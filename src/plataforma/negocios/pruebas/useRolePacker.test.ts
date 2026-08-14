@@ -13,14 +13,14 @@ describe('useRolePacker — Autoridad Remota', () => {
   const dbMock = {} as Database;
   const tenantPath = 'marisquerias/el-arrecife';
 
-  let effectCallback: any;
-  let stateSetter: any;
-  let mockState = null;
+  let effectCallback: (() => void | (() => void)) | undefined;
+  let stateSetter: jest.Mock;
+  let mockState: unknown = null;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockState = null;
-    stateSetter = jest.fn((val) => {
+    stateSetter = jest.fn((val: unknown | ((previous: unknown) => unknown)) => {
       mockState = typeof val === 'function' ? val(mockState) : val;
     });
 
@@ -29,7 +29,7 @@ describe('useRolePacker — Autoridad Remota', () => {
     });
 
     let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((initial: any) => {
+    jest.spyOn(React, 'useState').mockImplementation(((initial: unknown) => {
       // Very naive mock for this specific hook:
       // First call is config, second is loading, third is error.
       const isConfig = callCount % 3 === 0;
@@ -43,7 +43,7 @@ describe('useRolePacker — Autoridad Remota', () => {
         return [false, jest.fn()];
       }
       return [initial, jest.fn()];
-    });
+    }) as any);
   });
 
   afterEach(() => {
@@ -81,8 +81,6 @@ describe('useRolePacker — Autoridad Remota', () => {
       });
       return jest.fn();
     });
-
-    const getRoles = useRolePacker({ db: dbMock, tenantPath }).getRolesHabilitados;
 
     // Simulate mount
     if (effectCallback) effectCallback();
