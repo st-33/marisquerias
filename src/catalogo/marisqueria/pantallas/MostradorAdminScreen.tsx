@@ -16,10 +16,10 @@ import {
   View,
 } from 'react-native';
 import {
-  useAdminFeatures,
   useVentaCrudoAdmin,
   usePosConfig,
 } from '../../../plataforma/dominios/alimentos_y_bebidas';
+import { useAdminFeatures } from '../../../plataforma/dominios/marisqueria/administracion/configuracion/useAdminFeatures';
 
 export function MostradorAdminScreen() {
   const router = useRouter();

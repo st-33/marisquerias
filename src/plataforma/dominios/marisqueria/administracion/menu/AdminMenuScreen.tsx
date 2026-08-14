@@ -27,7 +27,8 @@ import type { Producto } from '../../../../base/_persistencia';
 import { getRtdb } from '../../../../core/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../core/store';
 import type { FabItem } from '../../../../core/types/contratos';
-import { useAdminFeatures, usePuenteAccionesFlotantes } from '../../../alimentos_y_bebidas';
+import { usePuenteAccionesFlotantes } from '../../../alimentos_y_bebidas';
+import { useAdminFeatures } from '../configuracion/useAdminFeatures';
 import { useMenuManagement } from './useMenuManagement';
 
 // --- UTILS ---

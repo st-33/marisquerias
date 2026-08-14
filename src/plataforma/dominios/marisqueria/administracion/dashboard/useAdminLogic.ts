@@ -1,8 +1,8 @@
-// src/verticales/admin/logica/useAdminLogic.ts
+// Dominio Marisquería: administración/dashboard/useAdminLogic.ts
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
-import { TenantRepository } from '../../base/_persistencia';
-import { useAdminFeatures } from './useAdminFeatures';
+import { TenantRepository } from '../../../../base/_persistencia';
+import { useAdminFeatures } from '../configuracion/useAdminFeatures';
 import { useAdminMetrics } from './useAdminMetrics';
 
 // ==================== TIPOS ====================

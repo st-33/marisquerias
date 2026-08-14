@@ -1,11 +1,11 @@
-// src/verticales/admin/logica/useAdminFeatures.ts
+// Dominio Marisquería: administración/configuracion/useAdminFeatures.ts
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
-import { TenantRepository } from '../../base/_persistencia/tenant.repo';
-import type { TenantFeatures } from './useAdminLogic'; // reuse type
-import { estaFeatureAdminHabilitada } from './menuSafety';
+import { useStore, type AppStore } from '../../../../core/store';
+import { getRtdb } from '../../../../core/firebase';
+import { TenantRepository } from '../../../../base/_persistencia/tenant.repo';
+import type { TenantFeatures } from '../dashboard/useAdminLogic'; // reuse type
+import { estaFeatureAdminHabilitada } from '../menu/menuSafety';
 
 type UseAdminFeaturesProps = {
   db?: Database;

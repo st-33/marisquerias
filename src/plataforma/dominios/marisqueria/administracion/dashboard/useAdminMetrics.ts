@@ -1,18 +1,18 @@
-// src/verticales/admin/logica/useAdminMetrics.ts
+// Dominio Marisquería: administración/dashboard/useAdminMetrics.ts
 import { useEffect, useState } from 'react';
 import {
   ensureNumberTimestamp,
   normalizeMesa,
   normalizePedido,
-} from '../../core/domain/normalizers';
-import { logger } from '../../core/monitoring/logger';
+} from '../../../../core/domain/normalizers';
+import { logger } from '../../../../core/monitoring/logger';
 import {
   useInventoryCatalog,
   useMesas,
   useMissingAssignments,
   usePedidos,
   useVentas,
-} from '../../core/store';
+} from '../../../../core/store';
 import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
 
 /**

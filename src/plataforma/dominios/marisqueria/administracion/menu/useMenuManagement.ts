@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Categoria, type Producto } from '../../../../base/_persistencia';
 import { RepositorioInventario } from '../../../alimentos_y_bebidas/infraestructura/repositorios';
 import { useStore } from '../../../../core/store';
-import { validarProductoParaEliminar } from '../../../alimentos_y_bebidas/menuSafety';
+import { validarProductoParaEliminar } from './menuSafety';
 
 type UseMenuManagementProps = {
   db: Database;
