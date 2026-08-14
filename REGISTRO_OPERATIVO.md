@@ -157,3 +157,7 @@ No quedaron definiciones históricas residuales de `RecipeEditor`, `VariantEdito
 ## Misión UX Mesero — revisión visual estática
 
 La exportación web cargó `/_role/mesero` sin error de navegación. En estado sin sesión de tenant se observó el estado inicial de carga y pedido vacío. El botón **AÑADIR** abrió el nuevo selector con jerarquía `NUEVO PEDIDO → Añadir al pedido`, categorías/productos y estado vacío; la revisión no ejecutó RTDB ni permite validar datos reales porque el navegador no tenía la sesión de Puerto Libres.
+
+## Cocina — verificación del modo Elite
+
+La investigación confirmó que `ThemeProvider` ya asigna `elite` por defecto a la categoría `marisquerias`, pero `CocinaScreen` usaba colores hardcodeados y no consumía el tema. Se conectó al mismo `useAppTheme`/`useThemedColors` existente y ahora muestra el estado `ELITE` o `CLÁSICO` en el encabezado; `TarjetaComanda` también usa los colores dinámicos en urgencia, botones, estados y completar orden. En la exportación web sin sesión de tenant el navegador mostró `CLÁSICO`, que es el fallback esperado; no se tocó RTDB.

@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
-import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 import type { OrdenCocina } from '../../../plataforma/core/engines/KitchenQueueEngine';
 import { AnimatedPressable } from './AnimatedPressable';
 import { Badge } from './Badge';
@@ -121,6 +121,7 @@ export function TarjetaComanda({
   onFinishOrder,
 }: TarjetaComandaProps) {
   const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
 
   // Estilos dinámicos según tema
   const themedStyles = useMemo(
@@ -236,7 +237,14 @@ export function TarjetaComanda({
     <Animated.View
       entering={FadeInDown.duration(400).springify().damping(16)}
       exiting={FadeOutUp.duration(300)}
-      style={[themedStyles.card, order.esUrgente && staticStyles.cardUrgent]}
+      style={[
+        themedStyles.card,
+        order.esUrgente && {
+          borderColor: COLORS.error,
+          borderWidth: 2,
+          backgroundColor: COLORS.alpha.error10,
+        },
+      ]}
     >
       {/* Header */}
       <View style={themedStyles.header}>
@@ -248,7 +256,7 @@ export function TarjetaComanda({
           baseTimestamp={order.sentToKitchenAt || order.createdAt}
           isUrgent={order.esUrgente}
         />
-        {order.esUrgente && <Badge label="URGENTE" backgroundColor="#dc2626" />}
+        {order.esUrgente && <Badge label="URGENTE" backgroundColor={COLORS.error} />}
       </View>
 
       {/* Items */}
@@ -267,7 +275,7 @@ export function TarjetaComanda({
                   <View
                     style={[
                       themedStyles.quantityBadge,
-                      item.estado === 'en_preparacion' && { backgroundColor: '#1d4ed8' },
+                      item.estado === 'en_preparacion' && { backgroundColor: COLORS.primary },
                     ]}
                   >
                     <Text style={staticStyles.quantityBadgeText}>{item.cantidad}</Text>
@@ -277,7 +285,7 @@ export function TarjetaComanda({
                 <Text
                   style={[
                     themedStyles.itemName,
-                    item.estado === 'en_preparacion' && { color: '#60a5fa' },
+                    item.estado === 'en_preparacion' && { color: COLORS.primaryLight },
                   ]}
                 >
                   {item.nombre}
@@ -307,7 +315,7 @@ export function TarjetaComanda({
               {(item.estado === 'nuevo' || item.estado === 'en_cocina') && (
                 <AnimatedPressable
                   onPress={() => onStartItem(item.id)}
-                  style={[staticStyles.btnStart]}
+                  style={[staticStyles.btnStart, { backgroundColor: COLORS.warning, ...SHADOWS.warning }] }
                 >
                   <Ionicons name="play" size={20} color="#ffffff" />
                   <Text style={staticStyles.btnText}>Comenzar</Text>
@@ -316,16 +324,16 @@ export function TarjetaComanda({
               {item.estado === 'en_preparacion' && (
                 <AnimatedPressable
                   onPress={() => onFinishItem(item.id)}
-                  style={[staticStyles.btnFinish]}
+                  style={[staticStyles.btnFinish, { backgroundColor: COLORS.success, ...SHADOWS.success }] }
                 >
                   <Ionicons name="checkmark" size={20} color="#ffffff" />
                   <Text style={staticStyles.btnTextFinish}>Listo</Text>
                 </AnimatedPressable>
               )}
               {item.estado === 'listo' && (
-                <View style={staticStyles.badgeReady}>
-                  <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                  <Text style={staticStyles.badgeReadyText}>Listo</Text>
+                  <View style={[staticStyles.badgeReady, { backgroundColor: COLORS.alpha.success10 }]}>
+                    <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                    <Text style={[staticStyles.badgeReadyText, { color: COLORS.success }]}>Listo</Text>
                 </View>
               )}
             </View>
@@ -335,7 +343,10 @@ export function TarjetaComanda({
 
       {/* Footer con botón de completar orden */}
       {order.itemsPendientes === 0 && order.itemsListos > 0 && (
-        <AnimatedPressable onPress={onFinishOrder} style={[staticStyles.btnCompleteOrder]}>
+        <AnimatedPressable
+          onPress={onFinishOrder}
+          style={[staticStyles.btnCompleteOrder, { backgroundColor: COLORS.success, ...SHADOWS.success }]}
+        >
           <Ionicons name="checkmark-done" size={18} color="#ffffff" />
           <Text style={staticStyles.btnCompleteOrderText}>Orden Completa</Text>
         </AnimatedPressable>
