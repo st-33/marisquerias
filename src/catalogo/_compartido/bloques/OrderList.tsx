@@ -5,8 +5,8 @@ import { COLORS, SPACING } from '../../../compartido/constantes/theme';
 import {
   OrderItem,
   PendingItem,
-} from '../../../plataforma/dominios/alimentos_y_bebidas/useMeseroLogic';
-import { Product } from '../../../plataforma/dominios/alimentos_y_bebidas/useProductSelector';
+} from '../../../plataforma/dominios/marisqueria/mesero/useMeseroLogic';
+import { Product } from '../../../plataforma/dominios/marisqueria/mesero/useProductSelector';
 import { OrderItemCard } from './OrderItemCard';
 
 type OrderListProps = {
@@ -20,15 +20,8 @@ type OrderListProps = {
 };
 
 function OrderListComponent(props: OrderListProps) {
-  const {
-    pending,
-    liveItems,
-    getProduct,
-    onIncPending,
-    onRemovePending,
-    onMarkDelivered,
-    onDoubleSwipeUp,
-  } = props;
+  const { pending, liveItems, onIncPending, onRemovePending, onMarkDelivered, onDoubleSwipeUp } =
+    props;
 
   // Detección de gesto: 2 deslizadas largas consecutivas hacia arriba
   const lastScrollY = useRef(0);

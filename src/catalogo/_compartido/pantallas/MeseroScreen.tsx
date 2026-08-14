@@ -23,7 +23,7 @@ import {
   useMeseroLogic,
   useProductSelector,
   useVariantSelector,
-} from '../../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../../plataforma/dominios/marisqueria/mesero';
 
 export function MeseroScreen() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';

@@ -21,7 +21,7 @@ import {
   computeVariantDeltaAndLabels,
   evaluateRules,
   getOrderedVisibleGroups,
-} from '../../../plataforma/dominios/alimentos_y_bebidas/rules';
+} from '../../../plataforma/dominios/marisqueria/mesero/rules';
 import { useAlternatingSounds } from '../../../plataforma/dominios/alimentos_y_bebidas/useAlternatingSounds';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -41,10 +41,6 @@ type VariantsModalProps = {
   onClose: () => void;
 };
 
-type VariantOption = {
-  titulo: string;
-  delta?: number;
-};
 const ConfirmButton = ({
   onPress,
   title,

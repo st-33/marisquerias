@@ -7,9 +7,9 @@
  * ✅ OPTIMIZADO: Consume del store centralizado (NO crea listeners)
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useCategorias, useProductos } from '../../core/store';
-import type { Category, Product } from '../../base/tipos/contratos';
+import { useCallback, useMemo, useState } from 'react';
+import { useCategorias, useProductos } from '../../../core/store';
+import type { Product } from '../../../base/tipos/contratos';
 export type { Product };
 
 type UseProductSelectorProps = Record<string, never>;

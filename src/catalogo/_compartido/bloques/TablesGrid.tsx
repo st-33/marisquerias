@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { TableBadge, type TableIndicator } from '../../../compartido/componentes/ui/TableBadge';
 import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
-import { OrderItem } from '../../../plataforma/dominios/alimentos_y_bebidas/useMeseroLogic';
+import { OrderItem } from '../../../plataforma/dominios/marisqueria/mesero/useMeseroLogic';
 
 // Habilitar LayoutAnimation en Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -46,8 +46,8 @@ const tileColor = (s: TableState) =>
   s === 'libre'
     ? COLORS.table.free
     : s === 'ocupada'
-    ? COLORS.table.occupied
-    : COLORS.table.billing;
+      ? COLORS.table.occupied
+      : COLORS.table.billing;
 
 function TablesGridComponent(props: TablesGridProps) {
   const {
@@ -106,14 +106,14 @@ function TablesGridComponent(props: TablesGridProps) {
     // Datos para badge (solo si es mesa normal)
     const mesaData = !isTakeaway ? (tables.find((t) => t.id === id) as any) : null;
 
-    const thisMesaPending = isSelected ? pendingCount > 0 : mesaData?.hasPending ?? false;
+    const thisMesaPending = isSelected ? pendingCount > 0 : (mesaData?.hasPending ?? false);
     const thisMesaLiveCount = isSelected
       ? liveItems.filter((it: OrderItem) => it.estado !== 'entregado').length
-      : mesaData?.liveCount ?? 0;
+      : (mesaData?.liveCount ?? 0);
     const thisMesaHasReady = isSelected
       ? liveItems.some((it: OrderItem) => it.estado === 'listo')
-      : mesaData?.hasReady ?? false;
-    const mesaIndicator = !isTakeaway ? indicators?.[id] ?? null : null;
+      : (mesaData?.hasReady ?? false);
+    const mesaIndicator = !isTakeaway ? (indicators?.[id] ?? null) : null;
 
     const bgColor = isTakeaway ? COLORS.primary : tileColor(state as TableState);
     const textColor = COLORS.text.primary;

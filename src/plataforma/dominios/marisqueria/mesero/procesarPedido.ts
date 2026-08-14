@@ -4,9 +4,9 @@
  * SEPARACIÓN SAGRADA: Solo lógica pura de negocio
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { PedidosRepository, MesasRepository } from '../../../base/_persistencia';
-import { PendingItem } from '../useMeseroLogic';
+import { PendingItem } from './useMeseroLogic';
 import { createLogger } from '../../../core/utils/logger';
 
 const log = createLogger('procesarPedido');

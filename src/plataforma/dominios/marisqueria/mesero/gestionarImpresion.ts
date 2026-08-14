@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../base/_persistencia';
 import { enqueuePrintIdempotent } from '../../../core/printing/printService';
 import { createLogger } from '../../../core/utils/logger';
-import { usePrintPolicies } from '../usePrintPolicies';
+import { usePrintPolicies } from './usePrintPolicies';
 
 const log = createLogger('gestionarImpresion');
 

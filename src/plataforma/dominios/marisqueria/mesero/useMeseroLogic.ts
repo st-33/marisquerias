@@ -9,16 +9,16 @@
 
 import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MesasRepository, PedidosRepository } from '../../base/_persistencia';
-import { InventoryV2Repository } from '../../base/_persistencia/inventory.v2.repo';
-import { useAppStateSync } from '../../base/hooks';
-import { useItemsPedido, usePedido, usePedidos, useProductos, useStore } from '../../core/store';
-import { createLogger } from '../../core/utils/logger';
+import { MesasRepository, PedidosRepository } from '../../../base/_persistencia';
+import { InventoryV2Repository } from '../../../base/_persistencia/inventory.v2.repo';
+import { useAppStateSync } from '../../../base/hooks';
+import { useItemsPedido, usePedido, usePedidos, useProductos, useStore } from '../../../core/store';
+import { createLogger } from '../../../core/utils/logger';
 
-import { useGestionarMesas } from './mesero/gestionarMesas';
-import { useDescontarInventario } from './mesero/descontarInventario';
-import { useGestionarImpresion } from './mesero/gestionarImpresion';
-import { useProcesarPedido } from './mesero/procesarPedido';
+import { useGestionarMesas } from './gestionarMesas';
+import { useDescontarInventario } from './descontarInventario';
+import { useGestionarImpresion } from './gestionarImpresion';
+import { useProcesarPedido } from './procesarPedido';
 import { useSharedDrafts } from './useSharedDrafts';
 
 const log = createLogger('useMeseroLogic');

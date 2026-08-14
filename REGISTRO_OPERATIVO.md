@@ -78,3 +78,13 @@ El análisis global de estilo sigue fallando con **72 errores y 50 advertencias*
 
 Para recorrer de forma real el flujo Mesero → Cocina → entrega → pago hace falta un **tenant de pruebas** y un código de acceso autorizado, con datos de mesas, menú y roles. Con ese entorno se puede validar el circuito sin escribir sobre un negocio productivo.
 
+
+## Tramo Mesero → Mesa → Pedido
+
+- **Movido:** el circuito exclusivo de Mesero desde `plataforma/dominios/alimentos_y_bebidas` a `plataforma/dominios/marisqueria/mesero`.
+- **Piezas:** orquestación de Mesero, mesas, borradores, productos, variantes, pedido, impresión e inventario de Mesero.
+- **Responsabilidad:** la pantalla selecciona mesa y productos; el orquestador mantiene borrador y pedido; `procesarPedido` crea o amplía pedido, lo asocia a la mesa, lo envía a Cocina y deja la mesa ocupada.
+- **Reconexión:** se actualizaron la pantalla de Mesero, lista de pedido, cuadrícula de mesas, modal de variantes y el barril histórico para mantener consumidores vigentes.
+- **No movido:** `SincronizadorCocina` continúa en la ruta histórica porque lo consumen Cocina y el repositorio persistente de pedidos; moverlo ampliaría este tramo.
+- **Validación:** tipos correctos; 16 suites y 104 pruebas correctas; web carga `/access` sin código de tenant. El primer servidor web agotó memoria con el límite por defecto y se reinició correctamente con un límite de 8 GB.
+
