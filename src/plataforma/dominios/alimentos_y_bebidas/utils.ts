@@ -1,4 +1,4 @@
-import type { ItemCocina, OrdenCocina } from './useCocinaLogic';
+import type { ItemCocina, OrdenCocina } from '../marisqueria/cocina/useCocinaLogic';
 
 /**
  * Deduplicate items within an order based on draftId, keeping the item with the highest

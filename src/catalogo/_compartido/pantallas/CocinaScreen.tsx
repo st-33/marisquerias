@@ -11,7 +11,7 @@ import { getRtdb } from '../../../plataforma/core/firebase';
 import { useNotifications } from '../../../compartido/hooks/useNotifications';
 import { useStoreNotifications } from '../../../compartido/hooks/useStoreNotifications';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
-import { useCocinaLogic } from '../../../plataforma/dominios/alimentos_y_bebidas';
+import { useCocinaLogic } from '../../../plataforma/dominios/marisqueria/cocina';
 import { logger } from '../../../compartido/utils/logger';
 
 const styles = StyleSheet.create({

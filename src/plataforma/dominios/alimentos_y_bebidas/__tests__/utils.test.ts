@@ -1,5 +1,5 @@
 // src/verticales/cocina/logica/__tests__/utils.test.ts
-import type { ItemCocina } from '../useCocinaLogic';
+import type { ItemCocina } from '../../marisqueria/cocina/useCocinaLogic';
 import { calculateStats, deduplicateItems, groupItems } from '../utils';
 
 describe('deduplicateItems', () => {
