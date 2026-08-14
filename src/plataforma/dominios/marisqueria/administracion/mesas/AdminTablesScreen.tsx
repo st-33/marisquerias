@@ -16,14 +16,14 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useToast } from '../../../compartido/componentes/ui/Toast';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
+import { useToast } from '../../../../../compartido/componentes/ui/Toast';
+import { getRtdb } from '../../../../core/firebase';
+import { useStore } from '../../../../core/store';
 import {
   useMesasManagement,
   usePuenteAccionesFlotantes,
-} from '../../../plataforma/dominios/alimentos_y_bebidas';
-import type { FabItem } from '../../../plataforma/core/types/contratos';
+} from '../../../alimentos_y_bebidas';
+import type { FabItem } from '../../../../core/types/contratos';
 
 // --- COMPONENTS ---
 

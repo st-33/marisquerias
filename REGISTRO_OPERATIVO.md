@@ -149,3 +149,5 @@ No quedaron definiciones históricas residuales de `RecipeEditor`, `VariantEdito
 ## Misión 4 — limpieza administrativa
 
 `useMenuManagement`, `menuSafety`, `useAdminFeatures`, `useAdminLogic`, `useAdminMetrics` y `metricasVendedores` quedaron en `marisqueria/administracion`; sus pruebas y consumidores fueron reconectados. `AdminDashboardScreen` también pasó a `administracion/dashboard` y `ScreenRegistry` quedó apuntando a la nueva ruta. No se movieron `RepositorioInventario`, `usePuenteAccionesFlotantes` ni infraestructura compartida porque mantienen consumidores activos en varios circuitos.
+
+`AdminTablesScreen` pasó a `marisqueria/administracion/mesas`; `ScreenRegistry` conserva la misma clave `admin_tables` y la misma ruta pública. `useMesasManagement` y `usePuenteAccionesFlotantes` permanecieron compartidos por sus consumidores activos. Tipos, suite completa y exportación web fueron correctos.
