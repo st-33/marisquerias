@@ -15,13 +15,14 @@ describe('useRolePacker — Autoridad Remota', () => {
 
   let effectCallback: any;
   let stateSetter: any;
-  let mockState = null;
+  let mockState: unknown = null;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockState = null;
-    stateSetter = jest.fn((val) => {
-      mockState = typeof val === 'function' ? val(mockState) : val;
+    stateSetter = jest.fn((val: unknown) => {
+      mockState =
+        typeof val === 'function' ? (val as (state: unknown) => unknown)(mockState) : val;
     });
 
     jest.spyOn(React, 'useEffect').mockImplementation((cb) => {
@@ -29,7 +30,8 @@ describe('useRolePacker — Autoridad Remota', () => {
     });
 
     let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((initial: any) => {
+    const useStateSpy = jest.spyOn(React, 'useState') as jest.Mock;
+    useStateSpy.mockImplementation((initial: unknown) => {
       // Very naive mock for this specific hook:
       // First call is config, second is loading, third is error.
       const isConfig = callCount % 3 === 0;
