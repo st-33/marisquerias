@@ -11,7 +11,6 @@ export * from './useCartPersistence';
 export * from '../marisqueria/cocina/useCocinaAudio';
 export * from '../marisqueria/cocina/useCocinaLogic';
 export * from './useFabRadial';
-export * from './useMenuManagement';
 export { useMesasManagement } from './useMesasManagement';
 export type { Mesa, EstadoMesa, MesaConLayout } from './useMesasManagement';
 export * from '../marisqueria/mesero/useMeseroLogic';

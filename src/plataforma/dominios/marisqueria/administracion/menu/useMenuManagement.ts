@@ -5,10 +5,10 @@
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MenuRepository, type Categoria, type Producto } from '../../base/_persistencia';
-import { RepositorioInventario } from './infraestructura/repositorios';
-import { useStore } from '../../core/store';
-import { validarProductoParaEliminar } from './menuSafety';
+import { MenuRepository, type Categoria, type Producto } from '../../../../base/_persistencia';
+import { RepositorioInventario } from '../../../alimentos_y_bebidas/infraestructura/repositorios';
+import { useStore } from '../../../../core/store';
+import { validarProductoParaEliminar } from '../../../alimentos_y_bebidas/menuSafety';
 
 type UseMenuManagementProps = {
   db: Database;
