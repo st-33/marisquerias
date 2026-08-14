@@ -6,6 +6,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import { useAppTheme } from '../../../../../compartido/temas';
+import {
+  AdminMetricTile,
+  AdminSectionHeading,
+  AdminStatusPill,
+  AdminSurface,
+} from '../ui/AdminPrimitives';
 import {
   ActivityIndicator,
   Pressable,
@@ -23,6 +30,7 @@ import { useAdminFeatures } from '../configuracion/useAdminFeatures';
 
 export function MostradorAdminScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
 
   const { sales } = useVentaCrudoAdmin();
   const { config, updateConfig } = usePosConfig();
@@ -69,35 +77,47 @@ export function MostradorAdminScreen() {
   }, 0);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </Pressable>
-        <View>
-          <Text style={styles.headerTitle}>Canal: Venta y Crudo</Text>
-          <Text style={styles.headerSubtitle}>Gobierno y Supervisión</Text>
-        </View>
-        <Ionicons name="storefront" size={24} color="#f59e0b" style={{ marginLeft: 'auto' }} />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AdminSurface style={styles.headerSurface}>
+        <AdminSectionHeading
+          eyebrow="Canal operativo"
+          title="Venta y Crudo"
+          subtitle="Gobierno y supervisión del punto de venta"
+          icon="storefront-outline"
+          action={
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={20} color={colors.primary} />
+            </Pressable>
+          }
+        />
+      </AdminSurface>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={styles.kpiRow}>
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Items Hoy</Text>
-            <Text style={styles.kpiValue}>{totalHoy}</Text>
-            <Ionicons name="cube-outline" size={20} color="#10b981" style={styles.kpiIcon} />
-          </View>
-          <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Movimientos</Text>
-            <Text style={styles.kpiValue}>{sales.length}</Text>
-            <Ionicons name="receipt-outline" size={20} color="#3b82f6" style={styles.kpiIcon} />
-          </View>
+          <AdminMetricTile
+            title="Items hoy"
+            value={String(totalHoy)}
+            subtitle="Unidades registradas"
+            icon="cube-outline"
+            color={colors.success}
+          />
+          <AdminMetricTile
+            title="Movimientos"
+            value={String(sales.length)}
+            subtitle="Salidas registradas"
+            icon="receipt-outline"
+            color={colors.primary}
+          />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Configuración de Comportamiento</Text>
-          <Text style={styles.sectionDesc}>Define las reglas operativas del canal POS.</Text>
+        <AdminSurface style={styles.sectionSurface} accent={colors.warning}>
+          <AdminSectionHeading
+            eyebrow="Reglas del canal"
+            title="Configuración de comportamiento"
+            subtitle="Define las reglas operativas del POS"
+            icon="options-outline"
+            action={<AdminStatusPill label="POS" tone="warning" />}
+          />
 
           <View style={styles.configCard}>
             <View style={styles.configRow}>
@@ -140,10 +160,16 @@ export function MostradorAdminScreen() {
               />
             </View>
           </View>
-        </View>
+        </AdminSurface>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Registro de Salidas (Stock)</Text>
+        <AdminSurface style={styles.sectionSurface}>
+          <AdminSectionHeading
+            eyebrow="Trazabilidad"
+            title="Registro de salidas"
+            subtitle="Movimientos recientes de inventario"
+            icon="list-outline"
+            action={<AdminStatusPill label={`${sales.length} movimientos`} tone="neutral" />}
+          />
           <View style={styles.tableCard}>
             <View style={styles.tableHeader}>
               <Text style={[styles.th, { flex: 1 }]}>Hora</Text>
@@ -181,7 +207,7 @@ export function MostradorAdminScreen() {
               </View>
             )}
           </View>
-        </View>
+        </AdminSurface>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -192,28 +218,30 @@ export function MostradorAdminScreen() {
 export default MostradorAdminScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f172a' },
+  container: { flex: 1 },
+  headerSurface: {
+    margin: 20,
+    marginBottom: 0,
+    padding: 18,
+  },
+  sectionSurface: {
+    marginBottom: 20,
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 40,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#1e293b',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
   },
   backBtn: { marginRight: 16 },
   headerTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
   headerSubtitle: { color: '#94a3b8', fontSize: 12 },
   content: { padding: 20 },
-  kpiRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  kpiRow: { flexDirection: 'row', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   kpiCard: {
     flex: 1,
-    backgroundColor: '#1e293b',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#334155',
   },
   kpiLabel: { color: '#94a3b8', fontSize: 12, marginBottom: 4 },
   kpiValue: { color: 'white', fontSize: 18, fontWeight: '900' },
