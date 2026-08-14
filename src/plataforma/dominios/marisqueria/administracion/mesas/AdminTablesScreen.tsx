@@ -16,6 +16,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppTheme } from '../../../../../compartido/temas';
+import { AdminSectionHeading, AdminStatusPill, AdminSurface } from '../ui/AdminPrimitives';
 import { useToast } from '../../../../../compartido/componentes/ui/Toast';
 import { getRtdb } from '../../../../core/firebase';
 import { useStore } from '../../../../core/store';
@@ -57,6 +59,7 @@ export function AdminTablesScreen() {
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { colors } = useAppTheme();
 
   // 🧠 CEREBRO
   const { mesas, cantidad, resumen, loading, actions } = useMesasManagement({ db, tenantPath });
@@ -211,47 +214,50 @@ export function AdminTablesScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {ToastComponent}
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Plano de Salón</Text>
-          <Text style={styles.subtitle}>Distribución e información de mesas en tiempo real</Text>
-        </View>
-
-        <View style={styles.headerActions}>
-          {editMode ? (
-            <View style={styles.editBadge}>
-              <Ionicons name="pencil-outline" size={16} color="#f59e0b" />
-              <Text style={styles.editBadgeText}>Arrastra las mesas para reubicarlas</Text>
-            </View>
-          ) : (
-            <View style={styles.quantityControl}>
-              <Text style={styles.quantityLabel}>Mesas Totales:</Text>
-              <Pressable
-                style={styles.btnQty}
-                onPress={() => setNewQuantity(Math.max(1, newQuantity - 1))}
-              >
-                <Ionicons name="remove" size={16} color="white" />
-              </Pressable>
-              <Text style={styles.quantityValue}>{newQuantity}</Text>
-              <Pressable style={styles.btnQty} onPress={() => setNewQuantity(newQuantity + 1)}>
-                <Ionicons name="add" size={16} color="white" />
-              </Pressable>
-              {newQuantity !== cantidad && (
-                <Pressable style={styles.btnApply} onPress={handleUpdateQuantity}>
-                  <Text style={styles.btnApplyText}>Aplicar</Text>
-                </Pressable>
+      <AdminSurface style={styles.headerSurface}>
+        <AdminSectionHeading
+          eyebrow="Operación de salón"
+          title="Plano de mesas"
+          subtitle="Distribución e información en tiempo real"
+          icon="grid-outline"
+          action={
+            <View style={styles.headerActions}>
+              {editMode ? (
+                <View style={styles.editBadge}>
+                  <Ionicons name="pencil-outline" size={16} color={colors.warning} />
+                  <Text style={styles.editBadgeText}>Arrastra las mesas para reubicarlas</Text>
+                </View>
+              ) : (
+                <View style={styles.quantityControl}>
+                  <Text style={styles.quantityLabel}>Mesas totales</Text>
+                  <Pressable
+                    style={styles.btnQty}
+                    onPress={() => setNewQuantity(Math.max(1, newQuantity - 1))}
+                  >
+                    <Ionicons name="remove" size={16} color="white" />
+                  </Pressable>
+                  <Text style={styles.quantityValue}>{newQuantity}</Text>
+                  <Pressable style={styles.btnQty} onPress={() => setNewQuantity(newQuantity + 1)}>
+                    <Ionicons name="add" size={16} color="white" />
+                  </Pressable>
+                  {newQuantity !== cantidad && (
+                    <Pressable style={styles.btnApply} onPress={handleUpdateQuantity}>
+                      <Text style={styles.btnApplyText}>Aplicar</Text>
+                    </Pressable>
+                  )}
+                </View>
               )}
             </View>
-          )}
-        </View>
-      </View>
+          }
+        />
+      </AdminSurface>
 
       {/* SUMMARY BAR */}
-      <View style={styles.summaryBar}>
+      <AdminSurface style={styles.summaryBar} accent={colors.primary}>
         <SummaryCard
           title="Libres"
           value={resumen.libres}
@@ -276,7 +282,7 @@ export function AdminTablesScreen() {
           icon="wallet-outline"
           color="#3b82f6"
         />
-      </View>
+      </AdminSurface>
 
       {/* CANVAS EDITOR */}
       <ScrollView contentContainerStyle={styles.canvasContainer}>
@@ -364,6 +370,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  headerSurface: {
+    padding: 18,
+  },
   title: {
     color: '#f8fafc',
     fontSize: 24,
@@ -435,8 +444,9 @@ const styles = StyleSheet.create({
   },
   summaryBar: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
     marginBottom: 20,
+    padding: 12,
   },
   summaryCard: {
     flex: 1,
