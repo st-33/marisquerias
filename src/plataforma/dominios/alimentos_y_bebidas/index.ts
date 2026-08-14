@@ -10,7 +10,6 @@ export * from './useAlternatingSounds';
 export * from './useCartPersistence';
 export * from '../marisqueria/cocina/useCocinaAudio';
 export * from '../marisqueria/cocina/useCocinaLogic';
-export * from './useDevicesManagement';
 export * from './useFabRadial';
 export * from './useMenuManagement';
 export { useMesasManagement } from './useMesasManagement';

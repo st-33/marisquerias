@@ -137,3 +137,7 @@ Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBan
 ## Tramo Administración — inventario
 
 `AdminInventoryScreen`, `PanelInventario` y `useInventarioAvanzado` salieron de las rutas históricas y ahora viven en `plataforma/dominios/marisqueria/administracion/inventario`. El registro de pantallas y el barril de Marisquerías quedaron reconectados. `RepositorioInventario` se conservó en `alimentos_y_bebidas/infraestructura` porque `useMenuManagement` lo consume activamente; por tanto, es infraestructura compartida y no se fusionó ni movió. Tipos, suite completa y exportación web fueron correctos.
+
+## Tramo Administración — configuración de dispositivos
+
+`useDevicesManagement` pasó de `alimentos_y_bebidas` a `plataforma/dominios/marisqueria/administracion/configuracion`. Su consumidor real es la ruta `/_role/admin/devices`, que se reconectó de forma directa. Se mantuvieron intactos los repositorios, políticas de impresión y contratos persistentes compartidos. Tipos, suite completa y exportación web fueron correctos.
