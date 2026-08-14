@@ -141,3 +141,7 @@ Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBan
 ## Tramo Administración — configuración de dispositivos
 
 `useDevicesManagement` pasó de `alimentos_y_bebidas` a `plataforma/dominios/marisqueria/administracion/configuracion`. Su consumidor real es la ruta `/_role/admin/devices`, que se reconectó de forma directa. Se mantuvieron intactos los repositorios, políticas de impresión y contratos persistentes compartidos. Tipos, suite completa y exportación web fueron correctos.
+
+## Revisión focalizada de compartidos
+
+No quedaron definiciones históricas residuales de `RecipeEditor`, `VariantEditor`, `PanelInventario`, `AdminInventoryScreen`, `useInventarioAvanzado` ni `useDevicesManagement`; cada una conserva una única implementación en Administración. `RepositorioInventario` se mantiene compartido porque lo usa `useMenuManagement`. `usePuenteAccionesFlotantes` también se conserva compartido: tiene consumidores activos en menú, inventario, dashboard y mesas. No se eliminó ningún duplicado sin consumidores.
