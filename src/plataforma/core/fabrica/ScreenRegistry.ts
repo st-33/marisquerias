@@ -6,7 +6,7 @@ import { AdminMenuScreen } from '../../dominios/marisqueria/administracion/menu/
 import { AdminTablesScreen } from '../../dominios/marisqueria/administracion/mesas/AdminTablesScreen';
 import { AdminInventoryScreen } from '../../dominios/marisqueria/administracion/inventario/AdminInventoryScreen';
 import { MostradorPro } from '../../../catalogo/_compartido/bloques/MostradorPro';
-import { MostradorAdminScreen } from '../../../catalogo/marisqueria/pantallas/MostradorAdminScreen';
+import { MostradorAdminScreen } from '../../dominios/marisqueria/administracion/mostrador/MostradorAdminScreen';
 
 /**
  * 🏭 SCREEN REGISTRY GLOBAL (MARISQUERÍAS)
