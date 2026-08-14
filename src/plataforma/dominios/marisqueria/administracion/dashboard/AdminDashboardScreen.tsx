@@ -6,7 +6,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SalesDistributionPieChart } from '../../../../../compartido/componentes/charts/SalesDistributionPieChart';
 import { SalesLineChart } from '../../../../../compartido/componentes/charts/SalesLineChart';
 import { TopProductsBarChart } from '../../../../../compartido/componentes/charts/TopProductsBarChart';
@@ -33,6 +41,36 @@ import {
 } from '../ui/AdminPrimitives';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
+
+type InlineTrendChartProps = {
+  data: { label: string; value: number }[];
+  color: string;
+};
+
+function InlineTrendChart({ data, color }: InlineTrendChartProps) {
+  const visibleData = data.slice(-12);
+  const maxValue = Math.max(...visibleData.map((point) => point.value), 1);
+
+  return (
+    <View style={styles.inlineChart} accessibilityLabel="Gráfica de ventas en web">
+      <View style={styles.inlineBars}>
+        {visibleData.map((point) => {
+          const barHeight = Math.max(8, (point.value / maxValue) * 100);
+          return (
+            <View key={point.label} style={styles.inlineBarColumn}>
+              <View
+                style={[styles.inlineBar, { height: `${barHeight}%`, backgroundColor: color }]}
+              />
+              <Text style={styles.inlineBarLabel} numberOfLines={1}>
+                {point.label}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export function AdminDashboardScreen() {
   const { width } = useWindowDimensions();
@@ -466,13 +504,23 @@ export function AdminDashboardScreen() {
             </View>
 
             {metrics.ventasPorHora.length > 0 ? (
-              <SalesLineChart
-                data={metrics.ventasPorHora.map((d: any) => ({
-                  label: d.label,
-                  value: d.monto ?? d.total ?? 0,
-                }))}
-                height={220}
-              />
+              Platform.OS === 'web' ? (
+                <InlineTrendChart
+                  data={metrics.ventasPorHora.map((d: any) => ({
+                    label: d.label,
+                    value: d.monto ?? d.total ?? 0,
+                  }))}
+                  color={colors.primary}
+                />
+              ) : (
+                <SalesLineChart
+                  data={metrics.ventasPorHora.map((d: any) => ({
+                    label: d.label,
+                    value: d.monto ?? d.total ?? 0,
+                  }))}
+                  height={220}
+                />
+              )
             ) : (
               <View style={styles.noDataContainer}>
                 <Text style={styles.noDataText}>Sin datos para el período seleccionado</Text>
@@ -843,6 +891,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  inlineChart: {
+    height: 220,
+    justifyContent: 'flex-end',
+    paddingTop: 12,
+  },
+  inlineBars: {
+    height: 180,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  inlineBarColumn: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+  },
+  inlineBar: {
+    width: '70%',
+    minWidth: 6,
+    borderRadius: 6,
+    opacity: 0.9,
+  },
+  inlineBarLabel: {
+    color: '#64748b',
+    fontSize: 9,
+    maxWidth: 42,
   },
   chartTitle: {
     color: '#f8fafc',
