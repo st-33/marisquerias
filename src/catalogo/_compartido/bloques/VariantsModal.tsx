@@ -23,6 +23,7 @@ import {
   getOrderedVisibleGroups,
 } from '../../../plataforma/dominios/marisqueria/mesero/rules';
 import { useAlternatingSounds } from '../../../plataforma/dominios/alimentos_y_bebidas/useAlternatingSounds';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -50,6 +51,9 @@ const ConfirmButton = ({
   title: string;
   disabled?: boolean;
 }) => {
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
+
   return (
     <Pressable
       onPress={onPress}
@@ -57,11 +61,20 @@ const ConfirmButton = ({
       style={({ pressed }) => [
         styles.confirmButton,
         disabled ? styles.confirmButtonDisabled : styles.confirmButtonActive,
-        { transform: [{ scale: pressed ? 0.98 : 1 }] },
+        {
+          backgroundColor: disabled ? COLORS.bg.elevated : COLORS.primary,
+          ...(disabled ? {} : SHADOWS.primary),
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
       ]}
     >
-      <Ionicons name="checkmark-circle" size={24} color="white" style={{ marginRight: 8 }} />
-      <Text style={styles.confirmButtonText}>{title}</Text>
+      <Ionicons
+        name="checkmark-circle"
+        size={24}
+        color={COLORS.text.primary}
+        style={{ marginRight: 8 }}
+      />
+      <Text style={[styles.confirmButtonText, { color: COLORS.text.primary }]}>{title}</Text>
     </Pressable>
   );
 };
@@ -82,6 +95,8 @@ function VariantsModalComponent({
   const [slideAnim] = useState(() => new Animated.Value(SCREEN_HEIGHT));
   const [pulseAnim] = useState(() => new Animated.Value(1)); // ✨ Animación de pulso para selección
   const isMounted = useRef(true);
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
 
   // 🔊 Sonidos alternantes para botón de agregar
   const {
@@ -187,29 +202,55 @@ function VariantsModalComponent({
   // -------------------------------------------------------------------------
   return (
     <Modal transparent visible animationType="none" onRequestClose={handleClose}>
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: COLORS.alpha.black50 }]}>
+
         {/* Fondo oscuro animado */}
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         </Animated.View>
 
         {/* Contenido Modal animado */}
-        <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View
+          style={[
+            styles.modalContainer,
+            {
+              backgroundColor: COLORS.bg.primary,
+              borderColor: COLORS.bg.elevated,
+              ...SHADOWS.lg,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
           {/* HEADER */}
-          <View style={styles.header}>
+          <View
+            style={[
+              styles.header,
+              { backgroundColor: COLORS.bg.surface, borderBottomColor: COLORS.bg.elevated },
+            ]}
+          >
             <View style={{ flex: 1 }}>
-              <Text style={styles.title} numberOfLines={2}>
+              <Text style={[styles.title, { color: COLORS.text.primary }]} numberOfLines={2}>
                 {prod.nombre || 'Personaliza tu producto'}
               </Text>
-              <Text style={styles.subtitle}>Selecciona tus opciones</Text>
+              <Text style={[styles.subtitle, { color: COLORS.text.secondary }]}>Selecciona tus opciones</Text>
             </View>
-            <Pressable onPress={handleClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#94a3b8" />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar opciones"
+              onPress={handleClose}
+              style={({ pressed }) => [
+                styles.closeButton,
+                { backgroundColor: COLORS.bg.tertiary, opacity: pressed ? 0.72 : 1 },
+              ]}
+            >
+              <Ionicons name="close" size={24} color={COLORS.text.secondary} />
             </Pressable>
           </View>
 
           {/* SUMMARY HEADER (BARRA DE PROGRESO) */}
-          <View style={styles.summaryBar}>
+          <View
+            style={[styles.summaryBar, { backgroundColor: COLORS.bg.primary, borderBottomColor: COLORS.bg.elevated }]}
+          >
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -230,10 +271,20 @@ function VariantsModalComponent({
                         setCurrentStep(idx);
                       }
                     }}
-                    style={[styles.summaryStep, isActive && styles.summaryStepActive]}
+                    style={[
+                      styles.summaryStep,
+                      {
+                        backgroundColor: isActive ? COLORS.alpha.primary20 : COLORS.bg.tertiary,
+                        borderColor: isActive ? COLORS.primary : COLORS.bg.elevated,
+                        opacity: isDone || isActive ? 1 : 0.72,
+                      },
+                    ]}
                   >
                     <Text
-                      style={[styles.summaryStepLabel, isActive && styles.summaryStepLabelActive]}
+                      style={[
+                        styles.summaryStepLabel,
+                        { color: isActive ? COLORS.primaryLight : COLORS.text.muted },
+                      ]}
                     >
                       {isDone
                         ? labels.find(
@@ -246,7 +297,7 @@ function VariantsModalComponent({
                         : g.titulo}
                     </Text>
                     {isDone && !isActive && (
-                      <Ionicons name="checkmark-circle" size={12} color="#10b981" />
+                      <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
                     )}
                   </Pressable>
                 );
@@ -255,11 +306,12 @@ function VariantsModalComponent({
           </View>
 
           {/* BODY (Current Step) */}
-          <View style={styles.bodyContainer}>
+          <View style={[styles.bodyContainer, { backgroundColor: COLORS.bg.primary }]}>
+
             {totalSteps === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="options-outline" size={48} color="#475569" />
-                <Text style={styles.emptyText}>Sin opciones disponibles.</Text>
+                  <Ionicons name="options-outline" size={48} color={COLORS.text.muted} />
+                  <Text style={[styles.emptyText, { color: COLORS.text.secondary }]}>Sin opciones disponibles.</Text>
               </View>
             ) : (
               <View style={styles.stepContainer}>
@@ -267,23 +319,28 @@ function VariantsModalComponent({
                 <View style={styles.stepHeader}>
                   {currentStep > 0 && (
                     <Pressable onPress={goBack} style={styles.backButton}>
-                      <Ionicons name="arrow-back" size={20} color="#60a5fa" />
-                      <Text style={styles.backButtonText}>Anterior</Text>
+                      <Ionicons name="arrow-back" size={20} color={COLORS.primaryLight} />
+                      <Text style={[styles.backButtonText, { color: COLORS.primaryLight }]}>Anterior</Text>
                     </Pressable>
                   )}
                   <View style={styles.stepIndicators}>
-                    <Text style={styles.stepCounter}>
+                    <Text style={[styles.stepCounter, { color: COLORS.text.tertiary }]}>
                       Paso {currentStep + 1} de {totalSteps}
                     </Text>
                   </View>
                 </View>
 
                 <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-                  <View style={styles.groupCard}>
+                  <View
+                    style={[
+                      styles.groupCard,
+                      { backgroundColor: COLORS.bg.secondary, borderColor: COLORS.bg.elevated },
+                    ]}
+                  >
                     <View style={styles.groupHeader}>
-                      <Text style={styles.groupTitle}>{currentGroup.titulo}</Text>
+                      <Text style={[styles.groupTitle, { color: COLORS.text.primary }]}>{currentGroup.titulo}</Text>
                       {currentGroup.obligatorio && (
-                        <View style={styles.badgeRequired}>
+                        <View style={[styles.badgeRequired, { backgroundColor: COLORS.error }]}>
                           <Text style={styles.badgeText}>REQUERIDO</Text>
                         </View>
                       )}
@@ -307,7 +364,16 @@ function VariantsModalComponent({
                                   styles.optionButton,
                                   isSelected && styles.optionSelected,
                                   isDisabled && styles.optionDisabled, // UI Deshabilitada
-                                  { transform: [{ scale: pressed && !isDisabled ? 0.96 : 1 }] },
+                                  {
+                                    backgroundColor: isSelected
+                                      ? COLORS.primary
+                                      : isDisabled
+                                        ? COLORS.bg.secondary
+                                        : COLORS.bg.tertiary,
+                                    borderColor: isSelected ? COLORS.primaryLight : COLORS.bg.elevated,
+                                    ...(isSelected ? SHADOWS.primary : {}),
+                                    transform: [{ scale: pressed && !isDisabled ? 0.96 : 1 }],
+                                  },
                                 ]}
                                 disabled={isDisabled}
                               >
@@ -317,18 +383,25 @@ function VariantsModalComponent({
                                       styles.optionText,
                                       isSelected && styles.optionTextSelected,
                                       isDisabled && styles.optionTextDisabled, // Texto Muted
+                                      {
+                                        color: isDisabled
+                                          ? COLORS.text.muted
+                                          : isSelected
+                                            ? COLORS.text.primary
+                                            : COLORS.text.secondary,
+                                      },
                                     ]}
                                   >
                                     {String(option.titulo)}
                                   </Text>
                                   {isSelected && (
-                                    <Ionicons name="checkmark-circle" size={18} color="white" />
+                                    <Ionicons name="checkmark-circle" size={18} color={COLORS.text.primary} />
                                   )}
                                   {isDisabled && (
                                     <Ionicons
                                       name="lock-closed"
                                       size={12}
-                                      color={theme.colors.textMuted}
+                                      color={COLORS.text.muted}
                                     />
                                   )}
                                 </View>
@@ -336,7 +409,8 @@ function VariantsModalComponent({
                                   <Text
                                     style={[
                                       styles.priceText,
-                                      isSelected && styles.priceTextSelected,
+                                      isSelected &&                                       styles.priceTextSelected,
+                                      { color: isSelected ? COLORS.warning : COLORS.success },
                                     ]}
                                   >
                                     {currentGroup.tipo === 'single'
@@ -389,10 +463,15 @@ function VariantsModalComponent({
           </View>
 
           {/* FOOTER */}
-          <View style={styles.footer}>
+          <View
+            style={[
+              styles.footer,
+              { backgroundColor: COLORS.bg.surface, borderTopColor: COLORS.bg.elevated },
+            ]}
+          >
             <View>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalPrice}>{formatMoney(totalPrice)}</Text>
+              <Text style={[styles.totalLabel, { color: COLORS.text.muted }]}>Total</Text>
+              <Text style={[styles.totalPrice, { color: COLORS.success }]}>{formatMoney(totalPrice)}</Text>
             </View>
             <ConfirmButton
               title={canConfirm ? 'Agregar' : `Selecciona ${missingRequired.length} opción(es)`}

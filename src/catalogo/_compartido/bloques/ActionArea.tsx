@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 import { formatMoney } from '../../../compartido/utils/formatters';
 import { useAlternatingSounds } from '../../../plataforma/dominios/alimentos_y_bebidas/useAlternatingSounds';
 
@@ -50,6 +51,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
     onPaid,
   } = props;
   const insets = useSafeAreaInsets();
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
 
   // 🔊 Sonidos alternantes para botón AÑADIR
   const { playSound: playAddSound, loadSounds, cleanup: cleanupSounds } = useAlternatingSounds();
@@ -89,7 +92,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
     <View
       style={{
         borderTopWidth: 1,
-        borderTopColor: COLORS.bg.primary,
+        borderTopColor: COLORS.bg.elevated,
         paddingHorizontal: SPACING.lg + 2,
         paddingTop: SPACING.xs - 1,
         paddingBottom: Math.max(18, insets.bottom + 4),
@@ -112,12 +115,13 @@ function ActionAreaComponent(props: ActionAreaProps) {
       >
         <View
           style={{
-            backgroundColor: COLORS.bg.secondary,
-            borderRadius: RADIUS.md - 1,
+            backgroundColor: COLORS.bg.tertiary,
+            borderRadius: RADIUS.lg,
             paddingVertical: 7,
             paddingHorizontal: SPACING.md,
             borderWidth: 1,
             borderColor: COLORS.bg.elevated,
+            ...SHADOWS.sm,
           }}
         >
           <View
@@ -160,10 +164,12 @@ function ActionAreaComponent(props: ActionAreaProps) {
       <View style={{ flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.sm }}>
         {/* 🔊 Botón AÑADIR con sonido */}
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Añadir producto al pedido"
           onPress={handleAddWithSound}
           style={({ pressed }) => ({
-            backgroundColor: 'transparent',
-            borderWidth: 3,
+            backgroundColor: COLORS.alpha.primary10,
+            borderWidth: 1.5,
             borderColor: COLORS.primary,
             flex: 1,
             paddingVertical: 12,
@@ -192,10 +198,12 @@ function ActionAreaComponent(props: ActionAreaProps) {
         {pendingCount > 0 ? (
           // CASO 1: Hay items pendientes → Botón ENVIAR
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Enviar pedido a Cocina"
             onPress={onSend}
             disabled={!mode || isSending}
             style={({ pressed }) => ({
-              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.warning,
+              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
               flex: 1.5,
               paddingVertical: 14,
               borderRadius: RADIUS.lg,
@@ -203,7 +211,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
               justifyContent: 'center',
               opacity: pressed || isSending ? 0.95 : 1,
               transform: [{ scale: pressed && !isSending ? 0.98 : 1 }],
-              ...(!mode || isSending ? {} : SHADOWS.warning),
+              ...(!mode || isSending ? {} : SHADOWS.primary),
             })}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>

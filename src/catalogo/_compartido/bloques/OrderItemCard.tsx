@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
-import { COLORS, RADIUS, SPACING } from '../../../compartido/constantes/theme';
+import { RADIUS, SPACING } from '../../../compartido/constantes/theme';
+import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
 
 type OrderItemCardProps = {
   item: any;
@@ -23,9 +24,11 @@ export const OrderItemCard = ({
   onRemove,
   onAction,
   actionLabel,
-  actionColor = COLORS.primary,
+  actionColor,
   actionIcon,
 }: OrderItemCardProps) => {
+  const COLORS = useThemedColors();
+  const resolvedActionColor = actionColor ?? COLORS.primary;
   const qty = Number(item.qty ?? item.cantidad ?? 1);
   const price = Number(item.price ?? item.precio ?? 0);
   // Precio sin decimales si es entero
@@ -49,12 +52,12 @@ export const OrderItemCard = ({
       layout={Layout.springify()}
       style={{
         backgroundColor: COLORS.bg.secondary,
-        borderRadius: RADIUS.lg,
-        paddingVertical: SPACING.md,
+        borderRadius: RADIUS.xl,
+        paddingVertical: SPACING.lg,
         paddingHorizontal: SPACING.lg,
         borderWidth: 1,
         borderColor: COLORS.bg.elevated,
-        borderLeftWidth: 5,
+        borderLeftWidth: 4,
         borderLeftColor: statusConfig.dotColor,
         marginBottom: SPACING.md,
         shadowColor: '#000',
@@ -114,12 +117,12 @@ export const OrderItemCard = ({
                   <View
                     key={i}
                     style={{
-                      backgroundColor: 'rgba(255,255,255,0.03)',
+                        backgroundColor: COLORS.alpha.primary10,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: RADIUS.xs,
                       borderWidth: 1,
-                      borderColor: 'rgba(255,255,255,0.1)',
+                      borderColor: COLORS.bg.elevated,
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 4,
@@ -155,12 +158,14 @@ export const OrderItemCard = ({
         {isPending && (
           <View style={{ flexDirection: 'row', gap: 8, marginLeft: 8 }}>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Aumentar ${name}`}
               onPress={onInc}
               style={({ pressed }) => ({
-                backgroundColor: COLORS.bg.elevated,
-                width: 32,
-                height: 32,
-                borderRadius: RADIUS.md,
+                backgroundColor: COLORS.alpha.primary20,
+                width: 36,
+                height: 36,
+                borderRadius: RADIUS.full,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.7 : 1,
@@ -169,12 +174,14 @@ export const OrderItemCard = ({
               <Ionicons name="add" size={18} color={COLORS.primary} />
             </Pressable>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Quitar ${name}`}
               onPress={onRemove}
               style={({ pressed }) => ({
-                backgroundColor: COLORS.error + '20',
-                width: 32,
-                height: 32,
-                borderRadius: RADIUS.md,
+                backgroundColor: COLORS.alpha.error10,
+                width: 36,
+                height: 36,
+                borderRadius: RADIUS.full,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.7 : 1,
@@ -244,9 +251,11 @@ export const OrderItemCard = ({
           {/* ACTION BUTTON */}
           {onAction && (
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={actionLabel || 'Acción del pedido'}
               onPress={onAction}
               style={({ pressed }) => ({
-                backgroundColor: actionColor,
+                backgroundColor: resolvedActionColor,
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: RADIUS.sm,
@@ -254,7 +263,7 @@ export const OrderItemCard = ({
                 alignItems: 'center',
                 gap: 4,
                 opacity: pressed ? 0.8 : 1,
-                shadowColor: actionColor,
+                shadowColor: resolvedActionColor,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.3,
                 shadowRadius: 4,

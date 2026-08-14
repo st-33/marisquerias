@@ -153,3 +153,7 @@ No quedaron definiciones históricas residuales de `RecipeEditor`, `VariantEdito
 `AdminTablesScreen` pasó a `marisqueria/administracion/mesas`; `ScreenRegistry` conserva la misma clave `admin_tables` y la misma ruta pública. `useMesasManagement` y `usePuenteAccionesFlotantes` permanecieron compartidos por sus consumidores activos. Tipos, suite completa y exportación web fueron correctos.
 
 `MostradorAdminScreen` pasó de `catalogo/marisqueria/pantallas` a `marisqueria/administracion/mostrador`; la clave `admin_mostrador` y sus rutas públicas permanecen iguales. `useVentaCrudoAdmin` y `usePosConfig` se conservaron en el dominio histórico porque tienen dependencias compartidas con el mostrador operativo. Tipos, suite completa y exportación web fueron correctos.
+
+## Misión UX Mesero — revisión visual estática
+
+La exportación web cargó `/_role/mesero` sin error de navegación. En estado sin sesión de tenant se observó el estado inicial de carga y pedido vacío. El botón **AÑADIR** abrió el nuevo selector con jerarquía `NUEVO PEDIDO → Añadir al pedido`, categorías/productos y estado vacío; la revisión no ejecutó RTDB ni permite validar datos reales porque el navegador no tenía la sesión de Puerto Libres.
