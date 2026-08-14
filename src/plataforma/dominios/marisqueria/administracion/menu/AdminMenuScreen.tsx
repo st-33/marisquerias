@@ -23,6 +23,7 @@ import RecipeEditor from './RecipeEditor';
 import VariantEditor from './VariantEditor';
 import { useToast } from '../../../../../compartido/componentes/ui/Toast';
 import { theme } from '../../../../../compartido/theme';
+import { useAppTheme } from '../../../../../compartido/temas';
 import type { Producto } from '../../../../base/_persistencia';
 import { getRtdb } from '../../../../core/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../core/store';
@@ -30,6 +31,12 @@ import type { FabItem } from '../../../../core/types/contratos';
 import { usePuenteAccionesFlotantes } from '../../../alimentos_y_bebidas';
 import { useAdminFeatures } from '../configuracion/useAdminFeatures';
 import { useMenuManagement } from './useMenuManagement';
+import {
+  AdminActionButton,
+  AdminSectionHeading,
+  AdminStatusPill,
+  AdminSurface,
+} from '../ui/AdminPrimitives';
 
 // --- UTILS ---
 async function confirmAction(
@@ -119,6 +126,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const { width } = useWindowDimensions();
+  const { colors } = useAppTheme();
   const IS_MOBILE = width < 768;
 
   const { categorias, loading, actions, getProductosPorCategoria } = useMenuManagement({
@@ -326,17 +334,20 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <Ionicons name="cube-outline" size={28} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>{l.catalogTitle}</Text>
-        </View>
-        <Text style={styles.headerSubtitle}>{l.catalogSubtitle}</Text>
-      </View>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <AdminSurface style={styles.headerSurface}>
+        <AdminSectionHeading
+          eyebrow="Catálogo"
+          title={l.catalogTitle}
+          subtitle={l.catalogSubtitle}
+          icon="restaurant-outline"
+          action={<AdminStatusPill label={`${categorias.length} categorías`} tone="accent" />}
+        />
+      </AdminSurface>
 
       <View style={[styles.mainGrid, IS_MOBILE && styles.mainGridMobile]}>
-        <CategorySidebar
+        <AdminSurface style={styles.sidebarSurface}>
+          <CategorySidebar
           categorias={categorias}
           activeId={activeCat}
           totals={totals}
@@ -350,31 +361,29 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
           }
           onUpdateHerencia={(id, herencia) => actions.actualizarCategoria(id, { herencia })}
           showVentaCrudo={l.showVentaCrudo}
-        />
+        /></AdminSurface>
 
-        <View style={styles.productsSection}>
+        <AdminSurface style={styles.productsSurface}>
           {activeCategoryObj ? (
             <>
-              <View style={styles.categoryHeader}>
-                <View>
-                  <Text style={styles.categoryTitle}>{activeCategoryObj.nombre}</Text>
-                  <Text style={styles.productCount}>
-                    {currentProducts.length}{' '}
-                    {currentProducts.length === 1 ? 'producto' : 'productos'}
-                  </Text>
-                </View>
-                <Pressable
-                  style={styles.btnPrimary}
-                  onPress={() => {
-                    setFormData({ ...createEmptyForm(), categoriaId: activeCategoryObj.id });
-                    setEditingTab('basico');
-                    setShowModal('addProd');
-                  }}
-                >
-                  <Ionicons name="add" size={20} color="white" />
-                  <Text style={styles.btnPrimaryText}>Agregar Producto</Text>
-                </Pressable>
-              </View>
+              <AdminSectionHeading
+                eyebrow="Categoría activa"
+                title={activeCategoryObj.nombre}
+                subtitle={`${currentProducts.length} ${currentProducts.length === 1 ? 'producto' : 'productos'} disponibles`}
+                icon="folder-open-outline"
+                action={
+                  <AdminActionButton
+                    label="Agregar producto"
+                    icon="add"
+                    emphasis
+                    onPress={() => {
+                      setFormData({ ...createEmptyForm(), categoriaId: activeCategoryObj.id });
+                      setEditingTab('basico');
+                      setShowModal('addProd');
+                    }}
+                  />
+                }
+              />
 
               <ScrollView contentContainerStyle={styles.productsGrid}>
                 {currentProducts.length === 0 ? (
@@ -446,7 +455,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
               <Text style={styles.emptyTitle}>Selecciona o crea una categoría</Text>
             </View>
           )}
-        </View>
+        </AdminSurface>
       </View>
 
       {showModal && (
@@ -757,6 +766,24 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
+  },
+  headerSurface: {
+    padding: theme.spacing.lg,
+  },
+  sidebarSurface: {
+    width: 280,
+    minHeight: 260,
+    padding: 0,
+  },
+  productsSurface: {
+    flex: 1,
+    minHeight: 420,
+    padding: theme.spacing.lg,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -794,11 +821,6 @@ const styles = StyleSheet.create({
   },
   productsSection: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   categoryHeader: {
     flexDirection: 'row',
