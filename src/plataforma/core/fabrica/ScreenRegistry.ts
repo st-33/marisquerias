@@ -1,7 +1,7 @@
 import { RolesScreen } from '../../../catalogo/_compartido/pantallas/RolesScreen';
 import { CocinaScreen } from '../../../catalogo/_compartido/pantallas/CocinaScreen';
 import { MeseroScreen } from '../../../catalogo/_compartido/pantallas/MeseroScreen';
-import { AdminDashboardScreen } from '../../../catalogo/_compartido/pantallas/AdminDashboardScreen';
+import { AdminDashboardScreen } from '../../dominios/marisqueria/administracion/dashboard/AdminDashboardScreen';
 import { AdminMenuScreen } from '../../dominios/marisqueria/administracion/menu/AdminMenuScreen';
 import { AdminTablesScreen } from '../../../catalogo/_compartido/pantallas/AdminTablesScreen';
 import { AdminInventoryScreen } from '../../dominios/marisqueria/administracion/inventario/AdminInventoryScreen';

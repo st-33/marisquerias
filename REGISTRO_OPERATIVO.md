@@ -145,3 +145,7 @@ Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBan
 ## Revisión focalizada de compartidos
 
 No quedaron definiciones históricas residuales de `RecipeEditor`, `VariantEditor`, `PanelInventario`, `AdminInventoryScreen`, `useInventarioAvanzado` ni `useDevicesManagement`; cada una conserva una única implementación en Administración. `RepositorioInventario` se mantiene compartido porque lo usa `useMenuManagement`. `usePuenteAccionesFlotantes` también se conserva compartido: tiene consumidores activos en menú, inventario, dashboard y mesas. No se eliminó ningún duplicado sin consumidores.
+
+## Misión 4 — limpieza administrativa
+
+`useMenuManagement`, `menuSafety`, `useAdminFeatures`, `useAdminLogic`, `useAdminMetrics` y `metricasVendedores` quedaron en `marisqueria/administracion`; sus pruebas y consumidores fueron reconectados. `AdminDashboardScreen` también pasó a `administracion/dashboard` y `ScreenRegistry` quedó apuntando a la nueva ruta. No se movieron `RepositorioInventario`, `usePuenteAccionesFlotantes` ni infraestructura compartida porque mantienen consumidores activos en varios circuitos.

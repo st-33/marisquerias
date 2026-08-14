@@ -7,22 +7,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { SalesDistributionPieChart } from '../../../compartido/componentes/charts/SalesDistributionPieChart';
-import { SalesLineChart } from '../../../compartido/componentes/charts/SalesLineChart';
-import { TopProductsBarChart } from '../../../compartido/componentes/charts/TopProductsBarChart';
-import { AdminLayout } from '../../../compartido/componentes/layouts/AdminLayout';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
-import { useNotifications } from '../../../compartido/hooks/useNotifications';
-import { useStoreNotifications } from '../../../compartido/hooks/useStoreNotifications';
-import { logger } from '../../../compartido/utils/logger';
+import { SalesDistributionPieChart } from '../../../../../compartido/componentes/charts/SalesDistributionPieChart';
+import { SalesLineChart } from '../../../../../compartido/componentes/charts/SalesLineChart';
+import { TopProductsBarChart } from '../../../../../compartido/componentes/charts/TopProductsBarChart';
+import { AdminLayout } from '../../../../../compartido/componentes/layouts/AdminLayout';
+import { getRtdb } from '../../../../core/firebase';
+import { useStore } from '../../../../core/store';
+import { useNotifications } from '../../../../../compartido/hooks/useNotifications';
+import { useStoreNotifications } from '../../../../../compartido/hooks/useStoreNotifications';
+import { logger } from '../../../../../compartido/utils/logger';
 import {
   useAlertasInteligentes,
   usePrediccionStock,
   usePuenteAccionesFlotantes,
-} from '../../../plataforma/dominios/alimentos_y_bebidas';
-import { useAdminLogic } from '../../../plataforma/dominios/marisqueria/administracion/dashboard/useAdminLogic';
-import type { FabItem } from '../../../plataforma/core/types/contratos';
+} from '../../../alimentos_y_bebidas';
+import { useAdminLogic } from './useAdminLogic';
+import type { FabItem } from '../../../../core/types/contratos';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
 
