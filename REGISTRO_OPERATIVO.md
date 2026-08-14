@@ -102,3 +102,27 @@ La entrega nace en `OrderList` y llega a `markAsDelivered` del orquestador de Me
 
 No se movieron `PedidosRepository` ni `MesasRepository`: son infraestructura compartida y alteran contratos persistentes de pedidos, mesas e índices. Tampoco se recorrió el flujo contra RTDB, porque requiere un tenant autorizado; el circuito quedó demostrado por llamadas, tipos y pruebas existentes.
 
+
+## Validación web autorizada
+
+La aplicación se levantó con el comando existente, caché limpia y límite de 4 GB; Metro compiló y el estado de arranque quedó listo. Al abrir `/access` para el tenant autorizado, el navegador conectado no respondió dos veces y devolvió HTTP 504 de la extensión. No se llegó a introducir el código ni se modificaron datos del tenant. La validación visual queda detenida hasta recuperar el navegador o cambiar a un navegador aislado.
+
+
+## Prueba web — Puerto Libres
+
+La exportación estática (`expo export --platform web`) compiló correctamente y permitió evitar el OOM del servidor Metro. Con `PUERTO-24`, `/access` redirige a `/_role/roles`. La configuración remota mostraba `mesero: false` y `cocina: false` bajo `caracteristicas/roles`; se restauraron de manera transaccional a `true`, preservando Admin y el resto de características. El selector volvió a mostrar **Mesero**, **Cocina** y **Admin**.
+
+El rol Mesero abre `/_role/mesero`. La interfaz muestra una mesa ocupada, seis libres, la opción Para Llevar, total en cero y el control Añadir. En navegador web, el selector de roles expone sus tarjetas como `Pressable` con `tabindex=0`; la activación por teclado funcionó, mientras que el clic automatizado sobre el texto no reprodujo el evento de presión.
+
+La prueba de la mesa 2 confirmó que seleccionar una mesa libre llama a `selectTable`, la deja `ocupada` y abre el selector de productos. Se añadió un solo **Tequila** sin variantes; el borrador se escribió en `mesas_pendientes/2/items` con cantidad 1, el total pasó a $60 y apareció el botón **Enviar**. No se creó pedido ni índice por mesa. Tras capturar la evidencia, se eliminaron exclusivamente ese borrador y el estado de ocupación de la mesa 2; quedó nuevamente libre y sin datos pendientes.
+
+## Circuito real autorizado — Puerto Libres
+
+Se usó únicamente `PUERTO-24` para `marisquerias/marisqueria-puerto-libres`. La configuración remota de `caracteristicas/roles` tenía `mesero: false` y `cocina: false`; ambos valores se restauraron transaccionalmente a `true`, manteniendo intactos Admin y las demás características. El selector web confirmó los tres roles visibles.
+
+El circuito se validó en web con pedidos de prueba de **Consome c/marisco**. En la mesa 2 se recorrió Mesero → pedido enviado → Cocina (`nuevo` → `en_preparacion` → `listo`) → entrega → cuenta impresa → pagado → mesa liberada. La mesa 3 se usó para validar el arreglo de la comanda y también se cerró hasta pago; ambas mesas quedaron libres, sin índice de pedido activo.
+
+Durante el primer envío se detectó un fallo real: `PedidosRepository` construía el payload de comanda con `variantes: undefined` para productos sin variantes. Firebase RTDB rechaza ese valor, por lo que el pedido llegaba a Cocina pero la cola de impresión fallaba. Se modificó el payload para **omitir** la propiedad cuando no hay variantes. La orden de mesa 3 produjo después una comanda persistida en `spool/jobs` con estado `pendiente_impresion` y sin el campo inválido. La cuenta de ambos pedidos se encoló correctamente y el cierre liberó las mesas.
+
+Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBand` correcto con **104/104** pruebas en **16/16** suites; reglas del archivo modificado correctas salvo una diferencia de formato preexistente en la línea 60 de `pedidos.repo.ts`.
+

@@ -429,11 +429,16 @@ export class PedidosRepository {
 
         // 🖨️ ENCOLAR COMANDA AL HUB (Canal: standard para restaurante)
         // El Hub Central escuchará esta cola y procesará la impresión
-        const comandaItems = kitchenItems.map(({ item }) => ({
-          nombre: item.nombre,
-          cantidad: item.cantidad,
-          variantes: item.variantes ? Object.values(item.variantes).flat().join(', ') : undefined,
-        }));
+        const comandaItems = kitchenItems.map(({ item }) => {
+          // RTDB rechaza propiedades con valor undefined; sin variantes, se omite el campo.
+          const variantes = item.variantes ? Object.values(item.variantes).flat().join(', ') : null;
+
+          return {
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            ...(variantes ? { variantes } : {}),
+          };
+        });
 
         const spooler = new RtdbSpooler(this.db, this.tenantPath);
         const jobId = `job_comanda_v1_${pedidoId}_${now}`;
