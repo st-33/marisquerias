@@ -20,6 +20,7 @@ export type SpoolStatus =
 const ORDER_ACTIVE: OrderStatus[] = ['enviado_cocina', 'en_preparacion', 'listo_para_entregar'];
 
 const ORDER_LEGACY_MAP: Record<string, OrderStatus> = {
+  abierto: 'enviado_cocina',
   enviada_cocina: 'enviado_cocina',
   preparando: 'en_preparacion',
   lista: 'listo_para_entregar',
