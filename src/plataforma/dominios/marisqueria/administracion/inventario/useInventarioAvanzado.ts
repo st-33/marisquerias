@@ -10,8 +10,11 @@ import {
   useInventoryCatalog,
   useInventorySections,
   useInventoryV2Store,
-} from '../../../core/store';
-import type { AreaInventario, InsumoInventario } from '../infraestructura/repositorios';
+} from '../../../../core/store';
+import type {
+  AreaInventario,
+  InsumoInventario,
+} from '../../../alimentos_y_bebidas/infraestructura/repositorios';
 
 type UseInventarioAvanzadoProps = {
   db: Database;

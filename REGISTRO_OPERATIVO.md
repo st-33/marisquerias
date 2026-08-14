@@ -133,3 +133,7 @@ Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBan
 - **Motivo:** sus únicos consumidores reales eran `AdminMenuScreen` y el barril de Marisquerías; `CollapsibleSection` y `VariantChip` eran privados de `VariantEditor`.
 - **Reconexión:** `AdminMenuScreen` ahora los importa localmente y el barril `catalogo/marisqueria` conserva sus reexports hacia la nueva ubicación.
 - **Validación:** `npm run check-types` y `menuSafety.test.ts` correctos después del traslado.
+
+## Tramo Administración — inventario
+
+`AdminInventoryScreen`, `PanelInventario` y `useInventarioAvanzado` salieron de las rutas históricas y ahora viven en `plataforma/dominios/marisqueria/administracion/inventario`. El registro de pantallas y el barril de Marisquerías quedaron reconectados. `RepositorioInventario` se conservó en `alimentos_y_bebidas/infraestructura` porque `useMenuManagement` lo consume activamente; por tanto, es infraestructura compartida y no se fusionó ni movió. Tipos, suite completa y exportación web fueron correctos.

@@ -15,13 +15,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { theme } from '@compartido/theme';
-import {
-  useInventarioAvanzado,
-  usePuenteAccionesFlotantes,
-  type AreaInventario,
-  type IdSeccionInventario,
-  type InsumoInventario,
-} from '../../../../../plataforma/dominios/alimentos_y_bebidas';
+import { usePuenteAccionesFlotantes } from '../../../alimentos_y_bebidas';
+import { useInventarioAvanzado } from './useInventarioAvanzado';
+import type {
+  AreaInventario,
+  IdSeccionInventario,
+  InsumoInventario,
+} from '../../../alimentos_y_bebidas/infraestructura/repositorios';
 
 type PanelInventarioProps = {
   db: Database;

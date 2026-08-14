@@ -33,5 +33,4 @@ export * from './utils';
 export { usePrediccionStock } from './analitica/usePrediccionStock';
 export type { PrediccionPlatillo } from './analitica/usePrediccionStock';
 export { usePuenteAccionesFlotantes } from './operacion/usePuenteAccionesFlotantes';
-export { useInventarioAvanzado } from './operacion/useInventarioAvanzado';
 export * from './infraestructura/repositorios';

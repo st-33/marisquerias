@@ -9,7 +9,7 @@ export * from '../_compartido/bloques/MostradorPro';
 export * from '../_compartido/bloques/OrbButton';
 export * from '../_compartido/bloques/OrderItemCard';
 export * from '../_compartido/bloques/OrderList';
-export { PanelInventario } from '../_compartido/bloques/pantallas/PanelInventario';
+export { PanelInventario } from '../../plataforma/dominios/marisqueria/administracion/inventario/PanelInventario';
 export * from '../_compartido/bloques/ProductPickerOverlay';
 export { PuestoMando } from '../_compartido/bloques/PuestoMando';
 export type {

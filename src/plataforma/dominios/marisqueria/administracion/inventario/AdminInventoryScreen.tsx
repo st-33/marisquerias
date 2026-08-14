@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AdminLayout } from '../../../compartido/componentes/layouts/AdminLayout';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
-import { PanelInventario } from '../bloques/pantallas/PanelInventario';
+import { AdminLayout } from '../../../../../compartido/componentes/layouts/AdminLayout';
+import { getRtdb } from '../../../../core/firebase';
+import { useStore } from '../../../../core/store';
+import { PanelInventario } from './PanelInventario';
 
 export function AdminInventoryScreen() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
