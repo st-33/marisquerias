@@ -15,6 +15,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { theme } from '@compartido/theme';
+import { useAppTheme } from '../../../../../compartido/temas';
+import { AdminSectionHeading, AdminStatusPill, AdminSurface } from '../ui/AdminPrimitives';
 import { usePuenteAccionesFlotantes } from '../../../alimentos_y_bebidas';
 import { useInventarioAvanzado } from './useInventarioAvanzado';
 import type {
@@ -33,6 +35,7 @@ type ViewMode = 'areas' | 'containers' | 'items_section' | 'items_area' | 'items
 
 export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: PanelInventarioProps) {
   const { width } = useWindowDimensions();
+  const { colors } = useAppTheme();
   const isLarge = width > 800;
 
   type InsumoConId = InsumoInventario & { id: string; sectionId?: IdSeccionInventario };
@@ -246,9 +249,9 @@ export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: Panel
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* HEADER TABS (SECCIÓN SELECTOR) */}
-      <View style={styles.tabHeader}>
+      <AdminSurface style={styles.tabHeader} accent={colors.primary}>
         {(
           [
             {
@@ -280,25 +283,28 @@ export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: Panel
             </Text>
           </Pressable>
         ))}
-      </View>
+      </AdminSurface>
 
       <View style={[styles.contentRow, !isLarge && styles.column]}>
         {viewMode === 'areas' && (
           <View style={styles.rightCol}>
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.title}>Inventario</Text>
-                <Text style={styles.subtitle}>Selecciona una sección y luego un área</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Pressable style={styles.addBtn} onPress={() => setViewMode('items_section')}>
-                  <Ionicons name="list" size={18} color="white" />
-                </Pressable>
-                <Pressable style={styles.addBtn} onPress={() => setShowAreaModal(true)}>
-                  <Ionicons name="add" size={20} color="white" />
-                </Pressable>
-              </View>
-            </View>
+            <AdminSectionHeading
+              eyebrow="Operación"
+              title="Inventario"
+              subtitle="Selecciona una sección y luego un área"
+              icon="cube-outline"
+              action={
+                <View style={styles.headerActions}>
+                  <AdminStatusPill label={`${itemsBajoStock} bajo stock`} tone={itemsBajoStock > 0 ? 'danger' : 'success'} />
+                  <Pressable style={styles.addBtn} onPress={() => setViewMode('items_section')}>
+                    <Ionicons name="list" size={18} color="white" />
+                  </Pressable>
+                  <Pressable style={styles.addBtn} onPress={() => setShowAreaModal(true)}>
+                    <Ionicons name="add" size={20} color="white" />
+                  </Pressable>
+                </View>
+              }
+            />
 
             <ScrollView
               horizontal
@@ -803,9 +809,8 @@ const styles = StyleSheet.create({
   // --- TABS ---
   tabHeader: {
     flexDirection: 'row',
-    backgroundColor: '#1e293b',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    padding: 4,
+    borderRadius: 18,
   },
   tabBtn: {
     flex: 1,
@@ -847,6 +852,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
   },
   title: {
     color: 'white',
