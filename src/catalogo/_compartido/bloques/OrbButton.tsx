@@ -90,7 +90,7 @@ export function OrbButton({
     ]).start();
   };
 
-  // [11Ene8:47.pm] handlePressOut: animación al SOLTAR el botón + dispara onPress
+  // [11Ene8:47.pm] handlePressOut: animación al SOLTAR el botón
   const handlePressOut = () => {
     if (isAnimatingRef.current) return;
     isAnimatingRef.current = true;
@@ -121,14 +121,21 @@ export function OrbButton({
       }),
     ]).start();
 
-    // [11Ene8:47.pm] setTimeout 30ms: pequeño delay antes de ejecutar onPress (UX feedback)
+    // [11Ene8:47.pm] setTimeout 30ms: completar el feedback sin bloquear la navegación
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    timerRef.current = setTimeout(() => {
-      resetInstant();
-      onPress();
-    }, 30);
+    timerRef.current = setTimeout(resetInstant, 30);
+  };
+
+  // React Native Web dispara la interacción navegable mediante onPress/onClick.
+  // Mantener la navegación fuera de onPressOut evita que el web renderer la omita.
+  const handlePress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    resetInstant();
+    onPress();
   };
 
   // [11Ene8:47.pm] TAMAÑOS BASE: principal=180px, secundario=170px, normal=160px (escalados)
@@ -206,7 +213,7 @@ export function OrbButton({
       />
 
       {/* [11Ene8:47.pm] PRESSABLE: zona táctil del botón */}
-      <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Pressable onPress={handlePress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
         <Animated.View style={[dynamicStyles.orb, { transform: [{ scale: scaleAnim }] }]}>
           {/* [11Ene8:47.pm] ICONO: usa Ionicons, tamaño=iconSize, color=primario del tema */}
           <Ionicons
