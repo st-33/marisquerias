@@ -88,3 +88,10 @@ Para recorrer de forma real el flujo Mesero → Cocina → entrega → pago hace
 - **No movido:** `SincronizadorCocina` continúa en la ruta histórica porque lo consumen Cocina y el repositorio persistente de pedidos; moverlo ampliaría este tramo.
 - **Validación:** tipos correctos; 16 suites y 104 pruebas correctas; web carga `/access` sin código de tenant. El primer servidor web agotó memoria con el límite por defecto y se reinició correctamente con un límite de 8 GB.
 
+
+## Tramo Pedido → Cocina
+
+La lógica y el audio de Cocina se movieron a `plataforma/dominios/marisqueria/cocina`. `CocinaScreen` recibe el pedido desde el store, muestra comandas mediante `TarjetaComanda` y llama a `startItem`, `finishItem` o `finishOrder`; esas acciones actualizan los items y el estatus persistido del pedido. Las utilidades y pruebas que usan sus tipos se reconectaron. El `SincronizadorCocina` no se movió: lo consumen Cocina, Mesero y el repositorio de pedidos, por lo que no es exclusivo de este tramo.
+
+Tipos, estilo local y las 16 suites con 104 pruebas pasaron. La validación web nueva quedó bloqueada por un agotamiento de memoria de Metro: la primera ejecución agotó el límite por defecto y el único reintento con 8 GB también agotó su heap. No se reintentará automáticamente; los cambios quedan validados estáticamente y con pruebas.
+
