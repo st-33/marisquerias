@@ -1,0 +1,5009 @@
+{
+  "access_codes": {
+    "ACC-ALIM-MARISCOS": "marisquerias/__plantilla_base",
+    "ARRECIFE-24": "marisquerias/el-arrecife",
+    "PERLA-24": "marisquerias/marisqueria-la-perla-del-pueblo",
+    "PUERTO-24": "marisquerias/marisqueria-puerto-libres"
+  },
+
+  "marisquerias": {
+    "__plantilla_base": {
+      "config": {
+        "nombre_comercial": "Plantilla Marisquería",
+        "flags": { "mesas": true, "cocina": true, "delivery": true }
+      },
+      "dispositivos_autorizados": { "placeholder_uid": true },
+      "menu": { "categorias_menu": {}, "productos": {} },
+      "inventory_v2": {},
+      "pedidos": {},
+      "ventas": {},
+      "caracteristicas": { "roles": { "admin": true, "mesero": true, "cocina": true } }
+    },
+
+    "el-arrecife": {
+      "__bootstrapDone": true,
+      "ajustes": {
+        "dispositivos": {
+          "impresion": {
+            "politicas": {
+              "maxReprintsByRole": {
+                "admin": 999,
+                "mesera": 1
+              },
+              "permitirAdminImprimirCuenta": true,
+              "permitirCocinaImprimirCuenta": true,
+              "permitirMeseraImprimirCuenta": true,
+              "retries": {
+                "write": 3
+              },
+              "timeouts": {
+                "bleConnectMs": 4000,
+                "jobMsBle": 10000,
+                "jobMsLan": 5000,
+                "lanConnectMs": 2000,
+                "writeMs": 2000
+              }
+            }
+          }
+        },
+        "reparto": {
+          "costos": {
+            "base": 22,
+            "minimo": 20,
+            "porKm": 5
+          },
+          "horarios": {
+            "habilitado": true,
+            "ventanas": [
+              {
+                "fin": "18:00",
+                "inicio": "09:00"
+              }
+            ]
+          },
+          "umbrales": {
+            "maxPedidosActivos": 10,
+            "stockBajo": 13,
+            "tiempoMaxEntregaMin": 45
+          }
+        }
+      },
+      "caracteristicas": {
+        "delivery": false,
+        "fastbutton_venta_crudo": true,
+        "inventory_auto_discount": false,
+        "menu_editor_venta_crudo": true,
+        "module_venta_crudo": true,
+        "roles": {
+          "admin": {
+            "dashboard": true,
+            "dispositivos": true,
+            "inventario": true,
+            "menu": true,
+            "mesas": true,
+            "repart": false
+          },
+          "cocina": true,
+          "mesero": true,
+          "mostrador": {
+            "habilitado": true
+          }
+        }
+      },
+      "config": {
+        "hub": {
+          "destination": "restaurante",
+          "deviceId": "hub_mkjbjsn4_33j3wmlwkde",
+          "enabled": true,
+          "heartbeat": 1782531803060,
+          "updatedAt": 1768716163293
+        },
+        "pos": {
+          "allowNegativeStock": false,
+          "quickCashButtons": true,
+          "requirePasskeyForVoid": true,
+          "showImagesInPos": true
+        }
+      },
+      "dispositivos_autorizados": {
+        "0b8502302d12e404": {
+          "brand": "motorola",
+          "fechaRegistro": 1767696859344,
+          "isEmulator": false,
+          "model": "moto g04",
+          "systemName": "Android",
+          "systemVersion": "14",
+          "ultimoAcceso": 1774589495826
+        },
+        "56b7e6ee8cffe508": {
+          "brand": "Acer",
+          "fechaRegistro": 1774500719371,
+          "isEmulator": false,
+          "model": "AC50",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1774500719371
+        },
+        "804c378c24b0c04e": {
+          "brand": "Lenovo",
+          "fechaRegistro": 1782525782717,
+          "isEmulator": false,
+          "model": "TB310FU",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782525782717
+        },
+        "d0a2790ca6a51f0d": {
+          "brand": "ONN",
+          "fechaRegistro": 1768716147669,
+          "isEmulator": false,
+          "model": "MID8016",
+          "systemName": "Android",
+          "systemVersion": "11",
+          "ultimoAcceso": 1769752437607
+        },
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1768599825705,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1777690288059
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1769130443743,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1769153072533
+        }
+      },
+      "impresion": {
+        "canales": {
+          "-OjcOCs7QwGOxKxBqS2z": {
+            "actualizadoEn": 1769130483284,
+            "creadoEn": 1769130483284,
+            "creadoPor": "admin",
+            "descripcion": "Canal mesero",
+            "estado": "activo",
+            "nombre": "mesero",
+            "reglas": {
+              "reimpresionesPermitidas": true,
+              "tiempoValidez": 3600
+            }
+          }
+        },
+        "destinos": {
+          "destino_1769130514456": {
+            "conexion": {
+              "identificador": "pending_1769130514456",
+              "tipo": "bluetooth"
+            },
+            "configuracion": {
+              "abrirCajon": false,
+              "anchoPapel": 80,
+              "caracteresPorLinea": 48,
+              "cortarAutomatico": true
+            },
+            "estado": "desconectado",
+            "nombre": "parrilla de mesas",
+            "tipo": "termica",
+            "ultimaConexionExitosa": 1769130514456
+          },
+          "destino_1769130571515": {
+            "conexion": {
+              "identificador": "pending_1769130571515",
+              "tipo": "bluetooth"
+            },
+            "configuracion": {
+              "abrirCajon": false,
+              "anchoPapel": 80,
+              "caracteresPorLinea": 48,
+              "cortarAutomatico": true
+            },
+            "estado": "desconectado",
+            "nombre": "parrilla de mesas",
+            "tipo": "termica",
+            "ultimaConexionExitosa": 1769130571515
+          },
+          "destino_1769130629545": {
+            "conexion": {
+              "identificador": "pending_1769130629545",
+              "tipo": "bluetooth"
+            },
+            "configuracion": {
+              "abrirCajon": false,
+              "anchoPapel": 80,
+              "caracteresPorLinea": 48,
+              "cortarAutomatico": true
+            },
+            "estado": "desconectado",
+            "nombre": "m",
+            "tipo": "termica",
+            "ultimaConexionExitosa": 1769130629545
+          }
+        },
+        "hubs": {
+          "device_1769122437622": {
+            "dispositivo": {
+              "modelo": "Dispositivo Desconocido",
+              "tipo": "windows",
+              "versionApp": "1.0.0",
+              "versionSistema": "Desconocida"
+            },
+            "estado": "activo",
+            "metricas": {
+              "latenciaPromedio": 0,
+              "trabajosProcesados": 0
+            },
+            "nombreAsignado": "Servidor Principal",
+            "nombreDispositivo": "Dispositivo Desconocido",
+            "ultimaComprobacion": 1769122437624
+          },
+          "device_1769126175578": {
+            "dispositivo": {
+              "modelo": "Dispositivo Desconocido",
+              "tipo": "windows",
+              "versionApp": "1.0.0",
+              "versionSistema": "Desconocida"
+            },
+            "estado": "inactivo",
+            "metricas": {
+              "latenciaPromedio": 0,
+              "trabajosProcesados": 0
+            },
+            "nombreAsignado": "Caja Principal",
+            "nombreDispositivo": "Dispositivo Desconocido",
+            "ultimaComprobacion": 1769126196316
+          },
+          "device_1769126350528": {
+            "dispositivo": {
+              "modelo": "Dispositivo Desconocido",
+              "tipo": "windows",
+              "versionApp": "1.0.0",
+              "versionSistema": "Desconocida"
+            },
+            "estado": "inactivo",
+            "metricas": {
+              "latenciaPromedio": 0,
+              "trabajosProcesados": 0
+            },
+            "nombreAsignado": "Caja Principal",
+            "nombreDispositivo": "Dispositivo Desconocido",
+            "ultimaComprobacion": 1769126354770
+          },
+          "device_1769130530939": {
+            "dispositivo": {
+              "modelo": "Dispositivo Desconocido",
+              "tipo": "windows",
+              "versionApp": "1.0.0",
+              "versionSistema": "Desconocida"
+            },
+            "estado": "activo",
+            "metricas": {
+              "latenciaPromedio": 0,
+              "trabajosProcesados": 0
+            },
+            "nombreAsignado": "Hub Principal",
+            "nombreDispositivo": "Dispositivo Desconocido",
+            "ultimaComprobacion": 1769130530946
+          },
+          "device_1769130653694": {
+            "dispositivo": {
+              "modelo": "Dispositivo Desconocido",
+              "tipo": "windows",
+              "versionApp": "1.0.0",
+              "versionSistema": "Desconocida"
+            },
+            "estado": "activo",
+            "metricas": {
+              "latenciaPromedio": 0,
+              "trabajosProcesados": 0
+            },
+            "nombreAsignado": "Hub Principal",
+            "nombreDispositivo": "Dispositivo Desconocido",
+            "ultimaComprobacion": 1769130653700
+          },
+          "hub_mjig87p4_5hq22xodsar": {
+            "estado": "activo",
+            "ultimaComprobacion": 1769160444391
+          }
+        },
+        "rutas": {
+          "-OjcOOXfUwcdC-sqk5AJ": {
+            "activa": true,
+            "canalId": "-OjcOCs7QwGOxKxBqS2z",
+            "destinoId": "destino_1769130514456",
+            "hubId": "device_1769130530939",
+            "prioridad": "normal"
+          },
+          "-OjcOrVXGNpLnI896qJV": {
+            "activa": true,
+            "canalId": "-OjcOCs7QwGOxKxBqS2z",
+            "destinoId": "destino_1769130571515",
+            "hubId": "device_1769130653694",
+            "prioridad": "normal"
+          }
+        }
+      },
+      "inventario": {
+        "items": {
+          "-Oj7l63JeSvvM243h9b6": {
+            "area": "arCocina",
+            "cantidad": 100,
+            "nombre": "Tortilla Maíz",
+            "umbralBajo": 50,
+            "unidad": "pza",
+            "updatedAt": 1768599708339
+          }
+        }
+      },
+      "inventory_v2": {
+        "areas": {
+          "-OhTeRSRfzJT8Quc69eT": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "metadata": {
+              "isDefault": true
+            },
+            "nombre": "Almacen",
+            "sectionId": "otros",
+            "tipo": "almacen",
+            "updatedAt": 1767249438470
+          },
+          "-OhbY1tkl4XDxbKZhncs": {
+            "hubId": "venta_crudo",
+            "icon": "📦",
+            "metadata": {
+              "isDefault": true
+            },
+            "nombre": "Tara",
+            "sectionId": "otros",
+            "tipo": "almacen",
+            "updatedAt": 1767249438470
+          },
+          "-OhwaE_T8ibN13DdJbc4": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "REFRI",
+            "parentId": "-OhTeRSRfzJT8Quc69eT",
+            "sectionId": "otros",
+            "tipo": "refri",
+            "updatedAt": 1767321958808
+          },
+          "-OhwaRj9fhJLEpp0iaBF": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "RESTAURANTE",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767322012676
+          },
+          "-OhwaTtOxG_ZIVNRluSa": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "COCINA",
+            "parentId": "-OhwaRj9fhJLEpp0iaBF",
+            "sectionId": "alimentos",
+            "tipo": "refri",
+            "updatedAt": 1767322021523
+          },
+          "-Ow3dvirYSjxZxjtDJ05": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Refrigerador ",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1782489528366
+          }
+        },
+        "catalog": {
+          "-OhTlngVrnVVEUvZkKP9": {
+            "minStock": 30,
+            "nombre": "platos",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767249438470
+          }
+        },
+        "missing_area_assignments": {
+          "-OhTlngVrnVVEUvZkKP9": {
+            "actor": "system",
+            "count": 1,
+            "fallbackAreaId": "__auto_section__",
+            "hubId": "restaurante",
+            "itemId": "-OhTlngVrnVVEUvZkKP9",
+            "lastTs": 1767249438470,
+            "nombre": "platos",
+            "reason": "auto_assign_section"
+          }
+        }
+      },
+      "menu": {
+        "categorias": {
+          "-OhSV8b8Yg59A8coTbiO": {
+            "activa": true,
+            "enviarACocina": false,
+            "herencia": {
+              "digital": false,
+              "mesero": false,
+              "ventaCrudo": true
+            },
+            "nombre": "Crudo",
+            "productos": {
+              "-OhSVDTmsQaQSh1DKq-M": {
+                "activo": true,
+                "categoriaId": "-OhSV8b8Yg59A8coTbiO",
+                "enviarACocina": true,
+                "nombre": "Camaron",
+                "precio": 100,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "camaron",
+                "unidad": "kg",
+                "usarConfigPersonalizada": false,
+                "visible": {
+                  "digital": false,
+                  "mesero": false,
+                  "ventaCrudo": true
+                }
+              }
+            },
+            "saltarPreparando": false,
+            "slug": "crudo"
+          },
+          "-OhXTtZNEvUFwg5rUYbF": {
+            "activa": true,
+            "enviarACocina": true,
+            "herencia": {
+              "digital": true,
+              "mesero": true
+            },
+            "nombre": "Platillos",
+            "productos": {
+              "-OhXaa9FjwaaCAKvbhlh": {
+                "activo": true,
+                "categoriaId": "-OhXTtZNEvUFwg5rUYbF",
+                "enviarACocina": false,
+                "nombre": "Caldo de 🐓",
+                "precio": 100,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "caldo-de",
+                "unidad": "pza",
+                "usarConfigPersonalizada": true,
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              }
+            },
+            "saltarPreparando": false,
+            "slug": "platillos"
+          }
+        },
+        "productos": {
+          "-OhSVDTmsQaQSh1DKq-M": {
+            "activo": true,
+            "categoriaId": "-OhSV8b8Yg59A8coTbiO",
+            "enviarACocina": true,
+            "nombre": "Camaron",
+            "precio": 100,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "camaron",
+            "unidad": "kg",
+            "usarConfigPersonalizada": false,
+            "visible": {
+              "digital": false,
+              "mesero": false,
+              "ventaCrudo": true
+            }
+          },
+          "-OhXaa9FjwaaCAKvbhlh": {
+            "activo": true,
+            "categoriaId": "-OhXTtZNEvUFwg5rUYbF",
+            "enviarACocina": false,
+            "nombre": "Caldo de 🐓",
+            "precio": 100,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "caldo-de",
+            "unidad": "pza",
+            "usarConfigPersonalizada": true,
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          }
+        },
+        "productos_index": {
+          "-OhSVDTmsQaQSh1DKq-M": {
+            "catId": "-OhSV8b8Yg59A8coTbiO",
+            "hasReceta": true,
+            "nombre": "Camaron",
+            "precio": 100,
+            "slug": "camaron"
+          },
+          "-OhXaa9FjwaaCAKvbhlh": {
+            "catId": "-OhXTtZNEvUFwg5rUYbF",
+            "hasReceta": true,
+            "nombre": "Caldo de 🐓",
+            "precio": 100,
+            "slug": "caldo-de"
+          }
+        }
+      },
+      "mesas": [
+        null,
+        {
+          "estado": "libre",
+          "updatedAt": 1782526771905
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782526761661
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782526759662
+        }
+      ],
+      "pedidos": {
+        "PED-20260118-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1768775914126,
+          "createdAtISO": "2026-01-18T22:38:34.126Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1768775917222,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1768775914376,
+              "agregadoAtISO": "2026-01-18T22:38:34.376Z",
+              "cantidad": 1,
+              "draftId": "i9534",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1768775914708,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1768775918439,
+          "pagadoAtISO": "2026-01-18T22:38:38.439Z",
+          "tipo": "mesa",
+          "updatedAt": 1768775918439,
+          "updatedAtISO": "2026-01-18T22:38:38.439Z"
+        },
+        "PED-20260118-002": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1768775974989,
+          "createdAtISO": "2026-01-18T22:39:34.989Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1768775978670,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1768775975235,
+              "agregadoAtISO": "2026-01-18T22:39:35.235Z",
+              "cantidad": 1,
+              "draftId": "i2215",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1768775975813,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            },
+            "IT-002": {
+              "agregadoAt": 1768775975483,
+              "agregadoAtISO": "2026-01-18T22:39:35.483Z",
+              "cantidad": 1,
+              "draftId": "i2217",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1768775975813,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1768775979438,
+          "pagadoAtISO": "2026-01-18T22:39:39.438Z",
+          "tipo": "mesa",
+          "updatedAt": 1768775979438,
+          "updatedAtISO": "2026-01-18T22:39:39.438Z"
+        },
+        "PED-20260120-001": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1768905483681,
+          "createdAtISO": "2026-01-20T10:38:03.681Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1768905488913,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1768905483990,
+              "agregadoAtISO": "2026-01-20T10:38:03.990Z",
+              "cantidad": 1,
+              "draftId": "i5368",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1768905484624,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            },
+            "IT-002": {
+              "agregadoAt": 1768905484261,
+              "agregadoAtISO": "2026-01-20T10:38:04.261Z",
+              "cantidad": 1,
+              "draftId": "i5370",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1768905484624,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1768905490469,
+          "pagadoAtISO": "2026-01-20T10:38:10.469Z",
+          "tipo": "mesa",
+          "updatedAt": 1768905490469,
+          "updatedAtISO": "2026-01-20T10:38:10.469Z"
+        },
+        "PED-20260129-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1769752512335,
+          "createdAtISO": "2026-01-30T05:55:12.335Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782489547328,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1769752512655,
+              "agregadoAtISO": "2026-01-30T05:55:12.655Z",
+              "cantidad": 1,
+              "draftId": "i5051",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1769752513070,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1782489548818,
+          "pagadoAtISO": "2026-06-26T15:59:08.818Z",
+          "tipo": "mesa",
+          "updatedAt": 1782489548818,
+          "updatedAtISO": "2026-06-26T15:59:08.818Z"
+        },
+        "PED-20260129-002": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1769752574184,
+          "createdAtISO": "2026-01-30T05:56:14.184Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1769752581637,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1769752574508,
+              "agregadoAtISO": "2026-01-30T05:56:14.508Z",
+              "cantidad": 1,
+              "draftId": "i2134",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1769752574921,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1769752583105,
+          "pagadoAtISO": "2026-01-30T05:56:23.105Z",
+          "tipo": "mesa",
+          "updatedAt": 1769752583105,
+          "updatedAtISO": "2026-01-30T05:56:23.105Z"
+        },
+        "PED-20260626-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782489558288,
+          "createdAtISO": "2026-06-26T15:59:18.288Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782489562253,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782489558547,
+              "agregadoAtISO": "2026-06-26T15:59:18.547Z",
+              "cantidad": 1,
+              "draftId": "i2089",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782489558827,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1782489562863,
+          "pagadoAtISO": "2026-06-26T15:59:22.863Z",
+          "tipo": "mesa",
+          "updatedAt": 1782489562863,
+          "updatedAtISO": "2026-06-26T15:59:22.863Z"
+        },
+        "PED-20260626-002": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1782525020003,
+          "createdAtISO": "2026-06-27T01:50:20.003Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525058124,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782525020292,
+              "agregadoAtISO": "2026-06-27T01:50:20.292Z",
+              "cantidad": 1,
+              "draftId": "i1020",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782525020558,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            },
+            "IT-002": {
+              "agregadoAt": 1782525036579,
+              "agregadoAtISO": "2026-06-27T01:50:36.579Z",
+              "cantidad": 1,
+              "draftId": "i1022",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782525036728,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1782525225182,
+          "pagadoAtISO": "2026-06-27T01:53:45.182Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525225182,
+          "updatedAtISO": "2026-06-27T01:53:45.182Z"
+        },
+        "PED-20260626-003": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782526744284,
+          "createdAtISO": "2026-06-27T02:19:04.284Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782526748307,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782526744519,
+              "agregadoAtISO": "2026-06-27T02:19:04.519Z",
+              "cantidad": 1,
+              "draftId": "i1036",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782526744817,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1782526761475,
+          "pagadoAtISO": "2026-06-27T02:19:21.475Z",
+          "tipo": "mesa",
+          "updatedAt": 1782526761475,
+          "updatedAtISO": "2026-06-27T02:19:21.475Z"
+        },
+        "PED-20260626-004": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782526753632,
+          "createdAtISO": "2026-06-27T02:19:13.632Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782526756251,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782526753857,
+              "agregadoAtISO": "2026-06-27T02:19:13.857Z",
+              "cantidad": 1,
+              "draftId": "i1038",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782526754143,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1782526759485,
+          "pagadoAtISO": "2026-06-27T02:19:19.485Z",
+          "tipo": "mesa",
+          "updatedAt": 1782526759485,
+          "updatedAtISO": "2026-06-27T02:19:19.485Z"
+        },
+        "PED-20260626-005": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782526767643,
+          "createdAtISO": "2026-06-27T02:19:27.643Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782526770660,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782526767887,
+              "agregadoAtISO": "2026-06-27T02:19:27.887Z",
+              "cantidad": 1,
+              "draftId": "i1040",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782526768187,
+              "nombre": "Caldo de 🐓",
+              "precio": 100,
+              "productCode": "caldo-de",
+              "productId": "-OhXaa9FjwaaCAKvbhlh"
+            }
+          },
+          "mesaId": "1",
+          "pagadoAt": 1782526771728,
+          "pagadoAtISO": "2026-06-27T02:19:31.728Z",
+          "tipo": "mesa",
+          "updatedAt": 1782526771728,
+          "updatedAtISO": "2026-06-27T02:19:31.728Z"
+        }
+      },
+      "secuencias": {
+        "pedidos": {
+          "20260118": 2,
+          "20260120": 1,
+          "20260129": 2,
+          "20260626": 5
+        }
+      },
+      "spool": {
+        "hub": {
+          "venta_crudo": {
+            "queue": {
+              "vc_1768905528768": true,
+              "vc_1769752598607": true,
+              "vc_1782525847002": true,
+              "vc_1782525923008": true,
+              "vc_1782525965912": true
+            }
+          }
+        },
+        "jobs": {
+          "job_cuenta_v1_PED-20260129-001": {
+            "_lockedBy": "hub_mqv4390k_nexqrzaxj6_0950o",
+            "attempts": 1,
+            "channel": "standard",
+            "createdAt": 1782489547247,
+            "jobId": "job_cuenta_v1_PED-20260129-001",
+            "lastError": "Excedió número máximo de reintentos",
+            "orderId": "PED-20260129-001",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 1,
+                  "nombre": "Caldo de 🐓",
+                  "precio": 100
+                }
+              ],
+              "mesaId": "3",
+              "timestamp": 1782489547186,
+              "tipo": "mesa",
+              "totales": {
+                "subtotal": 100,
+                "total": 100
+              }
+            },
+            "purpose": "cuenta",
+            "state": "fallo",
+            "templateVersion": "v1",
+            "updatedAt": 1782523605974
+          },
+          "job_cuenta_v1_PED-20260626-001": {
+            "_lockedBy": "hub_mqv4390k_nexqrzaxj6_0950o",
+            "attempts": 1,
+            "channel": "standard",
+            "createdAt": 1782489562163,
+            "jobId": "job_cuenta_v1_PED-20260626-001",
+            "lastError": "Excedió número máximo de reintentos",
+            "orderId": "PED-20260626-001",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 1,
+                  "nombre": "Caldo de 🐓",
+                  "precio": 100
+                }
+              ],
+              "mesaId": "2",
+              "timestamp": 1782489562098,
+              "tipo": "mesa",
+              "totales": {
+                "subtotal": 100,
+                "total": 100
+              }
+            },
+            "purpose": "cuenta",
+            "state": "fallo",
+            "templateVersion": "v1",
+            "updatedAt": 1782523605993
+          },
+          "job_cuenta_v1_PED-20260626-002": {
+            "_lockedBy": "hub_mqv4390k_nexqrzaxj6_yyrvt",
+            "attempts": 1,
+            "channel": "standard",
+            "createdAt": 1782525058037,
+            "jobId": "job_cuenta_v1_PED-20260626-002",
+            "lastError": "Excedió número máximo de reintentos",
+            "orderId": "PED-20260626-002",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 1,
+                  "nombre": "Caldo de 🐓",
+                  "precio": 100
+                },
+                {
+                  "cantidad": 1,
+                  "nombre": "Caldo de 🐓",
+                  "precio": 100
+                }
+              ],
+              "mesaId": "2",
+              "timestamp": 1782525057978,
+              "tipo": "mesa",
+              "totales": {
+                "subtotal": 200,
+                "total": 200
+              }
+            },
+            "purpose": "cuenta",
+            "state": "fallo",
+            "templateVersion": "v1",
+            "updatedAt": 1782525781874
+          },
+          "vc_1782525847002": {
+            "attempts": 0,
+            "channel": "venta_crudo",
+            "createdAt": 1782525847075,
+            "jobId": "vc_1782525847002",
+            "orderId": "vc_1782525847002",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 2,
+                  "id": "-OhSVDTmsQaQSh1DKq-M-k3khtdmcr",
+                  "nombre": "Camaron",
+                  "precio": 100,
+                  "productId": "-OhSVDTmsQaQSh1DKq-M",
+                  "productoId": "-OhSVDTmsQaQSh1DKq-M",
+                  "subtotal": 200,
+                  "unidad": "kg"
+                }
+              ],
+              "metodoPago": "efectivo",
+              "origen": "venta_crudo",
+              "timestamp": 1782525847002,
+              "total": 200,
+              "usuario": "Mostrador"
+            },
+            "purpose": "venta_crudo",
+            "state": "pendiente_impresion",
+            "templateVersion": "1.0.0",
+            "updatedAt": 1782525847075
+          },
+          "vc_1782525923008": {
+            "attempts": 0,
+            "channel": "venta_crudo",
+            "createdAt": 1782525923103,
+            "jobId": "vc_1782525923008",
+            "orderId": "vc_1782525923008",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 1,
+                  "id": "-OhSVDTmsQaQSh1DKq-M-m0gpfrrkl",
+                  "nombre": "Camaron",
+                  "precio": 100,
+                  "productId": "-OhSVDTmsQaQSh1DKq-M",
+                  "productoId": "-OhSVDTmsQaQSh1DKq-M",
+                  "subtotal": 100,
+                  "unidad": "kg"
+                }
+              ],
+              "metodoPago": "efectivo",
+              "origen": "venta_crudo",
+              "timestamp": 1782525923008,
+              "total": 100,
+              "usuario": "Mostrador"
+            },
+            "purpose": "venta_crudo",
+            "state": "pendiente_impresion",
+            "templateVersion": "1.0.0",
+            "updatedAt": 1782525923103
+          },
+          "vc_1782525965912": {
+            "attempts": 0,
+            "channel": "venta_crudo",
+            "createdAt": 1782525966005,
+            "jobId": "vc_1782525965912",
+            "orderId": "vc_1782525965912",
+            "payload": {
+              "items": [
+                {
+                  "cantidad": 10,
+                  "id": "-OhSVDTmsQaQSh1DKq-M-ay69drnr1",
+                  "nombre": "Camaron",
+                  "precio": 100,
+                  "productId": "-OhSVDTmsQaQSh1DKq-M",
+                  "productoId": "-OhSVDTmsQaQSh1DKq-M",
+                  "subtotal": 1000,
+                  "unidad": "kg"
+                }
+              ],
+              "metodoPago": "efectivo",
+              "origen": "venta_crudo",
+              "timestamp": 1782525965912,
+              "total": 1000,
+              "usuario": "Mostrador"
+            },
+            "purpose": "venta_crudo",
+            "state": "pendiente_impresion",
+            "templateVersion": "1.0.0",
+            "updatedAt": 1782525966005
+          }
+        }
+      },
+      "ventas": {
+        "-OjPzhU5ptgaVairmrlI": {
+          "id": "-OjPzhU5ptgaVairmrlI",
+          "items": [
+            {
+              "cantidad": 2,
+              "id": "-OhSVDTmsQaQSh1DKq-M-u6lxvz771",
+              "nombre": "Camaron",
+              "precio": 100,
+              "productId": "-OhSVDTmsQaQSh1DKq-M",
+              "productoId": "-OhSVDTmsQaQSh1DKq-M",
+              "subtotal": 200,
+              "unidad": "kg"
+            }
+          ],
+          "metodoPago": "efectivo",
+          "origen": "venta_crudo",
+          "timestamp": 1768905528768,
+          "total": 200,
+          "usuario": "Vendedor"
+        },
+        "-OkCTNPwPSbhQD2BGR1S": {
+          "id": "-OkCTNPwPSbhQD2BGR1S",
+          "items": [
+            {
+              "cantidad": 3,
+              "id": "-OhSVDTmsQaQSh1DKq-M-le5xxm9iy",
+              "nombre": "Camaron",
+              "precio": 100,
+              "productId": "-OhSVDTmsQaQSh1DKq-M",
+              "productoId": "-OhSVDTmsQaQSh1DKq-M",
+              "subtotal": 300,
+              "unidad": "kg"
+            }
+          ],
+          "metodoPago": "efectivo",
+          "origen": "venta_crudo",
+          "timestamp": 1769752598607,
+          "total": 300,
+          "usuario": "Vendedor"
+        },
+        "-Ow5oTZH5k7rdtGxEp3I": {
+          "id": "-Ow5oTZH5k7rdtGxEp3I",
+          "items": [
+            {
+              "cantidad": 2,
+              "id": "-OhSVDTmsQaQSh1DKq-M-k3khtdmcr",
+              "nombre": "Camaron",
+              "precio": 100,
+              "productId": "-OhSVDTmsQaQSh1DKq-M",
+              "productoId": "-OhSVDTmsQaQSh1DKq-M",
+              "subtotal": 200,
+              "unidad": "kg"
+            }
+          ],
+          "metodoPago": "efectivo",
+          "origen": "venta_crudo",
+          "timestamp": 1782525847002,
+          "total": 200,
+          "usuario": "Mostrador"
+        },
+        "-Ow5ol6sFFxiC2Ex2kea": {
+          "id": "-Ow5ol6sFFxiC2Ex2kea",
+          "items": [
+            {
+              "cantidad": 1,
+              "id": "-OhSVDTmsQaQSh1DKq-M-m0gpfrrkl",
+              "nombre": "Camaron",
+              "precio": 100,
+              "productId": "-OhSVDTmsQaQSh1DKq-M",
+              "productoId": "-OhSVDTmsQaQSh1DKq-M",
+              "subtotal": 100,
+              "unidad": "kg"
+            }
+          ],
+          "metodoPago": "efectivo",
+          "origen": "venta_crudo",
+          "timestamp": 1782525923008,
+          "total": 100,
+          "usuario": "Mostrador"
+        },
+        "-Ow5ovaFGNf-jODoxtDf": {
+          "id": "-Ow5ovaFGNf-jODoxtDf",
+          "items": [
+            {
+              "cantidad": 10,
+              "id": "-OhSVDTmsQaQSh1DKq-M-ay69drnr1",
+              "nombre": "Camaron",
+              "precio": 100,
+              "productId": "-OhSVDTmsQaQSh1DKq-M",
+              "productoId": "-OhSVDTmsQaQSh1DKq-M",
+              "subtotal": 1000,
+              "unidad": "kg"
+            }
+          ],
+          "metodoPago": "efectivo",
+          "origen": "venta_crudo",
+          "timestamp": 1782525965912,
+          "total": 1000,
+          "usuario": "Mostrador"
+        }
+      }
+    },
+
+    "marisqueria-la-perla-del-pueblo": {
+      "__bootstrapDone": true,
+      "ajustes": {
+        "dispositivos": {
+          "impresion": {
+            "defaultPrinter": {
+              "address": "10:22:33:71:87:CD",
+              "name": "POS58D87CD"
+            },
+            "politicas": {
+              "maxReprintsByRole": {
+                "admin": 999,
+                "cocina": 3,
+                "mesera": 1
+              },
+              "permitirAdminImprimirCuenta": false,
+              "permitirCocinaImprimirCuenta": false,
+              "permitirMeseraImprimirCuenta": true,
+              "retries": {
+                "write": 3
+              },
+              "timeouts": {
+                "bleConnectMs": 4000,
+                "jobMsBle": 10000,
+                "jobMsLan": 5000,
+                "lanConnectMs": 2000,
+                "writeMs": 2000
+              }
+            },
+            "testMessage": ""
+          }
+        },
+        "reparto": {
+          "costos": {
+            "base": 20,
+            "minimo": 20,
+            "porKm": 5
+          },
+          "horarios": {
+            "habilitado": false,
+            "ventanas": [
+              {
+                "fin": "18:00",
+                "inicio": "09:00"
+              }
+            ]
+          },
+          "umbrales": {
+            "maxPedidosActivos": 10,
+            "stockBajo": 5,
+            "tiempoMaxEntregaMin": 45
+          }
+        }
+      },
+      "caracteristicas": {
+        "delivery": false,
+        "fastbutton_venta_crudo": false,
+        "inventory_auto_discount": false,
+        "menu_editor_venta_crudo": false,
+        "module_venta_crudo": false,
+        "roles": {
+          "admin": {
+            "dashboard": true,
+            "dispositivos": true,
+            "inventario": true,
+            "menu": true,
+            "mesas": true,
+            "repart": false
+          },
+          "cocina": true,
+          "mesero": true
+        }
+      },
+      "config": {
+        "hub": {
+          "heartbeat": 1767791900935
+        }
+      },
+      "dispositivos_autorizados": {
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1767790597386,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1767828734533
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1767790513309,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1767790513309
+        }
+      },
+      "menu": {
+        "categorias": {
+          "-OiNZmXhNB60P4-IZXvP": {
+            "activa": true,
+            "enviarACocina": true,
+            "nombre": "Platillos",
+            "saltarPreparando": false,
+            "slug": "platillos"
+          }
+        }
+      },
+      "mesas": {
+        "5": {
+          "estado": "libre",
+          "updatedAt": 1765969807993
+        }
+      }
+    },
+
+    "marisqueria-puerto-libres": {
+      "__bootstrapDone": true,
+      "ajustes": {
+        "dispositivos": {
+          "impresion": {
+            "politicas": {
+              "maxReprintsByRole": {
+                "admin": 999,
+                "mesera": 1
+              },
+              "permitirAdminImprimirCuenta": true,
+              "permitirCocinaImprimirCuenta": true,
+              "permitirMeseraImprimirCuenta": true,
+              "retries": {
+                "write": 3
+              },
+              "timeouts": {
+                "bleConnectMs": 4000,
+                "jobMsBle": 10000,
+                "jobMsLan": 5000,
+                "lanConnectMs": 2000,
+                "writeMs": 2000
+              }
+            }
+          }
+        },
+        "mesas": {
+          "cantidad": 7
+        },
+        "reparto": {
+          "costos": {
+            "base": 20,
+            "minimo": 20,
+            "porKm": 5
+          },
+          "horarios": {
+            "habilitado": false,
+            "ventanas": [
+              {
+                "fin": "18:00",
+                "inicio": "09:00"
+              }
+            ]
+          },
+          "umbrales": {
+            "maxPedidosActivos": 10,
+            "stockBajo": 5,
+            "tiempoMaxEntregaMin": 45
+          }
+        }
+      },
+      "caracteristicas": {
+        "delivery": false,
+        "fastbutton_venta_crudo": false,
+        "inventory_auto_discount": true,
+        "menu_editor_venta_crudo": false,
+        "module_venta_crudo": false,
+        "roles": {
+          "admin": {
+            "dashboard": true,
+            "dispositivos": true,
+            "inventario": true,
+            "menu": true,
+            "mesas": true,
+            "repart": false
+          },
+          "cocina": true,
+          "mesero": true
+        }
+      },
+      "config": {
+        "hub": {
+          "destination": "restaurante",
+          "deviceId": "hub_mqv4390k_nexqrzaxj6",
+          "enabled": true,
+          "heartbeat": 1782538616877,
+          "updatedAt": 1782489278815
+        },
+        "pos": {
+          "allowNegativeStock": false,
+          "quickCashButtons": true,
+          "requirePasskeyForVoid": true,
+          "showImagesInPos": true
+        }
+      },
+      "dispositivos_autorizados": {
+        "0b8502302d12e404": {
+          "brand": "motorola",
+          "fechaRegistro": 1774589497733,
+          "isEmulator": false,
+          "model": "moto g04",
+          "systemName": "Android",
+          "systemVersion": "14",
+          "ultimoAcceso": 1776274275985
+        },
+        "56b7e6ee8cffe508": {
+          "brand": "Acer",
+          "fechaRegistro": 1776236657185,
+          "isEmulator": false,
+          "model": "AC50",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782267902663
+        },
+        "804c378c24b0c04e": {
+          "brand": "Lenovo",
+          "fechaRegistro": 1782538528332,
+          "isEmulator": false,
+          "model": "TB310FU",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782538528332
+        },
+        "d0a2790ca6a51f0d": {
+          "brand": "ONN",
+          "fechaRegistro": 1769752661443,
+          "isEmulator": false,
+          "model": "MID8016",
+          "systemName": "Android",
+          "systemVersion": "11",
+          "ultimoAcceso": 1769949180008
+        },
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1777690363902,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1782705951754
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1782488378751,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1782488639648
+        }
+      },
+      "impresion": {
+        "hubs": {
+          "hub_mjig87p4_5hq22xodsar": {
+            "estado": "activo",
+            "ultimaComprobacion": 1770024541208
+          }
+        }
+      },
+      "inventory_v2": {
+        "areas": {
+          "area_alim_almacen": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Almacén",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_almacen__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_almacen",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_barra": {
+            "hubId": "restaurante",
+            "icon": "🍸",
+            "nombre": "Barra",
+            "sectionId": "alimentos",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_barra__default": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_barra",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_cerveza": 24,
+              "item_alim_refresco": 24
+            },
+            "tipo": "refri",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_cocina": {
+            "hubId": "restaurante",
+            "icon": "🍳",
+            "nombre": "Cocina",
+            "sectionId": "alimentos",
+            "tipo": "cocina",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_cocina__default": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_cocina",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_camaron": 21,
+              "item_alim_pescado_entero": 8,
+              "item_alim_pulpo_cocido": 2
+            },
+            "tipo": "refri",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_venta_crudo": {
+            "hubId": "venta_crudo",
+            "icon": "🛒",
+            "nombre": "Venta Crudo",
+            "sectionId": "alimentos",
+            "tipo": "mostrador",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_venta_crudo__default": {
+            "hubId": "venta_crudo",
+            "icon": "📦",
+            "nombre": "Caja Principal",
+            "parentId": "area_alim_venta_crudo",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_calamar_fresco": 4,
+              "item_alim_camaron": 6
+            },
+            "tipo": "mostrador",
+            "updatedAt": 1767788615839
+          },
+          "area_losa_servicio": {
+            "hubId": "restaurante",
+            "icon": "🍽️",
+            "nombre": "Servicio",
+            "sectionId": "losa_cristaleria",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_losa_servicio__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Contenedor Principal",
+            "parentId": "area_losa_servicio",
+            "sectionId": "losa_cristaleria",
+            "stock": {
+              "item_losa_copa": 24,
+              "item_losa_cubierto": 80,
+              "item_losa_plato": 60,
+              "item_losa_vaso": 60
+            },
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_otros_general": {
+            "hubId": "restaurante",
+            "icon": "🧰",
+            "nombre": "General",
+            "sectionId": "otros",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_otros_general__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Contenedor Principal",
+            "parentId": "area_otros_general",
+            "sectionId": "otros",
+            "stock": {
+              "item_otros_bolsas": 200,
+              "item_otros_cloro": 3,
+              "item_otros_jabon": 2,
+              "item_otros_servilletas": 500
+            },
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          }
+        },
+        "catalog": {
+          "item_alim_calamar_fresco": {
+            "minStock": 3,
+            "nombre": "Calamar Fresco",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_camaron": {
+            "minStock": 5,
+            "nombre": "Camarón",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_cerveza": {
+            "minStock": 12,
+            "nombre": "Cerveza",
+            "sectionId": "alimentos",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_pescado_entero": {
+            "minStock": 5,
+            "nombre": "Pescado Entero",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_pulpo_cocido": {
+            "minStock": 3,
+            "nombre": "Pulpo Cocido",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_refresco": {
+            "minStock": 12,
+            "nombre": "Refresco",
+            "sectionId": "alimentos",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_charola": {
+            "minStock": 6,
+            "nombre": "Charola",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_copa": {
+            "minStock": 12,
+            "nombre": "Copa",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_cubierto": {
+            "minStock": 24,
+            "nombre": "Cubierto",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_jarra": {
+            "minStock": 6,
+            "nombre": "Jarra",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_plato": {
+            "minStock": 24,
+            "nombre": "Plato",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_vaso": {
+            "minStock": 24,
+            "nombre": "Vaso",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_bolsas": {
+            "minStock": 50,
+            "nombre": "Bolsas",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_cloro": {
+            "minStock": 2,
+            "nombre": "Cloro",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_guantes": {
+            "minStock": 1,
+            "nombre": "Guantes",
+            "sectionId": "otros",
+            "unidad": "caja",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_jabon": {
+            "minStock": 2,
+            "nombre": "Jabón",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_papel": {
+            "minStock": 6,
+            "nombre": "Papel",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_servilletas": {
+            "minStock": 200,
+            "nombre": "Servilletas",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          }
+        },
+        "missing_area_assignments": {
+          "coctel-1": {
+            "actor": "cocina",
+            "count": 10,
+            "fallbackAreaId": "area_alim_almacen",
+            "hubId": "restaurante",
+            "lastTs": 1782525370695,
+            "nombre": "Coctel",
+            "productoId": "coctel-1",
+            "reason": "no_area_assigned"
+          },
+          "duraznos-crema-11": {
+            "actor": "mesero",
+            "count": 2,
+            "fallbackAreaId": "area_alim_almacen",
+            "hubId": "restaurante",
+            "lastTs": 1782478842824,
+            "nombre": "Duraznos con Crema",
+            "productoId": "duraznos-crema-11",
+            "reason": "no_area_assigned"
+          },
+          "filetes-4": {
+            "actor": "cocina",
+            "count": 1,
+            "fallbackAreaId": "area_alim_almacen",
+            "hubId": "restaurante",
+            "lastTs": 1782489414351,
+            "nombre": "Filetes",
+            "productoId": "filetes-4",
+            "reason": "no_area_assigned"
+          },
+          "flan-napolitano-10": {
+            "actor": "mesero",
+            "count": 1,
+            "fallbackAreaId": "area_alim_almacen",
+            "hubId": "restaurante",
+            "lastTs": 1776237839743,
+            "nombre": "Flan Napolitano",
+            "productoId": "flan-napolitano-10",
+            "reason": "no_area_assigned"
+          },
+          "tostada-2": {
+            "actor": "cocina",
+            "count": 1,
+            "fallbackAreaId": "area_alim_almacen",
+            "hubId": "restaurante",
+            "lastTs": 1776237512177,
+            "nombre": "Tostada",
+            "productoId": "tostada-2",
+            "reason": "no_area_assigned"
+          }
+        },
+        "sections": {
+          "alimentos": {
+            "icon": "🍲",
+            "nombre": "Alimentos / Consumibles",
+            "updatedAt": 1767788615839
+          },
+          "losa_cristaleria": {
+            "icon": "🍽️",
+            "nombre": "Losa / Cristalería",
+            "updatedAt": 1767788615839
+          },
+          "otros": {
+            "icon": "📦",
+            "nombre": "Otros",
+            "updatedAt": 1767788615839
+          }
+        }
+      },
+      "menu": {
+        "categorias": {
+          "catBebidas": {
+            "activa": true,
+            "enviarACocina": false,
+            "nombre": "Bebidas y Postres",
+            "productos": {
+              "boing-1753220050777": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "enviarACocina": true,
+                "nombre": "BOING",
+                "precio": 25,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "boing",
+                "usarConfigPersonalizada": false,
+                "variantes": {
+                  "grupos": {
+                    "gSab": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oDur": {
+                          "delta": 0,
+                          "titulo": "Durazno"
+                        },
+                        "oGua": {
+                          "delta": 0,
+                          "titulo": "Guayaba"
+                        },
+                        "oMan": {
+                          "delta": 0,
+                          "titulo": "Mango"
+                        },
+                        "oManz": {
+                          "delta": 0,
+                          "titulo": "Manzana"
+                        },
+                        "oTam": {
+                          "delta": 0,
+                          "titulo": "Tamarindo"
+                        }
+                      },
+                      "rol": "Sabor",
+                      "tipo": "single",
+                      "titulo": "Sabor"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "botella-de-agua-1753903080422": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "enviarACocina": false,
+                "nombre": "Botella de Agua",
+                "precio": 20,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "botella-de-agua",
+                "unidad": "pza",
+                "usarConfigPersonalizada": false,
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "cerveza-🍺-1753220409330": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Cerveza 🍺",
+                "precio": 35,
+                "variantes": {
+                  "grupos": {
+                    "gMar": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oCor": {
+                          "delta": 0,
+                          "titulo": "Corona"
+                        },
+                        "oHei": {
+                          "delta": 0,
+                          "titulo": "HEINEKER"
+                        },
+                        "oInd": {
+                          "delta": 0,
+                          "titulo": "Indio"
+                        },
+                        "oSol": {
+                          "delta": 0,
+                          "titulo": "SoL"
+                        },
+                        "oVic": {
+                          "delta": 0,
+                          "titulo": "Victoria"
+                        },
+                        "oXX": {
+                          "delta": 0,
+                          "titulo": "XX"
+                        },
+                        "oXXA": {
+                          "delta": 0,
+                          "titulo": "XX Ambar"
+                        }
+                      },
+                      "rol": "Marca",
+                      "tipo": "single",
+                      "titulo": "De"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "coca-cola-1753219809285": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Coca-Cola",
+                "precio": 30,
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "duraznos-crema-11": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Duraznos con Crema",
+                "precio": 35,
+                "receta": {
+                  "ingredientes": {
+                    "crema-13": 0.08,
+                    "durazno-15": 0.15
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "flan-napolitano-10": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Flan Napolitano",
+                "precio": 35,
+                "receta": {
+                  "ingredientes": {
+                    "crema-13": 0.1,
+                    "helado-14": 0.05
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "jarra-agua-8": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Jarra de Agua",
+                "precio": 70,
+                "variantes": {
+                  "grupos": {
+                    "gSab": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oLim": {
+                          "delta": 10,
+                          "titulo": "Limón"
+                        },
+                        "oPepLim": {
+                          "delta": 0,
+                          "titulo": "Pepino/Limon"
+                        },
+                        "oPin": {
+                          "delta": 0,
+                          "titulo": "Piña"
+                        }
+                      },
+                      "rol": "Sabor",
+                      "tipo": "single",
+                      "titulo": "Sabor"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "limonada-rusa-7": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Limonada",
+                "precio": 35,
+                "variantes": {
+                  "grupos": {
+                    "gRus": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oRus": {
+                          "delta": 0,
+                          "titulo": "Rusa"
+                        }
+                      },
+                      "rol": "Tipo",
+                      "tipo": "single",
+                      "titulo": "Rusaaa"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "michcamaron-1754360074077": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "enviarACocina": true,
+                "nombre": "MichCamaron",
+                "precio": 100,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "michcamaron",
+                "unidad": "pza",
+                "usarConfigPersonalizada": false,
+                "visible": {
+                  "digital": false,
+                  "mesero": false
+                }
+              },
+              "michelada-1753221954881": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Michelada",
+                "precio": 45,
+                "variantes": {
+                  "grupos": {
+                    "gExt": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oCam": {
+                          "delta": 100,
+                          "titulo": "Camarones"
+                        },
+                        "oChel": {
+                          "delta": 0,
+                          "titulo": "Chelada"
+                        },
+                        "oSal": {
+                          "delta": 0,
+                          "titulo": "Sal Escarchado"
+                        }
+                      },
+                      "rol": "Extras",
+                      "tipo": "single",
+                      "titulo": "Otros"
+                    },
+                    "gMar": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oCor": {
+                          "delta": 0,
+                          "titulo": "Corona"
+                        },
+                        "oInd": {
+                          "delta": 0,
+                          "titulo": "Indio"
+                        },
+                        "oSol": {
+                          "delta": 0,
+                          "titulo": "SoL"
+                        },
+                        "oVic": {
+                          "delta": 0,
+                          "titulo": "Victoria"
+                        },
+                        "oXX": {
+                          "delta": 0,
+                          "titulo": "XX"
+                        },
+                        "oXXA": {
+                          "delta": 0,
+                          "titulo": "XX Ambar"
+                        }
+                      },
+                      "rol": "Marca",
+                      "tipo": "single",
+                      "titulo": "🍺"
+                    },
+                    "gSN": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "snCla": {
+                          "delta": 0,
+                          "titulo": "Clamato"
+                        },
+                        "snMag": {
+                          "delta": 0,
+                          "titulo": "Magi"
+                        },
+                        "snVal": {
+                          "delta": 0,
+                          "titulo": "Valentína"
+                        }
+                      },
+                      "rol": "SN",
+                      "tipo": "multi",
+                      "titulo": "S/N"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "tequila-1754436871660": {
+                "activo": true,
+                "categoriaId": "catBebidas",
+                "nombre": "Tequila",
+                "precio": 60,
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              }
+            },
+            "saltarPreparando": false
+          },
+          "catPlatillos": {
+            "activa": true,
+            "enviarACocina": true,
+            "herencia": {
+              "digital": false,
+              "mesero": true
+            },
+            "nombre": "Platillos",
+            "productos": {
+              "caldo-sopa-7": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Caldo",
+                "precio": 140,
+                "prepMin": 9,
+                "variantes": {
+                  "grupos": {
+                    "gDe": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oFil": {
+                          "delta": -130,
+                          "titulo": "Filete"
+                        },
+                        "oMar": {
+                          "delta": 15,
+                          "titulo": "Mariscos"
+                        },
+                        "oMix": {
+                          "delta": 5,
+                          "titulo": "Mixto"
+                        },
+                        "oPara": {
+                          "delta": 0,
+                          "titulo": "Para Pelar"
+                        },
+                        "oPel": {
+                          "delta": 0,
+                          "titulo": "Pelados"
+                        },
+                        "oPes": {
+                          "delta": -135,
+                          "titulo": "Pescado"
+                        }
+                      },
+                      "rol": "De",
+                      "tipo": "single",
+                      "titulo": "De"
+                    },
+                    "gPor": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oMed": {
+                          "delta": -90,
+                          "titulo": "Media Orden"
+                        }
+                      },
+                      "rol": "Porción",
+                      "tipo": "single",
+                      "titulo": "Porción"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": false,
+                  "mesero": true
+                }
+              },
+              "camarones-mixtos-6": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Mixtos",
+                "precio": 175,
+                "prepMin": 12,
+                "variantes": {
+                  "grupos": {
+                    "gPero": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oPara": {
+                          "delta": 0,
+                          "titulo": "Para Pelar"
+                        },
+                        "oPel": {
+                          "delta": 5,
+                          "titulo": "Pelados"
+                        },
+                        "oPul": {
+                          "delta": 0,
+                          "titulo": "Pulpo"
+                        }
+                      },
+                      "rol": "Pero",
+                      "tipo": "single",
+                      "titulo": "Pero"
+                    },
+                    "gPrep1": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCoc": {
+                          "delta": 25,
+                          "titulo": "Coco"
+                        },
+                        "oDiab": {
+                          "delta": 0,
+                          "titulo": "A la Diabla"
+                        },
+                        "oEmp": {
+                          "delta": 0,
+                          "titulo": "Empanizados"
+                        },
+                        "oEnc": {
+                          "delta": 0,
+                          "titulo": "Enchipotlado"
+                        },
+                        "oMex": {
+                          "delta": 0,
+                          "titulo": "Mexicana"
+                        },
+                        "oMoj": {
+                          "delta": 0,
+                          "titulo": "Al Mojo"
+                        }
+                      },
+                      "rol": "Preparación",
+                      "tipo": "single",
+                      "titulo": "Preparación 1"
+                    },
+                    "gPrep2": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCoc": {
+                          "delta": 25,
+                          "titulo": "Coco"
+                        },
+                        "oDiab": {
+                          "delta": 0,
+                          "titulo": "A la Diabla"
+                        },
+                        "oEmp": {
+                          "delta": 0,
+                          "titulo": "Empanizados"
+                        },
+                        "oEnc": {
+                          "delta": 0,
+                          "titulo": "Enchipotlado"
+                        },
+                        "oMex": {
+                          "delta": 0,
+                          "titulo": "Mexicana"
+                        },
+                        "oMoj": {
+                          "delta": 0,
+                          "titulo": "Al Mojo"
+                        }
+                      },
+                      "rol": "Preparación",
+                      "tipo": "single",
+                      "titulo": "Preparación 2"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "coctel-1": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "enviarACocina": true,
+                "nombre": "Coctel",
+                "precio": 70,
+                "prepMin": 5,
+                "receta": {
+                  "ingredientes": {
+                    "camaron-1": 0.08,
+                    "cebolla-5": 0.03,
+                    "cilantro-11": 0.01,
+                    "ostion-10": 0.08,
+                    "pulpo-2": 0.08,
+                    "tomate-4": 0.05
+                  }
+                },
+                "saltarPreparando": false,
+                "slug": "coctel",
+                "usarConfigPersonalizada": false,
+                "variantes": {
+                  "grupos": {
+                    "gSN": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "snAgu": {
+                          "delta": 0,
+                          "titulo": "Aguacate"
+                        },
+                        "snCeb": {
+                          "delta": 0,
+                          "titulo": "Cebolla"
+                        },
+                        "snCil": {
+                          "delta": 0,
+                          "titulo": "Cilantro"
+                        },
+                        "snPic": {
+                          "delta": 0,
+                          "titulo": "Picante"
+                        }
+                      },
+                      "rol": "SN",
+                      "tipo": "multi",
+                      "titulo": "S/N"
+                    },
+                    "gTam": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCh": {
+                          "delta": 0,
+                          "titulo": "Chico"
+                        },
+                        "oGr": {
+                          "delta": 85,
+                          "titulo": "Grande"
+                        },
+                        "oMe": {
+                          "delta": 50,
+                          "titulo": "Mediano"
+                        }
+                      },
+                      "rol": "Tamaño",
+                      "tipo": "single",
+                      "titulo": "Tamaño"
+                    },
+                    "gTip": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCO": {
+                          "delta": 0,
+                          "titulo": "C/O"
+                        },
+                        "oCP": {
+                          "delta": 0,
+                          "titulo": "C/P"
+                        },
+                        "oCam": {
+                          "delta": 0,
+                          "titulo": "Camarón"
+                        },
+                        "oCamp": {
+                          "delta": 0,
+                          "titulo": "Campechano"
+                        },
+                        "oOst": {
+                          "delta": 0,
+                          "titulo": "Ostión"
+                        },
+                        "oPO": {
+                          "delta": 0,
+                          "titulo": "P/O"
+                        },
+                        "oPul": {
+                          "delta": 0,
+                          "titulo": "Pulpo"
+                        }
+                      },
+                      "rol": "Tipo",
+                      "tipo": "single",
+                      "titulo": "Tipo"
+                    }
+                  },
+                  "reglas": {
+                    "visible": {
+                      "r1": {
+                        "showGroups": {
+                          "gSN": true
+                        },
+                        "whenGroup": "gTip",
+                        "whenOpt": "oCam"
+                      }
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "consome-c-marisco-1754360356425": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Consome c/marisco",
+                "precio": 50,
+                "prepMin": 5,
+                "slug": "consome-c-marisco",
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "ensalada-1753219184045": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "enviarACocina": true,
+                "nombre": "Ensalada",
+                "precio": 150,
+                "prepMin": 0,
+                "saltarPreparando": false,
+                "slug": "ensalada",
+                "unidad": "pza",
+                "usarConfigPersonalizada": false,
+                "variantes": {
+                  "grupos": {
+                    "g1776237674259": {
+                      "excludeFromSibling": "gDe",
+                      "nextGroupId": "gDe",
+                      "obligatorio": false,
+                      "opciones": {
+                        "o1776237882742": {
+                          "titulo": "Cebolla "
+                        }
+                      },
+                      "tipo": "single",
+                      "titulo": "S/N"
+                    },
+                    "gDe": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCamPes": {
+                          "delta": 0,
+                          "titulo": "Camarón/Pescado"
+                        },
+                        "oMar": {
+                          "delta": 0,
+                          "titulo": "Mariscos"
+                        }
+                      },
+                      "rol": "De",
+                      "tipo": "single",
+                      "titulo": "De"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "envio-1754504589741": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Envio",
+                "precio": 15,
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "filetes-4": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "enviarACocina": true,
+                "nombre": "Filetes",
+                "precio": 135,
+                "prepMin": 9,
+                "receta": {
+                  "ingredientes": {
+                    "camaron-1": 0.1,
+                    "pescado-3": 0.25,
+                    "queso-12": 0.05
+                  }
+                },
+                "saltarPreparando": false,
+                "slug": "filetes",
+                "usarConfigPersonalizada": true,
+                "variantes": {
+                  "grupos": {
+                    "gEst": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oDiab": {
+                          "delta": 0,
+                          "titulo": "A la Diabla"
+                        },
+                        "oEmp": {
+                          "delta": 0,
+                          "titulo": "Empanizado"
+                        },
+                        "oEmpa": {
+                          "delta": 40,
+                          "titulo": "Empapelado"
+                        },
+                        "oEnc": {
+                          "delta": 0,
+                          "titulo": "Enchipotlado"
+                        },
+                        "oMex": {
+                          "delta": 0,
+                          "titulo": "A la Mexicana"
+                        },
+                        "oMoj": {
+                          "delta": 0,
+                          "titulo": "Al Mojo"
+                        }
+                      },
+                      "rol": "Estilo",
+                      "tipo": "single",
+                      "titulo": "Estilo"
+                    },
+                    "gPor": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "oMed": {
+                          "delta": -100,
+                          "titulo": "Media Orden"
+                        }
+                      },
+                      "rol": "Porción",
+                      "tipo": "single",
+                      "titulo": "Porción"
+                    },
+                    "gSN": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "snAgu": {
+                          "delta": 0,
+                          "titulo": "Aguacate"
+                        },
+                        "snJit": {
+                          "delta": 0,
+                          "titulo": "Jitomate"
+                        },
+                        "snLec": {
+                          "delta": 0,
+                          "titulo": "Lechuga"
+                        },
+                        "snPep": {
+                          "delta": 0,
+                          "titulo": "Pepino"
+                        }
+                      },
+                      "rol": "SN",
+                      "tipo": "multi",
+                      "titulo": "S/N"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "mojarra-5": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Mojarra",
+                "precio": 165,
+                "prepMin": 15,
+                "variantes": {
+                  "grupos": {
+                    "gEst": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oDiab": {
+                          "delta": 0,
+                          "titulo": "A la Diabla"
+                        },
+                        "oEnc": {
+                          "delta": 0,
+                          "titulo": "Enchipoclada"
+                        },
+                        "oFri": {
+                          "delta": 0,
+                          "titulo": "Frita"
+                        },
+                        "oMex": {
+                          "delta": 0,
+                          "titulo": "A la Mexicana"
+                        },
+                        "oMoj": {
+                          "delta": 0,
+                          "titulo": "Al Mojo"
+                        }
+                      },
+                      "rol": "Estilo",
+                      "tipo": "single",
+                      "titulo": "Estilo"
+                    },
+                    "gSN": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "snAgu": {
+                          "delta": 0,
+                          "titulo": "Aguacate"
+                        },
+                        "snJit": {
+                          "delta": 0,
+                          "titulo": "Jitomate"
+                        },
+                        "snLec": {
+                          "delta": 0,
+                          "titulo": "Lechuga"
+                        },
+                        "snPep": {
+                          "delta": 0,
+                          "titulo": "Pepino"
+                        }
+                      },
+                      "rol": "SN",
+                      "tipo": "multi",
+                      "titulo": "S/N"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "pulpo-al-gusto-8": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Pulpo",
+                "precio": 135,
+                "prepMin": 9,
+                "receta": {
+                  "ingredientes": {
+                    "pulpo-2": 0.25
+                  }
+                },
+                "variantes": {
+                  "grupos": {
+                    "gEst": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oAji": {
+                          "delta": 0,
+                          "titulo": "Al Ajillo"
+                        },
+                        "oDiab": {
+                          "delta": 0,
+                          "titulo": "A la Diabla"
+                        },
+                        "oEnc": {
+                          "delta": 0,
+                          "titulo": "Encebollado"
+                        },
+                        "oMex": {
+                          "delta": 0,
+                          "titulo": "A la Mexicana"
+                        },
+                        "oMoj": {
+                          "delta": 0,
+                          "titulo": "Al Mojo"
+                        }
+                      },
+                      "rol": "Estilo",
+                      "tipo": "single",
+                      "titulo": "Estilo"
+                    },
+                    "gSN": {
+                      "obligatorio": false,
+                      "opciones": {
+                        "snAgu": {
+                          "delta": 0,
+                          "titulo": "Aguacate"
+                        },
+                        "snJit": {
+                          "delta": 0,
+                          "titulo": "Jitomate"
+                        },
+                        "snLec": {
+                          "delta": 0,
+                          "titulo": "Lechuga"
+                        },
+                        "snPep": {
+                          "delta": 0,
+                          "titulo": "Pepino"
+                        }
+                      },
+                      "rol": "SN",
+                      "tipo": "multi",
+                      "titulo": "S/N"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              },
+              "tostada-2": {
+                "activo": true,
+                "categoriaId": "catPlatillos",
+                "nombre": "Tostada",
+                "precio": 40,
+                "receta": {
+                  "ingredientes": {
+                    "cebolla-5": 0.03,
+                    "pescado-3": 0.08,
+                    "tomate-4": 0.05
+                  }
+                },
+                "variantes": {
+                  "grupos": {
+                    "gDe": {
+                      "obligatorio": true,
+                      "opciones": {
+                        "oCam": {
+                          "delta": 0,
+                          "titulo": "Camarón"
+                        },
+                        "oPes": {
+                          "delta": 0,
+                          "titulo": "Pescado"
+                        }
+                      },
+                      "rol": "De",
+                      "tipo": "single",
+                      "titulo": "De"
+                    }
+                  }
+                },
+                "visible": {
+                  "digital": true,
+                  "mesero": true
+                }
+              }
+            },
+            "saltarPreparando": false
+          }
+        },
+        "productos": {
+          "boing-1753220050777": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "enviarACocina": true,
+            "nombre": "BOING",
+            "precio": 25,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "boing",
+            "usarConfigPersonalizada": false,
+            "variantes": {
+              "grupos": {
+                "gSab": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oDur": {
+                      "delta": 0,
+                      "titulo": "Durazno"
+                    },
+                    "oGua": {
+                      "delta": 0,
+                      "titulo": "Guayaba"
+                    },
+                    "oMan": {
+                      "delta": 0,
+                      "titulo": "Mango"
+                    },
+                    "oManz": {
+                      "delta": 0,
+                      "titulo": "Manzana"
+                    },
+                    "oTam": {
+                      "delta": 0,
+                      "titulo": "Tamarindo"
+                    }
+                  },
+                  "rol": "Sabor",
+                  "tipo": "single",
+                  "titulo": "Sabor"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "botella-de-agua-1753903080422": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "enviarACocina": false,
+            "nombre": "Botella de Agua",
+            "precio": 20,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "botella-de-agua",
+            "unidad": "pza",
+            "usarConfigPersonalizada": false,
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "caldo-sopa-7": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Caldo",
+            "precio": 140,
+            "prepMin": 9,
+            "variantes": {
+              "grupos": {
+                "gDe": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oFil": {
+                      "delta": -130,
+                      "titulo": "Filete"
+                    },
+                    "oMar": {
+                      "delta": 15,
+                      "titulo": "Mariscos"
+                    },
+                    "oMix": {
+                      "delta": 5,
+                      "titulo": "Mixto"
+                    },
+                    "oPara": {
+                      "delta": 0,
+                      "titulo": "Para Pelar"
+                    },
+                    "oPel": {
+                      "delta": 0,
+                      "titulo": "Pelados"
+                    },
+                    "oPes": {
+                      "delta": -135,
+                      "titulo": "Pescado"
+                    }
+                  },
+                  "rol": "De",
+                  "tipo": "single",
+                  "titulo": "De"
+                },
+                "gPor": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oMed": {
+                      "delta": -90,
+                      "titulo": "Media Orden"
+                    }
+                  },
+                  "rol": "Porción",
+                  "tipo": "single",
+                  "titulo": "Porción"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "camarones-mixtos-6": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Mixtos",
+            "precio": 175,
+            "prepMin": 12,
+            "variantes": {
+              "grupos": {
+                "gPero": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oPara": {
+                      "delta": 0,
+                      "titulo": "Para Pelar"
+                    },
+                    "oPel": {
+                      "delta": 5,
+                      "titulo": "Pelados"
+                    },
+                    "oPul": {
+                      "delta": 0,
+                      "titulo": "Pulpo"
+                    }
+                  },
+                  "rol": "Pero",
+                  "tipo": "single",
+                  "titulo": "Pero"
+                },
+                "gPrep1": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCoc": {
+                      "delta": 25,
+                      "titulo": "Coco"
+                    },
+                    "oDiab": {
+                      "delta": 0,
+                      "titulo": "A la Diabla"
+                    },
+                    "oEmp": {
+                      "delta": 0,
+                      "titulo": "Empanizados"
+                    },
+                    "oEnc": {
+                      "delta": 0,
+                      "titulo": "Enchipotlado"
+                    },
+                    "oMex": {
+                      "delta": 0,
+                      "titulo": "Mexicana"
+                    },
+                    "oMoj": {
+                      "delta": 0,
+                      "titulo": "Al Mojo"
+                    }
+                  },
+                  "rol": "Preparación",
+                  "tipo": "single",
+                  "titulo": "Preparación 1"
+                },
+                "gPrep2": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCoc": {
+                      "delta": 25,
+                      "titulo": "Coco"
+                    },
+                    "oDiab": {
+                      "delta": 0,
+                      "titulo": "A la Diabla"
+                    },
+                    "oEmp": {
+                      "delta": 0,
+                      "titulo": "Empanizados"
+                    },
+                    "oEnc": {
+                      "delta": 0,
+                      "titulo": "Enchipotlado"
+                    },
+                    "oMex": {
+                      "delta": 0,
+                      "titulo": "Mexicana"
+                    },
+                    "oMoj": {
+                      "delta": 0,
+                      "titulo": "Al Mojo"
+                    }
+                  },
+                  "rol": "Preparación",
+                  "tipo": "single",
+                  "titulo": "Preparación 2"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "cerveza-🍺-1753220409330": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Cerveza 🍺",
+            "precio": 35,
+            "variantes": {
+              "grupos": {
+                "gMar": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oCor": {
+                      "delta": 0,
+                      "titulo": "Corona"
+                    },
+                    "oHei": {
+                      "delta": 0,
+                      "titulo": "HEINEKER"
+                    },
+                    "oInd": {
+                      "delta": 0,
+                      "titulo": "Indio"
+                    },
+                    "oSol": {
+                      "delta": 0,
+                      "titulo": "SoL"
+                    },
+                    "oVic": {
+                      "delta": 0,
+                      "titulo": "Victoria"
+                    },
+                    "oXX": {
+                      "delta": 0,
+                      "titulo": "XX"
+                    },
+                    "oXXA": {
+                      "delta": 0,
+                      "titulo": "XX Ambar"
+                    }
+                  },
+                  "rol": "Marca",
+                  "tipo": "single",
+                  "titulo": "De"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "coca-cola-1753219809285": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Coca-Cola",
+            "precio": 30,
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "coctel-1": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "enviarACocina": true,
+            "nombre": "Coctel",
+            "precio": 70,
+            "prepMin": 5,
+            "receta": {
+              "ingredientes": {
+                "camaron-1": 0.08,
+                "cebolla-5": 0.03,
+                "cilantro-11": 0.01,
+                "ostion-10": 0.08,
+                "pulpo-2": 0.08,
+                "tomate-4": 0.05
+              }
+            },
+            "saltarPreparando": false,
+            "slug": "coctel",
+            "usarConfigPersonalizada": false,
+            "variantes": {
+              "grupos": {
+                "gSN": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "snAgu": {
+                      "delta": 0,
+                      "titulo": "Aguacate"
+                    },
+                    "snCeb": {
+                      "delta": 0,
+                      "titulo": "Cebolla"
+                    },
+                    "snCil": {
+                      "delta": 0,
+                      "titulo": "Cilantro"
+                    },
+                    "snPic": {
+                      "delta": 0,
+                      "titulo": "Picante"
+                    }
+                  },
+                  "rol": "SN",
+                  "tipo": "multi",
+                  "titulo": "S/N"
+                },
+                "gTam": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCh": {
+                      "delta": 0,
+                      "titulo": "Chico"
+                    },
+                    "oGr": {
+                      "delta": 85,
+                      "titulo": "Grande"
+                    },
+                    "oMe": {
+                      "delta": 50,
+                      "titulo": "Mediano"
+                    }
+                  },
+                  "rol": "Tamaño",
+                  "tipo": "single",
+                  "titulo": "Tamaño"
+                },
+                "gTip": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCO": {
+                      "delta": 0,
+                      "titulo": "C/O"
+                    },
+                    "oCP": {
+                      "delta": 0,
+                      "titulo": "C/P"
+                    },
+                    "oCam": {
+                      "delta": 0,
+                      "titulo": "Camarón"
+                    },
+                    "oCamp": {
+                      "delta": 0,
+                      "titulo": "Campechano"
+                    },
+                    "oOst": {
+                      "delta": 0,
+                      "titulo": "Ostión"
+                    },
+                    "oPO": {
+                      "delta": 0,
+                      "titulo": "P/O"
+                    },
+                    "oPul": {
+                      "delta": 0,
+                      "titulo": "Pulpo"
+                    }
+                  },
+                  "rol": "Tipo",
+                  "tipo": "single",
+                  "titulo": "Tipo"
+                }
+              },
+              "reglas": {
+                "visible": {
+                  "r1": {
+                    "showGroups": {
+                      "gSN": true
+                    },
+                    "whenGroup": "gTip",
+                    "whenOpt": "oCam"
+                  }
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "consome-c-marisco-1754360356425": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Consome c/marisco",
+            "precio": 50,
+            "prepMin": 5,
+            "slug": "consome-c-marisco",
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "duraznos-crema-11": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Duraznos con Crema",
+            "precio": 35,
+            "receta": {
+              "ingredientes": {
+                "crema-13": 0.08,
+                "durazno-15": 0.15
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "ensalada-1753219184045": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "enviarACocina": true,
+            "nombre": "Ensalada",
+            "precio": 150,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "ensalada",
+            "unidad": "pza",
+            "usarConfigPersonalizada": false,
+            "variantes": {
+              "grupos": {
+                "g1776237674259": {
+                  "excludeFromSibling": "gDe",
+                  "nextGroupId": "gDe",
+                  "obligatorio": false,
+                  "opciones": {
+                    "o1776237882742": {
+                      "titulo": "Cebolla "
+                    }
+                  },
+                  "tipo": "single",
+                  "titulo": "S/N"
+                },
+                "gDe": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCamPes": {
+                      "delta": 0,
+                      "titulo": "Camarón/Pescado"
+                    },
+                    "oMar": {
+                      "delta": 0,
+                      "titulo": "Mariscos"
+                    }
+                  },
+                  "rol": "De",
+                  "tipo": "single",
+                  "titulo": "De"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "envio-1754504589741": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Envio",
+            "precio": 15,
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "filetes-4": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "enviarACocina": true,
+            "nombre": "Filetes",
+            "precio": 135,
+            "prepMin": 9,
+            "receta": {
+              "ingredientes": {
+                "camaron-1": 0.1,
+                "pescado-3": 0.25,
+                "queso-12": 0.05
+              }
+            },
+            "saltarPreparando": false,
+            "slug": "filetes",
+            "usarConfigPersonalizada": true,
+            "variantes": {
+              "grupos": {
+                "gEst": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oDiab": {
+                      "delta": 0,
+                      "titulo": "A la Diabla"
+                    },
+                    "oEmp": {
+                      "delta": 0,
+                      "titulo": "Empanizado"
+                    },
+                    "oEmpa": {
+                      "delta": 40,
+                      "titulo": "Empapelado"
+                    },
+                    "oEnc": {
+                      "delta": 0,
+                      "titulo": "Enchipotlado"
+                    },
+                    "oMex": {
+                      "delta": 0,
+                      "titulo": "A la Mexicana"
+                    },
+                    "oMoj": {
+                      "delta": 0,
+                      "titulo": "Al Mojo"
+                    }
+                  },
+                  "rol": "Estilo",
+                  "tipo": "single",
+                  "titulo": "Estilo"
+                },
+                "gPor": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oMed": {
+                      "delta": -100,
+                      "titulo": "Media Orden"
+                    }
+                  },
+                  "rol": "Porción",
+                  "tipo": "single",
+                  "titulo": "Porción"
+                },
+                "gSN": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "snAgu": {
+                      "delta": 0,
+                      "titulo": "Aguacate"
+                    },
+                    "snJit": {
+                      "delta": 0,
+                      "titulo": "Jitomate"
+                    },
+                    "snLec": {
+                      "delta": 0,
+                      "titulo": "Lechuga"
+                    },
+                    "snPep": {
+                      "delta": 0,
+                      "titulo": "Pepino"
+                    }
+                  },
+                  "rol": "SN",
+                  "tipo": "multi",
+                  "titulo": "S/N"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "flan-napolitano-10": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Flan Napolitano",
+            "precio": 35,
+            "receta": {
+              "ingredientes": {
+                "crema-13": 0.1,
+                "helado-14": 0.05
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "jarra-agua-8": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Jarra de Agua",
+            "precio": 70,
+            "variantes": {
+              "grupos": {
+                "gSab": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oLim": {
+                      "delta": 10,
+                      "titulo": "Limón"
+                    },
+                    "oPepLim": {
+                      "delta": 0,
+                      "titulo": "Pepino/Limon"
+                    },
+                    "oPin": {
+                      "delta": 0,
+                      "titulo": "Piña"
+                    }
+                  },
+                  "rol": "Sabor",
+                  "tipo": "single",
+                  "titulo": "Sabor"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "limonada-rusa-7": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Limonada",
+            "precio": 35,
+            "variantes": {
+              "grupos": {
+                "gRus": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oRus": {
+                      "delta": 0,
+                      "titulo": "Rusa"
+                    }
+                  },
+                  "rol": "Tipo",
+                  "tipo": "single",
+                  "titulo": "Rusaaa"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "michcamaron-1754360074077": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "enviarACocina": true,
+            "nombre": "MichCamaron",
+            "precio": 100,
+            "prepMin": 0,
+            "saltarPreparando": false,
+            "slug": "michcamaron",
+            "unidad": "pza",
+            "usarConfigPersonalizada": false,
+            "visible": {
+              "digital": false,
+              "mesero": false
+            }
+          },
+          "michelada-1753221954881": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Michelada",
+            "precio": 45,
+            "variantes": {
+              "grupos": {
+                "gExt": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oCam": {
+                      "delta": 100,
+                      "titulo": "Camarones"
+                    },
+                    "oChel": {
+                      "delta": 0,
+                      "titulo": "Chelada"
+                    },
+                    "oSal": {
+                      "delta": 0,
+                      "titulo": "Sal Escarchado"
+                    }
+                  },
+                  "rol": "Extras",
+                  "tipo": "single",
+                  "titulo": "Otros"
+                },
+                "gMar": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "oCor": {
+                      "delta": 0,
+                      "titulo": "Corona"
+                    },
+                    "oInd": {
+                      "delta": 0,
+                      "titulo": "Indio"
+                    },
+                    "oSol": {
+                      "delta": 0,
+                      "titulo": "SoL"
+                    },
+                    "oVic": {
+                      "delta": 0,
+                      "titulo": "Victoria"
+                    },
+                    "oXX": {
+                      "delta": 0,
+                      "titulo": "XX"
+                    },
+                    "oXXA": {
+                      "delta": 0,
+                      "titulo": "XX Ambar"
+                    }
+                  },
+                  "rol": "Marca",
+                  "tipo": "single",
+                  "titulo": "🍺"
+                },
+                "gSN": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "snCla": {
+                      "delta": 0,
+                      "titulo": "Clamato"
+                    },
+                    "snMag": {
+                      "delta": 0,
+                      "titulo": "Magi"
+                    },
+                    "snVal": {
+                      "delta": 0,
+                      "titulo": "Valentína"
+                    }
+                  },
+                  "rol": "SN",
+                  "tipo": "multi",
+                  "titulo": "S/N"
+                }
+              }
+            },
+            "visible": {
+              "digital": false,
+              "mesero": true
+            }
+          },
+          "mojarra-5": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Mojarra",
+            "precio": 165,
+            "prepMin": 15,
+            "variantes": {
+              "grupos": {
+                "gEst": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oDiab": {
+                      "delta": 0,
+                      "titulo": "A la Diabla"
+                    },
+                    "oEnc": {
+                      "delta": 0,
+                      "titulo": "Enchipoclada"
+                    },
+                    "oFri": {
+                      "delta": 0,
+                      "titulo": "Frita"
+                    },
+                    "oMex": {
+                      "delta": 0,
+                      "titulo": "A la Mexicana"
+                    },
+                    "oMoj": {
+                      "delta": 0,
+                      "titulo": "Al Mojo"
+                    }
+                  },
+                  "rol": "Estilo",
+                  "tipo": "single",
+                  "titulo": "Estilo"
+                },
+                "gSN": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "snAgu": {
+                      "delta": 0,
+                      "titulo": "Aguacate"
+                    },
+                    "snJit": {
+                      "delta": 0,
+                      "titulo": "Jitomate"
+                    },
+                    "snLec": {
+                      "delta": 0,
+                      "titulo": "Lechuga"
+                    },
+                    "snPep": {
+                      "delta": 0,
+                      "titulo": "Pepino"
+                    }
+                  },
+                  "rol": "SN",
+                  "tipo": "multi",
+                  "titulo": "S/N"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "pulpo-al-gusto-8": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Pulpo",
+            "precio": 135,
+            "prepMin": 9,
+            "receta": {
+              "ingredientes": {
+                "pulpo-2": 0.25
+              }
+            },
+            "variantes": {
+              "grupos": {
+                "gEst": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oAji": {
+                      "delta": 0,
+                      "titulo": "Al Ajillo"
+                    },
+                    "oDiab": {
+                      "delta": 0,
+                      "titulo": "A la Diabla"
+                    },
+                    "oEnc": {
+                      "delta": 0,
+                      "titulo": "Encebollado"
+                    },
+                    "oMex": {
+                      "delta": 0,
+                      "titulo": "A la Mexicana"
+                    },
+                    "oMoj": {
+                      "delta": 0,
+                      "titulo": "Al Mojo"
+                    }
+                  },
+                  "rol": "Estilo",
+                  "tipo": "single",
+                  "titulo": "Estilo"
+                },
+                "gSN": {
+                  "obligatorio": false,
+                  "opciones": {
+                    "snAgu": {
+                      "delta": 0,
+                      "titulo": "Aguacate"
+                    },
+                    "snJit": {
+                      "delta": 0,
+                      "titulo": "Jitomate"
+                    },
+                    "snLec": {
+                      "delta": 0,
+                      "titulo": "Lechuga"
+                    },
+                    "snPep": {
+                      "delta": 0,
+                      "titulo": "Pepino"
+                    }
+                  },
+                  "rol": "SN",
+                  "tipo": "multi",
+                  "titulo": "S/N"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "tequila-1754436871660": {
+            "activo": true,
+            "categoriaId": "catBebidas",
+            "nombre": "Tequila",
+            "precio": 60,
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          },
+          "tostada-2": {
+            "activo": true,
+            "categoriaId": "catPlatillos",
+            "nombre": "Tostada",
+            "precio": 40,
+            "receta": {
+              "ingredientes": {
+                "cebolla-5": 0.03,
+                "pescado-3": 0.08,
+                "tomate-4": 0.05
+              }
+            },
+            "variantes": {
+              "grupos": {
+                "gDe": {
+                  "obligatorio": true,
+                  "opciones": {
+                    "oCam": {
+                      "delta": 0,
+                      "titulo": "Camarón"
+                    },
+                    "oPes": {
+                      "delta": 0,
+                      "titulo": "Pescado"
+                    }
+                  },
+                  "rol": "De",
+                  "tipo": "single",
+                  "titulo": "De"
+                }
+              }
+            },
+            "visible": {
+              "digital": true,
+              "mesero": true
+            }
+          }
+        },
+        "productos_index": {
+          "boing-1753220050777": {
+            "catId": "catBebidas",
+            "nombre": "BOING",
+            "precio": 25,
+            "slug": "boing"
+          },
+          "botella-de-agua-1753903080422": {
+            "catId": "catBebidas",
+            "nombre": "Botella de Agua",
+            "precio": 20,
+            "slug": "botella-de-agua"
+          },
+          "caldo-sopa-7": {
+            "catId": "catPlatillos",
+            "nombre": "Caldo",
+            "precio": 140
+          },
+          "camarones-mixtos-6": {
+            "catId": "catPlatillos",
+            "nombre": "Mixtos",
+            "precio": 175
+          },
+          "coctel-1": {
+            "catId": "catPlatillos",
+            "nombre": "Coctel",
+            "precio": 70,
+            "slug": "coctel"
+          },
+          "consome-c-marisco-1754360356425": {
+            "catId": "catPlatillos",
+            "nombre": "Consome c/marisco",
+            "precio": 50,
+            "slug": "consome-c-marisco"
+          },
+          "ensalada-1753219184045": {
+            "catId": "catPlatillos",
+            "nombre": "Ensalada",
+            "precio": 150,
+            "slug": "ensalada"
+          },
+          "filetes-4": {
+            "catId": "catPlatillos",
+            "nombre": "Filetes",
+            "precio": 135,
+            "slug": "filetes"
+          },
+          "michcamaron-1754360074077": {
+            "catId": "catBebidas",
+            "nombre": "MichCamaron",
+            "precio": 100,
+            "slug": "michcamaron"
+          }
+        }
+      },
+      "mesas": [
+        null,
+        {
+          "estado": "libre",
+          "updatedAt": 1782525414673
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525686263
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525674372
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525650696
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525698157
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525748664
+        },
+        {
+          "estado": "libre",
+          "updatedAt": 1782525669656
+        }
+      ],
+      "pedidos": {
+        "PED-20251223-002": {
+          "_seqItems": 4,
+          "cerrado": true,
+          "createdAt": 1766490377195,
+          "createdAtISO": "2025-12-23T11:46:17.195Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1766492101437,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1766490377543,
+              "agregadoAtISO": "2025-12-23T11:46:17.543Z",
+              "cantidad": 1,
+              "draftId": "i6390",
+              "estado": "entregado",
+              "impreso": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1766490416844,
+              "variantes": {
+                "gSN": ["snCil"],
+                "gTam": ["oMe"],
+                "gTip": ["oCam"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1766492058774,
+              "agregadoAtISO": "2025-12-23T12:14:18.774Z",
+              "cantidad": 1,
+              "draftId": "i1745",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Botella de Agua",
+              "precio": 20,
+              "productCode": "botella-de-agua",
+              "productId": "botella-de-agua-1753903080422"
+            },
+            "IT-003": {
+              "agregadoAt": 1766492058858,
+              "agregadoAtISO": "2025-12-23T12:14:18.858Z",
+              "cantidad": 1,
+              "draftId": "i1747",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Cerveza 🍺",
+              "precio": 35,
+              "productCode": "cerveza",
+              "productId": "cerveza-🍺-1753220409330",
+              "variantes": {
+                "gMar": ["oXX"]
+              }
+            },
+            "IT-004": {
+              "agregadoAt": 1766492089844,
+              "agregadoAtISO": "2025-12-23T12:14:49.844Z",
+              "cantidad": 1,
+              "draftId": "i1749",
+              "estado": "entregado",
+              "impreso": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1766492092349,
+              "variantes": {
+                "gSN": ["snCil", "snPic"],
+                "gTam": ["oMe"],
+                "gTip": ["oPO"]
+              }
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1766492129030,
+          "pagadoAtISO": "2025-12-23T12:15:29.030Z",
+          "sentToKitchenAt": 1766490377889,
+          "sentToKitchenAtISO": "2025-12-23T11:46:17.889Z",
+          "tipo": "mesa",
+          "updatedAt": 1766492129030,
+          "updatedAtISO": "2025-12-23T12:15:29.030Z"
+        },
+        "PED-20260106-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1767695694594,
+          "createdAtISO": "2026-01-06T10:34:54.594Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1767696353643,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1767695694842,
+              "agregadoAtISO": "2026-01-06T10:34:54.842Z",
+              "cantidad": 1,
+              "draftId": "i7543",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1767695695170,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Durazno"],
+              "variantes": {
+                "gSab": ["oDur"]
+              }
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1767696360059,
+          "pagadoAtISO": "2026-01-06T10:46:00.059Z",
+          "tipo": "mesa",
+          "updatedAt": 1767696360059,
+          "updatedAtISO": "2026-01-06T10:46:00.059Z"
+        },
+        "PED-20260106-002": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1767696669818,
+          "createdAtISO": "2026-01-06T10:51:09.818Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1767696752799,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1767696670067,
+              "agregadoAtISO": "2026-01-06T10:51:10.067Z",
+              "cantidad": 1,
+              "draftId": "i7545",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1767696670394,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "variantLabels": ["Aguacate", "Grande", "Camarón"],
+              "variantes": {
+                "gSN": ["snAgu"],
+                "gTam": ["oGr"],
+                "gTip": ["oCam"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1767696728868,
+              "agregadoAtISO": "2026-01-06T10:52:08.868Z",
+              "cantidad": 1,
+              "draftId": "i7547",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1767696743198,
+              "variantLabels": ["Aguacate", "Grande", "Camarón"],
+              "variantes": {
+                "gSN": ["snAgu"],
+                "gTam": ["oGr"],
+                "gTip": ["oCam"]
+              }
+            }
+          },
+          "mesaId": "1",
+          "pagadoAt": 1767696757180,
+          "pagadoAtISO": "2026-01-06T10:52:37.180Z",
+          "sentToKitchenAt": 1767696729034,
+          "sentToKitchenAtISO": "2026-01-06T10:52:09.034Z",
+          "tipo": "mesa",
+          "updatedAt": 1767696757180,
+          "updatedAtISO": "2026-01-06T10:52:37.180Z"
+        },
+        "PED-20260316-001": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1773713976912,
+          "createdAtISO": "2026-03-17T02:19:36.912Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1773714130796,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1773713977159,
+              "agregadoAtISO": "2026-03-17T02:19:37.159Z",
+              "cantidad": 1,
+              "draftId": "i1745",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1773714076390,
+              "variantLabels": ["Aguacate", "Mediano", "Camarón"],
+              "variantes": {
+                "gSN": ["snAgu"],
+                "gTam": ["oMe"],
+                "gTip": ["oCam"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1773713977364,
+              "agregadoAtISO": "2026-03-17T02:19:37.364Z",
+              "cantidad": 1,
+              "draftId": "i1747",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1773713977625,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Mango"],
+              "variantes": {
+                "gSab": ["oMan"]
+              }
+            }
+          },
+          "mesaId": "5",
+          "pagadoAt": 1773714132464,
+          "pagadoAtISO": "2026-03-17T02:22:12.464Z",
+          "sentToKitchenAt": 1773713977625,
+          "sentToKitchenAtISO": "2026-03-17T02:19:37.625Z",
+          "tipo": "mesa",
+          "updatedAt": 1773714132464,
+          "updatedAtISO": "2026-03-17T02:22:12.464Z"
+        },
+        "PED-20260325-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1774457672829,
+          "createdAtISO": "2026-03-25T16:54:32.829Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1774457711778,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1774457673047,
+              "agregadoAtISO": "2026-03-25T16:54:33.047Z",
+              "cantidad": 1,
+              "draftId": "i5331",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1774457691766,
+              "variantLabels": ["Aguacate", "Cebolla", "Cilantro", "Picante", "Mediano", "Camarón"],
+              "variantes": {
+                "gSN": ["snAgu", "snCeb", "snCil", "snPic"],
+                "gTam": ["oMe"],
+                "gTip": ["oCam"]
+              }
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1774457713486,
+          "pagadoAtISO": "2026-03-25T16:55:13.486Z",
+          "sentToKitchenAt": 1774457673294,
+          "sentToKitchenAtISO": "2026-03-25T16:54:33.294Z",
+          "tipo": "mesa",
+          "updatedAt": 1774457713486,
+          "updatedAtISO": "2026-03-25T16:55:13.486Z"
+        },
+        "PED-20260413-001": {
+          "_seqItems": 4,
+          "cerrado": true,
+          "createdAt": 1776142586796,
+          "createdAtISO": "2026-04-14T04:56:26.796Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1776237096829,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1776142587117,
+              "agregadoAtISO": "2026-04-14T04:56:27.117Z",
+              "cantidad": 1,
+              "draftId": "i7672",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1776142614911,
+              "variantLabels": ["Cebolla", "Mediano", "Camarón"],
+              "variantes": {
+                "gSN": ["snCeb"],
+                "gTam": ["oMe"],
+                "gTip": ["oCam"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1776142587365,
+              "agregadoAtISO": "2026-04-14T04:56:27.365Z",
+              "cantidad": 1,
+              "draftId": "i7674",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776142587689,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Mango"],
+              "variantes": {
+                "gSab": ["oMan"]
+              }
+            },
+            "IT-003": {
+              "agregadoAt": 1776142628901,
+              "agregadoAtISO": "2026-04-14T04:57:08.901Z",
+              "cantidad": 1,
+              "draftId": "i7676",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776142629105,
+              "nombre": "Botella de Agua",
+              "precio": 20,
+              "productCode": "botella-de-agua",
+              "productId": "botella-de-agua-1753903080422"
+            },
+            "IT-004": {
+              "agregadoAt": 1776142658006,
+              "agregadoAtISO": "2026-04-14T04:57:38.006Z",
+              "cantidad": 1,
+              "draftId": "i7678",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Ensalada",
+              "precio": 150,
+              "productCode": "ensalada",
+              "productId": "ensalada-1753219184045",
+              "startedAt": 1776142665917,
+              "variantLabels": ["Camarón/Pescado"],
+              "variantes": {
+                "gDe": ["oCamPes"]
+              }
+            }
+          },
+          "mesaId": "4",
+          "pagadoAt": 1776237097331,
+          "pagadoAtISO": "2026-04-15T07:11:37.331Z",
+          "sentToKitchenAt": 1776142587689,
+          "sentToKitchenAtISO": "2026-04-14T04:56:27.689Z",
+          "tipo": "mesa",
+          "updatedAt": 1776237097331,
+          "updatedAtISO": "2026-04-15T07:11:37.331Z"
+        },
+        "PED-20260415-001": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1776236911535,
+          "createdAtISO": "2026-04-15T07:08:31.535Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1776237029521,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1776236911780,
+              "agregadoAtISO": "2026-04-15T07:08:31.780Z",
+              "cantidad": 1,
+              "draftId": "i1883",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Caldo",
+              "precio": 65,
+              "productCode": "caldo",
+              "productId": "caldo-sopa-7",
+              "startedAt": 1776237022572,
+              "variantLabels": ["Media Orden", "Mariscos"],
+              "variantes": {
+                "gDe": ["oMar"],
+                "gPor": ["oMed"]
+              }
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1776237030107,
+          "pagadoAtISO": "2026-04-15T07:10:30.107Z",
+          "sentToKitchenAt": 1776236912047,
+          "sentToKitchenAtISO": "2026-04-15T07:08:32.047Z",
+          "tipo": "mesa",
+          "updatedAt": 1776237030107,
+          "updatedAtISO": "2026-04-15T07:10:30.107Z"
+        },
+        "PED-20260415-002": {
+          "_seqItems": 10,
+          "cerrado": true,
+          "createdAt": 1776237061899,
+          "createdAtISO": "2026-04-15T07:11:01.899Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1776237848962,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1776237062193,
+              "agregadoAtISO": "2026-04-15T07:11:02.193Z",
+              "cantidad": 1,
+              "draftId": "i1889",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776237062670,
+              "nombre": "Coca-Cola",
+              "precio": 30,
+              "productCode": "coca-cola",
+              "productId": "coca-cola-1753219809285"
+            },
+            "IT-002": {
+              "agregadoAt": 1776237062412,
+              "agregadoAtISO": "2026-04-15T07:11:02.412Z",
+              "cantidad": 1,
+              "draftId": "i1891",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776237062670,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Mango"],
+              "variantes": {
+                "gSab": ["oMan"]
+              }
+            },
+            "IT-003": {
+              "agregadoAt": 1776237414628,
+              "agregadoAtISO": "2026-04-15T07:16:54.628Z",
+              "cantidad": 1,
+              "draftId": "i1893",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1776237511267,
+              "variantLabels": ["Grande", "Camarón"],
+              "variantes": {
+                "gTam": ["oGr"],
+                "gTip": ["oCam"]
+              }
+            },
+            "IT-004": {
+              "agregadoAt": 1776237414692,
+              "agregadoAtISO": "2026-04-15T07:16:54.692Z",
+              "cantidad": 3,
+              "draftId": "i1895",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Tostada",
+              "precio": 40,
+              "productCode": "tostada",
+              "productId": "tostada-2",
+              "startedAt": 1776237512093,
+              "variantLabels": ["Camarón"],
+              "variantes": {
+                "gDe": ["oCam"]
+              }
+            },
+            "IT-005": {
+              "agregadoAt": 1776237414698,
+              "agregadoAtISO": "2026-04-15T07:16:54.698Z",
+              "cantidad": 1,
+              "draftId": "i1897",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Ensalada",
+              "precio": 150,
+              "productCode": "ensalada",
+              "productId": "ensalada-1753219184045",
+              "startedAt": 1776237518091,
+              "variantLabels": ["Mariscos"],
+              "variantes": {
+                "gDe": ["oMar"]
+              }
+            },
+            "IT-006": {
+              "agregadoAt": 1776237553957,
+              "agregadoAtISO": "2026-04-15T07:19:13.957Z",
+              "cantidad": 1,
+              "draftId": "i1899",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776237554163,
+              "nombre": "Limonada",
+              "precio": 35,
+              "productCode": "limonada",
+              "productId": "limonada-rusa-7",
+              "variantLabels": ["Rusa"],
+              "variantes": {
+                "gRus": ["oRus"]
+              }
+            },
+            "IT-007": {
+              "agregadoAt": 1776237554019,
+              "agregadoAtISO": "2026-04-15T07:19:14.019Z",
+              "cantidad": 1,
+              "draftId": "i1901",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776237554163,
+              "nombre": "Cerveza 🍺",
+              "precio": 35,
+              "productCode": "cerveza",
+              "productId": "cerveza-🍺-1753220409330",
+              "variantLabels": ["XX"],
+              "variantes": {
+                "gMar": ["oXX"]
+              }
+            },
+            "IT-008": {
+              "agregadoAt": 1776237745941,
+              "agregadoAtISO": "2026-04-15T07:22:25.941Z",
+              "cantidad": 1,
+              "draftId": "i1903",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1776237746200,
+              "nombre": "Duraznos con Crema",
+              "precio": 35,
+              "productCode": "duraznos-con-crema",
+              "productId": "duraznos-crema-11"
+            },
+            "IT-009": {
+              "agregadoAt": 1776237746006,
+              "agregadoAtISO": "2026-04-15T07:22:26.006Z",
+              "cantidad": 1,
+              "draftId": "i1905",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1776237746200,
+              "nombre": "Flan Napolitano",
+              "precio": 35,
+              "productCode": "flan-napolitano",
+              "productId": "flan-napolitano-10"
+            },
+            "IT-010": {
+              "agregadoAt": 1776237746012,
+              "agregadoAtISO": "2026-04-15T07:22:26.012Z",
+              "cantidad": 1,
+              "draftId": "i1907",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1776237746200,
+              "nombre": "Michelada",
+              "precio": 145,
+              "productCode": "michelada",
+              "productId": "michelada-1753221954881",
+              "variantLabels": ["Camarones", "Indio", "Clamato", "Magi", "Valentína"],
+              "variantes": {
+                "gExt": ["oCam"],
+                "gMar": ["oInd"],
+                "gSN": ["snCla", "snMag", "snVal"]
+              }
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1776237856820,
+          "pagadoAtISO": "2026-04-15T07:24:16.820Z",
+          "sentToKitchenAt": 1776237414886,
+          "sentToKitchenAtISO": "2026-04-15T07:16:54.886Z",
+          "tipo": "mesa",
+          "updatedAt": 1776237856820,
+          "updatedAtISO": "2026-04-15T07:24:16.820Z"
+        },
+        "PED-20260415-003": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1776237949528,
+          "createdAtISO": "2026-04-15T07:25:49.528Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782478431564,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1776237949825,
+              "agregadoAtISO": "2026-04-15T07:25:49.825Z",
+              "cantidad": 1,
+              "draftId": "i1909",
+              "estado": "entregado",
+              "impreso": true,
+              "nombre": "Ensalada",
+              "precio": 150,
+              "productCode": "ensalada",
+              "productId": "ensalada-1753219184045",
+              "startedAt": 1780906430678,
+              "variantLabels": ["Cebolla ", "Mariscos"],
+              "variantes": {
+                "g1776237674259": ["o1776237882742"],
+                "gDe": ["oMar"]
+              }
+            }
+          },
+          "mesaId": "1",
+          "pagadoAt": 1782478433472,
+          "pagadoAtISO": "2026-06-26T12:53:53.472Z",
+          "sentToKitchenAt": 1776237950096,
+          "sentToKitchenAtISO": "2026-04-15T07:25:50.096Z",
+          "tipo": "mesa",
+          "updatedAt": 1782478433472,
+          "updatedAtISO": "2026-06-26T12:53:53.472Z"
+        },
+        "PED-20260501-001": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1777690038602,
+          "createdAtISO": "2026-05-02T02:47:18.602Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782478338029,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1777690038845,
+              "agregadoAtISO": "2026-05-02T02:47:18.845Z",
+              "cantidad": 1,
+              "draftId": "i9892",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1777690039144,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Guayaba"],
+              "variantes": {
+                "gSab": ["oGua"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1777690111893,
+              "agregadoAtISO": "2026-05-02T02:48:31.893Z",
+              "cantidad": 1,
+              "draftId": "i9894",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1777690139957,
+              "variantLabels": ["Cebolla", "Grande", "Camarón"],
+              "variantes": {
+                "gSN": ["snCeb"],
+                "gTam": ["oGr"],
+                "gTip": ["oCam"]
+              }
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1782478342821,
+          "pagadoAtISO": "2026-06-26T12:52:22.821Z",
+          "sentToKitchenAt": 1777690112281,
+          "sentToKitchenAtISO": "2026-05-02T02:48:32.281Z",
+          "tipo": "mesa",
+          "updatedAt": 1782478342821,
+          "updatedAtISO": "2026-06-26T12:52:22.821Z"
+        },
+        "PED-20260626-001": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1782478373493,
+          "createdAtISO": "2026-06-26T12:52:53.493Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782478399332,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782478373770,
+              "agregadoAtISO": "2026-06-26T12:52:53.770Z",
+              "cantidad": 1,
+              "draftId": "i2169",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782478374432,
+              "nombre": "Cerveza 🍺",
+              "precio": 35,
+              "productCode": "cerveza",
+              "productId": "cerveza-🍺-1753220409330",
+              "variantLabels": ["XX Ambar"],
+              "variantes": {
+                "gMar": ["oXXA"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1782478374039,
+              "agregadoAtISO": "2026-06-26T12:52:54.039Z",
+              "cantidad": 1,
+              "draftId": "i2171",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Caldo",
+              "precio": -85,
+              "productCode": "caldo",
+              "productId": "caldo-sopa-7",
+              "startedAt": 1782478386102,
+              "variantLabels": ["Pescado", "Media Orden"],
+              "variantes": {
+                "gDe": ["oPes"],
+                "gPor": ["oMed"]
+              }
+            }
+          },
+          "mesaId": "6",
+          "pagadoAt": 1782478400116,
+          "pagadoAtISO": "2026-06-26T12:53:20.116Z",
+          "sentToKitchenAt": 1782478374432,
+          "sentToKitchenAtISO": "2026-06-26T12:52:54.432Z",
+          "tipo": "mesa",
+          "updatedAt": 1782478400116,
+          "updatedAtISO": "2026-06-26T12:53:20.116Z"
+        },
+        "PED-20260626-002": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782478840178,
+          "createdAtISO": "2026-06-26T13:00:40.178Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782478853224,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782478840599,
+              "agregadoAtISO": "2026-06-26T13:00:40.599Z",
+              "cantidad": 1,
+              "draftId": "i5037",
+              "estado": "entregado",
+              "impreso": true,
+              "listoAt": 1782478841020,
+              "nombre": "Duraznos con Crema",
+              "precio": 35,
+              "productCode": "duraznos-con-crema",
+              "productId": "duraznos-crema-11"
+            }
+          },
+          "mesaId": "6",
+          "pagadoAt": 1782478854187,
+          "pagadoAtISO": "2026-06-26T13:00:54.187Z",
+          "tipo": "mesa",
+          "updatedAt": 1782478854187,
+          "updatedAtISO": "2026-06-26T13:00:54.187Z"
+        },
+        "PED-20260626-003": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782478872747,
+          "createdAtISO": "2026-06-26T13:01:12.747Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782478885562,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782478873029,
+              "agregadoAtISO": "2026-06-26T13:01:13.029Z",
+              "cantidad": 1,
+              "draftId": "i5039",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1782478878300,
+              "variantLabels": ["Cilantro", "Mediano", "Pulpo"],
+              "variantes": {
+                "gSN": ["snCil"],
+                "gTam": ["oMe"],
+                "gTip": ["oPul"]
+              }
+            }
+          },
+          "mesaId": "6",
+          "pagadoAt": 1782478886405,
+          "pagadoAtISO": "2026-06-26T13:01:26.405Z",
+          "sentToKitchenAt": 1782478873354,
+          "sentToKitchenAtISO": "2026-06-26T13:01:13.354Z",
+          "tipo": "mesa",
+          "updatedAt": 1782478886405,
+          "updatedAtISO": "2026-06-26T13:01:26.405Z"
+        },
+        "PED-20260626-004": {
+          "_seqItems": 3,
+          "cerrado": true,
+          "createdAt": 1782489187354,
+          "createdAtISO": "2026-06-26T15:53:07.354Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782489220603,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782489187645,
+              "agregadoAtISO": "2026-06-26T15:53:07.645Z",
+              "cantidad": 1,
+              "draftId": "i2077",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1782489210848,
+              "variantLabels": ["Cebolla", "Grande", "Campechano"],
+              "variantes": {
+                "gSN": ["snCeb"],
+                "gTam": ["oGr"],
+                "gTip": ["oCamp"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1782489197495,
+              "agregadoAtISO": "2026-06-26T15:53:17.495Z",
+              "cantidad": 1,
+              "draftId": "i2079",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Caldo",
+              "precio": 5,
+              "productCode": "caldo",
+              "productId": "caldo-sopa-7",
+              "startedAt": 1782489211733,
+              "variantLabels": ["Pescado"],
+              "variantes": {
+                "gDe": ["oPes"]
+              }
+            },
+            "IT-003": {
+              "agregadoAt": 1782489204866,
+              "agregadoAtISO": "2026-06-26T15:53:24.866Z",
+              "cantidad": 1,
+              "draftId": "i2081",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782489204992,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Mango"],
+              "variantes": {
+                "gSab": ["oMan"]
+              }
+            }
+          },
+          "mesaId": "7",
+          "pagadoAt": 1782489222544,
+          "pagadoAtISO": "2026-06-26T15:53:42.544Z",
+          "sentToKitchenAt": 1782489187906,
+          "sentToKitchenAtISO": "2026-06-26T15:53:07.906Z",
+          "tipo": "mesa",
+          "updatedAt": 1782489222544,
+          "updatedAtISO": "2026-06-26T15:53:42.544Z"
+        },
+        "PED-20260626-005": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782489226178,
+          "createdAtISO": "2026-06-26T15:53:46.178Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525647709,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782489226502,
+              "agregadoAtISO": "2026-06-26T15:53:46.502Z",
+              "cantidad": 1,
+              "draftId": "i2083",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782489226874,
+              "nombre": "Botella de Agua",
+              "precio": 20,
+              "productCode": "botella-de-agua",
+              "productId": "botella-de-agua-1753903080422"
+            }
+          },
+          "mesaId": "4",
+          "pagadoAt": 1782525650560,
+          "pagadoAtISO": "2026-06-27T02:00:50.560Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525650560,
+          "updatedAtISO": "2026-06-27T02:00:50.560Z"
+        },
+        "PED-20260626-006": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1782489233133,
+          "createdAtISO": "2026-06-26T15:53:53.133Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525694923,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782489233435,
+              "agregadoAtISO": "2026-06-26T15:53:53.435Z",
+              "cantidad": 4,
+              "draftId": "i2085",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782489233710,
+              "nombre": "BOING",
+              "precio": 25,
+              "productCode": "boing",
+              "productId": "boing-1753220050777",
+              "variantLabels": ["Guayaba"],
+              "variantes": {
+                "gSab": ["oGua"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1782489245811,
+              "agregadoAtISO": "2026-06-26T15:54:05.811Z",
+              "cantidad": 1,
+              "draftId": "i2087",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Filetes",
+              "precio": 175,
+              "productCode": "filetes",
+              "productId": "filetes-4",
+              "startedAt": 1782489414263,
+              "variantLabels": ["Empapelado"],
+              "variantes": {
+                "gEst": ["oEmpa"]
+              }
+            }
+          },
+          "mesaId": "5",
+          "pagadoAt": 1782525698029,
+          "pagadoAtISO": "2026-06-27T02:01:38.029Z",
+          "sentToKitchenAt": 1782489245940,
+          "sentToKitchenAtISO": "2026-06-26T15:54:05.940Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525698029,
+          "updatedAtISO": "2026-06-27T02:01:38.029Z"
+        },
+        "PED-20260626-007": {
+          "_seqItems": 2,
+          "cerrado": true,
+          "createdAt": 1782525294145,
+          "createdAtISO": "2026-06-27T01:54:54.145Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525404302,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782525294483,
+              "agregadoAtISO": "2026-06-27T01:54:54.483Z",
+              "cantidad": 1,
+              "draftId": "i1024",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 155,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1782525370004,
+              "variantLabels": ["Aguacate", "Cebolla", "Cilantro", "Picante", "Grande", "Pulpo"],
+              "variantes": {
+                "gSN": ["snAgu", "snCeb", "snCil", "snPic"],
+                "gTam": ["oGr"],
+                "gTip": ["oPul"]
+              }
+            },
+            "IT-002": {
+              "agregadoAt": 1782525348800,
+              "agregadoAtISO": "2026-06-27T01:55:48.800Z",
+              "cantidad": 1,
+              "draftId": "i1026",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Coctel",
+              "precio": 120,
+              "productCode": "coctel",
+              "productId": "coctel-1",
+              "startedAt": 1782525370541,
+              "variantLabels": ["Picante", "Mediano", "Ostión"],
+              "variantes": {
+                "gSN": ["snPic"],
+                "gTam": ["oMe"],
+                "gTip": ["oOst"]
+              }
+            }
+          },
+          "mesaId": "1",
+          "pagadoAt": 1782525414537,
+          "pagadoAtISO": "2026-06-27T01:56:54.537Z",
+          "sentToKitchenAt": 1782525294788,
+          "sentToKitchenAtISO": "2026-06-27T01:54:54.788Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525414537,
+          "updatedAtISO": "2026-06-27T01:56:54.537Z"
+        },
+        "PED-20260626-008": {
+          "_seqItems": 4,
+          "cerrado": true,
+          "createdAt": 1782525540870,
+          "createdAtISO": "2026-06-27T01:59:00.870Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525683148,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782525541180,
+              "agregadoAtISO": "2026-06-27T01:59:01.180Z",
+              "cantidad": 1,
+              "draftId": "i1028",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782525541449,
+              "nombre": "Botella de Agua",
+              "precio": 20,
+              "productCode": "botella-de-agua",
+              "productId": "botella-de-agua-1753903080422"
+            },
+            "IT-002": {
+              "agregadoAt": 1782525556285,
+              "agregadoAtISO": "2026-06-27T01:59:16.285Z",
+              "cantidad": 1,
+              "draftId": "i1030",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Caldo",
+              "precio": 155,
+              "productCode": "caldo",
+              "productId": "caldo-sopa-7",
+              "startedAt": 1782525614107,
+              "variantLabels": ["Mariscos"],
+              "variantes": {
+                "gDe": ["oMar"]
+              }
+            },
+            "IT-003": {
+              "agregadoAt": 1782525600928,
+              "agregadoAtISO": "2026-06-27T02:00:00.928Z",
+              "cantidad": 1,
+              "draftId": "i1032",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Mojarra",
+              "precio": 165,
+              "productCode": "mojarra",
+              "productId": "mojarra-5",
+              "startedAt": 1782525615296,
+              "variantLabels": ["Frita"],
+              "variantes": {
+                "gEst": ["oFri"]
+              }
+            },
+            "IT-004": {
+              "agregadoAt": 1782525600995,
+              "agregadoAtISO": "2026-06-27T02:00:00.995Z",
+              "cantidad": 1,
+              "draftId": "i1034",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782525601149,
+              "nombre": "Coca-Cola",
+              "precio": 30,
+              "productCode": "coca-cola",
+              "productId": "coca-cola-1753219809285"
+            }
+          },
+          "mesaId": "2",
+          "pagadoAt": 1782525686101,
+          "pagadoAtISO": "2026-06-27T02:01:26.101Z",
+          "sentToKitchenAt": 1782525556419,
+          "sentToKitchenAtISO": "2026-06-27T01:59:16.419Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525686101,
+          "updatedAtISO": "2026-06-27T02:01:26.101Z"
+        },
+        "PED-20260626-009": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782525653878,
+          "createdAtISO": "2026-06-27T02:00:53.878Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525659788,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782525654186,
+              "agregadoAtISO": "2026-06-27T02:00:54.186Z",
+              "cantidad": 1,
+              "draftId": "i2091",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "listoAt": 1782525654468,
+              "nombre": "Botella de Agua",
+              "precio": 20,
+              "productCode": "botella-de-agua",
+              "productId": "botella-de-agua-1753903080422"
+            }
+          },
+          "mesaId": "3",
+          "pagadoAt": 1782525661818,
+          "pagadoAtISO": "2026-06-27T02:01:01.818Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525661818,
+          "updatedAtISO": "2026-06-27T02:01:01.818Z"
+        },
+        "PED-20260626-010": {
+          "_seqItems": 1,
+          "cerrado": true,
+          "createdAt": 1782525703021,
+          "createdAtISO": "2026-06-27T02:01:43.021Z",
+          "cuentaImpresa": true,
+          "cuentaImpresaAt": 1782525747031,
+          "estatus": "cerrado",
+          "items": {
+            "IT-001": {
+              "agregadoAt": 1782525703413,
+              "agregadoAtISO": "2026-06-27T02:01:43.413Z",
+              "cantidad": 1,
+              "draftId": "i1018",
+              "estado": "entregado",
+              "impreso": true,
+              "inventoryDeducted": true,
+              "nombre": "Consome c/marisco",
+              "precio": 50,
+              "productCode": "consome-c-marisco",
+              "productId": "consome-c-marisco-1754360356425",
+              "startedAt": 1782525714312
+            }
+          },
+          "mesaId": "6",
+          "pagadoAt": 1782525748528,
+          "pagadoAtISO": "2026-06-27T02:02:28.528Z",
+          "sentToKitchenAt": 1782525703688,
+          "sentToKitchenAtISO": "2026-06-27T02:01:43.688Z",
+          "tipo": "mesa",
+          "updatedAt": 1782525748528,
+          "updatedAtISO": "2026-06-27T02:02:28.528Z"
+        }
+      },
+      "pedidos_por_mesa": [
+        null,
+        {
+          "PED-20260107-001": 1767830815140
+        }
+      ],
+      "secuencias": {
+        "pedidos": {
+          "20251227": 3,
+          "20260106": 2,
+          "20260107": 1,
+          "20260316": 1,
+          "20260325": 1,
+          "20260413": 1,
+          "20260415": 3,
+          "20260501": 1,
+          "20260626": 10
+        }
+      },
+      "spool": {
+        "hub": {
+          "queue": {
+            "job_cuenta_v1_PED-20260316-001": true,
+            "job_cuenta_v1_PED-20260325-001": true,
+            "job_cuenta_v1_PED-20260413-001": true,
+            "job_cuenta_v1_PED-20260415-001": true,
+            "job_cuenta_v1_PED-20260415-002": true,
+            "job_cuenta_v1_PED-20260415-002_reprint_1776237848819": true
+          }
+        }
+      }
+    }
+  }
+}

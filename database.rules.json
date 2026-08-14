@@ -1,0 +1,41 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "access_codes": {
+      "$code": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "2 alimentos_y_bebidas": {
+      "marisquerias": {
+        "$tenantId": {
+          ".read": true,
+          ".write": true,
+
+          "dispositivos_autorizados": {
+            "$deviceId": {
+              ".validate": "data.exists()",
+              "rol": { ".validate": "newData.val() === data.val()" },
+              "isAdmin": { ".validate": "newData.val() === data.val()" }
+            }
+          },
+
+          "pedidos": {
+            ".indexOn": ["estatus", "mesaId", "cuentaSolicitada", "cerrado"]
+          }
+        }
+      }
+    },
+
+    "tenants": {
+      "$tenantId": {
+        ".read": "auth != null",
+        ".write": false
+      }
+    }
+  }
+}

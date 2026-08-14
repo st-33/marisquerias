@@ -1,0 +1,43 @@
+{
+  "extends": "expo/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    "rootDir": ".",
+    "types": ["node", "jest"],
+    "paths": {
+      "@assets/*": ["./assets/*"],
+      "@plataforma/*": ["./src/plataforma/*"],
+      "@compartido/*": ["./src/compartido/*"],
+      "@ecosistema/*": ["./src/compartido/ecosistema/*"],
+      "@temas/*": ["./src/compartido/temas/*"],
+      "@core/*": ["./src/plataforma/core/*"],
+      "@base/*": ["./src/plataforma/base/*"],
+      "@components/*": ["./src/compartido/componentes/*"],
+      "@hooks/*": ["./src/compartido/hooks/*"],
+      "@lib/*": ["../lib/*"]
+    }
+  },
+  "files": ["app/index.tsx", "app/_layout.tsx", "expo-env.d.ts"],
+  "exclude": [
+    "**/node_modules/**/*",
+    "**/*.d.ts",
+    "app-example/**/*",
+    "*.d.ts",
+    "info/**/*",
+    "Evidencia/**/*",
+    "src_legacy/**/*",
+    "app_legacy/**/*"
+  ],
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+}
