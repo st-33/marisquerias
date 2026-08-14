@@ -95,3 +95,10 @@ La lógica y el audio de Cocina se movieron a `plataforma/dominios/marisqueria/c
 
 Tipos, estilo local y las 16 suites con 104 pruebas pasaron. La validación web nueva quedó bloqueada por un agotamiento de memoria de Metro: la primera ejecución agotó el límite por defecto y el único reintento con 8 GB también agotó su heap. No se reintentará automáticamente; los cambios quedan validados estáticamente y con pruebas.
 
+
+## Tramo Entrega → Pago
+
+La entrega nace en `OrderList` y llega a `markAsDelivered` del orquestador de Mesero; esa acción marca el item como `entregado` mediante `PedidosRepository.actualizarEstadoItem` y puede lanzar el descuento de inventario configurado. La cuenta se solicita desde `gestionarImpresion`, que deja la mesa en `solicitar_cuenta`. El pago exige cuenta impresa e ítems entregados; `markAsPaid` cierra el pedido con `PedidosRepository.cerrar`, guarda el pago y elimina su índice por mesa, después libera la mesa con `MesasRepository.liberar`.
+
+No se movieron `PedidosRepository` ni `MesasRepository`: son infraestructura compartida y alteran contratos persistentes de pedidos, mesas e índices. Tampoco se recorrió el flujo contra RTDB, porque requiere un tenant autorizado; el circuito quedó demostrado por llamadas, tipos y pruebas existentes.
+
