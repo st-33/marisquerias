@@ -11,6 +11,7 @@ import { SalesDistributionPieChart } from '../../../../../compartido/componentes
 import { SalesLineChart } from '../../../../../compartido/componentes/charts/SalesLineChart';
 import { TopProductsBarChart } from '../../../../../compartido/componentes/charts/TopProductsBarChart';
 import { AdminLayout } from '../../../../../compartido/componentes/layouts/AdminLayout';
+import { useAppTheme } from '../../../../../compartido/temas';
 import { getRtdb } from '../../../../core/firebase';
 import { useStore } from '../../../../core/store';
 import { useNotifications } from '../../../../../compartido/hooks/useNotifications';
@@ -23,59 +24,19 @@ import {
 } from '../../../alimentos_y_bebidas';
 import { useAdminLogic } from './useAdminLogic';
 import type { FabItem } from '../../../../core/types/contratos';
+import {
+  AdminActionButton,
+  AdminMetricTile,
+  AdminSectionHeading,
+  AdminStatusPill,
+  AdminSurface,
+} from '../ui/AdminPrimitives';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
 
-type MetricCardProps = {
-  title: string;
-  value: string;
-  subtitle?: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  trend?: 'up' | 'down' | 'neutral';
-  containerStyle?: any;
-};
-
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  color,
-  trend,
-  containerStyle,
-}: MetricCardProps) {
-  return (
-    <View style={[styles.metricCard, containerStyle]}>
-      <View style={styles.metricHeader}>
-        <View style={[styles.iconBadge, { backgroundColor: `${color}15` }]}>
-          <Ionicons name={icon} size={22} color={color} />
-        </View>
-        {trend && (
-          <View
-            style={[
-              styles.trendBadge,
-              trend === 'up' && styles.trendBadgeUp,
-              trend === 'down' && styles.trendBadgeDown,
-            ]}
-          >
-            <Ionicons
-              name={trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'remove'}
-              size={14}
-              color={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
-            />
-          </View>
-        )}
-      </View>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricTitle}>{title}</Text>
-      {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
-    </View>
-  );
-}
-
 export function AdminDashboardScreen() {
   const { width } = useWindowDimensions();
+  const { colors } = useAppTheme();
   const isMobile = width < 480;
   const isTablet = width >= 480 && width < 900;
   const isDesktop = width >= 900;
@@ -202,10 +163,22 @@ export function AdminDashboardScreen() {
   return (
     <AdminLayout>
       <View style={styles.container}>
-        <View style={[styles.header, isMobile && styles.headerMobile]}>
+        <View
+          style={[
+            styles.header,
+            { backgroundColor: colors.surface, borderBottomColor: colors.border },
+            isMobile && styles.headerMobile,
+          ]}
+        >
           <View style={styles.headerLeft}>
-            <Ionicons name="stats-chart" size={26} color="#ffffff" />
-            <Text style={styles.title}>Métricas y Datos</Text>
+            <View style={[styles.headerIcon, { backgroundColor: `${colors.primary}18` }]}>
+              <Ionicons name="stats-chart" size={21} color={colors.primary} />
+            </View>
+            <View style={styles.headerMeta}>
+              <Text style={[styles.eyebrow, { color: colors.primary }]}>Centro de control</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Métricas y datos</Text>
+            </View>
+            <AdminStatusPill label="Operativo" tone="success" icon="pulse-outline" />
           </View>
           <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
             {isMobile ? (
@@ -264,12 +237,11 @@ export function AdminDashboardScreen() {
                 ))}
               </View>
             )}
-            <Pressable
+            <AdminActionButton
+              label="Actualizar"
+              icon="refresh"
               onPress={actions.refreshMetrics}
-              style={({ pressed }) => [styles.refreshBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="refresh" size={20} color="#3b82f6" />
-            </Pressable>
+            />
           </View>
         </View>
 
@@ -283,72 +255,81 @@ export function AdminDashboardScreen() {
           ]}
         >
           {/* Métrica principal - Ventas filtradas */}
-          <View style={styles.mainMetricCard}>
-            <Text style={styles.mainMetricLabel}>
-              {dateFilter === 'hoy'
-                ? 'Ventas de Hoy'
-                : dateFilter === 'ayer'
-                ? 'Ventas de Ayer'
-                : dateFilter === 'hace3dias'
-                ? 'Ventas últimos 3 días'
-                : dateFilter === 'semana'
-                ? 'Ventas de esta Semana'
-                : 'Ventas de este Mes'}
-            </Text>
-            <Text style={styles.mainMetricValue}>
+          <AdminSurface style={styles.mainMetricCard} accent={colors.primary}>
+            <AdminSectionHeading
+              eyebrow="Rendimiento"
+              title={
+                dateFilter === 'hoy'
+                  ? 'Ventas de hoy'
+                  : dateFilter === 'ayer'
+                  ? 'Ventas de ayer'
+                  : dateFilter === 'hace3dias'
+                  ? 'Ventas de los últimos 3 días'
+                  : dateFilter === 'semana'
+                  ? 'Ventas de esta semana'
+                  : 'Ventas de este mes'
+              }
+              subtitle="Lectura rápida del periodo seleccionado"
+              icon="trending-up"
+              action={<AdminStatusPill label="Periodo activo" tone="accent" />}
+            />
+            <Text style={[styles.mainMetricValue, { color: colors.text }]}>
               ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
             </Text>
-            <Text style={styles.mainMetricSubtitle}>
+            <Text style={[styles.mainMetricSubtitle, { color: colors.primary }]}>
               {metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0}{' '}
               subpedidos finalizados
             </Text>
-          </View>
+          </AdminSurface>
 
           {/* Grid de métricas secundarias */}
           <View style={styles.metricsGrid}>
-            <MetricCard
-              title="Promedio por Pedido"
+            <AdminMetricTile
+              title="Promedio por pedido"
               value={`$${(metrics?.ticketPromedio ?? 0).toFixed(2)}`}
               subtitle="Ticket promedio acumulado"
-              icon="receipt"
-              color="#3b82f6"
-              containerStyle={{ width: metricCardWidth }}
+              icon="receipt-outline"
+              color={colors.primary}
+              style={{ width: metricCardWidth }}
             />
-            <MetricCard
-              title="Vendedor Estrella"
+            <AdminMetricTile
+              title="Vendedor estrella"
               value={metrics?.vendedorEstrella?.nombre ?? 'Sin ventas'}
-              subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} (${
+              subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} · ${
                 metrics?.vendedorEstrella?.subpedidos ?? 0
-              } subpedidos)`}
-              icon="trophy"
-              color="#f59e0b"
-              containerStyle={{ width: metricCardWidth }}
+              } subpedidos`}
+              icon="trophy-outline"
+              color={colors.warning}
+              style={{ width: metricCardWidth }}
             />
-            <MetricCard
-              title="Platillo Más Vendido"
+            <AdminMetricTile
+              title="Platillo más vendido"
               value={metrics?.platilloMasVendido?.nombre ?? 'Sin ventas'}
               subtitle={`${metrics?.platilloMasVendido?.cantidad ?? 0} unidades vendidas`}
-              icon="flame"
-              color="#ef4444"
-              containerStyle={{ width: metricCardWidth }}
+              icon="flame-outline"
+              color={colors.danger}
+              style={{ width: metricCardWidth }}
             />
-            <MetricCard
-              title="Hora Pico de Ventas"
+            <AdminMetricTile
+              title="Hora pico de ventas"
               value={metrics?.horaPico?.hora ?? 'N/A'}
               subtitle={`${metrics?.horaPico?.pedidos ?? 0} pedidos en esta hora`}
-              icon="time"
+              icon="time-outline"
               color="#8b5cf6"
-              containerStyle={{ width: metricCardWidth }}
+              style={{ width: metricCardWidth }}
             />
           </View>
 
           {/* 🚨 SECCIÓN DE ALERTAS INTELIGENTES */}
           {tieneAlertas && (
-            <View style={styles.alertsContainer}>
-              <View style={styles.sectionHeaderContainer}>
-                <Ionicons name="warning" size={22} color="#ef4444" />
-                <Text style={styles.sectionTitle}>Alertas del Negocio</Text>
-              </View>
+            <AdminSurface style={styles.sectionSurface} accent={colors.danger}>
+              <AdminSectionHeading
+                eyebrow="Atención"
+                title="Alertas del negocio"
+                subtitle="Señales que requieren revisión"
+                icon="warning-outline"
+                action={<AdminStatusPill label="Revisar" tone="danger" />}
+              />
 
               {alertasCriticas.map((alerta) => (
                 <View key={alerta.id} style={[styles.alertCard, styles.alertCardCritical]}>
@@ -369,15 +350,18 @@ export function AdminDashboardScreen() {
                   </View>
                 </View>
               ))}
-            </View>
+            </AdminSurface>
           )}
 
           {/* 🤖 SECCIÓN DE PREDICCIÓN DE STOCK */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderContainer}>
-              <Ionicons name="analytics" size={22} color="#8b5cf6" />
-              <Text style={styles.sectionTitle}>Predicción de Reabastecimiento</Text>
-            </View>
+          <AdminSurface style={styles.sectionSurface} accent="#8b5cf6">
+            <AdminSectionHeading
+              eyebrow="Inventario"
+              title="Predicción de reabastecimiento"
+              subtitle="Prioridades sugeridas a partir del consumo"
+              icon="analytics-outline"
+              action={<AdminStatusPill label="Automático" tone="accent" />}
+            />
 
             {loadingPredicciones ? (
               <View style={styles.predictionsLoading}>
@@ -467,10 +451,10 @@ export function AdminDashboardScreen() {
                 })}
               </View>
             )}
-          </View>
+          </AdminSurface>
 
           {/* Gráfico de Ventas en el Tiempo */}
-          <View style={styles.chartCard}>
+          <AdminSurface style={styles.chartCard}>
             <View style={styles.chartHeader}>
               <View>
                 <Text style={styles.chartTitle}>Ventas en el Tiempo</Text>
@@ -494,10 +478,10 @@ export function AdminDashboardScreen() {
                 <Text style={styles.noDataText}>Sin datos para el período seleccionado</Text>
               </View>
             )}
-          </View>
+          </AdminSurface>
 
           {/* Gráfico de Distribución de Ventas */}
-          <View style={styles.chartCard}>
+          <AdminSurface style={styles.chartCard}>
             <View style={styles.chartHeader}>
               <View>
                 <Text style={styles.chartTitle}>Distribución de Ventas</Text>
@@ -522,10 +506,10 @@ export function AdminDashboardScreen() {
                 <Text style={styles.noDataText}>Sin datos de distribución</Text>
               </View>
             )}
-          </View>
+          </AdminSurface>
 
           {/* Top 5 Platillos Más Vendidos */}
-          <View style={styles.chartCard}>
+          <AdminSurface style={styles.chartCard}>
             <View style={styles.chartHeader}>
               <View>
                 <Text style={styles.chartTitle}>Top 5 Platillos Más Vendidos</Text>
@@ -541,7 +525,7 @@ export function AdminDashboardScreen() {
                 <Text style={styles.noDataText}>Sin datos de platillos</Text>
               </View>
             )}
-          </View>
+          </AdminSurface>
         </ScrollView>
       </View>
     </AdminLayout>
@@ -583,6 +567,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerMeta: {
+    gap: 2,
+  },
+  eyebrow: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
   },
   headerRight: {
     flexDirection: 'row',
@@ -641,11 +642,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   mainMetricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
     padding: 24,
-    borderWidth: 1,
-    borderColor: '#3b82f650',
   },
   mainMetricLabel: {
     color: '#94a3b8',
@@ -669,11 +666,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   metricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#334155',
+    flexGrow: 1,
   },
   metricHeader: {
     flexDirection: 'row',
@@ -761,6 +754,9 @@ const styles = StyleSheet.create({
   sectionContainer: {
     gap: 12,
   },
+  sectionSurface: {
+    gap: 12,
+  },
   predictionsLoading: {
     padding: 20,
     alignItems: 'center',
@@ -840,11 +836,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   chartCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
     padding: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
   },
   chartHeader: {
     flexDirection: 'row',
