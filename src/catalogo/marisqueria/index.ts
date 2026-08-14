@@ -19,11 +19,14 @@ export type {
   MesaState as PuestoMandoMesaState,
   PuestoMandoProps,
 } from '../_compartido/bloques/PuestoMando';
-export { default as RecipeEditor, type ItemInventario } from '../_compartido/bloques/RecipeEditor';
+export {
+  default as RecipeEditor,
+  type ItemInventario,
+} from '../../plataforma/dominios/marisqueria/administracion/menu/RecipeEditor';
 export * from '../_compartido/bloques/RoleSelectorElite';
 export * from '../_compartido/bloques/StickerLayer';
 export { TablesGrid } from '../_compartido/bloques/TablesGrid';
 export type { Table as TablesGridTable } from '../_compartido/bloques/TablesGrid';
 export * from '../_compartido/bloques/TarjetaComanda';
-export { default as VariantEditor } from '../_compartido/bloques/VariantEditor';
+export { default as VariantEditor } from '../../plataforma/dominios/marisqueria/administracion/menu/VariantEditor';
 export * from '../_compartido/bloques/VariantsModal';

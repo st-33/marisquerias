@@ -126,3 +126,10 @@ Durante el primer envío se detectó un fallo real: `PedidosRepository` constru�
 
 Validaciones del cambio: `npm run check-types` correcto; `npm test -- --runInBand` correcto con **104/104** pruebas en **16/16** suites; reglas del archivo modificado correctas salvo una diferencia de formato preexistente en la línea 60 de `pedidos.repo.ts`.
 
+
+## Tramo Administración — editores de producto
+
+- **Movido:** `RecipeEditor`, `VariantEditor`, `CollapsibleSection` y `VariantChip` desde `catalogo/_compartido/bloques` a `plataforma/dominios/marisqueria/administracion/menu`.
+- **Motivo:** sus únicos consumidores reales eran `AdminMenuScreen` y el barril de Marisquerías; `CollapsibleSection` y `VariantChip` eran privados de `VariantEditor`.
+- **Reconexión:** `AdminMenuScreen` ahora los importa localmente y el barril `catalogo/marisqueria` conserva sus reexports hacia la nueva ubicación.
+- **Validación:** `npm run check-types` y `menuSafety.test.ts` correctos después del traslado.

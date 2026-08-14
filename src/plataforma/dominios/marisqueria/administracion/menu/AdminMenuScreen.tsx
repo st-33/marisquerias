@@ -19,8 +19,8 @@ import {
 } from 'react-native';
 import { CategorySidebar } from './CategorySidebar';
 import { ProductCard } from './ProductCard';
-import RecipeEditor from '../../../../../catalogo/_compartido/bloques/RecipeEditor';
-import VariantEditor from '../../../../../catalogo/_compartido/bloques/VariantEditor';
+import RecipeEditor from './RecipeEditor';
+import VariantEditor from './VariantEditor';
 import { useToast } from '../../../../../compartido/componentes/ui/Toast';
 import { theme } from '../../../../../compartido/theme';
 import type { Producto } from '../../../../base/_persistencia';
