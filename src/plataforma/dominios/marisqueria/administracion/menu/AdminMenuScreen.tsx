@@ -17,21 +17,21 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { CategorySidebar } from '../bloques/menu/CategorySidebar';
-import { ProductCard } from '../bloques/menu/ProductCard';
-import RecipeEditor from '../bloques/RecipeEditor';
-import VariantEditor from '../bloques/VariantEditor';
-import { useToast } from '../../../compartido/componentes/ui/Toast';
-import { theme } from '../../../compartido/theme';
-import type { Producto } from '../../../plataforma/base/_persistencia';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../plataforma/core/store';
-import type { FabItem } from '../../../plataforma/core/types/contratos';
+import { CategorySidebar } from './CategorySidebar';
+import { ProductCard } from './ProductCard';
+import RecipeEditor from '../../../../../catalogo/_compartido/bloques/RecipeEditor';
+import VariantEditor from '../../../../../catalogo/_compartido/bloques/VariantEditor';
+import { useToast } from '../../../../../compartido/componentes/ui/Toast';
+import { theme } from '../../../../../compartido/theme';
+import type { Producto } from '../../../../base/_persistencia';
+import { getRtdb } from '../../../../core/firebase';
+import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../core/store';
+import type { FabItem } from '../../../../core/types/contratos';
 import {
   useAdminFeatures,
   useMenuManagement,
   usePuenteAccionesFlotantes,
-} from '../../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../../alimentos_y_bebidas';
 
 // --- UTILS ---
 async function confirmAction(

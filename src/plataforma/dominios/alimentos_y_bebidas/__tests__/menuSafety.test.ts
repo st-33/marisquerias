@@ -26,7 +26,7 @@ describe('seguridad del menú administrativo', () => {
     const fuente = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../../catalogo/nichos/2 alimentos_y_bebidas/_compartido/pantallas/AdminMenuScreen.tsx'
+        '../../marisqueria/administracion/menu/AdminMenuScreen.tsx'
       ),
       'utf8'
     );
