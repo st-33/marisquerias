@@ -49,3 +49,6 @@ marisquerias-final.apk
 *.apk
 /android/app/build/
 /ios/build/
+
+# Ignore old git backups
+.git_old/

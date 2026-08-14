@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-# ======== GGA START ========
-# Gentleman Guardian Angel - Code Review
-gga run || exit 1
-# ======== GGA END ========
