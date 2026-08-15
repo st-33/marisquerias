@@ -69,6 +69,13 @@ interface ResultadoProcesamiento {
 // CONFIGURACIÓN POR DEFECTO
 // ═══════════════════════════════════════════════════════════════════════════
 
+export const SPOOL_JOB_TTL_MS = 48 * 60 * 60 * 1000;
+
+export function esTrabajoExpirado(createdAt: unknown, ahora = Date.now()): boolean {
+  if (typeof createdAt !== 'number' || !Number.isFinite(createdAt)) return true;
+  return ahora - createdAt > SPOOL_JOB_TTL_MS;
+}
+
 const CONFIGURACION_DEFECTO: ConfiguracionDespachador = {
   maxReintentos: 1, // Sin reintentos extra para evitar impresión triple
   retardoReintento: 2000,
@@ -120,6 +127,11 @@ export class DespachadorCola {
   private configTicketLegacy: any = null;
   private modo: ModoOperacion;
   private idInstancia: string;
+  private procesamientoInicialTimer: ReturnType<typeof setTimeout> | null = null;
+  private garbageCollectorTimer: ReturnType<typeof setTimeout> | null = null;
+  private procesandoColaInicial = false;
+  private trabajosRecibidosDuranteInicio = new Set<string>();
+  private trabajosIniciales = new Set<string>();
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CONSTRUCTOR Y SINGLETON
@@ -240,36 +252,91 @@ export class DespachadorCola {
 
     const refCola = ref(this.db, rutaCola);
 
-    // 🔥 CRÍTICO: Procesar cola EXISTENTE primero
-    // onChildAdded solo escucha NUEVOS hijos DESPUÉS de la suscripción
+    // onChildAdded solo escucha NUEVOS hijos DESPUÉS de la suscripción.
+    // La cola histórica se procesa después de la interacción inicial para no bloquear el arranque.
     if (this.config.procesamientoAuto) {
-      console.log('[DespachadorCola] 🔍 Procesando trabajos existentes en cola...');
-      this.procesarCola().catch((err) =>
-        console.error('[DespachadorCola] Error procesando cola inicial:', err)
-      );
+      this.procesandoColaInicial = true;
+      this.programarProcesamientoInicial();
     }
 
     // Escuchar nuevos trabajos
     this.listenerCola = onChildAdded(refCola, (snapshot) => {
       const idTrabajo = snapshot.key;
-      console.log(`[DespachadorCola] 🆕 NUEVO trabajo detectado: ${idTrabajo}`);
-      if (idTrabajo && this.config.procesamientoAuto) {
-        this.procesarTrabajo(idTrabajo).catch((err) =>
-          console.error('[DespachadorCola] Error procesando trabajo:', idTrabajo, err)
-        );
+      if (!idTrabajo || !this.config.procesamientoAuto) return;
+
+      if (this.procesandoColaInicial) {
+        this.trabajosRecibidosDuranteInicio.add(idTrabajo);
+        return;
       }
+
+      if (this.trabajosIniciales.delete(idTrabajo)) return;
+
+      console.log(`[DespachadorCola] 🆕 NUEVO trabajo detectado: ${idTrabajo}`);
+      this.procesarTrabajo(idTrabajo).catch((err) =>
+        console.error('[DespachadorCola] Error procesando trabajo:', idTrabajo, err)
+      );
     }) as any;
 
     console.log('[DespachadorCola] ✅ Listener activo');
 
-    // Auto-limpieza al iniciar
-    this.ejecutarGarbageCollector();
+    // Auto-limpieza diferida al iniciar; nunca bloquea el renderizado inicial.
+    this.programarGarbageCollector();
+  }
+
+  private programarProcesamientoInicial(): void {
+    if (this.procesamientoInicialTimer) return;
+
+    this.procesamientoInicialTimer = setTimeout(() => {
+      this.procesamientoInicialTimer = null;
+      void this.procesarCola().catch((err) =>
+        console.error('[DespachadorCola] Error procesando cola inicial:', err)
+      );
+    }, 0);
+  }
+
+  private programarGarbageCollector(): void {
+    if (this.garbageCollectorTimer) return;
+
+    this.garbageCollectorTimer = setTimeout(() => {
+      this.garbageCollectorTimer = null;
+      void this.ejecutarGarbageCollector();
+    }, 0);
+  }
+
+  private finalizarProcesamientoInicial(): void {
+    this.procesandoColaInicial = false;
+    const pendientes = Array.from(this.trabajosRecibidosDuranteInicio);
+    this.trabajosRecibidosDuranteInicio.clear();
+
+    for (const idTrabajo of pendientes) {
+      if (this.trabajosIniciales.delete(idTrabajo)) continue;
+      void this.procesarTrabajo(idTrabajo).catch((err) =>
+        console.error('[DespachadorCola] Error procesando trabajo post-arranque:', idTrabajo, err)
+      );
+    }
+
+    this.trabajosIniciales.clear();
+  }
+
+  private cancelarTareasIniciales(): void {
+    if (this.procesamientoInicialTimer) {
+      clearTimeout(this.procesamientoInicialTimer);
+      this.procesamientoInicialTimer = null;
+    }
+    if (this.garbageCollectorTimer) {
+      clearTimeout(this.garbageCollectorTimer);
+      this.garbageCollectorTimer = null;
+    }
+    this.procesandoColaInicial = false;
+    this.trabajosRecibidosDuranteInicio.clear();
+    this.trabajosIniciales.clear();
   }
 
   /**
    * Detiene el despachador
    */
   detener(): void {
+    this.cancelarTareasIniciales();
     if (this.listenerCola) {
       this.listenerCola();
       this.listenerCola = null;
@@ -373,6 +440,7 @@ export class DespachadorCola {
 
       const datos = snapshot.val() || {};
       const idTrabajos = Object.keys(datos);
+      idTrabajos.forEach((idTrabajo) => this.trabajosIniciales.add(idTrabajo));
 
       for (const idTrabajo of idTrabajos) {
         await this.procesarTrabajo(idTrabajo);
@@ -381,6 +449,7 @@ export class DespachadorCola {
       console.error('[DespachadorCola] Error procesando cola:', error);
     } finally {
       this.procesando = false;
+      this.finalizarProcesamientoInicial();
     }
   }
 
@@ -392,9 +461,17 @@ export class DespachadorCola {
       const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
       const snapshot = await get(refTrabajo);
 
-      if (!snapshot.exists()) return;
+      if (!snapshot.exists()) {
+        await set(ref(this.db, this.rutaColaActual(idTrabajo)), null);
+        return;
+      }
 
       const trabajo = snapshot.val() as TrabajoRTDB;
+
+      if (esTrabajoExpirado(trabajo.createdAt)) {
+        await this.eliminarTrabajoExpirado(idTrabajo, trabajo);
+        return;
+      }
 
       console.log(`[DespachadorCola] 🔍 Procesando ${idTrabajo}:`, {
         estado: trabajo.state,
@@ -642,6 +719,41 @@ export class DespachadorCola {
   // UTILIDADES
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private rutaColaActual(idTrabajo: string): string {
+    const canal = this.config.canal;
+    return this.modo === 'hub'
+      ? canal === 'standard'
+        ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
+        : `${this.tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`
+      : `${this.tenantPath}/spool/devices/${this.idDispositivo}/queue/${idTrabajo}`;
+  }
+
+  private rutaColaParaGarbageCollector(idTrabajo: string, trabajo: Partial<TrabajoRTDB>): string {
+    const canal = trabajo.channel || trabajo.purpose || this.config.canal || 'standard';
+    const canalNormalizado = canal === 'cuenta' || canal === 'comanda' ? 'standard' : canal;
+    return this.modo === 'hub'
+      ? canalNormalizado === 'standard'
+        ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
+        : `${this.tenantPath}/spool/hub/${canalNormalizado}/queue/${idTrabajo}`
+      : `${this.tenantPath}/spool/devices/${
+          trabajo.deviceId || this.idDispositivo
+        }/queue/${idTrabajo}`;
+  }
+
+  private async eliminarTrabajoExpirado(
+    idTrabajo: string,
+    trabajo: Partial<TrabajoRTDB>
+  ): Promise<void> {
+    await Promise.all([
+      set(ref(this.db, this.rutaColaParaGarbageCollector(idTrabajo, trabajo)), null),
+      set(ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`), null),
+    ]);
+    console.log(`[DespachadorCola] 🧹 Trabajo expirado eliminado: ${idTrabajo}`, {
+      createdAt: trabajo.createdAt,
+      ttlMs: SPOOL_JOB_TTL_MS,
+    });
+  }
+
   private async removerDeCola(idTrabajo: string): Promise<void> {
     const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
     const snap = await get(refTrabajo);
@@ -652,12 +764,7 @@ export class DespachadorCola {
       canal = 'standard';
     }
 
-    const rutaCola =
-      this.modo === 'hub'
-        ? canal === 'standard'
-          ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
-          : `${this.tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`
-        : `${this.tenantPath}/spool/devices/${this.idDispositivo}/queue/${idTrabajo}`;
+    const rutaCola = this.rutaColaActual(idTrabajo);
 
     // Si éxito, eliminar trabajo completamente; si fallo, dejarlo para auditoría
     if (snap.exists() && snap.val().state === 'exito') {
@@ -677,7 +784,7 @@ export class DespachadorCola {
 
   /**
    * 🧹 GARBAGE COLLECTOR
-   * Elimina trabajos antiguos (>24h) para evitar saturar RTDB
+   * Elimina trabajos antiguos (>48h) y sus referencias en las colas para evitar saturar RTDB.
    */
   private async ejecutarGarbageCollector(): Promise<void> {
     try {
@@ -688,22 +795,24 @@ export class DespachadorCola {
       if (!snap.exists()) return;
 
       const ahora = Date.now();
-      const umbral = 24 * 60 * 60 * 1000; // 24 horas
       const actualizaciones: Record<string, any> = {};
+      const referenciasCola: string[] = [];
       let contador = 0;
 
       snap.forEach((child) => {
-        const trabajo = child.val();
-        const creadoEn = trabajo.createdAt || 0;
-
-        if (ahora - creadoEn > umbral) {
+        const trabajo = (child.val() || {}) as Partial<TrabajoRTDB>;
+        if (esTrabajoExpirado(trabajo.createdAt, ahora)) {
           actualizaciones[child.key!] = null;
+          referenciasCola.push(this.rutaColaParaGarbageCollector(child.key!, trabajo));
           contador++;
         }
       });
 
       if (contador > 0) {
-        await update(refTrabajos, actualizaciones);
+        await Promise.all([
+          update(refTrabajos, actualizaciones),
+          ...referenciasCola.map((ruta) => set(ref(this.db, ruta), null)),
+        ]);
         console.log(`[DespachadorCola] ♻️ GC completado: ${contador} trabajos purgados`);
       }
     } catch (e) {
