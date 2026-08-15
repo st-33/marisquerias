@@ -11,6 +11,7 @@ import { getRtdb } from '../firebase';
 import { logger } from '../monitoring';
 import {
   registerTenantCleanup,
+  registerTenantScopedStateReset,
   registerTenantStateReset,
   resetTenantLifecycle,
   switchTenantLifecycle,
@@ -73,16 +74,23 @@ export const useStore = create<AppStore>()(
   }))
 );
 
-registerTenantStateReset(() => {
+const resetTenantScopedSlices = () => {
   useStore.setState({
-    sesion: ESTADO_SESION_INICIAL,
-    estadoInstalacion: 'SIN_VINCULO',
     negocio: ESTADO_INICIAL_NEGOCIO,
     ui: ESTADO_INICIAL_UI,
     dataSources: ESTADO_INICIAL_DATA_SOURCES,
     hardware: ESTADO_INICIAL_HARDWARE,
     ...ESTADO_INICIAL_OPERACION,
     ...ESTADO_INICIAL_INVENTORY_V2,
+  });
+};
+
+registerTenantScopedStateReset(resetTenantScopedSlices);
+registerTenantStateReset(() => {
+  resetTenantScopedSlices();
+  useStore.setState({
+    sesion: ESTADO_SESION_INICIAL,
+    estadoInstalacion: 'SIN_VINCULO',
   });
 });
 
@@ -260,7 +268,6 @@ export function useAppListeners(isAppReady: boolean) {
 
   useEffect(() => {
     if (!isAppReady || !tenantPath) {
-      switchTenantLifecycle(null);
       cleanupRef.current?.();
       cleanupRef.current = null;
       return;
