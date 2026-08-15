@@ -86,8 +86,9 @@ export default function VariantEditor({
   };
 
   const addOption = (groupKey: string) => {
-    if (!optionForm.titulo) {
-      Alert.alert('Error', 'Completa título');
+    const label = optionForm.titulo?.trim();
+    if (!label) {
+      Alert.alert('Error', 'Escribe el nombre de la opción');
       return;
     }
     const grupos = variantes.grupos || {};
@@ -104,7 +105,8 @@ export default function VariantEditor({
             ...opciones,
             [newKey]: {
               ...(deltaValue > 0 ? { delta: deltaValue } : {}),
-              titulo: optionForm.titulo!,
+              label,
+              titulo: label,
             },
           },
         },

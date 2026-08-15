@@ -5,7 +5,7 @@
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { limpiarUndefined } from './serializacion';
+import { limpiarUndefined, normalizarVariantes } from './serializacion';
 import { MenuRepository, type Categoria, type Producto } from '../../../../base/_persistencia';
 import { RepositorioInventario } from '../../../alimentos_y_bebidas/infraestructura/repositorios';
 import { useStore } from '../../../../core/store';
@@ -302,7 +302,7 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
         precio,
         categoriaId: datos.categoriaId,
         activo: true,
-        variantes: datos.variantes || {},
+        variantes: normalizarVariantes(datos.variantes),
         visible: datos.visible || { digital: true, mesero: true },
         prepMin: datos.prepMin || 0,
         receta: datos.receta || {},
@@ -356,7 +356,7 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
       limpiarUndefined({
         nombre: datos.nombre.trim(),
         precio,
-        variantes: datos.variantes,
+        variantes: normalizarVariantes(datos.variantes),
         visible: datos.visible,
         prepMin: datos.prepMin,
         receta: datos.receta,

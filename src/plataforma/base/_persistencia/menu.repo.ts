@@ -87,6 +87,10 @@ export type VariantGroup = {
 
 export type VariantOption = {
   delta?: number; // Opcional: si falta, se asume 0
+  /** Texto legible para Mesero, Cocina y catálogo; el key sigue siendo el ID interno. */
+  label?: string;
+  /** Alias tolerado para datos legacy o integraciones externas. */
+  nombre?: string;
   titulo: string;
   triggers?: {
     // ⚡ NUEVO: Disparadores de visibilidad dinámicos
@@ -94,6 +98,15 @@ export type VariantOption = {
     hideGroups?: string[];
   };
 };
+
+export function getVariantOptionLabel(
+  option: Partial<VariantOption> | string | null | undefined,
+  fallback = ''
+): string {
+  if (typeof option === 'string') return option.trim() || fallback;
+  const candidates = [option?.label, option?.nombre, option?.titulo];
+  return candidates.find((value) => typeof value === 'string' && value.trim())?.trim() || fallback;
+}
 
 export type VariantRule = {
   showGroups?: Record<string, boolean>;

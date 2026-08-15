@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { Producto } from '../../../../base/_persistencia';
+import { getVariantOptionLabel, type Producto } from '../../../../base/_persistencia';
 import { theme } from '@compartido/theme';
 import { useThemedColors, useThemedShadows } from '../../../../../compartido/hooks/useThemedColors';
 
@@ -95,7 +95,9 @@ export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: 
                             const deltaNum = Number(opt.delta || 0);
                             return (
                               <View key={optKey} style={styles.miniChip}>
-                                <Text style={styles.miniChipText}>{opt.titulo}</Text>
+                                <Text style={styles.miniChipText}>
+                                  {getVariantOptionLabel(opt, optKey)}
+                                </Text>
                                 {deltaNum > 0 && (
                                   <Text style={styles.miniChipDelta}>+${deltaNum.toFixed(0)}</Text>
                                 )}

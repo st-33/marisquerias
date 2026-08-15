@@ -11,7 +11,7 @@ export type { Pedido, PedidoItem } from './pedidos.repo';
 
 export * from './mesas.repo';
 
-export { MenuRepository } from './menu.repo';
+export { getVariantOptionLabel, MenuRepository } from './menu.repo';
 export type { Categoria, Producto, VariantGroup, VariantOption, VariantRule } from './menu.repo';
 
 export { TicketTemplatesRepository } from './tickets.repo';

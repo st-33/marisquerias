@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Producto } from '../../../plataforma/base/_persistencia';
+import { getVariantOptionLabel, type Producto } from '../../../plataforma/base/_persistencia';
 import { theme } from '@compartido/theme';
 import { formatMoney } from '../../../compartido/utils/formatters';
 import {
@@ -302,12 +302,10 @@ function VariantsModalComponent({
                       ]}
                     >
                       {isDone
-                        ? labels.find(
-                            (l) =>
-                              g.opciones[
-                                Object.keys(g.opciones).find((o) => g.opciones[o].titulo === l) ||
-                                  ''
-                              ]?.titulo === l
+                        ? labels.find((label) =>
+                            Object.values(g.opciones).some(
+                              (option) => getVariantOptionLabel(option, '') === label
+                            )
                           ) || g.titulo
                         : g.titulo}
                     </Text>
@@ -414,7 +412,7 @@ function VariantsModalComponent({
                                       },
                                     ]}
                                   >
-                                    {String(option.titulo)}
+                                    {getVariantOptionLabel(option, oid)}
                                   </Text>
                                   {isSelected && (
                                     <Ionicons

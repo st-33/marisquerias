@@ -1,4 +1,8 @@
-import type { VariantGroup, VariantRule } from '../../../base/_persistencia/menu.repo';
+import {
+  getVariantOptionLabel,
+  type VariantGroup,
+  type VariantRule,
+} from '../../../base/_persistencia/menu.repo';
 
 export function computeVariantDeltaAndLabels(
   groups: Record<string, VariantGroup>,
@@ -16,7 +20,7 @@ export function computeVariantDeltaAndLabels(
       if (option) {
         const optionDelta = Number(option.delta || 0);
         delta += Number.isNaN(optionDelta) ? 0 : optionDelta;
-        labels.push(option.titulo);
+        labels.push(getVariantOptionLabel(option, oid));
       }
     });
   });
