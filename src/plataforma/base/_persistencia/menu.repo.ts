@@ -4,6 +4,7 @@
  */
 
 import type { Database } from 'firebase/database';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 import { get, off, onValue, push, ref, remove, set, update } from 'firebase/database';
 
 export type Categoria = {
@@ -103,7 +104,12 @@ export type VariantRule = {
 };
 
 export class MenuRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private slugify(x?: string | null) {
     const raw = String(x || '').trim();
@@ -244,7 +250,7 @@ export class MenuRepository {
     const newRef = push(r);
     const base = this.slugify(categoria.nombre);
     const slug = await this.ensureUniqueCategorySlug(base);
-    await set(newRef, { ...categoria, slug });
+    await set(newRef, sanitizeRtdbPayload({ ...categoria, slug }));
     return newRef.key!;
   }
 
@@ -257,7 +263,10 @@ export class MenuRepository {
       const base = this.slugify(datos.nombre);
       patch.slug = await this.ensureUniqueCategorySlug(base, categoriaId);
     }
-    await update(ref(this.db, `${this.tenantPath}/menu/categorias/${categoriaId}`), patch);
+    await update(
+      ref(this.db, `${this.tenantPath}/menu/categorias/${categoriaId}`),
+      sanitizeRtdbPayload(patch)
+    );
   }
 
   /**

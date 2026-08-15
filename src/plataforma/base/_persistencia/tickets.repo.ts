@@ -1,5 +1,6 @@
 import { ref, onValue, off, set, update, get } from 'firebase/database';
 import type { Database } from 'firebase/database';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 
 export type TicketElementTipo = 'texto' | 'listaProductos' | 'total' | 'fechaHora';
 
@@ -37,7 +38,12 @@ export type TicketTemplate = {
 export type TicketTemplatesPorRol = Record<string, TicketTemplate>;
 
 export class TicketTemplatesRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private basePath() {
     return `${this.tenantPath}/ajustes/dispositivos/tickets`;
@@ -63,10 +69,13 @@ export class TicketTemplatesRepository {
   }
 
   async guardarTemplate(rol: string, template: TicketTemplate) {
-    await set(ref(this.db, `${this.basePath()}/${rol}`), template);
+    await set(ref(this.db, `${this.basePath()}/${rol}`), sanitizeRtdbPayload(template));
   }
 
   async actualizarAcciones(rol: string, acciones: TicketTemplateAcciones) {
-    await update(ref(this.db, `${this.basePath()}/${rol}/acciones`), acciones as any);
+    await update(
+      ref(this.db, `${this.basePath()}/${rol}/acciones`),
+      sanitizeRtdbPayload(acciones) as any
+    );
   }
 }

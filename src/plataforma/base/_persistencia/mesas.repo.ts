@@ -8,6 +8,7 @@ import { get, off, onValue, ref, runTransaction, update } from 'firebase/databas
 import { z } from 'zod';
 import { ensureNumberTimestamp } from '../../core/domain/normalizers';
 import { logger } from '../../core/monitoring/logger';
+import { assertValidTenantPath } from '../../core/rtdb/guards';
 
 export type EstadoMesa = 'libre' | 'ocupada' | 'reservada' | 'solicitar_cuenta';
 
@@ -30,7 +31,12 @@ export type MesaLayoutInput = {
 };
 
 export class MesasRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private getBasePath() {
     return `${this.tenantPath}/mesas`;

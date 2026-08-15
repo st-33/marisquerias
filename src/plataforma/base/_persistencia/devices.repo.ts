@@ -7,6 +7,7 @@
 import type { Database } from 'firebase/database';
 import { off, onValue, ref, set, update } from 'firebase/database';
 import type { PrintPolicies, PrinterRef } from '../../core/printing/policies';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 
 /**
  * Configuración de formato de ticket
@@ -38,7 +39,12 @@ export type TicketConfig = {
 };
 
 export class DevicesRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private getPoliciesPath() {
     return `${this.tenantPath}/ajustes/dispositivos/impresion/politicas`;
@@ -74,7 +80,7 @@ export class DevicesRepository {
    */
   async actualizarPoliticasImpresion(updates: Partial<PrintPolicies>): Promise<void> {
     const r = ref(this.db, this.getPoliciesPath());
-    await update(r, updates);
+    await update(r, sanitizeRtdbPayload(updates));
   }
 
   /**
@@ -131,7 +137,7 @@ export class DevicesRepository {
    */
   async actualizarTicketConfig(config: TicketConfig): Promise<void> {
     const r = ref(this.db, this.getTicketConfigPath());
-    await set(r, config);
+    await set(r, sanitizeRtdbPayload(config));
   }
 
   private getHubConfigPath() {
@@ -154,7 +160,7 @@ export class DevicesRepository {
    */
   async establecerHubConfig(config: HubConfig): Promise<void> {
     const r = ref(this.db, this.getHubConfigPath());
-    await set(r, config);
+    await set(r, sanitizeRtdbPayload(config));
   }
 
   /**
@@ -162,7 +168,7 @@ export class DevicesRepository {
    */
   async actualizarHubConfig(updates: Partial<HubConfig>): Promise<void> {
     const r = ref(this.db, this.getHubConfigPath());
-    await update(r, updates);
+    await update(r, sanitizeRtdbPayload(updates));
   }
 }
 

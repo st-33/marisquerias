@@ -6,6 +6,7 @@
 
 import { ref, onValue, off, set, update, Unsubscribe } from 'firebase/database';
 import type { Database } from 'firebase/database';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 
 export type AjustesReparto = {
   umbrales: {
@@ -25,7 +26,12 @@ export type AjustesReparto = {
 };
 
 export class RepartoAjustesRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private getBasePath() {
     return `${this.tenantPath}/ajustes/reparto`;
@@ -52,7 +58,7 @@ export class RepartoAjustesRepository {
    */
   async actualizarUmbrales(umbrales: Partial<AjustesReparto['umbrales']>): Promise<void> {
     const r = ref(this.db, `${this.getBasePath()}/umbrales`);
-    await update(r, umbrales);
+    await update(r, sanitizeRtdbPayload(umbrales));
   }
 
   /**
@@ -78,9 +84,9 @@ export class RepartoAjustesRepository {
     const r = ref(this.db, `${this.getBasePath()}/horarios`);
     // Si viene ventanas completas, sobreescribir con set; para parches simples usar update
     if (horarios.ventanas) {
-      await set(r, horarios as AjustesReparto['horarios']);
+      await set(r, sanitizeRtdbPayload(horarios as AjustesReparto['horarios']));
     } else {
-      await update(r, horarios);
+      await update(r, sanitizeRtdbPayload(horarios));
     }
   }
 
@@ -113,6 +119,6 @@ export class RepartoAjustesRepository {
    */
   async actualizarCostos(costos: Partial<AjustesReparto['costos']>): Promise<void> {
     const r = ref(this.db, `${this.getBasePath()}/costos`);
-    await update(r, costos);
+    await update(r, sanitizeRtdbPayload(costos));
   }
 }

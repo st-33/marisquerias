@@ -1,6 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
 import type { ContratoDataSources } from '../../types/contratos';
+import { getTenantStorageKey } from './sesion';
+
+type SessionContext = { sesion: { tenantPath: string | null } };
+
+export const ESTADO_INICIAL_DATA_SOURCES: ContratoDataSources = {
+  operacionUrl: null,
+  repartoUrl: null,
+  perfilesUrl: null,
+};
+
+function getTenantPath(get: () => DataSourcesSlice): string | null {
+  return (get() as unknown as SessionContext).sesion.tenantPath;
+}
 
 export interface AccionesDataSources {
   setDataSources: (sources: Partial<ContratoDataSources>) => Promise<void>;
@@ -13,18 +26,15 @@ export const createDataSourcesSlice: StateCreator<DataSourcesSlice, [], [], Data
   set,
   get
 ) => ({
-  dataSources: {
-    operacionUrl: null,
-    repartoUrl: null,
-    perfilesUrl: null,
-  },
+  dataSources: ESTADO_INICIAL_DATA_SOURCES,
 
   async setDataSources(sources) {
     const merged = { ...get().dataSources, ...sources };
     set({ dataSources: merged });
 
     try {
-      await AsyncStorage.setItem('dataSources', JSON.stringify(merged));
+      const key = getTenantStorageKey(getTenantPath(get), 'data-sources', 'config');
+      if (key) await AsyncStorage.setItem(key, JSON.stringify(merged));
     } catch (error) {
       console.error('[Store] Error al persistir dataSources:', error);
     }
@@ -32,11 +42,13 @@ export const createDataSourcesSlice: StateCreator<DataSourcesSlice, [], [], Data
 
   async loadDataSources() {
     try {
-      const raw = await AsyncStorage.getItem('dataSources');
+      const key = getTenantStorageKey(getTenantPath(get), 'data-sources', 'config');
+      if (!key) return;
+
+      const raw = await AsyncStorage.getItem(key);
       if (!raw) return;
 
-      const dataSources = JSON.parse(raw) as ContratoDataSources;
-      set({ dataSources });
+      set({ dataSources: JSON.parse(raw) as ContratoDataSources });
     } catch (error) {
       console.error('[Store] Error al cargar dataSources:', error);
     }

@@ -9,6 +9,7 @@ import { get, off, onValue, ref, remove, runTransaction, set, update } from 'fir
 import { ensureNumberTimestamp } from '../../core/domain/normalizers';
 import { RtdbSpooler } from '../../core/printing/rtdbSpooler';
 import { resolver } from '../../core/utils/paths';
+import { assertValidTenantPath } from '../../core/rtdb/guards';
 import { SincronizadorCocina } from '../../dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
 
 export type PedidoItem = {
@@ -57,7 +58,12 @@ export type Pedido = {
 };
 
 export class PedidosRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private getBasePath() {
     return `${this.tenantPath}/${resolver('pedidos')}`;

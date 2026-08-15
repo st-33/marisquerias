@@ -1,7 +1,28 @@
 import type { StateCreator } from 'zustand';
 import type { ContratoNegocio } from '../../types/contratos';
 import { setFeature as setFeatureHelper } from '../../types/contratos';
-import { storage } from './sesion';
+import { storage, getTenantStorageKey } from './sesion';
+
+type SessionContext = { sesion: { tenantPath: string | null } };
+
+export const ESTADO_INICIAL_NEGOCIO: ContratoNegocio = {
+  features: {},
+};
+
+function getTenantPath(get: () => NegocioSlice): string | null {
+  return (get() as unknown as SessionContext).sesion.tenantPath;
+}
+
+async function persistFeatures(tenantPath: string | null, features: ContratoNegocio['features']) {
+  const key = getTenantStorageKey(tenantPath, 'negocio', 'features');
+  if (!key) return;
+
+  try {
+    await storage.setItem(key, JSON.stringify(features));
+  } catch (error) {
+    console.error('[STORE_NEGOCIO] Error al persistir features', error);
+  }
+}
 
 export interface AccionesNegocio {
   setFeatures: (features: ContratoNegocio['features']) => void;
@@ -13,26 +34,22 @@ export interface AccionesNegocio {
 export type NegocioSlice = { negocio: ContratoNegocio } & AccionesNegocio;
 
 export const createNegocioSlice: StateCreator<NegocioSlice, [], [], NegocioSlice> = (set, get) => ({
-  negocio: {
-    features: {},
-  },
+  negocio: ESTADO_INICIAL_NEGOCIO,
 
   setFeatures(features) {
+    const tenantPath = getTenantPath(get);
     set((state) => ({
       negocio: { ...state.negocio, features },
     }));
-    storage.setItem('features', JSON.stringify(features)).catch((err) => {
-      console.error('[STORE_NEGOCIO] Error al persistir features', err);
-    });
+    void persistFeatures(tenantPath, features);
   },
 
   setFeature(path, enabled, config) {
     const negocio = get().negocio;
     const newNegocio = setFeatureHelper(negocio, path, enabled, config);
+    const tenantPath = getTenantPath(get);
     set({ negocio: newNegocio });
-    storage.setItem('features', JSON.stringify(newNegocio.features)).catch((err) => {
-      console.error('[STORE_NEGOCIO] Error al persistir feature unitaria', err);
-    });
+    void persistFeatures(tenantPath, newNegocio.features);
   },
 
   setConfiguracion(config) {

@@ -1,58 +1,61 @@
-/**
- * 🔄 OFFLINE SALES SYNC SERVICE
- *
- * Sincroniza ventas guardadas localmente (SQLite) hacia Firebase
- * cuando se restaura la conexión a internet.
- *
- * DOGMA V2: Este servicio es parte de la arquitectura offline-first.
- */
-
 import NetInfo from '@react-native-community/netinfo';
 import type { Database } from 'firebase/database';
 import { SimpleSalesRepo } from '../../base/_persistencia/SimpleSalesRepo';
 import { logger } from '../monitoring';
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
+import {
+  isCurrentTenantLifecycle,
+  switchTenantLifecycle,
+} from '../lifecycle/TenantLifecycleController';
 import { validarRutaTenant } from '../rtdb/rutas/RutaTenant';
 
 class OfflineSalesSyncClass {
   private isRunning = false;
   private unsubscribeNetInfo: (() => void) | null = null;
   private salesRepo: SimpleSalesRepo | null = null;
+  private tenantPath: string | null = null;
+  private lifecycleGeneration = 0;
 
-  /**
-   * Inicializa el servicio de sincronización.
-   * Requiere referencia a la base de datos Firebase.
-   */
   initialize(db: Database, tenantPath: string): void {
-    if (this.salesRepo) return; // Ya inicializado
-
     if (!validarRutaTenant(tenantPath)) {
       logger.error(
         'OFFLINE_SYNC',
-        'Intento de inicializar con tenantPath inválido o legacy',
+        'Intento de inicializar ventas con tenantPath inválido o legacy',
         new Error(tenantPath)
       );
       return;
     }
 
+    if (this.salesRepo && this.tenantPath === tenantPath) return;
+    if (this.salesRepo && this.tenantPath !== tenantPath) this.destroy();
+
+    this.tenantPath = tenantPath;
+    this.lifecycleGeneration = switchTenantLifecycle(tenantPath);
     this.salesRepo = new SimpleSalesRepo(db, tenantPath);
 
-    // Escuchar cambios de red
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
-      if (state.isConnected && !this.isRunning) {
+      if (state.isConnected && !this.isRunning && this.isCurrent()) {
         logger.info('OFFLINE_SYNC', '🌐 Red restaurada, iniciando sincronización...');
-        this.syncPendingSales();
+        void this.syncPendingSales();
       }
     });
 
-    logger.info('OFFLINE_SYNC', '✅ Servicio de sincronización inicializado');
+    logger.info('OFFLINE_SYNC', '✅ Servicio de sincronización inicializado', { tenantPath });
   }
 
-  /**
-   * Sincroniza todas las ventas pendientes en SQLite hacia Firebase.
-   */
+  private isCurrent(): boolean {
+    return Boolean(
+      this.tenantPath &&
+      this.salesRepo &&
+      isCurrentTenantLifecycle(this.tenantPath, this.lifecycleGeneration)
+    );
+  }
+
   async syncPendingSales(): Promise<{ synced: number; failed: number }> {
-    if (this.isRunning || !this.salesRepo) {
+    const repo = this.salesRepo;
+    const tenantPath = this.tenantPath;
+    const generation = this.lifecycleGeneration;
+    if (this.isRunning || !repo || !tenantPath || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
 
@@ -62,33 +65,31 @@ class OfflineSalesSyncClass {
 
     try {
       const pendingVentas = await SQLiteStorageAdapter.getVentasPendientes();
+      if (!this.isCurrent()) return { synced, failed };
 
       if (pendingVentas.length === 0) {
         logger.info('OFFLINE_SYNC', 'No hay ventas pendientes');
-        this.isRunning = false;
         return { synced: 0, failed: 0 };
       }
 
-      logger.info('OFFLINE_SYNC', `Sincronizando ${pendingVentas.length} ventas...`);
+      logger.info('OFFLINE_SYNC', `Sincronizando ${pendingVentas.length} ventas...`, {
+        tenantPath,
+        generation,
+      });
 
       for (const venta of pendingVentas) {
+        if (!this.isCurrent()) break;
         try {
-          // Parsear los datos de la venta
           const ventaData = JSON.parse(venta.data);
+          await repo.registrarVenta(ventaData);
+          if (!this.isCurrent()) break;
 
-          // Enviar a Firebase
-          await this.salesRepo.registrarVenta(ventaData);
-
-          // Marcar como sincronizada
           await SQLiteStorageAdapter.markVentaSynced(venta.id);
           synced++;
-
           logger.info('OFFLINE_SYNC', `✅ Venta ${venta.id} sincronizada`);
         } catch (error: any) {
           failed++;
           logger.error('OFFLINE_SYNC', `❌ Error sincronizando ${venta.id}:`, error);
-
-          // Si es error de conflicto o datos inválidos, marcar como conflicto
           if (error?.message?.includes('conflict') || error?.message?.includes('invalid')) {
             await SQLiteStorageAdapter.markVentaConflict(venta.id);
           }
@@ -105,25 +106,19 @@ class OfflineSalesSyncClass {
     return { synced, failed };
   }
 
-  /**
-   * Obtiene el conteo de ventas pendientes de sincronizar
-   */
   async getPendingCount(): Promise<number> {
     const pending = await SQLiteStorageAdapter.getVentasPendientes();
     return pending.length;
   }
 
-  /**
-   * Detiene el servicio
-   */
   destroy(): void {
-    if (this.unsubscribeNetInfo) {
-      this.unsubscribeNetInfo();
-      this.unsubscribeNetInfo = null;
-    }
+    this.lifecycleGeneration += 1;
+    this.isRunning = false;
+    this.unsubscribeNetInfo?.();
+    this.unsubscribeNetInfo = null;
     this.salesRepo = null;
+    this.tenantPath = null;
   }
 }
 
-// Singleton
 export const OfflineSalesSync = new OfflineSalesSyncClass();

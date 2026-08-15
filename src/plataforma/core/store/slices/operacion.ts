@@ -20,6 +20,8 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref, update } from 'firebase/database';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoring';
+import { validarRutaTenant } from '../../rtdb/rutas/RutaTenant';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../rtdb/guards';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS BASE (Genéricos para multi-negocio)
@@ -216,6 +218,11 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   // INICIALIZACIÓN DE LISTENERS
   // ─────────────────────────────────────────────────────────────────────────
   inicializarOperacionListeners: (db: Database, tenantPath: string) => {
+    if (!validarRutaTenant(tenantPath)) {
+      logger.error('STORE', 'No se montan listeners de operación con tenantPath inválido');
+      return () => {};
+    }
+
     if (get().listenersActivos) {
       logger.warn('STORE', 'Listeners ya activos, ignorando inicialización duplicada');
       return () => {};
@@ -310,16 +317,14 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     logger.info('STORE', '✅ Listeners centralizados activos (5 total)');
 
     // Retornar función de cleanup
+    let cleaned = false;
     return () => {
+      if (cleaned) return;
+      cleaned = true;
       logger.info('STORE', '🔌 Desconectando listeners centralizados');
       cleanupFunctions.forEach((cleanup) => cleanup());
       set({
-        listenersActivos: false,
-        mesas: {},
-        pedidos: {},
-        categorias: {},
-        productos: {},
-        ventas: {},
+        ...ESTADO_INICIAL_OPERACION,
       });
     };
   },
@@ -337,8 +342,9 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   },
 
   actualizarMesa: async (db, tenantPath, mesaId, data) => {
+    assertValidTenantPath(tenantPath);
     const now = Date.now();
-    const payload = { ...data, updatedAt: now };
+    const payload = sanitizeRtdbPayload({ ...data, updatedAt: now });
 
     // Optimistic update
     get().actualizarMesaLocal(mesaId, payload);
@@ -354,6 +360,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   },
 
   liberarMesa: async (db, tenantPath, mesaId) => {
+    assertValidTenantPath(tenantPath);
     const now = Date.now();
     const payload = { estado: 'libre', pedidoActivoId: null, updatedAt: now };
 

@@ -9,13 +9,31 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { getRtdb } from '../firebase';
 import { logger } from '../monitoring';
+import {
+  registerTenantCleanup,
+  registerTenantStateReset,
+  resetTenantLifecycle,
+  switchTenantLifecycle,
+} from '../lifecycle/TenantLifecycleController';
 import { createDataSourcesSlice, type DataSourcesSlice } from './slices/dataSources';
 import { createHardwareSlice, type HardwareSlice } from './slices/hardware';
 import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventoryV2';
 import { createNegocioSlice, type NegocioSlice } from './slices/negocio';
 import { createOperacionSlice, type OperacionSlice } from './slices/operacion';
-import { createSesionSlice, type SesionSlice, storage } from './slices/sesion';
-import { createUISlice, type UISlice } from './slices/ui';
+import {
+  createSesionSlice,
+  type SesionSlice,
+  storage,
+  SESION_STORAGE_KEY,
+  ESTADO_SESION_INICIAL,
+  getTenantStorageKey,
+} from './slices/sesion';
+import { createUISlice, ESTADO_INICIAL_UI, type UISlice } from './slices/ui';
+import { ESTADO_INICIAL_NEGOCIO } from './slices/negocio';
+import { ESTADO_INICIAL_DATA_SOURCES } from './slices/dataSources';
+import { ESTADO_INICIAL_HARDWARE } from './slices/hardware';
+import { ESTADO_INICIAL_OPERACION } from './slices/operacion';
+import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventoryV2';
 
 // Import local para uso interno en selectores
 import type { ItemBase, PedidoBase } from './slices/operacion';
@@ -54,6 +72,19 @@ export const useStore = create<AppStore>()(
     ...createInventoryV2Slice(...args),
   }))
 );
+
+registerTenantStateReset(() => {
+  useStore.setState({
+    sesion: ESTADO_SESION_INICIAL,
+    estadoInstalacion: 'SIN_VINCULO',
+    negocio: ESTADO_INICIAL_NEGOCIO,
+    ui: ESTADO_INICIAL_UI,
+    dataSources: ESTADO_INICIAL_DATA_SOURCES,
+    hardware: ESTADO_INICIAL_HARDWARE,
+    ...ESTADO_INICIAL_OPERACION,
+    ...ESTADO_INICIAL_INVENTORY_V2,
+  });
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SELECTORES Y HOOKS (Compatibilidad y Comodidad)
@@ -166,7 +197,8 @@ export const useOperacionListeners = (_isReady?: boolean) => {}; // STUB
 export async function cargarEstadoPersistido() {
   const store = useStore.getState();
   try {
-    const rawSesion = await storage.getItem('sesion');
+    const rawSesion =
+      (await storage.getItem(SESION_STORAGE_KEY)) || (await storage.getItem('sesion'));
     if (rawSesion) {
       const sesion = JSON.parse(rawSesion);
       await store.setSession(sesion);
@@ -191,7 +223,10 @@ export async function cargarEstadoPersistido() {
         logger.error('STORE', '❌ Error al validar dispositivo en arranque', deviceError as Error);
       }
     }
-    const rawFeatures = await storage.getItem('features');
+    const featuresKey = getTenantStorageKey(store.sesion.tenantPath, 'negocio', 'features');
+    const rawFeatures =
+      (featuresKey ? await storage.getItem(featuresKey) : null) ||
+      (await storage.getItem('features'));
     if (rawFeatures) {
       const features = JSON.parse(rawFeatures);
       store.setFeatures(features);
@@ -204,7 +239,15 @@ export async function cargarEstadoPersistido() {
 }
 
 export async function limpiarEstadoPersistido() {
-  // Implementar si es necesario
+  resetTenantLifecycle('persisted_state_cleanup');
+  await storage.multiRemove([
+    SESION_STORAGE_KEY,
+    'sesion',
+    'features',
+    'hardware_dispositivos',
+    'hardware_preferidos',
+    'dataSources',
+  ]);
 }
 
 /**
@@ -213,31 +256,49 @@ export async function limpiarEstadoPersistido() {
  */
 export function useAppListeners(isAppReady: boolean) {
   const tenantPath = useStore((s) => s.sesion.tenantPath);
-  const operacionCleanup = useRef<(() => void) | null>(null);
-  const inventoryCleanup = useRef<(() => void) | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!isAppReady || !tenantPath) {
-      if (operacionCleanup.current) {
-        operacionCleanup.current();
-        operacionCleanup.current = null;
-      }
-      if (inventoryCleanup.current) {
-        inventoryCleanup.current();
-        inventoryCleanup.current = null;
-      }
+      switchTenantLifecycle(null);
+      cleanupRef.current?.();
+      cleanupRef.current = null;
       return;
     }
 
+    const generation = switchTenantLifecycle(tenantPath);
     const db = getRtdb();
-    logger.info('LISTENERS', '🔌 Activando Suscripciones Centralizadas', { tenantPath });
+    const store = useStore.getState();
+    const operacionCleanup = store.inicializarOperacionListeners(db, tenantPath);
+    const inventoryCleanup = store.inicializarInventoryV2Listeners(db, tenantPath);
+    let cleaned = false;
 
-    operacionCleanup.current = useStore.getState().inicializarOperacionListeners(db, tenantPath);
-    inventoryCleanup.current = useStore.getState().inicializarInventoryV2Listeners(db, tenantPath);
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      operacionCleanup();
+      inventoryCleanup();
+      logger.info('LISTENERS', '🔌 Suscripciones centralizadas desconectadas', {
+        tenantPath,
+        generation,
+      });
+    };
+
+    const unregister = registerTenantCleanup(tenantPath, cleanup);
+    cleanupRef.current = () => {
+      unregister();
+      cleanup();
+    };
+
+    logger.info('LISTENERS', '🔌 Suscripciones centralizadas activas', {
+      tenantPath,
+      generation,
+    });
 
     return () => {
-      if (operacionCleanup.current) operacionCleanup.current();
-      if (inventoryCleanup.current) inventoryCleanup.current();
+      unregister();
+      cleanup();
+      if (cleanupRef.current) cleanupRef.current = null;
     };
   }, [isAppReady, tenantPath]);
 }

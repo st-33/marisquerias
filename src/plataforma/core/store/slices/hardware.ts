@@ -1,6 +1,31 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
 import type { ContratoHardware, DispositivoConfig, TipoDispositivo } from '../../types/contratos';
+import { getTenantStorageKey } from './sesion';
+
+type SessionContext = { sesion: { tenantPath: string | null } };
+
+export const ESTADO_INICIAL_HARDWARE: ContratoHardware = {
+  dispositivos: {},
+  preferidos: {},
+  permisos: {
+    bluetooth: false,
+    ubicacion: false,
+    camara: false,
+    almacenamiento: false,
+  },
+};
+
+function getTenantPath(get: () => HardwareSlice): string | null {
+  return (get() as unknown as SessionContext).sesion.tenantPath;
+}
+
+function getHardwareKey(
+  get: () => HardwareSlice,
+  key: 'dispositivos' | 'preferidos'
+): string | null {
+  return getTenantStorageKey(getTenantPath(get), 'hardware', key);
+}
 
 export interface AccionesHardware {
   registrarDispositivo: (dispositivo: DispositivoConfig) => Promise<void>;
@@ -17,16 +42,7 @@ export const createHardwareSlice: StateCreator<HardwareSlice, [], [], HardwareSl
   set,
   get
 ) => ({
-  hardware: {
-    dispositivos: {},
-    preferidos: {},
-    permisos: {
-      bluetooth: false,
-      ubicacion: false,
-      camara: false,
-      almacenamiento: false,
-    },
-  },
+  hardware: ESTADO_INICIAL_HARDWARE,
 
   async registrarDispositivo(dispositivo) {
     set((state) => ({
@@ -40,8 +56,10 @@ export const createHardwareSlice: StateCreator<HardwareSlice, [], [], HardwareSl
     }));
 
     try {
-      const dispositivos = get().hardware.dispositivos;
-      await AsyncStorage.setItem('hardware_dispositivos', JSON.stringify(dispositivos));
+      const key = getHardwareKey(get, 'dispositivos');
+      if (key) {
+        await AsyncStorage.setItem(key, JSON.stringify(get().hardware.dispositivos));
+      }
     } catch (error) {
       console.error('[Store] Error al persistir dispositivo:', error);
     }
@@ -76,8 +94,10 @@ export const createHardwareSlice: StateCreator<HardwareSlice, [], [], HardwareSl
     });
 
     try {
-      const dispositivos = get().hardware.dispositivos;
-      await AsyncStorage.setItem('hardware_dispositivos', JSON.stringify(dispositivos));
+      const key = getHardwareKey(get, 'dispositivos');
+      if (key) {
+        await AsyncStorage.setItem(key, JSON.stringify(get().hardware.dispositivos));
+      }
     } catch (error) {
       console.error('[Store] Error al eliminar dispositivo:', error);
     }
@@ -95,8 +115,10 @@ export const createHardwareSlice: StateCreator<HardwareSlice, [], [], HardwareSl
     }));
 
     try {
-      const preferidos = get().hardware.preferidos;
-      await AsyncStorage.setItem('hardware_preferidos', JSON.stringify(preferidos));
+      const key = getHardwareKey(get, 'preferidos');
+      if (key) {
+        await AsyncStorage.setItem(key, JSON.stringify(get().hardware.preferidos));
+      }
     } catch (error) {
       console.error('[Store] Error al persistir preferido:', error);
     }
@@ -116,21 +138,22 @@ export const createHardwareSlice: StateCreator<HardwareSlice, [], [], HardwareSl
 
   async loadHardware() {
     try {
-      const rawDispositivos = await AsyncStorage.getItem('hardware_dispositivos');
-      if (rawDispositivos) {
-        const dispositivos = JSON.parse(rawDispositivos);
-        set((state) => ({
-          hardware: { ...state.hardware, dispositivos },
-        }));
-      }
+      const dispositivosKey = getHardwareKey(get, 'dispositivos');
+      const preferidosKey = getHardwareKey(get, 'preferidos');
+      if (!dispositivosKey || !preferidosKey) return;
 
-      const rawPreferidos = await AsyncStorage.getItem('hardware_preferidos');
-      if (rawPreferidos) {
-        const preferidos = JSON.parse(rawPreferidos);
-        set((state) => ({
-          hardware: { ...state.hardware, preferidos },
-        }));
-      }
+      const [rawDispositivos, rawPreferidos] = await Promise.all([
+        AsyncStorage.getItem(dispositivosKey),
+        AsyncStorage.getItem(preferidosKey),
+      ]);
+
+      set((state) => ({
+        hardware: {
+          ...state.hardware,
+          dispositivos: rawDispositivos ? JSON.parse(rawDispositivos) : {},
+          preferidos: rawPreferidos ? JSON.parse(rawPreferidos) : {},
+        },
+      }));
     } catch (error) {
       console.error('[Store] Error al cargar hardware:', error);
     }
