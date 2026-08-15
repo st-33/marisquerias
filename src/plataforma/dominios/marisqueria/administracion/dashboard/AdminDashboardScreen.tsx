@@ -236,6 +236,15 @@ export function AdminDashboardScreen() {
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, alertasBajas, tieneAlertas } = useAlertasInteligentes();
 
+  const fabFeatureSignature = [
+    features?.admin_dashboard !== false,
+    features?.admin_menu !== false,
+    features?.admin_inventory !== false,
+    features?.admin_tables !== false,
+    features?.admin_devices !== false,
+    features?.admin_repart !== false,
+  ].join('|');
+
   const navItems = useMemo<FabItem[]>(() => {
     const items: FabItem[] = [];
 
@@ -304,7 +313,7 @@ export function AdminDashboardScreen() {
             enabled: false,
           },
         ];
-  }, [features]);
+  }, [fabFeatureSignature]);
 
   const fabConfig = useMemo(
     () => ({

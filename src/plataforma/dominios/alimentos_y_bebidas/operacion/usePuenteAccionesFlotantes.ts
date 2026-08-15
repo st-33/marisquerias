@@ -1,5 +1,5 @@
 import { usePathname } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { logger } from '../../../core/monitoring';
 import { useStore } from '../../../core/store';
 import type { FabConfig } from '../../../core/types/contratos';
@@ -25,6 +25,21 @@ export function usePuenteAccionesFlotantes(config: FabConfig) {
   const pathname = (rawPathname ? rawPathname.replace(/\/$/, '') : '') || '/';
   const setFabConfigForRoute = useStore((s) => s.setFabConfigForRoute);
   const clearFabConfigForRoute = useStore((s) => s.clearFabConfigForRoute);
+  const configRef = useRef(config);
+  configRef.current = config;
+
+  // La configuración trae React nodes y callbacks, por lo que su identidad puede
+  // cambiar aunque la definición operativa del FAB siga siendo la misma. El efecto
+  // depende de esta firma estable, no del objeto completo.
+  const configSignature = [
+    config.enabled === false ? 'disabled' : 'enabled',
+    config.initialKey ?? '',
+    config.visibleCount ?? '',
+    config.position ?? '',
+    config.items
+      .map((item) => `${item.key}:${item.label}:${item.color ?? ''}`)
+      .join('|'),
+  ].join('::');
 
   useEffect(() => {
     // 🛡️ VALIDACIÓN DEFENSIVA: Verificar que el store esté completamente inicializado
@@ -37,8 +52,10 @@ export function usePuenteAccionesFlotantes(config: FabConfig) {
       return;
     }
 
+    const currentConfig = configRef.current;
+
     // Si el FAB está deshabilitado para esta pantalla, no hacer nada.
-    if (config.enabled === false) {
+    if (currentConfig.enabled === false) {
       // Asegurarse de que no haya una configuración previa para esta ruta
       clearFabConfigForRoute(pathname);
       return;
@@ -47,9 +64,9 @@ export function usePuenteAccionesFlotantes(config: FabConfig) {
     // Al montar la pantalla (o si la config cambia), registrarla en el store.
     logger.debug('FAB_BRIDGE', '🔧 Registrando config FAB', {
       pathname,
-      itemsCount: config.items.length,
+      itemsCount: currentConfig.items.length,
     });
-    setFabConfigForRoute(pathname, config);
+    setFabConfigForRoute(pathname, currentConfig);
 
     // Al desmontar la pantalla, limpiar su configuración específica.
     return () => {
@@ -58,5 +75,5 @@ export function usePuenteAccionesFlotantes(config: FabConfig) {
         clearFabConfigForRoute(pathname);
       }
     };
-  }, [pathname, setFabConfigForRoute, clearFabConfigForRoute, config]); // Depender del objeto config para re-registrar si cambia
+  }, [pathname, setFabConfigForRoute, clearFabConfigForRoute, configSignature]);
 }
