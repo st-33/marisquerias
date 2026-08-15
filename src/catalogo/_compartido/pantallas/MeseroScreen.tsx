@@ -25,7 +25,7 @@ import {
   useVariantSelector,
 } from '../../../plataforma/dominios/marisqueria/mesero';
 
-export function MeseroScreen() {
+function MeseroScreenContent() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const tenantId = useStore((s) => s.sesion.tenantId) || '';
   const access_code = useStore((s) => s.sesion.access_code) || '';
@@ -288,6 +288,11 @@ export function MeseroScreen() {
       />
     </View>
   );
+}
+
+export function MeseroScreen() {
+  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  return <MeseroScreenContent key={tenantPath || 'no-tenant'} />;
 }
 
 export default MeseroScreen;

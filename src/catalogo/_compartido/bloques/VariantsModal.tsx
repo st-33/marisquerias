@@ -14,6 +14,7 @@ import {
   UIManager,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Producto } from '../../../plataforma/base/_persistencia';
 import { theme } from '@compartido/theme';
 import { formatMoney } from '../../../compartido/utils/formatters';
@@ -99,6 +100,7 @@ function VariantsModalComponent({
   const isMounted = useRef(true);
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
+  const insets = useSafeAreaInsets();
 
   // 🔊 Sonidos alternantes para botón de agregar
   const {
@@ -490,7 +492,11 @@ function VariantsModalComponent({
           <View
             style={[
               styles.footer,
-              { backgroundColor: COLORS.bg.surface, borderTopColor: COLORS.bg.elevated },
+              {
+                backgroundColor: COLORS.bg.surface,
+                borderTopColor: COLORS.bg.elevated,
+                paddingBottom: Math.max(20, insets.bottom + 12),
+              },
             ]}
           >
             <View>

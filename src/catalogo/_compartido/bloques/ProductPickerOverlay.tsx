@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 import { formatMoney } from '../../../compartido/utils/formatters';
@@ -37,6 +38,7 @@ function ProductPickerOverlayComponent({
   const [fadeAnim] = React.useState(() => new Animated.Value(0));
   const [slideAnim] = React.useState(() => new Animated.Value(34));
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isWideLayout = width >= 560;
   const columnCount = isWideLayout ? 2 : 1;
   const COLORS = useThemedColors();
@@ -97,8 +99,8 @@ function ProductPickerOverlayComponent({
           marginTop: SPACING.xs,
         },
         closeButton: {
-          width: 42,
-          height: 42,
+          width: 48,
+          height: 48,
           borderRadius: RADIUS.full,
           alignItems: 'center',
           justifyContent: 'center',
@@ -120,11 +122,6 @@ function ProductPickerOverlayComponent({
           color: COLORS.text.primary,
           fontSize: TYPOGRAPHY.sizes.lg,
           fontWeight: TYPOGRAPHY.weights.bold,
-        },
-        sectionMeta: {
-          color: COLORS.text.muted,
-          fontSize: TYPOGRAPHY.sizes.sm,
-          fontWeight: TYPOGRAPHY.weights.semibold,
         },
         categoryScroller: {
           paddingBottom: SPACING.xs,
@@ -262,7 +259,16 @@ function ProductPickerOverlayComponent({
   };
 
   return (
-    <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+    <Animated.View
+      style={[
+        styles.overlay,
+        {
+          opacity: fadeAnim,
+          paddingTop: SPACING.xl + insets.top,
+          paddingBottom: SPACING.xl + insets.bottom,
+        },
+      ]}
+    >
       <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
         <View style={styles.header}>
           <View style={styles.headerRow}>
@@ -288,7 +294,6 @@ function ProductPickerOverlayComponent({
         <View style={styles.section}>
           <View style={styles.sectionLabelRow}>
             <Text style={styles.sectionLabel}>Categorías</Text>
-            <Text style={styles.sectionMeta}>{categories.length} disponibles</Text>
           </View>
           <ScrollView
             horizontal
@@ -336,7 +341,6 @@ function ProductPickerOverlayComponent({
               <Ionicons name="grid-outline" size={18} color={COLORS.primary} />
               <Text style={styles.sectionLabel}>Productos</Text>
             </View>
-            <Text style={styles.sectionMeta}>{productsInCategory.length} opciones</Text>
           </View>
 
           <FlatList
