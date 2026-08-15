@@ -5,6 +5,7 @@
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { limpiarUndefined } from './serializacion';
 import { MenuRepository, type Categoria, type Producto } from '../../../../base/_persistencia';
 import { RepositorioInventario } from '../../../alimentos_y_bebidas/infraestructura/repositorios';
 import { useStore } from '../../../../core/store';
@@ -218,6 +219,13 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
   } | null>(null);
   const [validandoActive, setValidandoActive] = useState(false);
 
+  // Purgar validación local al cambiar de tenant o desmontar/recrear el menú.
+  useEffect(() => {
+    setRecetaEnEdicion(null);
+    setValidacionActive(null);
+    setValidandoActive(false);
+  }, [tenantPath]);
+
   // Sincronizar el estado durante la fase de renderizado para evitar cascading renders
   const [prevRecetaEnEdicion, setPrevRecetaEnEdicion] = useState<Record<string, any> | null>(null);
   if (recetaEnEdicion !== prevRecetaEnEdicion) {
@@ -288,20 +296,22 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
       }
     }
 
-    return await crearProducto({
-      nombre: datos.nombre.trim(),
-      precio,
-      categoriaId: datos.categoriaId,
-      activo: true,
-      variantes: datos.variantes || {},
-      visible: datos.visible || { digital: true, mesero: true },
-      prepMin: datos.prepMin || 0,
-      receta: datos.receta || {},
-      usarConfigPersonalizada: datos.usarConfigPersonalizada,
-      enviarACocina: datos.enviarACocina,
-      saltarPreparando: datos.saltarPreparando,
-      unidad: datos.unidad as any,
-    });
+    return await crearProducto(
+      limpiarUndefined({
+        nombre: datos.nombre.trim(),
+        precio,
+        categoriaId: datos.categoriaId,
+        activo: true,
+        variantes: datos.variantes || {},
+        visible: datos.visible || { digital: true, mesero: true },
+        prepMin: datos.prepMin || 0,
+        receta: datos.receta || {},
+        usarConfigPersonalizada: datos.usarConfigPersonalizada,
+        enviarACocina: datos.enviarACocina,
+        saltarPreparando: datos.saltarPreparando,
+        unidad: datos.unidad as any,
+      })
+    );
   };
 
   // 🎭 ORQUESTACIÓN: Actualizar producto con validación
@@ -341,18 +351,21 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
       }
     }
 
-    await actualizarProducto(id, {
-      nombre: datos.nombre.trim(),
-      precio,
-      variantes: datos.variantes,
-      visible: datos.visible,
-      prepMin: datos.prepMin,
-      receta: datos.receta,
-      usarConfigPersonalizada: datos.usarConfigPersonalizada,
-      enviarACocina: datos.enviarACocina,
-      saltarPreparando: datos.saltarPreparando,
-      unidad: datos.unidad as any,
-    });
+    await actualizarProducto(
+      id,
+      limpiarUndefined({
+        nombre: datos.nombre.trim(),
+        precio,
+        variantes: datos.variantes,
+        visible: datos.visible,
+        prepMin: datos.prepMin,
+        receta: datos.receta,
+        usarConfigPersonalizada: datos.usarConfigPersonalizada,
+        enviarACocina: datos.enviarACocina,
+        saltarPreparando: datos.saltarPreparando,
+        unidad: datos.unidad as any,
+      })
+    );
   };
 
   const refresh = async () => {

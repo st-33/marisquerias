@@ -4,7 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Platform,
@@ -109,9 +109,9 @@ export const DEFAULT_MENU_LABELS: MenuLabels = {
   itemsPluralLabel: 'productos',
   categoryLabel: 'Categoría',
   recipeTab: 'Receta / Insumos',
-  preparationFlow: 'Flujo de Despacho / Preparación',
-  sendToPreparation: 'Enviar a Despacho / Cocina',
-  sellerVisibility: 'Visible para Operadores',
+  preparationFlow: 'Configuración de preparación',
+  sendToPreparation: 'Enviar a Cocina',
+  sellerVisibility: 'Visible en Mesero',
   sellerSubtext: 'Aparece en la app de atención y ventas',
   showVentaCrudo: true,
 };
@@ -129,7 +129,14 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
   const { colors } = useAppTheme();
   const IS_MOBILE = width < 768;
 
-  const { categorias, loading, actions, getProductosPorCategoria } = useMenuManagement({
+  const {
+    categorias,
+    loading,
+    actions,
+    getProductosPorCategoria,
+    validacionActive,
+    validandoActive,
+  } = useMenuManagement({
     db,
     tenantPath,
   });
@@ -163,6 +170,15 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
   const [formData, setFormData] = useState<FormState>(createEmptyForm());
   const [editingTab, setEditingTab] = useState<'basico' | 'variantes' | 'receta'>('basico');
   const { isEnabled: featureEnabled } = useAdminFeatures();
+
+  useEffect(() => {
+    setSelectedCat(null);
+    setShowModal(null);
+    setCatNombre('');
+    setFormData(createEmptyForm());
+    setEditingTab('basico');
+    actions.setRecetaEnEdicion(null);
+  }, [tenantPath]);
 
   const activeCat = useMemo(() => {
     if (selectedCat && categorias.some((c) => c.id === selectedCat)) {
@@ -263,6 +279,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
       }
       setFormData(createEmptyForm());
       setShowModal(null);
+      actions.setRecetaEnEdicion(null);
     } catch (err: any) {
       showToast(err?.message || 'Error al guardar producto', 'error');
     } finally {
@@ -693,10 +710,10 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                               <View style={[styles.switchRow, styles.switchRowNested]}>
                                 <View style={{ flex: 1 }}>
                                   <Text style={styles.switchLabel}>
-                                    Auto-Completar (Saltar Preparando)
+                                    Enviar directo a “Listo”
                                   </Text>
                                   <Text style={styles.switchSublabel}>
-                                    Pasa directo a listo al enviar
+                                    La comanda pasa directamente a lista al enviarse
                                   </Text>
                                 </View>
                                 <Switch
@@ -728,12 +745,13 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   {editingTab === 'receta' && (
                     <RecipeEditor
                       receta={formData.receta}
-                      onRecetaChange={(newReceta) =>
-                        setFormData({ ...formData, receta: newReceta })
-                      }
+                      onRecetaChange={(newReceta) => {
+                        setFormData({ ...formData, receta: newReceta });
+                        actions.setRecetaEnEdicion(newReceta?.ingredientes ?? null);
+                      }}
                       itemsInventario={itemsInventario as any}
-                      validacion={null}
-                      validando={false}
+                      validacion={validacionActive}
+                      validando={validandoActive}
                     />
                   )}
                 </ScrollView>

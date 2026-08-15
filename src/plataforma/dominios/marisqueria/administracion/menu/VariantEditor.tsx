@@ -315,7 +315,7 @@ export default function VariantEditor({
                     color="#60a5fa"
                   />
                   <Text style={[styles.metaChipText, { color: '#60a5fa' }]}>
-                    {group.tipo === 'single' ? 'Una opción' : 'Multi'}
+                    {group.tipo === 'single' ? 'Selección única' : 'Selección múltiple'}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -351,7 +351,7 @@ export default function VariantEditor({
 
             {/* FLUJO Y MIXTOS (PRO) */}
             <View style={styles.flowSection}>
-              <Text style={styles.metaLabel}>PASO SIGUIENTE:</Text>
+              <Text style={styles.metaLabel}>Después de este grupo:</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -364,7 +364,7 @@ export default function VariantEditor({
                   <Text
                     style={[styles.flowChipText, !group.nextGroupId && styles.flowChipTextActive]}
                   >
-                    Fin
+                    Terminar aquí
                   </Text>
                 </Pressable>
                 {Object.entries(variantes.grupos || {}).map(
@@ -395,7 +395,7 @@ export default function VariantEditor({
                 style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 8 }}
               />
 
-              <Text style={styles.metaLabel}>EXCLUIR REPETIDOS DE (MIXTOS):</Text>
+              <Text style={styles.metaLabel}>Evitar repetir opciones junto con:</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -411,7 +411,7 @@ export default function VariantEditor({
                       !group.excludeFromSibling && styles.flowChipTextActive,
                     ]}
                   >
-                    Ninguno
+                    Sin exclusión
                   </Text>
                 </Pressable>
                 {Object.entries(variantes.grupos || {}).map(
@@ -465,14 +465,14 @@ export default function VariantEditor({
             <View style={styles.addOptionForm}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Opción"
+                placeholder="Nombre de opción"
                 placeholderTextColor="#6b7280"
                 value={optionForm.titulo || ''}
                 onChangeText={(t) => setOptionForm({ ...optionForm, titulo: t })}
               />
               <TextInput
                 style={[styles.input, { width: 70 }]}
-                placeholder="$"
+                placeholder="Sobrecosto"
                 placeholderTextColor="#6b7280"
                 value={optionForm.delta?.toString() || ''}
                 onChangeText={(d) => setOptionForm({ ...optionForm, delta: parseFloat(d) || 0 })}
@@ -523,9 +523,9 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <View>
-              <Text style={styles.modalTitle}>Ajustes de Flujo Inteligente</Text>
+              <Text style={styles.modalTitle}>Reglas de visibilidad</Text>
               <Text style={{ color: '#64748b', fontSize: 11 }}>
-                Configura la visibilidad basada en esta opción
+                Decide qué grupos aparecen o se ocultan al seleccionar esta opción
               </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -542,12 +542,11 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
             <View style={styles.infoBox}>
               <Ionicons name="information-circle-outline" size={16} color={theme.colors.primary} />
               <Text style={styles.infoText}>
-                Usa el sistema de &quot;Whitelist&quot; para activar grupos ocultos, o
-                &quot;Blacklist&quot; para forzar el ocultamiento de grupos activos.
+                Al seleccionar esta opción puedes mostrar grupos relacionados u ocultar grupos que ya no aplican.
               </Text>
             </View>
 
-            <Text style={styles.configLabel}>AL SELECCIONAR, ACTIVAR (SHOW):</Text>
+            <Text style={styles.configLabel}>Al seleccionar, mostrar:</Text>
             <View style={styles.checkGrid}>
               {Object.entries(grupos || {}).map(
                 ([id, g]: any) =>
@@ -589,7 +588,7 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
               style={{ height: 1.5, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 }}
             />
 
-            <Text style={styles.configLabel}>AL SELECCIONAR, DESACTIVAR (HIDE):</Text>
+            <Text style={styles.configLabel}>Al seleccionar, ocultar:</Text>
             <View style={styles.checkGrid}>
               {Object.entries(grupos || {}).map(
                 ([id, g]: any) =>

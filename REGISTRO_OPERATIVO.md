@@ -161,3 +161,7 @@ La exportación web cargó `/_role/mesero` sin error de navegación. En estado s
 ## Cocina — verificación del modo Elite
 
 La investigación confirmó que `ThemeProvider` ya asigna `elite` por defecto a la categoría `marisquerias`, pero `CocinaScreen` usaba colores hardcodeados y no consumía el tema. Se conectó al mismo `useAppTheme`/`useThemedColors` existente y ahora muestra el estado `ELITE` o `CLÁSICO` en el encabezado; `TarjetaComanda` también usa los colores dinámicos en urgencia, botones, estados y completar orden. En la exportación web sin sesión de tenant el navegador mostró `CLÁSICO`, que es el fallback esperado; no se tocó RTDB.
+
+## Menú administrativo — revisión web estática
+
+La ruta `/_role/admin/menu` cargó correctamente la exportación web y mostró el estado inicial `Cargando menú...` junto con el FAB, sin error de navegación. La sesión aislada no tenía tenant autenticado, por lo que no fue posible observar categorías/productos reales ni ejecutar guardado desde esta revisión; no se escribió en RTDB.

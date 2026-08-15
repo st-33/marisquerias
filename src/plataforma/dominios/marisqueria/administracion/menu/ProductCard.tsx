@@ -3,6 +3,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Producto } from '../../../../base/_persistencia';
 import { theme } from '@compartido/theme';
+import { useThemedColors, useThemedShadows } from '../../../../../compartido/hooks/useThemedColors';
 
 type ProductCardProps = {
   producto: Producto;
@@ -13,6 +14,8 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: ProductCardProps) {
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
   const activo = producto.activo ?? true;
   const hasRecipe =
     producto.receta?.ingredientes && Object.keys(producto.receta.ingredientes).length > 0;
@@ -22,20 +25,28 @@ export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: 
   const hasVariants = variantCount > 0;
 
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: COLORS.bg.surface, borderColor: COLORS.bg.elevated },
+        SHADOWS.sm,
+      ]}
+    >
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Editar producto ${producto.nombre}`}
         style={({ pressed }) => [
           styles.touchableArea,
-          pressed && { backgroundColor: 'rgba(255,255,255,0.02)' },
+          pressed && { backgroundColor: COLORS.alpha.primary10 },
         ]}
         onPress={() => onEdit(producto)}
       >
         <View style={styles.content}>
           <View style={styles.headerRow}>
-            <Text style={styles.name} numberOfLines={2}>
+            <Text style={[styles.name, { color: COLORS.text.primary }]} numberOfLines={2}>
               {producto.nombre}
             </Text>
-            <Text style={styles.price}>${producto.precio.toFixed(2)}</Text>
+            <Text style={[styles.price, { color: COLORS.primary }]}>${producto.precio.toFixed(2)}</Text>
           </View>
 
           <View style={styles.metaRow}>
@@ -44,18 +55,36 @@ export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: 
                 e.stopPropagation();
                 onToggle(producto);
               }}
-              style={[styles.statusPill, activo ? styles.statusActive : styles.statusInactive]}
+              style={[
+                styles.statusPill,
+                activo
+                  ? { backgroundColor: COLORS.alpha.success10, borderColor: COLORS.success }
+                  : { backgroundColor: COLORS.alpha.error10, borderColor: COLORS.error },
+              ]}
             >
               <View
-                style={[styles.statusDot, !activo && { backgroundColor: theme.colors.danger }]}
+                style={[styles.statusDot, { backgroundColor: activo ? COLORS.success : COLORS.error }]}
               />
-              <Text style={[styles.statusText, !activo && { color: theme.colors.danger }]}>
+              <Text style={[styles.statusText, { color: activo ? COLORS.success : COLORS.error }]}>
                 {activo ? 'Activo' : 'Inactivo'}
               </Text>
             </Pressable>
 
             {hasVariants && (
-              <View style={styles.variantsContainer}>
+              <>
+                <View
+                  style={[
+                    styles.metaPill,
+                    { backgroundColor: COLORS.alpha.primary10, borderColor: COLORS.bg.elevated },
+                  ]}
+                >
+                  <Ionicons name="options-outline" size={13} color={COLORS.primary} />
+                  <Text style={[styles.metaText, { color: COLORS.primary }]}>
+                    {variantCount} {variantCount === 1 ? 'grupo' : 'grupos'} de variantes
+                  </Text>
+                </View>
+                <View style={styles.variantsContainer}>
+
                 {Object.entries(producto.variantes?.grupos || {}).map(
                   ([key, group]: [string, any]) => (
                     <View key={key} style={styles.variantGroup}>
@@ -78,14 +107,15 @@ export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: 
                     </View>
                   )
                 )}
-              </View>
+                </View>
+              </>
             )}
 
             {producto.prepMin ? (
               <View style={styles.metaRow}>
                 <View style={styles.metaPill}>
-                  <Ionicons name="time-outline" size={14} color={theme.colors.accent} />
-                  <Text style={styles.metaText}>{producto.prepMin} min de prep.</Text>
+                  <Ionicons name="time-outline" size={14} color={COLORS.warning} />
+                  <Text style={[styles.metaText, { color: COLORS.text.muted }]}>{producto.prepMin} min de preparación</Text>
                 </View>
               </View>
             ) : null}
@@ -93,16 +123,21 @@ export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: 
         </View>
       </Pressable>
 
-      <View style={styles.actionsRow}>
-        <CardButton
+      <View
+        style={[
+          styles.actionsRow,
+          { backgroundColor: COLORS.bg.secondary, borderTopColor: COLORS.bg.elevated },
+        ]}
+      >
+          <CardButton
           icon="restaurant-outline"
-          color={hasRecipe ? theme.colors.secondary : theme.colors.textMuted}
+          color={hasRecipe ? COLORS.success : COLORS.text.muted}
           onPress={() => onRecipe(producto)}
           label="Receta"
         />
         <CardButton
           icon="trash-outline"
-          color={theme.colors.danger}
+          color={COLORS.error}
           onPress={() => onDelete(producto)}
         />
       </View>
