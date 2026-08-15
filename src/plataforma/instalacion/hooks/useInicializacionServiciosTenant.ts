@@ -18,7 +18,6 @@ export function useInicializacionServiciosTenant({ estadoInstalacion, tenantPath
 
   useEffect(() => {
     if (estadoInstalacion !== 'VINCULADA' || !tenantPath || !validarRutaTenant(tenantPath)) {
-      switchTenantLifecycle(null);
       initializedTenantRef.current = null;
       return;
     }

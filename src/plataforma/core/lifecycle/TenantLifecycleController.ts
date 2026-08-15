@@ -6,6 +6,7 @@ export type TenantCleanup = () => void;
 let activeTenantPath: string | null = null;
 let lifecycleGeneration = 0;
 let resetTenantState: (() => void) | null = null;
+let resetTenantScopedState: (() => void) | null = null;
 const registeredCleanups = new Set<TenantCleanup>();
 
 function runCleanup(cleanup: TenantCleanup): void {
@@ -39,7 +40,7 @@ export function switchTenantLifecycle(nextTenantPath: string | null): number {
   }
 
   cleanupRegisteredResources();
-  resetTenantState?.();
+  resetTenantScopedState?.();
   lifecycleGeneration += 1;
   activeTenantPath = normalizedTenantPath;
 
@@ -104,6 +105,13 @@ export function registerTenantStateReset(reset: () => void): () => void {
   resetTenantState = reset;
   return () => {
     if (resetTenantState === reset) resetTenantState = null;
+  };
+}
+
+export function registerTenantScopedStateReset(reset: () => void): () => void {
+  resetTenantScopedState = reset;
+  return () => {
+    if (resetTenantScopedState === reset) resetTenantScopedState = null;
   };
 }
 

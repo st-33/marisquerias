@@ -3,7 +3,11 @@
 import { useStore, cargarEstadoPersistido } from '../index';
 import type { DispositivoConfig } from '../../types/contratos';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { registerTenantCleanup } from '../../lifecycle/TenantLifecycleController';
+import {
+  getActiveTenantPath,
+  registerTenantCleanup,
+  switchTenantLifecycle,
+} from '../../lifecycle/TenantLifecycleController';
 
 jest.mock(
   'react-native',
@@ -169,6 +173,54 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     expect(state.sesion.access_code).toBe('ACCESS-123');
     expect(state.sesion.tenantPath).toBe('2 alimentos_y_bebidas/marisquerias/puerto-libres');
     expect(state.negocio.features.admin_menu.enabled).toBe(true);
+  });
+
+  it('no debe purgar la sesión al desmontar un cleanup de navegación', async () => {
+    const store = useStore.getState();
+    const tenantPath = '2 alimentos_y_bebidas/marisquerias/tenant-navigation';
+    await store.setSession({
+      access_code: 'ACCESS-NAV',
+      tenantPath,
+      tenantId: 'tenant-navigation',
+      niche: '2 alimentos_y_bebidas',
+      category: 'marisquerias',
+      rol: 'admin',
+    });
+
+    const localCleanup = jest.fn();
+    const unregister = registerTenantCleanup(tenantPath, localCleanup);
+    unregister();
+
+    const generation = switchTenantLifecycle(tenantPath);
+    expect(switchTenantLifecycle(tenantPath)).toBe(generation);
+    expect(localCleanup).not.toHaveBeenCalled();
+    expect(useStore.getState().sesion.tenantPath).toBe(tenantPath);
+    expect(getActiveTenantPath()).toBe(tenantPath);
+  });
+
+  it('debe purgar los datos scoped al cambiar explícitamente de tenant', async () => {
+    const store = useStore.getState();
+    await store.setSession({
+      access_code: 'ACCESS-A',
+      tenantPath: 'marisquerias/tenant-a',
+      tenantId: 'tenant-a',
+      niche: '2 alimentos_y_bebidas',
+      category: 'marisquerias',
+      rol: 'admin',
+    });
+    store.actualizarMesaLocal('mesa-a', { estado: 'ocupada' });
+
+    await store.setSession({
+      access_code: 'ACCESS-B',
+      tenantPath: 'cafeterias/tenant-b',
+      tenantId: 'tenant-b',
+      niche: '2 alimentos_y_bebidas',
+      category: 'cafeterias',
+      rol: 'admin',
+    });
+
+    expect(useStore.getState().sesion.tenantPath).toBe('cafeterias/tenant-b');
+    expect(useStore.getState().mesas).toEqual({});
   });
 
   it('debe purgar estado tenant y desconectar listeners al limpiar la sesión', async () => {
