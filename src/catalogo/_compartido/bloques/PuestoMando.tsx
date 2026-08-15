@@ -257,9 +257,6 @@ export function PuestoMando(props: PuestoMandoProps) {
               tables={mesas}
               selectedTable={mesaSeleccionada}
               mode={mesaSeleccionada ? 'table' : null}
-              liveItems={itemsEnCurso}
-              pendingCount={pendingCount}
-              indicators={undefined}
               onPressTable={async (id, isFree) => {
                 await onSelectMesa(id);
                 if (isFree) {

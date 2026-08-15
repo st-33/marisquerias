@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   Animated,
   FlatList,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
@@ -362,7 +364,12 @@ function ProductPickerOverlayComponent({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Agregar ${String(product?.nombre || 'producto')}`}
-                onPress={() => onOpenVariant(product.id)}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  onOpenVariant(product.id);
+                }}
                 style={({ pressed }) => [
                   styles.productCard,
                   {

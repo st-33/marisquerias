@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, Pressable, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
@@ -85,6 +86,9 @@ function ActionAreaComponent(props: ActionAreaProps) {
   // 🔊 Handler con sonido para AÑADIR
   const handleAddWithSound = () => {
     playAddSound(); // 🔊 Sonido alternante
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     onAdd();
   };
 

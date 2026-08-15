@@ -24,6 +24,7 @@ function OrderListComponent(props: OrderListProps) {
   const {
     pending,
     liveItems,
+    getProduct,
     onIncPending,
     onDecPending,
     onRemovePending,
@@ -158,6 +159,7 @@ function OrderListComponent(props: OrderListProps) {
               item={it}
               statusConfig={getStatusConfig('nuevo')}
               isPending={true}
+              getProduct={getProduct}
               onInc={() => onIncPending(idx)}
               onDec={() => onDecPending(idx)}
               onRemove={() => onRemovePending(idx)}
@@ -168,7 +170,12 @@ function OrderListComponent(props: OrderListProps) {
           {groupedItems.en_cocina.length > 0 && (
             <View style={{ marginTop: pending.length > 0 ? 6 : 0 }}>
               {groupedItems.en_cocina.map((it: any) => (
-                <OrderItemCard key={it.id} item={it} statusConfig={getStatusConfig('en_cocina')} />
+                <OrderItemCard
+                  key={it.id}
+                  item={it}
+                  getProduct={getProduct}
+                  statusConfig={getStatusConfig('en_cocina')}
+                />
               ))}
             </View>
           )}
@@ -179,7 +186,12 @@ function OrderListComponent(props: OrderListProps) {
               style={{ marginTop: pending.length > 0 || groupedItems.en_cocina.length > 0 ? 6 : 0 }}
             >
               {groupedItems.preparando.map((it: any) => (
-                <OrderItemCard key={it.id} item={it} statusConfig={getStatusConfig('preparando')} />
+                <OrderItemCard
+                  key={it.id}
+                  item={it}
+                  getProduct={getProduct}
+                  statusConfig={getStatusConfig('preparando')}
+                />
               ))}
             </View>
           )}
@@ -200,6 +212,7 @@ function OrderListComponent(props: OrderListProps) {
                 <OrderItemCard
                   key={it.id}
                   item={it}
+                  getProduct={getProduct}
                   statusConfig={getStatusConfig('listo')}
                   onAction={() => onMarkDelivered?.(it.id)}
                   actionLabel="ENTREGAR"
@@ -217,6 +230,7 @@ function OrderListComponent(props: OrderListProps) {
                 <OrderItemCard
                   key={it.id}
                   item={it}
+                  getProduct={getProduct}
                   statusConfig={getStatusConfig('entregado')}
                   actionLabel="✓"
                   actionColor="transparent"

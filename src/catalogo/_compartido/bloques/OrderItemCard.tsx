@@ -15,7 +15,44 @@ type OrderItemCardProps = {
   actionLabel?: string;
   actionColor?: string;
   actionIcon?: keyof typeof Ionicons.glyphMap;
+  getProduct?: (productId: string) => any | null;
 };
+
+const LEGACY_VARIANT_LABELS: Record<string, string> = {
+  snAgu: 'Sin aguacate',
+  oGr: 'Grande',
+};
+
+function readableVariant(value: unknown): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (LEGACY_VARIANT_LABELS[raw]) return LEGACY_VARIANT_LABELS[raw];
+  return raw
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (char) => char.toUpperCase());
+}
+
+function resolveVariantLabels(item: any, getProduct?: (productId: string) => any | null): string[] {
+  const productId = item.productId ?? item.productoId;
+  const product = productId ? getProduct?.(String(productId)) : null;
+  const groups = product?.variantes?.grupos ?? {};
+  const source = Array.isArray(item.variantLabels)
+    ? item.variantLabels
+    : item.simpleVariants && Array.isArray(item.simpleVariants)
+    ? item.simpleVariants
+    : item.variantes && typeof item.variantes === 'object'
+    ? Object.entries(item.variantes).flatMap(([groupId, options]) => {
+        const group = groups[groupId];
+        return (Array.isArray(options) ? options : [options]).map((optionId) => {
+          const option = group?.opciones?.[String(optionId)];
+          return option?.titulo ?? optionId;
+        });
+      })
+    : [];
+
+  return source.map(readableVariant).filter(Boolean);
+}
 
 export const OrderItemCard = ({
   item,
@@ -28,6 +65,7 @@ export const OrderItemCard = ({
   actionLabel,
   actionColor,
   actionIcon,
+  getProduct,
 }: OrderItemCardProps) => {
   const COLORS = useThemedColors();
   const resolvedActionColor = actionColor ?? COLORS.primary;
@@ -38,15 +76,7 @@ export const OrderItemCard = ({
   const total = Number.isInteger(totalNum) ? `$${totalNum}` : `$${totalNum.toFixed(2)}`;
   const name = String(item.name ?? item.nombre ?? 'Item');
 
-  // Extract variants
-  let variants: string[] = [];
-  if (Array.isArray(item.variantLabels)) {
-    variants = item.variantLabels;
-  } else if (isPending && Array.isArray(item.simpleVariants)) {
-    variants = item.simpleVariants;
-  } else if (item.variantes && typeof item.variantes === 'object') {
-    variants = Object.values(item.variantes).flat().map(String);
-  }
+  const variants = resolveVariantLabels(item, getProduct);
 
   return (
     <Animated.View
@@ -113,46 +143,18 @@ export const OrderItemCard = ({
               {name}
             </Text>
 
-            {/* VARIANTS (PREMIUM CHIPS) */}
             {variants.length > 0 && (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {variants.map((v, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      backgroundColor: COLORS.alpha.primary10,
-                      paddingHorizontal: 6,
-                      paddingVertical: 2,
-                      borderRadius: RADIUS.xs,
-                      borderWidth: 1,
-                      borderColor: COLORS.bg.elevated,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: 2,
-                        backgroundColor: statusConfig.dotColor,
-                      }}
-                    />
-                    <Text
-                      style={{
-                        color: COLORS.text.secondary,
-                        fontSize: 10,
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      {v}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <Text
+                numberOfLines={2}
+                style={{
+                  color: COLORS.text.secondary,
+                  fontSize: 13,
+                  lineHeight: 18,
+                  marginTop: 3,
+                }}
+              >
+                {variants.join(', ')}
+              </Text>
             )}
           </View>
         </View>
