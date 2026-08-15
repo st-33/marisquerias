@@ -59,7 +59,11 @@ export function useAdminLogic({ db, tenantPath }: { db: Database; tenantPath: st
 
   // Load metrics based on the selected date filter
   const includeVentaCrudo = features?.module_venta_crudo === true;
-  const { metrics, loading: metricsLoading } = useAdminMetrics({ dateFilter, includeVentaCrudo });
+  const { metrics, loading: metricsLoading } = useAdminMetrics({
+    dateFilter,
+    includeVentaCrudo,
+    tenantPath,
+  });
 
   const loading = featuresLoading || metricsLoading;
 

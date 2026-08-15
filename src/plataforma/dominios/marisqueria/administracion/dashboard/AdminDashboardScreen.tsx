@@ -5,7 +5,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -15,9 +15,9 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SalesDistributionPieChart } from '../../../../../compartido/componentes/charts/SalesDistributionPieChart';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import Svg, { Circle, G } from 'react-native-svg';
 import { SalesLineChart } from '../../../../../compartido/componentes/charts/SalesLineChart';
-import { TopProductsBarChart } from '../../../../../compartido/componentes/charts/TopProductsBarChart';
 import { AdminLayout } from '../../../../../compartido/componentes/layouts/AdminLayout';
 import { useAppTheme } from '../../../../../compartido/temas';
 import { getRtdb } from '../../../../core/firebase';
@@ -42,33 +42,162 @@ import {
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
 
+type FinancialDataPoint = {
+  label: string;
+  ventaTotal: number;
+  costo: number;
+  ganancia: number;
+  ordenes: number;
+};
+
 type InlineTrendChartProps = {
-  data: { label: string; value: number }[];
+  data: FinancialDataPoint[];
   color: string;
 };
 
-function InlineTrendChart({ data, color }: InlineTrendChartProps) {
-  const visibleData = data.slice(-12);
-  const maxValue = Math.max(...visibleData.map((point) => point.value), 1);
+type DistributionDatum = { label: string; value: number };
+
+type TopProductDatum = { id: string; nombre: string; ventas: number; monto?: number };
+
+function DistributionDonut({ data, palette }: { data: DistributionDatum[]; palette: string[] }) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  let consumed = 0;
 
   return (
-    <View style={styles.inlineChart} accessibilityLabel="Gráfica de ventas en web">
+    <View style={styles.distributionWrap}>
+      <View style={styles.donutStage}>
+        <Svg width={144} height={144} viewBox="0 0 144 144">
+          <G rotation="-90" origin="72,72">
+            {data.map((item, index) => {
+              const segment = total > 0 ? (item.value / total) * circumference : 0;
+              const offset = consumed;
+              consumed += segment;
+              return (
+                <Circle
+                  key={`${item.label}-${index}`}
+                  cx="72"
+                  cy="72"
+                  r={radius}
+                  fill="none"
+                  stroke={palette[index % palette.length]}
+                  strokeWidth="18"
+                  strokeDasharray={`${segment} ${circumference - segment}`}
+                  strokeDashoffset={-offset}
+                  strokeLinecap="round"
+                  onPress={() => setSelectedIndex(index)}
+                />
+              );
+            })}
+          </G>
+        </Svg>
+        <View style={styles.donutCenter}>
+          <Text style={styles.donutCenterValue}>{`$${(data[selectedIndex]?.value || 0).toFixed(0)}`}</Text>
+          <Text style={styles.donutCenterLabel}>{data[selectedIndex]?.label || 'Sin datos'}</Text>
+        </View>
+      </View>
+      <View style={styles.distributionLegend}>
+        {data.map((item, index) => (
+          <Pressable
+            key={`${item.label}-legend-${index}`}
+            onPress={() => setSelectedIndex(index)}
+            style={[styles.distributionLegendItem, selectedIndex === index && styles.distributionLegendActive]}
+          >
+            <View style={[styles.financialLegendDot, { backgroundColor: palette[index % palette.length] }]} />
+            <Text style={styles.distributionLegendLabel} numberOfLines={1}>{item.label}</Text>
+            <Text style={styles.distributionLegendValue}>{`$${item.value.toFixed(0)}`}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function TopProductsList({ data, color }: { data: TopProductDatum[]; color: string }) {
+  const max = Math.max(...data.map((item) => item.ventas), 1);
+  return (
+    <View style={styles.topProductsList}>
+      {data.map((item, index) => (
+        <View key={item.id || `${item.nombre}-${index}`} style={styles.topProductRow}>
+          <View style={styles.topProductMeta}>
+            <Text style={styles.topProductName} numberOfLines={1}>{item.nombre}</Text>
+            <Text style={styles.topProductAmount}>{`${item.ventas} u · $${(item.monto || 0).toFixed(2)}`}</Text>
+          </View>
+          <View style={styles.topProductTrack}>
+            <View style={[styles.topProductFill, { width: `${Math.max(8, (item.ventas / max) * 100)}%`, backgroundColor: color }]} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function InlineTrendChart({ data, color }: InlineTrendChartProps) {
+  const [selectedIndex, setSelectedIndex] = useState(() =>
+    Math.max(0, data.findIndex((point) => point.ventaTotal > 0))
+  );
+  const selected = data[selectedIndex] || data[0] || {
+    label: '—',
+    ventaTotal: 0,
+    costo: 0,
+    ganancia: 0,
+    ordenes: 0,
+  };
+  const maxValue = Math.max(...data.map((point) => Math.max(point.ventaTotal, point.costo)), 1);
+
+  return (
+    <Animated.View entering={FadeInDown.duration(420)} style={styles.inlineChart} accessibilityLabel="Gráfica financiera de ventas">
+      <View style={styles.financialLegendRow}>
+        <View style={styles.financialLegendItem}>
+          <View style={[styles.financialLegendDot, { backgroundColor: color }]} />
+          <Text style={styles.financialLegendText}>Venta total</Text>
+        </View>
+        <View style={styles.financialLegendItem}>
+          <View style={[styles.financialLegendDot, { backgroundColor: '#f59e0b' }]} />
+          <Text style={styles.financialLegendText}>Costo / inversión</Text>
+        </View>
+        <Text style={styles.financialHint}>Pulsa una franja</Text>
+      </View>
+
       <View style={styles.inlineBars}>
-        {visibleData.map((point) => {
-          const barHeight = Math.max(8, (point.value / maxValue) * 100);
+        {data.map((point, index) => {
+          const ventaHeight = Math.max(5, (point.ventaTotal / maxValue) * 100);
+          const costoHeight = Math.max(3, (point.costo / maxValue) * 100);
+          const active = selectedIndex === index;
           return (
-            <View key={point.label} style={styles.inlineBarColumn}>
-              <View
-                style={[styles.inlineBar, { height: `${barHeight}%`, backgroundColor: color }]}
-              />
-              <Text style={styles.inlineBarLabel} numberOfLines={1}>
+            <Pressable
+              key={`${point.label}-${index}`}
+              accessibilityRole="button"
+              accessibilityLabel={`Desglose financiero ${point.label}`}
+              onPress={() => setSelectedIndex(index)}
+              style={[styles.inlineBarColumn, active && styles.inlineBarColumnActive]}
+            >
+              <Animated.View entering={FadeInDown.delay(index * 22).duration(260)} style={styles.barStack}>
+                <View style={[styles.inlineBar, { height: `${ventaHeight}%`, backgroundColor: color }]} />
+                <View style={[styles.inlineCostBar, { height: `${costoHeight}%` }]} />
+              </Animated.View>
+              <Text style={[styles.inlineBarLabel, active && styles.inlineBarLabelActive]} numberOfLines={1}>
                 {point.label}
               </Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
-    </View>
+
+      <View style={styles.chartTooltip}>
+        <View>
+          <Text style={styles.tooltipEyebrow}>Desglose de {selected.label}</Text>
+          <Text style={styles.tooltipOrders}>{selected.ordenes} {selected.ordenes === 1 ? 'orden' : 'órdenes'} cobradas</Text>
+        </View>
+        <View style={styles.tooltipFinancials}>
+          <View><Text style={styles.tooltipLabel}>Venta total</Text><Text style={[styles.tooltipValue, { color }]}>{`$${selected.ventaTotal.toFixed(2)}`}</Text></View>
+          <View><Text style={styles.tooltipLabel}>Costo</Text><Text style={[styles.tooltipValue, { color: '#f59e0b' }]}>{`$${selected.costo.toFixed(2)}`}</Text></View>
+          <View><Text style={styles.tooltipLabel}>Ganancia neta</Text><Text style={[styles.tooltipValue, { color: selected.ganancia >= 0 ? '#10b981' : '#ef4444' }]}>{`$${selected.ganancia.toFixed(2)}`}</Text></View>
+        </View>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -105,7 +234,7 @@ export function AdminDashboardScreen() {
   // 🧠 CEREBRO: Hook de lógica pura
   const { metrics, loading, actions, features, dateFilter } = useAdminLogic({ db, tenantPath });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
-  const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
+  const { alertasCriticas, alertasMedias, alertasBajas, tieneAlertas } = useAlertasInteligentes();
 
   const navItems = useMemo<FabItem[]>(() => {
     const items: FabItem[] = [];
@@ -331,6 +460,22 @@ export function AdminDashboardScreen() {
               style={{ width: metricCardWidth }}
             />
             <AdminMetricTile
+              title="Costo de insumos"
+              value={`$${(metrics?.costoTotal ?? 0).toFixed(2)}`}
+              subtitle="Inversión del periodo"
+              icon="wallet-outline"
+              color={colors.warning}
+              style={{ width: metricCardWidth }}
+            />
+            <AdminMetricTile
+              title="Ganancia neta"
+              value={`$${(metrics?.gananciaNeta ?? 0).toFixed(2)}`}
+              subtitle="Venta menos costo"
+              icon="trending-up-outline"
+              color={metrics?.gananciaNeta >= 0 ? colors.success : colors.danger}
+              style={{ width: metricCardWidth }}
+            />
+            <AdminMetricTile
               title="Vendedor estrella"
               value={metrics?.vendedorEstrella?.nombre ?? 'Sin ventas'}
               subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} · ${
@@ -369,25 +514,25 @@ export function AdminDashboardScreen() {
                 action={<AdminStatusPill label="Revisar" tone="danger" />}
               />
 
-              {alertasCriticas.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardCritical]}>
-                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
+              {[
+                ...alertasCriticas.map((alerta: any) => ({ ...alerta, badge: 'CRÍTICO', tone: 'critical', icon: 'alert-circle' as const })),
+                ...alertasMedias.map((alerta: any) => ({ ...alerta, badge: 'RECETA INCOMPLETA', tone: 'medium', icon: 'warning' as const })),
+                ...alertasBajas.map((alerta: any) => ({ ...alerta, badge: 'REABASTECIMIENTO', tone: 'low', icon: 'cube-outline' as const })),
+              ].map((alerta: any) => {
+                const toneColor = alerta.tone === 'critical' ? '#ef4444' : alerta.tone === 'medium' ? '#f59e0b' : '#10b981';
+                return (
+                  <View key={alerta.id} style={[styles.alertFeedRow, { borderLeftColor: toneColor }]}>
+                    <View style={[styles.alertSeverityBadge, { backgroundColor: `${toneColor}18` }]}>
+                      <Ionicons name={alerta.icon} size={14} color={toneColor} />
+                      <Text style={[styles.alertSeverityText, { color: toneColor }]}>{alerta.badge}</Text>
+                    </View>
+                    <View style={styles.alertContent}>
+                      <Text style={styles.alertTitle} numberOfLines={1}>{alerta.titulo || alerta.productoNombre || 'Revisión operativa'}</Text>
+                      <Text style={styles.alertMessage} numberOfLines={2}>{alerta.mensaje || alerta.accionSugerida || alerta.ingredienteLimitante || 'Revisar inventario y operación'}</Text>
+                    </View>
                   </View>
-                </View>
-              ))}
-
-              {alertasMedias.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardMedium]}>
-                  <Ionicons name="warning" size={24} color="#f59e0b" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </AdminSurface>
           )}
 
@@ -495,9 +640,9 @@ export function AdminDashboardScreen() {
           <AdminSurface style={styles.chartCard}>
             <View style={styles.chartHeader}>
               <View>
-                <Text style={styles.chartTitle}>Ventas en el Tiempo</Text>
+                <Text style={styles.chartTitle}>Analítica financiera</Text>
                 <Text style={styles.chartSubtitle}>
-                  Evolución por {dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}
+                  Venta total, costo y ganancia por {dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'franja'}
                 </Text>
               </View>
               <Ionicons name="trending-up" size={24} color="#10b981" />
@@ -506,17 +651,14 @@ export function AdminDashboardScreen() {
             {metrics.ventasPorHora.length > 0 ? (
               Platform.OS === 'web' ? (
                 <InlineTrendChart
-                  data={metrics.ventasPorHora.map((d: any) => ({
-                    label: d.label,
-                    value: d.monto ?? d.total ?? 0,
-                  }))}
+                  data={metrics.ventasPorHora}
                   color={colors.primary}
                 />
               ) : (
                 <SalesLineChart
                   data={metrics.ventasPorHora.map((d: any) => ({
                     label: d.label,
-                    value: d.monto ?? d.total ?? 0,
+                    value: d.ventaTotal ?? d.total ?? 0,
                   }))}
                   height={220}
                 />
@@ -528,8 +670,9 @@ export function AdminDashboardScreen() {
             )}
           </AdminSurface>
 
+          <View style={[styles.analyticsSplit, isDesktop && styles.analyticsSplitDesktop]}>
           {/* Gráfico de Distribución de Ventas */}
-          <AdminSurface style={styles.chartCard}>
+          <AdminSurface style={[styles.chartCard, isDesktop && styles.chartCardHalf]}>
             <View style={styles.chartHeader}>
               <View>
                 <Text style={styles.chartTitle}>Distribución de Ventas</Text>
@@ -539,15 +682,12 @@ export function AdminDashboardScreen() {
             </View>
 
             {metrics.distribucionVentas.length > 0 ? (
-              <SalesDistributionPieChart
-                title="Distribución de Ventas"
-                data={metrics.distribucionVentas.map((d: any, index: number) => ({
-                  name: d.label || d.name || 'Origen',
-                  population: Number(d.value || d.population || 0),
-                  color: chartPalette[index % chartPalette.length],
-                  legendFontColor: '#94a3b8',
-                  legendFontSize: 12,
+              <DistributionDonut
+                data={metrics.distribucionVentas.map((d: any) => ({
+                  label: d.label || d.name || 'Origen',
+                  value: Number(d.value || d.population || 0),
                 }))}
+                palette={chartPalette}
               />
             ) : (
               <View style={styles.noDataContainer}>
@@ -557,7 +697,7 @@ export function AdminDashboardScreen() {
           </AdminSurface>
 
           {/* Top 5 Platillos Más Vendidos */}
-          <AdminSurface style={styles.chartCard}>
+          <AdminSurface style={[styles.chartCard, isDesktop && styles.chartCardHalf]}>
             <View style={styles.chartHeader}>
               <View>
                 <Text style={styles.chartTitle}>Top 5 Platillos Más Vendidos</Text>
@@ -567,13 +707,14 @@ export function AdminDashboardScreen() {
             </View>
 
             {metrics.topPlatillos.length > 0 ? (
-              <TopProductsBarChart title="Top 5 Platillos" data={metrics.topPlatillos} />
+              <TopProductsList data={metrics.topPlatillos} color={colors.warning} />
             ) : (
               <View style={styles.noDataContainer}>
                 <Text style={styles.noDataText}>Sin datos de platillos</Text>
               </View>
             )}
           </AdminSurface>
+          </View>
         </ScrollView>
       </View>
     </AdminLayout>
@@ -941,6 +1082,215 @@ const styles = StyleSheet.create({
   noDataText: {
     color: '#64748b',
     fontSize: 14,
+  },
+  alertFeedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 58,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderLeftWidth: 3,
+    borderRadius: 8,
+    backgroundColor: '#0f172a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  alertSeverityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 6,
+    minWidth: 82,
+  },
+  alertSeverityText: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.35,
+  },
+  financialLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 10,
+  },
+  financialLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  financialLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  financialLegendText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  financialHint: {
+    color: '#64748b',
+    fontSize: 10,
+    marginLeft: 'auto',
+  },
+  barStack: {
+    height: 170,
+    width: '70%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 2,
+  },
+  inlineBarColumnActive: {
+    backgroundColor: '#ffffff08',
+    borderRadius: 8,
+  },
+  inlineBarLabelActive: {
+    color: '#f8fafc',
+    fontWeight: '800',
+  },
+  inlineCostBar: {
+    width: '100%',
+    minWidth: 6,
+    borderRadius: 6,
+    backgroundColor: '#f59e0b',
+    opacity: 0.82,
+  },
+  chartTooltip: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+    backgroundColor: '#0f172a',
+    gap: 10,
+  },
+  tooltipEyebrow: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  tooltipOrders: {
+    color: '#64748b',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  tooltipFinancials: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  tooltipLabel: {
+    color: '#64748b',
+    fontSize: 10,
+    marginBottom: 2,
+  },
+  tooltipValue: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  analyticsSplit: {
+    gap: 12,
+  },
+  analyticsSplitDesktop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  chartCardHalf: {
+    flex: 1,
+    minWidth: 0,
+  },
+  distributionWrap: {
+    minHeight: 164,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  donutStage: {
+    width: 144,
+    height: 144,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donutCenter: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 92,
+  },
+  donutCenterValue: {
+    color: '#f8fafc',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  donutCenterLabel: {
+    color: '#94a3b8',
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  distributionLegend: {
+    flex: 1,
+    gap: 5,
+  },
+  distributionLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+  },
+  distributionLegendActive: {
+    backgroundColor: '#ffffff08',
+  },
+  distributionLegendLabel: {
+    color: '#cbd5e1',
+    fontSize: 11,
+    flex: 1,
+  },
+  distributionLegendValue: {
+    color: '#f8fafc',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  topProductsList: {
+    gap: 14,
+    paddingVertical: 8,
+  },
+  topProductRow: {
+    gap: 7,
+  },
+  topProductMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  topProductName: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '700',
+    flex: 1,
+  },
+  topProductAmount: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  topProductTrack: {
+    height: 8,
+    width: '100%',
+    overflow: 'hidden',
+    borderRadius: 4,
+    backgroundColor: '#334155',
+  },
+  topProductFill: {
+    height: '100%',
+    borderRadius: 4,
   },
   salesKpiCard: {
     backgroundColor: '#0f172a',
