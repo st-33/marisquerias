@@ -15,13 +15,15 @@ export interface AccionesUI {
 
 export type UISlice = { ui: ContratoUI } & AccionesUI;
 
+export const ESTADO_INICIAL_UI: ContratoUI = {
+  fabConfigs: {},
+  alertas: [],
+  loading: { activo: false },
+  modals: {},
+};
+
 export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) => ({
-  ui: {
-    fabConfigs: {},
-    alertas: [],
-    loading: { activo: false },
-    modals: {},
-  },
+  ui: ESTADO_INICIAL_UI,
 
   setFabConfigForRoute(pathname: string, config: FabConfig | null) {
     set((state) => {

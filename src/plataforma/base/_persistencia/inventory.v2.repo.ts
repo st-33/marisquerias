@@ -18,6 +18,7 @@ import {
 } from 'firebase/database';
 import { z } from 'zod';
 import { stripVoidDeep } from '../../core/domain/itemCanonical';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 
 // --- Esquemas de Datos ---
 
@@ -106,7 +107,11 @@ export type VentaV2 = z.infer<typeof VentaV2Schema>;
 export class InventoryV2Repository {
   private baseRef: string;
 
-  constructor(private db: Database, tenantPath: string) {
+  constructor(
+    private db: Database,
+    tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
     this.baseRef = `${tenantPath}/inventory_v2`;
   }
 
@@ -115,10 +120,10 @@ export class InventoryV2Repository {
   async crearItem(item: Omit<InventoryItemV2, 'id' | 'updatedAt'>): Promise<string> {
     const r = ref(this.db, `${this.baseRef}/catalog`);
     const newRef = push(r);
-    const payload = {
+    const payload = sanitizeRtdbPayload({
       ...item,
       updatedAt: Date.now(),
-    };
+    });
     await set(newRef, payload);
     return newRef.key!;
   }

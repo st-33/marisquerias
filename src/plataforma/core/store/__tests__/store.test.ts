@@ -3,6 +3,7 @@
 import { useStore, cargarEstadoPersistido } from '../index';
 import type { DispositivoConfig } from '../../types/contratos';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { registerTenantCleanup } from '../../lifecycle/TenantLifecycleController';
 
 jest.mock(
   'react-native',
@@ -95,6 +96,14 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
 
   it('debe registrar un dispositivo de hardware y persistirlo', async () => {
     const store = useStore.getState();
+    await store.setSession({
+      access_code: 'ACCESS-HW',
+      tenantPath: '2 alimentos_y_bebidas/marisquerias/tenant-hw',
+      tenantId: 'tenant-hw',
+      niche: '2 alimentos_y_bebidas',
+      category: 'marisquerias',
+      rol: 'admin',
+    });
     const dispositivo: DispositivoConfig = {
       id: 'HW-PRINTER-01',
       nombre: 'Impresora Térmica',
@@ -109,18 +118,26 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
 
     expect(useStore.getState().hardware.dispositivos['HW-PRINTER-01']).toEqual(dispositivo);
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      'hardware_dispositivos',
+      '@2 alimentos_y_bebidas/marisquerias/tenant-hw:hardware:dispositivos',
       expect.stringContaining('HW-PRINTER-01')
     );
   });
 
   it('debe asignar dispositivo preferido y persistirlo', async () => {
     const store = useStore.getState();
+    await store.setSession({
+      access_code: 'ACCESS-HW',
+      tenantPath: '2 alimentos_y_bebidas/marisquerias/tenant-hw',
+      tenantId: 'tenant-hw',
+      niche: '2 alimentos_y_bebidas',
+      category: 'marisquerias',
+      rol: 'admin',
+    });
     await store.setDispositivoPreferido('impresora-termica', 'HW-PRINTER-01');
 
     expect(useStore.getState().hardware.preferidos['impresora-termica']).toBe('HW-PRINTER-01');
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      'hardware_preferidos',
+      '@2 alimentos_y_bebidas/marisquerias/tenant-hw:hardware:preferidos',
       JSON.stringify({ 'impresora-termica': 'HW-PRINTER-01' })
     );
   });
@@ -152,6 +169,31 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     expect(state.sesion.access_code).toBe('ACCESS-123');
     expect(state.sesion.tenantPath).toBe('2 alimentos_y_bebidas/marisquerias/puerto-libres');
     expect(state.negocio.features.admin_menu.enabled).toBe(true);
+  });
+
+  it('debe purgar estado tenant y desconectar listeners al limpiar la sesión', async () => {
+    const store = useStore.getState();
+    await store.setSession({
+      access_code: 'ACCESS-RESET',
+      tenantPath: '2 alimentos_y_bebidas/marisquerias/tenant-reset',
+      tenantId: 'tenant-reset',
+      niche: '2 alimentos_y_bebidas',
+      category: 'marisquerias',
+      rol: 'admin',
+    });
+    store.actualizarMesaLocal('mesa-1', { estado: 'ocupada' });
+    store.actualizarPedidoLocal('pedido-1', { estatus: 'nuevo' });
+    const listenerCleanup = jest.fn();
+    registerTenantCleanup('2 alimentos_y_bebidas/marisquerias/tenant-reset', listenerCleanup);
+
+    await store.clearSession();
+
+    const state = useStore.getState();
+    expect(listenerCleanup).toHaveBeenCalledTimes(1);
+    expect(state.sesion.tenantPath).toBeNull();
+    expect(state.mesas).toEqual({});
+    expect(state.pedidos).toEqual({});
+    expect(state.catalog).toEqual({});
   });
 
   it('debe limpiar toda la sesión y revocar el hardware en el logout', async () => {

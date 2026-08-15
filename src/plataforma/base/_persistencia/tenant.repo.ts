@@ -7,6 +7,7 @@
 import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, update } from 'firebase/database';
 import { ensureTenantBootstrap } from '../../core/bootstrap/ensureTenant';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
 
 export type Caracteristicas = {
   roles?: {
@@ -46,7 +47,12 @@ export type Caracteristicas = {
 export type Features = Record<string, boolean>;
 
 export class TenantRepository {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {
+    assertValidTenantPath(tenantPath);
+  }
 
   private getCaracteristicasPath() {
     return `${this.tenantPath}/caracteristicas`;
@@ -160,6 +166,6 @@ export class TenantRepository {
     }>
   ): Promise<void> {
     const r = ref(this.db, `${this.getCaracteristicasPath()}/roles/admin`);
-    await update(r, admin);
+    await update(r, sanitizeRtdbPayload(admin));
   }
 }

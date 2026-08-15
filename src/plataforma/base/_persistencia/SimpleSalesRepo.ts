@@ -1,5 +1,7 @@
 import { push, ref, set, type Database } from 'firebase/database';
 
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../core/rtdb/guards';
+
 export interface VentaSimple {
   id?: string;
   total: number;
@@ -15,6 +17,7 @@ export class SimpleSalesRepo {
   private tenantPath: string;
 
   constructor(db: Database, tenantPath: string) {
+    assertValidTenantPath(tenantPath);
     this.db = db;
     this.tenantPath = tenantPath;
   }
@@ -36,10 +39,10 @@ export class SimpleSalesRepo {
       targetRef = newVentaRef;
     }
 
-    const payload: VentaSimple = {
+    const payload = sanitizeRtdbPayload({
       ...venta,
       id: ventaId,
-    };
+    });
 
     await set(targetRef, payload);
     return ventaId;

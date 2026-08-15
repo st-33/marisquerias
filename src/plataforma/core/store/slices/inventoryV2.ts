@@ -8,13 +8,15 @@ import type {
 } from '../../../base/_persistencia/inventory.v2.repo';
 import { OfflinePrintFallback } from '../../services/OfflinePrintFallback';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
+import { validarRutaTenant } from '../../rtdb/rutas/RutaTenant';
+import { assertValidTenantPath, sanitizeRtdbPayload } from '../../rtdb/guards';
 
 export interface ContratoInventoryV2 {
   catalog: Record<string, InventoryItemV2>;
   sections: Record<string, InventorySectionV2>;
   areas: Record<string, InventoryAreaV2>;
   missingAssignments: Record<string, any>;
-  listenersActivos: boolean;
+  inventoryListenersActivos: boolean;
   ultimaActualizacion: number | null;
   normalizing: boolean;
 }
@@ -105,7 +107,7 @@ export const ESTADO_INICIAL_INVENTORY_V2: ContratoInventoryV2 = {
   sections: {},
   areas: {},
   missingAssignments: {},
-  listenersActivos: false,
+  inventoryListenersActivos: false,
   ultimaActualizacion: null,
   normalizing: false,
 };
@@ -119,7 +121,11 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   ...ESTADO_INICIAL_INVENTORY_V2,
 
   inicializarInventoryV2Listeners: (db: Database, tenantPath: string) => {
-    if (getState().listenersActivos) {
+    if (!validarRutaTenant(tenantPath)) {
+      return () => {};
+    }
+
+    if (getState().inventoryListenersActivos) {
       return () => {};
     }
 
@@ -174,40 +180,50 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     });
     cleanupFunctions.push(() => off(missingRef, 'value', missingCb as any));
 
-    set({ listenersActivos: true });
+    set({ inventoryListenersActivos: true });
 
+    let cleaned = false;
     return () => {
+      if (cleaned) return;
+      cleaned = true;
       cleanupFunctions.forEach((fn) => fn());
       set({ ...ESTADO_INICIAL_INVENTORY_V2 });
     };
   },
 
   async crearItem(db, tenantPath, item) {
+    assertValidTenantPath(tenantPath);
     const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
     const r = rtdbRef(db, `${tenantPath}/inventory_v2/catalog`);
     const newRef = push(r);
-    await rtdbSet(newRef, { ...item, updatedAt: Date.now() });
+    await rtdbSet(newRef, sanitizeRtdbPayload({ ...item, updatedAt: Date.now() }));
     return newRef.key as string;
   },
 
   async crearArea(db, tenantPath, area) {
+    assertValidTenantPath(tenantPath);
     const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
     const r = rtdbRef(db, `${tenantPath}/inventory_v2/areas`);
     const newRef = push(r);
-    await rtdbSet(newRef, { ...area, updatedAt: Date.now() });
+    await rtdbSet(newRef, sanitizeRtdbPayload({ ...area, updatedAt: Date.now() }));
     return newRef.key as string;
   },
 
   async crearContenedor(db, tenantPath, contenedor) {
+    assertValidTenantPath(tenantPath);
     const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
     const r = rtdbRef(db, `${tenantPath}/inventory_v2/areas`);
     const newRef = push(r);
-    await rtdbSet(newRef, { ...contenedor, stock: contenedor.stock || {}, updatedAt: Date.now() });
+    await rtdbSet(
+      newRef,
+      sanitizeRtdbPayload({ ...contenedor, stock: contenedor.stock || {}, updatedAt: Date.now() })
+    );
     return newRef.key as string;
   },
 
   async crearItemEnContenedor(params) {
     const { db, tenantPath, containerId, item, initialQty = 0 } = params;
+    assertValidTenantPath(tenantPath);
     const { push, ref: rtdbRef } = await import('firebase/database');
 
     const catalogRef = rtdbRef(db, `${tenantPath}/inventory_v2/catalog`);
@@ -216,18 +232,22 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const now = Date.now();
 
     const updates: Record<string, any> = {};
-    updates[`${tenantPath}/inventory_v2/catalog/${itemId}`] = { ...item, updatedAt: now };
+    updates[`${tenantPath}/inventory_v2/catalog/${itemId}`] = sanitizeRtdbPayload({
+      ...item,
+      updatedAt: now,
+    });
     updates[`${tenantPath}/inventory_v2/areas/${containerId}/stock/${itemId}`] = Number(
       initialQty || 0
     );
     updates[`${tenantPath}/inventory_v2/areas/${containerId}/updatedAt`] = now;
 
-    await update(rtdbRef(db), updates);
+    await update(rtdbRef(db), sanitizeRtdbPayload(updates));
     return itemId;
   },
 
   async crearItemEnSeccion(params) {
     const { db, tenantPath, sectionId, item, initialQty = 0 } = params;
+    assertValidTenantPath(tenantPath);
     const { push, ref: rtdbRef } = await import('firebase/database');
 
     const catalogRef = rtdbRef(db, `${tenantPath}/inventory_v2/catalog`);
@@ -236,17 +256,21 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const now = Date.now();
 
     const updates: Record<string, any> = {};
-    updates[`${tenantPath}/inventory_v2/catalog/${itemId}`] = { ...item, updatedAt: now };
+    updates[`${tenantPath}/inventory_v2/catalog/${itemId}`] = sanitizeRtdbPayload({
+      ...item,
+      updatedAt: now,
+    });
     updates[`${tenantPath}/inventory_v2/sections/${sectionId}/stock/${itemId}`] = Number(
       initialQty || 0
     );
     updates[`${tenantPath}/inventory_v2/sections/${sectionId}/updatedAt`] = now;
 
-    await update(rtdbRef(db), updates);
+    await update(rtdbRef(db), sanitizeRtdbPayload(updates));
     return itemId;
   },
 
   async seedPresets(db, tenantPath) {
+    assertValidTenantPath(tenantPath);
     const { get, ref: rtdbRef } = await import('firebase/database');
 
     const [catSnap, areasSnap, sectionsSnap] = await Promise.all([
@@ -600,10 +624,11 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       };
     }
 
-    await update(rtdbRef(db), updates);
+    await update(rtdbRef(db), sanitizeRtdbPayload(updates));
   },
 
   async normalizarItemsSinContenedor(db, tenantPath, areas) {
+    assertValidTenantPath(tenantPath);
     if (getState().normalizing) return;
 
     const niche = (getState() as any).sesion?.niche;
@@ -658,7 +683,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     set({ normalizing: true });
     try {
       const { ref: rtdbRef } = await import('firebase/database');
-      await update(rtdbRef(db), updates);
+      await update(rtdbRef(db), sanitizeRtdbPayload(updates));
     } finally {
       set({ normalizing: false });
     }
@@ -666,6 +691,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
   async ajustarStockDelta(params) {
     const { db, tenantPath, containerId, itemId, delta, usuario, razon, allowNegative } = params;
+    assertValidTenantPath(tenantPath);
     const { get, push, ref: rtdbRef } = await import('firebase/database');
 
     const { isOnline } = OfflinePrintFallback.getStatus();
@@ -719,7 +745,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
     const updates: Record<string, any> = {};
     updates[`${tenantPath}/inventory_v2/areas/${containerId}/stock/${itemId}`] = next;
-    updates[`${tenantPath}/inventory_v2/movements/${movRef.key}`] = {
+    updates[`${tenantPath}/inventory_v2/movements/${movRef.key}`] = sanitizeRtdbPayload({
       tipo: 'ajuste',
       itemId,
       cantidad: delta,
@@ -728,13 +754,14 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       razon,
       timestamp: Date.now(),
       permiteNegativo: allowNegative,
-    };
+    });
 
-    await update(rtdbRef(db), updates);
+    await update(rtdbRef(db), sanitizeRtdbPayload(updates));
   },
 
   async ajustarStockDeltaSeccion(params) {
     const { db, tenantPath, sectionId, itemId, delta, usuario, razon, allowNegative } = params;
+    assertValidTenantPath(tenantPath);
     const { get, push, ref: rtdbRef } = await import('firebase/database');
 
     const { isOnline } = OfflinePrintFallback.getStatus();
@@ -791,7 +818,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
     const updates: Record<string, any> = {};
     updates[`${tenantPath}/inventory_v2/sections/${sectionId}/stock/${itemId}`] = next;
-    updates[`${tenantPath}/inventory_v2/movements/${movRef.key}`] = {
+    updates[`${tenantPath}/inventory_v2/movements/${movRef.key}`] = sanitizeRtdbPayload({
       tipo: 'ajuste',
       itemId,
       cantidad: delta,
@@ -800,9 +827,9 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       razon,
       timestamp: Date.now(),
       permiteNegativo: allowNegative,
-    };
+    });
 
-    await update(rtdbRef(db), updates);
+    await update(rtdbRef(db), sanitizeRtdbPayload(updates));
   },
 
   getPredicciones: (productos) => {

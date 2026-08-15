@@ -26,9 +26,6 @@ export function useAuth() {
           return { ok: false, error: installRes.error };
         }
 
-        // 2. Establecer características resueltas en el store centralizado
-        setFeatures(installRes.features);
-
         const { dispositivo } = installRes;
 
         // 2.5 Registrar dispositivo de forma persistente en el sistema de seguridad
@@ -45,6 +42,9 @@ export function useAuth() {
           category: dispositivo.category || null,
           rol: rolInicial,
         });
+
+        // Las features se persisten después de fijar el tenant activo.
+        setFeatures(installRes.features);
 
         // Configurar usuario en Sentry para tracking
         setUser({

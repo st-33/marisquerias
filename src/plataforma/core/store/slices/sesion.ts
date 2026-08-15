@@ -4,6 +4,11 @@ import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoring';
 import type { ContratoSesion } from '../../types/contratos';
 import { validarRutaTenant, descomponerRutaTenant } from '../../rtdb/rutas/RutaTenant';
+import {
+  resetTenantLifecycle,
+  switchTenantLifecycle,
+  tenantStorageKey,
+} from '../../lifecycle/TenantLifecycleController';
 
 export type EstadoInstalacion =
   | 'HIDRATANDO'
@@ -14,7 +19,17 @@ export type EstadoInstalacion =
   | 'BLOQUEADA'
   | 'ERROR';
 
-// Adapter for storage
+export const SESION_STORAGE_KEY = '@system:session:active';
+
+export const ESTADO_SESION_INICIAL: ContratoSesion = {
+  access_code: null,
+  tenantPath: null,
+  tenantId: null,
+  niche: null,
+  category: null,
+  rol: null,
+};
+
 const getStorage = () => {
   if (Platform.OS === 'web') {
     return {
@@ -28,6 +43,14 @@ const getStorage = () => {
 };
 
 export const storage = getStorage();
+
+export function getTenantStorageKey(
+  tenantPath: string | null | undefined,
+  modulo: string,
+  clave: string
+): string | null {
+  return tenantStorageKey(tenantPath, modulo, clave);
+}
 
 export interface AccionesSesion {
   setSession: (sesion: Omit<ContratoSesion, 'usuario'>) => Promise<void>;
@@ -43,17 +66,15 @@ export type SesionSlice = {
 } & AccionesSesion;
 
 export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> = (set, get) => ({
-  sesion: {
-    access_code: null,
-    tenantPath: null,
-    tenantId: null,
-    niche: null,
-    category: null,
-    rol: null,
-  },
+  sesion: ESTADO_SESION_INICIAL,
   estadoInstalacion: 'HIDRATANDO',
 
   async setSession(sesion) {
+    const previousTenantPath = get().sesion.tenantPath;
+    if (previousTenantPath !== sesion.tenantPath) {
+      switchTenantLifecycle(sesion.tenantPath);
+    }
+
     let resolvedCategory = sesion.category ?? null;
     if (!resolvedCategory && sesion.tenantPath) {
       const iden = descomponerRutaTenant(sesion.tenantPath);
@@ -69,7 +90,7 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
 
     try {
       await storage.setItem(
-        'sesion',
+        SESION_STORAGE_KEY,
         JSON.stringify({
           access_code: sesion.access_code,
           tenantPath: sesion.tenantPath,
@@ -80,7 +101,6 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
         })
       );
 
-      // Actualizar estado instalación basado en validez de ruta
       if (sesion.tenantPath && validarRutaTenant(sesion.tenantPath)) {
         set({ estadoInstalacion: 'VINCULADA' });
       } else {
@@ -108,28 +128,35 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
   },
 
   async clearSession() {
+    const previousTenantPath = get().sesion.tenantPath;
+    resetTenantLifecycle('clear_session');
+
     set({
-      sesion: {
-        access_code: null,
-        tenantPath: null,
-        tenantId: null,
-        niche: null,
-        category: null,
-        rol: null,
-      },
+      sesion: ESTADO_SESION_INICIAL,
       estadoInstalacion: 'SIN_VINCULO',
     });
 
     try {
+      const tenantKeys = [
+        getTenantStorageKey(previousTenantPath, 'negocio', 'features'),
+        getTenantStorageKey(previousTenantPath, 'hardware', 'dispositivos'),
+        getTenantStorageKey(previousTenantPath, 'hardware', 'preferidos'),
+        getTenantStorageKey(previousTenantPath, 'data-sources', 'config'),
+      ].filter((key): key is string => Boolean(key));
+
+      await storage.removeItem(SESION_STORAGE_KEY);
       await storage.removeItem('sesion');
       await storage.removeItem('features');
+      await storage.removeItem('hardware_dispositivos');
+      await storage.removeItem('hardware_preferidos');
+      await storage.removeItem('dataSources');
+      await storage.multiRemove(tenantKeys);
+
       const { deviceBinding } = await import('../../security');
       await deviceBinding.unregisterDevice();
 
-      // Desvincular localmente
       await storage.removeItem('adi_dispositivo_vinculado');
-
-      logger.info('STORE_SESION', 'Dispositivo desvinculado en logout');
+      logger.info('STORE_SESION', 'Dispositivo desvinculado y estado tenant purgado en logout');
     } catch (error) {
       logger.error('STORE_SESION', 'Error al limpiar sesión', error as Error);
     }
