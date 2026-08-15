@@ -100,6 +100,7 @@ export function MeseroScreen() {
     addPendingItem,
     removePendingItem,
     incrementPendingItem,
+    decrementPendingItem,
     sendOrderWithValidation,
     requestBill,
     printBillWithConnectionCheck,
@@ -243,6 +244,7 @@ export function MeseroScreen() {
         onRequestBill={requestBill}
         onMarkPaid={markAsPaid}
         onIncrementPending={(index) => incrementPendingItem(index, activeSubpedidoId)}
+        onDecrementPending={(index) => decrementPendingItem(index, activeSubpedidoId)}
         onRemovePending={(index) => removePendingItem(index, activeSubpedidoId)}
         onMarkDelivered={markAsDelivered}
         getProduct={getProduct}

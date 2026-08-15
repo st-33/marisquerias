@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { RADIUS, SPACING } from '../../../compartido/constantes/theme';
 import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
@@ -9,6 +9,7 @@ type OrderItemCardProps = {
   statusConfig: { label: string; color: string; bgColor: string; dotColor: string };
   isPending?: boolean;
   onInc?: () => void;
+  onDec?: () => void;
   onRemove?: () => void;
   onAction?: () => void;
   actionLabel?: string;
@@ -21,6 +22,7 @@ export const OrderItemCard = ({
   statusConfig,
   isPending,
   onInc,
+  onDec,
   onRemove,
   onAction,
   actionLabel,
@@ -55,6 +57,7 @@ export const OrderItemCard = ({
         borderRadius: RADIUS.xl,
         paddingVertical: SPACING.lg,
         paddingHorizontal: SPACING.lg,
+        minHeight: 92,
         borderWidth: 1,
         borderColor: COLORS.bg.elevated,
         borderLeftWidth: 4,
@@ -117,7 +120,7 @@ export const OrderItemCard = ({
                   <View
                     key={i}
                     style={{
-                        backgroundColor: COLORS.alpha.primary10,
+                      backgroundColor: COLORS.alpha.primary10,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                       borderRadius: RADIUS.xs,
@@ -156,22 +159,38 @@ export const OrderItemCard = ({
 
         {/* PENDING ACTIONS */}
         {isPending && (
-          <View style={{ flexDirection: 'row', gap: 8, marginLeft: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 6, marginLeft: 8, alignItems: 'center' }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Reducir cantidad de ${name}`}
+              onPress={onDec}
+              style={({ pressed }) => ({
+                backgroundColor: COLORS.bg.elevated,
+                width: 48,
+                height: 48,
+                borderRadius: RADIUS.md,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Ionicons name="remove" size={22} color={COLORS.text.primary} />
+            </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Aumentar ${name}`}
               onPress={onInc}
               style={({ pressed }) => ({
                 backgroundColor: COLORS.alpha.primary20,
-                width: 36,
-                height: 36,
-                borderRadius: RADIUS.full,
+                width: 48,
+                height: 48,
+                borderRadius: RADIUS.md,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Ionicons name="add" size={18} color={COLORS.primary} />
+              <Ionicons name="add" size={22} color={COLORS.primary} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -179,15 +198,15 @@ export const OrderItemCard = ({
               onPress={onRemove}
               style={({ pressed }) => ({
                 backgroundColor: COLORS.alpha.error10,
-                width: 36,
-                height: 36,
-                borderRadius: RADIUS.full,
+                width: 48,
+                height: 48,
+                borderRadius: RADIUS.md,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Ionicons name="trash-outline" size={16} color={COLORS.error} />
+              <Ionicons name="trash-outline" size={19} color={COLORS.error} />
             </Pressable>
           </View>
         )}

@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
   Animated,
   FlatList,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
@@ -35,6 +36,9 @@ function ProductPickerOverlayComponent({
 }: Props) {
   const [fadeAnim] = React.useState(() => new Animated.Value(0));
   const [slideAnim] = React.useState(() => new Animated.Value(34));
+  const { width } = useWindowDimensions();
+  const isWideLayout = width >= 560;
+  const columnCount = isWideLayout ? 2 : 1;
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
 
@@ -131,7 +135,7 @@ function ProductPickerOverlayComponent({
           paddingRight: SPACING.xl,
         },
         categoryPill: {
-          minHeight: 42,
+          minHeight: 48,
           paddingHorizontal: SPACING.lg,
           borderRadius: RADIUS.full,
           alignItems: 'center',
@@ -195,8 +199,8 @@ function ProductPickerOverlayComponent({
           fontWeight: TYPOGRAPHY.weights.black,
         },
         addButton: {
-          width: 34,
-          height: 34,
+          width: 48,
+          height: 48,
           borderRadius: RADIUS.full,
           alignItems: 'center',
           justifyContent: 'center',
@@ -259,9 +263,7 @@ function ProductPickerOverlayComponent({
 
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-      <Animated.View
-        style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
-      >
+      <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
         <View style={styles.header}>
           <View style={styles.headerRow}>
             <View style={{ flex: 1 }}>
@@ -340,8 +342,9 @@ function ProductPickerOverlayComponent({
           <FlatList
             data={productsInCategory}
             keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.productRow}
+            key={`product-grid-${columnCount}`}
+            numColumns={columnCount}
+            columnWrapperStyle={columnCount > 1 ? styles.productRow : undefined}
             contentContainerStyle={styles.productList}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
@@ -359,6 +362,7 @@ function ProductPickerOverlayComponent({
                 style={({ pressed }) => [
                   styles.productCard,
                   {
+                    width: isWideLayout ? '48.2%' : '100%',
                     backgroundColor: pressed ? COLORS.bg.elevated : COLORS.bg.tertiary,
                     borderColor: pressed ? COLORS.primaryLight : COLORS.bg.elevated,
                     opacity: pressed ? 0.92 : 1,
@@ -374,8 +378,12 @@ function ProductPickerOverlayComponent({
                   <View style={[styles.productDot, { backgroundColor: COLORS.success }]} />
                 </View>
                 <View style={styles.productFooter}>
-                  <Text style={styles.productPrice}>{formatMoney(product?.precio)}</Text>
-                  <View style={[styles.addButton, { backgroundColor: COLORS.primary }, SHADOWS.primary]}>
+                  <Text style={styles.productPrice}>
+                    {formatMoney(Number(product?.precio ?? 0))}
+                  </Text>
+                  <View
+                    style={[styles.addButton, { backgroundColor: COLORS.primary }, SHADOWS.primary]}
+                  >
                     <Ionicons name="add" size={20} color={COLORS.text.primary} />
                   </View>
                 </View>

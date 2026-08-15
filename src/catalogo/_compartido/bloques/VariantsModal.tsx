@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -56,6 +56,8 @@ const ConfirmButton = ({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
@@ -139,8 +141,15 @@ function VariantsModalComponent({
   // Obtener grupos visibles ordenados
   const visibleGroupIds = getOrderedVisibleGroups(groups, variantSelections, reglas);
   const totalSteps = visibleGroupIds.length;
-  const currentGroupId = visibleGroupIds[currentStep];
+  const activeStep = Math.min(currentStep, Math.max(totalSteps - 1, 0));
+  const currentGroupId = visibleGroupIds[activeStep];
   const currentGroup = groups[currentGroupId];
+
+  useEffect(() => {
+    if (currentStep !== activeStep) {
+      setCurrentStep(activeStep);
+    }
+  }, [activeStep, currentStep]);
 
   // Cálculo de precio acumulado
   const { delta, labels } = computeVariantDeltaAndLabels(groups, variantSelections);
@@ -166,7 +175,7 @@ function VariantsModalComponent({
     toggleOption(gid, oid, type);
 
     // Auto-Advance si es selección única y no es el último paso
-    if (type === 'single' && currentStep < totalSteps - 1) {
+    if (type === 'single' && activeStep < totalSteps - 1) {
       setTimeout(() => {
         if (isMounted.current) {
           LayoutAnimation.configureNext(LayoutAnimation.Presets.spring); // ✨ Transición tipo spring más 'satisfactoria'
@@ -177,16 +186,16 @@ function VariantsModalComponent({
   };
 
   const goBack = () => {
-    if (currentStep > 0) {
+    if (activeStep > 0) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(activeStep - 1);
     }
   };
 
   const goNext = () => {
-    if (currentStep < totalSteps - 1 && isStepComplete) {
+    if (activeStep < totalSteps - 1 && isStepComplete) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(activeStep + 1);
     }
   };
 
@@ -203,7 +212,6 @@ function VariantsModalComponent({
   return (
     <Modal transparent visible animationType="none" onRequestClose={handleClose}>
       <View style={[styles.overlay, { backgroundColor: COLORS.alpha.black50 }]}>
-
         {/* Fondo oscuro animado */}
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
@@ -232,7 +240,9 @@ function VariantsModalComponent({
               <Text style={[styles.title, { color: COLORS.text.primary }]} numberOfLines={2}>
                 {prod.nombre || 'Personaliza tu producto'}
               </Text>
-              <Text style={[styles.subtitle, { color: COLORS.text.secondary }]}>Selecciona tus opciones</Text>
+              <Text style={[styles.subtitle, { color: COLORS.text.secondary }]}>
+                Selecciona tus opciones
+              </Text>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -249,7 +259,10 @@ function VariantsModalComponent({
 
           {/* SUMMARY HEADER (BARRA DE PROGRESO) */}
           <View
-            style={[styles.summaryBar, { backgroundColor: COLORS.bg.primary, borderBottomColor: COLORS.bg.elevated }]}
+            style={[
+              styles.summaryBar,
+              { backgroundColor: COLORS.bg.primary, borderBottomColor: COLORS.bg.elevated },
+            ]}
           >
             <ScrollView
               horizontal
@@ -260,7 +273,7 @@ function VariantsModalComponent({
                 const g = groups[gid];
                 const sel = variantSelections[gid] || [];
                 const isDone = sel.length > 0;
-                const isActive = currentStep === idx;
+                const isActive = activeStep === idx;
 
                 return (
                   <Pressable
@@ -307,25 +320,28 @@ function VariantsModalComponent({
 
           {/* BODY (Current Step) */}
           <View style={[styles.bodyContainer, { backgroundColor: COLORS.bg.primary }]}>
-
             {totalSteps === 0 ? (
               <View style={styles.emptyState}>
-                  <Ionicons name="options-outline" size={48} color={COLORS.text.muted} />
-                  <Text style={[styles.emptyText, { color: COLORS.text.secondary }]}>Sin opciones disponibles.</Text>
+                <Ionicons name="options-outline" size={48} color={COLORS.text.muted} />
+                <Text style={[styles.emptyText, { color: COLORS.text.secondary }]}>
+                  Sin opciones disponibles.
+                </Text>
               </View>
             ) : (
               <View style={styles.stepContainer}>
                 {/* Navegación Back */}
                 <View style={styles.stepHeader}>
-                  {currentStep > 0 && (
+                  {activeStep > 0 && (
                     <Pressable onPress={goBack} style={styles.backButton}>
                       <Ionicons name="arrow-back" size={20} color={COLORS.primaryLight} />
-                      <Text style={[styles.backButtonText, { color: COLORS.primaryLight }]}>Anterior</Text>
+                      <Text style={[styles.backButtonText, { color: COLORS.primaryLight }]}>
+                        Anterior
+                      </Text>
                     </Pressable>
                   )}
                   <View style={styles.stepIndicators}>
                     <Text style={[styles.stepCounter, { color: COLORS.text.tertiary }]}>
-                      Paso {currentStep + 1} de {totalSteps}
+                      Paso {activeStep + 1} de {totalSteps}
                     </Text>
                   </View>
                 </View>
@@ -338,7 +354,9 @@ function VariantsModalComponent({
                     ]}
                   >
                     <View style={styles.groupHeader}>
-                      <Text style={[styles.groupTitle, { color: COLORS.text.primary }]}>{currentGroup.titulo}</Text>
+                      <Text style={[styles.groupTitle, { color: COLORS.text.primary }]}>
+                        {currentGroup.titulo}
+                      </Text>
                       {currentGroup.obligatorio && (
                         <View style={[styles.badgeRequired, { backgroundColor: COLORS.error }]}>
                           <Text style={styles.badgeText}>REQUERIDO</Text>
@@ -368,9 +386,11 @@ function VariantsModalComponent({
                                     backgroundColor: isSelected
                                       ? COLORS.primary
                                       : isDisabled
-                                        ? COLORS.bg.secondary
-                                        : COLORS.bg.tertiary,
-                                    borderColor: isSelected ? COLORS.primaryLight : COLORS.bg.elevated,
+                                      ? COLORS.bg.secondary
+                                      : COLORS.bg.tertiary,
+                                    borderColor: isSelected
+                                      ? COLORS.primaryLight
+                                      : COLORS.bg.elevated,
                                     ...(isSelected ? SHADOWS.primary : {}),
                                     transform: [{ scale: pressed && !isDisabled ? 0.96 : 1 }],
                                   },
@@ -387,15 +407,19 @@ function VariantsModalComponent({
                                         color: isDisabled
                                           ? COLORS.text.muted
                                           : isSelected
-                                            ? COLORS.text.primary
-                                            : COLORS.text.secondary,
+                                          ? COLORS.text.primary
+                                          : COLORS.text.secondary,
                                       },
                                     ]}
                                   >
                                     {String(option.titulo)}
                                   </Text>
                                   {isSelected && (
-                                    <Ionicons name="checkmark-circle" size={18} color={COLORS.text.primary} />
+                                    <Ionicons
+                                      name="checkmark-circle"
+                                      size={18}
+                                      color={COLORS.text.primary}
+                                    />
                                   )}
                                   {isDisabled && (
                                     <Ionicons
@@ -409,7 +433,7 @@ function VariantsModalComponent({
                                   <Text
                                     style={[
                                       styles.priceText,
-                                      isSelected &&                                       styles.priceTextSelected,
+                                      isSelected && styles.priceTextSelected,
                                       { color: isSelected ? COLORS.warning : COLORS.success },
                                     ]}
                                   >
@@ -428,7 +452,7 @@ function VariantsModalComponent({
                 </ScrollView>
 
                 {/* Botón Siguiente: Solo si es Multi-select o si es Single y el usuario regresó y quiere avanzar sin cambiar */}
-                {currentStep < totalSteps - 1 &&
+                {activeStep < totalSteps - 1 &&
                   (currentGroup.tipo === 'multi' || selectionsInStep.length > 0) && (
                     <Pressable
                       onPress={goNext}
@@ -471,7 +495,9 @@ function VariantsModalComponent({
           >
             <View>
               <Text style={[styles.totalLabel, { color: COLORS.text.muted }]}>Total</Text>
-              <Text style={[styles.totalPrice, { color: COLORS.success }]}>{formatMoney(totalPrice)}</Text>
+              <Text style={[styles.totalPrice, { color: COLORS.success }]}>
+                {formatMoney(totalPrice)}
+              </Text>
             </View>
             <ConfirmButton
               title={canConfirm ? 'Agregar' : `Selecciona ${missingRequired.length} opción(es)`}
@@ -505,7 +531,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceDark,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '90%',
+    height: '92%',
     width: '100%',
     overflow: 'hidden',
     display: 'flex',
@@ -524,7 +550,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight,
     backgroundColor: theme.colors.surfaceDark,
-    minHeight: 80,
+    minHeight: 88,
   },
   title: {
     color: theme.colors.text,
@@ -537,9 +563,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: theme.colors.card,
     alignItems: 'center',
     justifyContent: 'center',
@@ -609,7 +635,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 16,
-    paddingVertical: 12,
+    minHeight: 72,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -698,8 +725,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   summaryStep: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    minHeight: 42,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
     flexDirection: 'row',
@@ -732,6 +760,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   backButton: {
+    minHeight: 48,
+    paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -757,6 +787,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#2563eb',
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -776,8 +807,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   confirmButton: {
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 20, // ✨ Más circular

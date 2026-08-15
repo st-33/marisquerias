@@ -14,14 +14,22 @@ type OrderListProps = {
   liveItems: OrderItem[];
   getProduct: (id: string) => Product | null;
   onIncPending: (index: number) => void;
+  onDecPending: (index: number) => void;
   onRemovePending: (index: number) => void;
   onMarkDelivered?: (itemId: string) => void;
   onDoubleSwipeUp?: () => void;
 };
 
 function OrderListComponent(props: OrderListProps) {
-  const { pending, liveItems, onIncPending, onRemovePending, onMarkDelivered, onDoubleSwipeUp } =
-    props;
+  const {
+    pending,
+    liveItems,
+    onIncPending,
+    onDecPending,
+    onRemovePending,
+    onMarkDelivered,
+    onDoubleSwipeUp,
+  } = props;
 
   // Detección de gesto: 2 deslizadas largas consecutivas hacia arriba
   const lastScrollY = useRef(0);
@@ -151,6 +159,7 @@ function OrderListComponent(props: OrderListProps) {
               statusConfig={getStatusConfig('nuevo')}
               isPending={true}
               onInc={() => onIncPending(idx)}
+              onDec={() => onDecPending(idx)}
               onRemove={() => onRemovePending(idx)}
             />
           ))}

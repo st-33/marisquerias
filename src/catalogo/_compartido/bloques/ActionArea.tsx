@@ -127,7 +127,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <View>
+            <View style={{ flex: 1 }}>
               <Text
                 style={{
                   color: COLORS.text.tertiary,
@@ -138,15 +138,52 @@ function ActionAreaComponent(props: ActionAreaProps) {
               >
                 TOTAL PEDIDO
               </Text>
-              <Text
+              <View
                 style={{
-                  color: COLORS.text.secondary,
-                  fontSize: 12,
-                  marginTop: 2,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: SPACING.sm,
+                  marginTop: 6,
+                  flexWrap: 'wrap',
                 }}
               >
-                {pendingCount + liveItemsCount} items
-              </Text>
+                <View
+                  style={{
+                    backgroundColor: COLORS.alpha.primary10,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: RADIUS.md,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: COLORS.primaryLight,
+                      fontSize: TYPOGRAPHY.sizes.xs,
+                      fontWeight: TYPOGRAPHY.weights.bold,
+                    }}
+                  >
+                    {pendingCount} pendientes
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: COLORS.bg.elevated,
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: RADIUS.md,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: COLORS.text.muted,
+                      fontSize: TYPOGRAPHY.sizes.xs,
+                      fontWeight: TYPOGRAPHY.weights.bold,
+                    }}
+                  >
+                    {liveItemsCount} en curso
+                  </Text>
+                </View>
+              </View>
             </View>
             <Text
               style={{
@@ -161,7 +198,9 @@ function ActionAreaComponent(props: ActionAreaProps) {
         </View>
       </Animated.View>
 
-      <View style={{ flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.sm }}>
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.sm }}
+      >
         {/* 🔊 Botón AÑADIR con sonido */}
         <Pressable
           accessibilityRole="button"
@@ -172,6 +211,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
             borderWidth: 1.5,
             borderColor: COLORS.primary,
             flex: 1,
+            minHeight: 54,
+            paddingHorizontal: SPACING.md,
             paddingVertical: 12,
             borderRadius: RADIUS.xl + 1,
             alignItems: 'center',
@@ -204,7 +245,9 @@ function ActionAreaComponent(props: ActionAreaProps) {
             disabled={!mode || isSending}
             style={({ pressed }) => ({
               backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
-              flex: 1.5,
+              flex: 1.35,
+              minHeight: 54,
+              paddingHorizontal: SPACING.md,
               paddingVertical: 14,
               borderRadius: RADIUS.lg,
               alignItems: 'center',
@@ -277,6 +320,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: isPrinting ? COLORS.bg.elevated : COLORS.primary,
                   flex: showPaidButton ? 1.2 : 1.5,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',
@@ -325,6 +370,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: COLORS.success,
                   flex: 1.5,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',
@@ -356,6 +403,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: COLORS.warning,
                   flex: 1.3,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',
