@@ -1,8 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
-import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
+import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
 import { ActionArea } from './ActionArea';
 import { OrderList } from './OrderList';
 import { TablesGrid } from './TablesGrid';
@@ -70,10 +69,10 @@ export type PuestoMandoProps = {
 const staticStyles = StyleSheet.create({
   layout: {
     flex: 1,
-    paddingTop: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.sm,
-    gap: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.xs,
+    gap: SPACING.sm,
   },
   orderContent: {
     flex: 1,
@@ -83,61 +82,6 @@ const staticStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.lg,
-    gap: SPACING.md,
-  },
-  headerLeft: {
-    flex: 1,
-    minWidth: 0,
-  },
-  eyebrow: {
-    fontSize: TYPOGRAPHY.sizes.xs,
-    fontWeight: TYPOGRAPHY.weights.black,
-    letterSpacing: 1.2,
-  },
-  orderTitle: {
-    fontSize: TYPOGRAPHY.sizes.xl,
-    fontWeight: TYPOGRAPHY.weights.black,
-    marginTop: 2,
-  },
-  orderMeta: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    fontWeight: TYPOGRAPHY.weights.semibold,
-    marginTop: 3,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.md,
-  },
-  badgeText: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    fontWeight: TYPOGRAPHY.weights.semibold,
-  },
-  countBadge: {
-    minHeight: 38,
-    paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-  },
-  countText: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    fontWeight: TYPOGRAPHY.weights.bold,
   },
   emptyState: {
     flex: 1,
@@ -159,7 +103,6 @@ export function PuestoMando(props: PuestoMandoProps) {
     isSending,
     isPrinting,
     canSend,
-    hasReadyItems,
     hasUndelivered,
     allItemsDelivered,
     hasPrinted,
@@ -184,7 +127,6 @@ export function PuestoMando(props: PuestoMandoProps) {
 
   // 🎨 COLORES DINÁMICOS según tema activo
   const COLORS = useThemedColors();
-  const SHADOWS_T = useThemedShadows();
   const { width } = useWindowDimensions();
   const isWideLayout = width >= 900;
 
@@ -198,21 +140,12 @@ export function PuestoMando(props: PuestoMandoProps) {
         },
         gridWrapper: {
           flex: 3,
-          backgroundColor: COLORS.bg.secondary,
-          borderRadius: RADIUS.xl,
-          borderWidth: 1,
-          borderColor: COLORS.bg.elevated,
-          padding: SPACING.md,
+          backgroundColor: 'transparent',
           overflow: 'hidden',
-          ...SHADOWS_T.md,
         },
         orderWrapper: {
           flex: isWideLayout ? 7 : 1,
-          backgroundColor: COLORS.bg.secondary,
-          borderRadius: RADIUS.xl,
-          borderWidth: 1,
-          borderColor: COLORS.bg.elevated,
-          padding: SPACING.md,
+          backgroundColor: 'transparent',
           overflow: 'hidden',
         },
         headerTitle: {
@@ -227,7 +160,7 @@ export function PuestoMando(props: PuestoMandoProps) {
           textAlign: 'center',
         },
       }),
-    [COLORS, SHADOWS_T, isWideLayout]
+    [COLORS, isWideLayout]
   );
 
   // Total auto hide recibido por props
@@ -257,6 +190,8 @@ export function PuestoMando(props: PuestoMandoProps) {
               tables={mesas}
               selectedTable={mesaSeleccionada}
               mode={mesaSeleccionada ? 'table' : null}
+              liveItems={itemsEnCurso}
+              pendingCount={pendingCount}
               onPressTable={async (id, isFree) => {
                 await onSelectMesa(id);
                 if (isFree) {
@@ -269,40 +204,6 @@ export function PuestoMando(props: PuestoMandoProps) {
         </View>
 
         <View style={themedStyles.orderWrapper}>
-          <View style={staticStyles.header}>
-            <View style={staticStyles.headerLeft}>
-              <Text style={[staticStyles.eyebrow, { color: COLORS.primaryLight }]}>
-                PEDIDO ACTIVO
-              </Text>
-              <Text style={[staticStyles.orderTitle, { color: COLORS.text.primary }]}>
-                {mesaSeleccionada ? `Mesa ${mesaSeleccionada}` : 'Sin mesa seleccionada'}
-              </Text>
-              <Text style={[staticStyles.orderMeta, { color: COLORS.text.muted }]}>
-                {pendingCount} pendientes · {liveItemsCount} en curso
-              </Text>
-            </View>
-            <View style={staticStyles.badgeRow}>
-              {hasReadyItems && (
-                <View style={[staticStyles.badge, { backgroundColor: COLORS.alpha.success20 }]}>
-                  <Ionicons name="flash" size={16} color={COLORS.success} />
-                  <Text style={[staticStyles.badgeText, { color: COLORS.success }]}>RETIRA YA</Text>
-                </View>
-              )}
-              <View
-                style={[
-                  staticStyles.countBadge,
-                  {
-                    backgroundColor: COLORS.bg.tertiary,
-                    borderColor: COLORS.bg.elevated,
-                  },
-                ]}
-              >
-                <Text style={[staticStyles.countText, { color: COLORS.text.secondary }]}>
-                  {pendingCount + liveItemsCount} ítems
-                </Text>
-              </View>
-            </View>
-          </View>
           <View style={staticStyles.orderContent}>
             {mesaSeleccionada ? (
               <OrderList
@@ -315,12 +216,7 @@ export function PuestoMando(props: PuestoMandoProps) {
                 onMarkDelivered={onMarkDelivered}
               />
             ) : (
-              <View style={staticStyles.emptyState}>
-                <Ionicons name="walk" size={56} color={COLORS.text.muted} />
-                <Text style={themedStyles.emptyText}>
-                  Selecciona una mesa para empezar a tomar nota
-                </Text>
-              </View>
+              <View style={{ flex: 1 }} />
             )}
 
             {showOrderLoading && (

@@ -142,52 +142,16 @@ function ActionAreaComponent(props: ActionAreaProps) {
               >
                 TOTAL PEDIDO
               </Text>
-              <View
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: SPACING.sm,
-                  marginTop: 6,
-                  flexWrap: 'wrap',
+                  color: COLORS.text.muted,
+                  fontSize: TYPOGRAPHY.sizes.sm,
+                  fontWeight: TYPOGRAPHY.weights.semibold,
+                  marginTop: 5,
                 }}
               >
-                <View
-                  style={{
-                    backgroundColor: COLORS.alpha.primary10,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: RADIUS.md,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: COLORS.primaryLight,
-                      fontSize: TYPOGRAPHY.sizes.xs,
-                      fontWeight: TYPOGRAPHY.weights.bold,
-                    }}
-                  >
-                    {pendingCount} pendientes
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    backgroundColor: COLORS.bg.elevated,
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: RADIUS.md,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: COLORS.text.muted,
-                      fontSize: TYPOGRAPHY.sizes.xs,
-                      fontWeight: TYPOGRAPHY.weights.bold,
-                    }}
-                  >
-                    {liveItemsCount} en curso
-                  </Text>
-                </View>
-              </View>
+                {pendingCount + liveItemsCount} {pendingCount + liveItemsCount === 1 ? 'item' : 'items'}
+              </Text>
             </View>
             <Text
               style={{

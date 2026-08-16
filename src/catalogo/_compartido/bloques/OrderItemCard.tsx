@@ -2,7 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { RADIUS, SPACING } from '../../../compartido/constantes/theme';
-import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 
 type OrderItemCardProps = {
   item: any;
@@ -15,44 +15,7 @@ type OrderItemCardProps = {
   actionLabel?: string;
   actionColor?: string;
   actionIcon?: keyof typeof Ionicons.glyphMap;
-  getProduct?: (productId: string) => any | null;
 };
-
-const LEGACY_VARIANT_LABELS: Record<string, string> = {
-  snAgu: 'Sin aguacate',
-  oGr: 'Grande',
-};
-
-function readableVariant(value: unknown): string {
-  const raw = String(value ?? '').trim();
-  if (!raw) return '';
-  if (LEGACY_VARIANT_LABELS[raw]) return LEGACY_VARIANT_LABELS[raw];
-  return raw
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/[_-]+/g, ' ')
-    .replace(/^./, (char) => char.toUpperCase());
-}
-
-function resolveVariantLabels(item: any, getProduct?: (productId: string) => any | null): string[] {
-  const productId = item.productId ?? item.productoId;
-  const product = productId ? getProduct?.(String(productId)) : null;
-  const groups = product?.variantes?.grupos ?? {};
-  const source = Array.isArray(item.variantLabels)
-    ? item.variantLabels
-    : item.simpleVariants && Array.isArray(item.simpleVariants)
-    ? item.simpleVariants
-    : item.variantes && typeof item.variantes === 'object'
-    ? Object.entries(item.variantes).flatMap(([groupId, options]) => {
-        const group = groups[groupId];
-        return (Array.isArray(options) ? options : [options]).map((optionId) => {
-          const option = group?.opciones?.[String(optionId)];
-          return option?.titulo ?? optionId;
-        });
-      })
-    : [];
-
-  return source.map(readableVariant).filter(Boolean);
-}
 
 export const OrderItemCard = ({
   item,
@@ -65,190 +28,164 @@ export const OrderItemCard = ({
   actionLabel,
   actionColor,
   actionIcon,
-  getProduct,
 }: OrderItemCardProps) => {
   const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
   const resolvedActionColor = actionColor ?? COLORS.primary;
-  const qty = Number(item.qty ?? item.cantidad ?? 1);
+  const qty = Math.max(1, Number(item.qty ?? item.cantidad ?? 1));
   const price = Number(item.price ?? item.precio ?? 0);
-  // Precio sin decimales si es entero
   const totalNum = qty * price;
   const total = Number.isInteger(totalNum) ? `$${totalNum}` : `$${totalNum.toFixed(2)}`;
   const name = String(item.name ?? item.nombre ?? 'Item');
 
-  const variants = resolveVariantLabels(item, getProduct);
+  let variants: string[] = [];
+  if (Array.isArray(item.variantLabels)) {
+    variants = item.variantLabels;
+  } else if (isPending && Array.isArray(item.simpleVariants)) {
+    variants = item.simpleVariants;
+  } else if (item.variantes && typeof item.variantes === 'object') {
+    variants = Object.values(item.variantes).flat().map(String);
+  }
+
+  const statusLabel = statusConfig.label === 'NUEVO' ? 'Nueva' : statusConfig.label;
 
   return (
     <Animated.View
-      entering={FadeInUp.duration(350).springify().damping(15)}
+      entering={FadeInUp.duration(220)}
       layout={Layout.springify()}
       style={{
         backgroundColor: COLORS.bg.secondary,
-        borderRadius: RADIUS.xl,
-        paddingVertical: SPACING.lg,
-        paddingHorizontal: SPACING.lg,
-        minHeight: 92,
+        borderRadius: RADIUS.lg,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        minHeight: 64,
         borderWidth: 1,
         borderColor: COLORS.bg.elevated,
-        borderLeftWidth: 4,
+        borderLeftWidth: 3,
         borderLeftColor: statusConfig.dotColor,
-        marginBottom: SPACING.md,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 3,
+        marginBottom: 8,
+        ...SHADOWS.sm,
       }}
     >
-      {/* HEADER: Qty + Name + Actions (Pending) */}
-      <View
-        style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}
-      >
-        <View style={{ flexDirection: 'row', flex: 1, gap: 8 }}>
-          {/* Solo mostrar badge de cantidad si qty > 1 */}
-          {qty > 1 && (
-            <View
-              style={{
-                backgroundColor: COLORS.bg.elevated,
-                borderRadius: RADIUS.sm,
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                height: 24,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  color: COLORS.text.primary,
-                  fontWeight: '900',
-                  fontSize: 14,
-                }}
-              >
-                {qty}x
-              </Text>
-            </View>
-          )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Text
+          style={{
+            color: COLORS.text.primary,
+            fontWeight: '900',
+            fontSize: 14,
+            minWidth: 22,
+          }}
+        >
+          {qty}x
+        </Text>
 
-          <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              color: COLORS.text.primary,
+              fontWeight: '700',
+              fontSize: 15,
+            }}
+          >
+            {name}
+          </Text>
+          {(variants.length > 0 || isPending) && (
             <Text
-              numberOfLines={2}
+              numberOfLines={1}
               style={{
-                color: COLORS.text.primary,
-                fontWeight: '700',
-                fontSize: 15,
-                lineHeight: 20,
+                color: variants.length > 0 ? COLORS.text.secondary : statusConfig.color,
+                fontSize: 11,
+                fontWeight: '600',
+                marginTop: 3,
               }}
             >
-              {name}
+              {variants.length > 0 ? variants.join(' · ') : statusLabel}
             </Text>
-
-            {variants.length > 0 && (
-              <Text
-                numberOfLines={2}
-                style={{
-                  color: COLORS.text.secondary,
-                  fontSize: 13,
-                  lineHeight: 18,
-                  marginTop: 3,
-                }}
-              >
-                {variants.join(', ')}
-              </Text>
-            )}
-          </View>
+          )}
         </View>
 
-        {/* PENDING ACTIONS */}
-        {isPending && (
-          <View style={{ flexDirection: 'row', gap: 6, marginLeft: 8, alignItems: 'center' }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Reducir cantidad de ${name}`}
-              onPress={onDec}
-              style={({ pressed }) => ({
-                backgroundColor: COLORS.bg.elevated,
-                width: 48,
-                height: 48,
-                borderRadius: RADIUS.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Ionicons name="remove" size={22} color={COLORS.text.primary} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Aumentar ${name}`}
-              onPress={onInc}
-              style={({ pressed }) => ({
-                backgroundColor: COLORS.alpha.primary20,
-                width: 48,
-                height: 48,
-                borderRadius: RADIUS.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Ionicons name="add" size={22} color={COLORS.primary} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Quitar ${name}`}
-              onPress={onRemove}
-              style={({ pressed }) => ({
-                backgroundColor: COLORS.alpha.error10,
-                width: 48,
-                height: 48,
-                borderRadius: RADIUS.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Ionicons name="trash-outline" size={19} color={COLORS.error} />
-            </Pressable>
-          </View>
-        )}
-      </View>
-
-      {/* FOOTER: Price + Status + Action */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 12,
-          paddingTop: 8,
-          borderTopWidth: 1,
-          borderTopColor: COLORS.bg.elevated,
-        }}
-      >
         <Text
           style={{
             color: COLORS.text.primary,
             fontWeight: '800',
-            fontSize: 16,
+            fontSize: 15,
+            minWidth: 56,
+            textAlign: 'right',
           }}
         >
           {total}
         </Text>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {/* STATUS BADGE */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: statusConfig.bgColor,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              borderRadius: RADIUS.sm,
-            }}
-          >
+        {isPending && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 2 }}>
+            {qty > 1 && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Reducir cantidad de ${name}`}
+                onPress={onDec}
+                hitSlop={6}
+                style={({ pressed }) => ({
+                  width: 34,
+                  height: 34,
+                  borderRadius: RADIUS.md,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: COLORS.bg.elevated,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Ionicons name="remove" size={18} color={COLORS.text.primary} />
+              </Pressable>
+            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Aumentar ${name}`}
+              onPress={onInc}
+              hitSlop={6}
+              style={({ pressed }) => ({
+                width: 34,
+                height: 34,
+                borderRadius: RADIUS.md,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: COLORS.alpha.primary20,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Ionicons name="add" size={19} color={COLORS.primary} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Quitar ${name}`}
+              onPress={onRemove}
+              hitSlop={6}
+              style={({ pressed }) => ({
+                width: 34,
+                height: 34,
+                borderRadius: RADIUS.md,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: COLORS.alpha.error10,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Ionicons name="trash-outline" size={17} color={COLORS.error} />
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {!isPending && (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 6,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View
               style={{
                 width: 6,
@@ -257,19 +194,10 @@ export const OrderItemCard = ({
                 backgroundColor: statusConfig.dotColor,
               }}
             />
-            <Text
-              style={{
-                color: statusConfig.color,
-                fontSize: 11,
-                fontWeight: '800',
-                letterSpacing: 0.5,
-              }}
-            >
-              {statusConfig.label}
+            <Text style={{ color: statusConfig.color, fontSize: 11, fontWeight: '800' }}>
+              {statusLabel}
             </Text>
           </View>
-
-          {/* ACTION BUTTON */}
           {onAction && (
             <Pressable
               accessibilityRole="button"
@@ -277,18 +205,13 @@ export const OrderItemCard = ({
               onPress={onAction}
               style={({ pressed }) => ({
                 backgroundColor: resolvedActionColor,
-                paddingHorizontal: 12,
+                paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: RADIUS.sm,
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 4,
                 opacity: pressed ? 0.8 : 1,
-                shadowColor: resolvedActionColor,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 3,
               })}
             >
               {actionIcon && <Ionicons name={actionIcon} size={14} color="white" />}
@@ -300,7 +223,7 @@ export const OrderItemCard = ({
             </Pressable>
           )}
         </View>
-      </View>
+      )}
     </Animated.View>
   );
 };
