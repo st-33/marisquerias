@@ -23,13 +23,14 @@ export function useFabRadial(itemsInput: FabItem[], initialActiveKey: string, vi
   const [offset, setOffset] = useState(0);
 
   const [prevSafeKey, setPrevSafeKey] = useState(safeInitialKey);
-  if (safeInitialKey !== prevSafeKey) {
+
+  useEffect(() => {
+    if (safeInitialKey === prevSafeKey) return;
     setPrevSafeKey(safeInitialKey);
-    if (safeInitialKey) {
-      setActiveKey(safeInitialKey);
-      setOffset(0);
-    }
-  }
+    setActiveKey(safeInitialKey);
+    setOffset(0);
+    setExpanded(false);
+  }, [safeInitialKey, prevSafeKey]);
 
   const len = items.length;
   const visible = useMemo(() => {

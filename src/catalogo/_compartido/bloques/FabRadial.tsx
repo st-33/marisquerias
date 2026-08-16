@@ -1,10 +1,8 @@
 'use no memo';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
-  runOnJS,
   SharedValue,
   useAnimatedStyle,
   useSharedValue,
@@ -77,75 +75,29 @@ const Bubble: React.FC<BubbleProps> = ({
   });
 
   return (
-    <PressableFeedback
-      onPress={() => onPress(item)}
+    <Animated.View
       style={[staticStyles.miniBubbleContainer, { backgroundColor: bubbleColor }, animatedStyle]}
     >
-      {item.icon}
-    </PressableFeedback>
-  );
-};
-
-const PressableFeedback = ({
-  children,
-  onPress,
-  onLongPress,
-  style,
-}: {
-  children: React.ReactNode;
-  onPress: () => void;
-  onLongPress?: () => void;
-  style?: any;
-}) => {
-  const scale = useSharedValue(1);
-
-  const tap = Gesture.Tap()
-    .onBegin(() => {
-      scale.value = withTiming(0.9, { duration: 100 });
-    })
-    .onFinalize(() => {
-      scale.value = withTiming(1, { duration: 150 });
-    })
-    .onEnd(() => {
-      runOnJS(onPress)();
-    });
-
-  const longPress = Gesture.LongPress()
-    .minDuration(600)
-    .onBegin(() => {
-      scale.value = withTiming(0.9, { duration: 100 });
-    })
-    .onFinalize(() => {
-      scale.value = withTiming(1, { duration: 150 });
-    })
-    .onEnd(() => {
-      if (onLongPress) {
-        runOnJS(onLongPress)();
-      }
-    });
-
-  const gesture = onLongPress ? Gesture.Race(longPress, tap) : tap;
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>
-    </GestureDetector>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={item.label}
+        onPress={() => onPress(item)}
+        style={({ pressed }) => [staticStyles.fill, { opacity: pressed ? 0.82 : 1 }]}
+      >
+        {item.icon}
+      </Pressable>
+    </Animated.View>
   );
 };
 
 const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-right' }) => {
   const COLORS = useThemedColors();
   const [activeKey, setActiveKey] = useState(initialKey ?? items[0]?.key);
-  const [prevInitialKey, setPrevInitialKey] = useState(initialKey);
 
-  if (initialKey !== prevInitialKey) {
-    setPrevInitialKey(initialKey);
-    setActiveKey(initialKey ?? items[0]?.key);
-  }
+  useEffect(() => {
+    const nextKey = initialKey ?? items[0]?.key;
+    setActiveKey((current) => (current === nextKey ? current : nextKey));
+  }, [initialKey, items]);
 
   const isOpen = useSharedValue(0);
   const pulse = useSharedValue(1);
@@ -223,19 +175,23 @@ const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-
           bubbleColor={themedStyles.miniBubbleColor}
         />
       ))}
-      <PressableFeedback
-        onPress={() => {
-          if (childItems.length > 0) {
-            toggleMenu();
-          } else {
-            mainItem.onPress?.();
-          }
-        }}
-        onLongPress={mainItem.onLongPress}
-        style={[themedStyles.mainBubble, animatedMainBubbleStyle]}
-      >
-        {mainItem.icon}
-      </PressableFeedback>
+      <Animated.View style={[themedStyles.mainBubble, animatedMainBubbleStyle]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={mainItem.label}
+          onPress={() => {
+            if (childItems.length > 0) {
+              toggleMenu();
+            } else {
+              ejecutarAccionFab(mainItem);
+            }
+          }}
+          onLongPress={mainItem.onLongPress}
+          style={({ pressed }) => [staticStyles.fill, { opacity: pressed ? 0.82 : 1 }]}
+        >
+          {mainItem.icon}
+        </Pressable>
+      </Animated.View>
     </View>
   );
 };
@@ -271,6 +227,14 @@ const staticStyles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
     zIndex: 10,
+  },
+  fill: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BUBBLE_SIZE / 2,
   },
   miniBubbleContainer: {
     position: 'absolute',
