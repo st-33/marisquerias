@@ -157,6 +157,7 @@ const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-
 
   return (
     <View
+      collapsable={false}
       style={[
         staticStyles.container,
         staticStyles[position as 'top-right' | 'bottom-right' | 'bottom-left'],
@@ -202,6 +203,7 @@ const staticStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
+    elevation: 100,
   },
   'top-right': {
     top: 60,

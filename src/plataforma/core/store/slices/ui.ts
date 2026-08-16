@@ -27,6 +27,8 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
 
   setFabConfigForRoute(pathname: string, config: FabConfig | null) {
     set((state) => {
+      if (state.ui.fabConfigs[pathname] === config) return state;
+
       const newConfigs = { ...state.ui.fabConfigs };
       if (config === null) {
         delete newConfigs[pathname];
@@ -42,6 +44,8 @@ export const createUISlice: StateCreator<UISlice, [], [], UISlice> = (set, get) 
 
   clearFabConfigForRoute(pathname: string) {
     set((state) => {
+      if (!Object.prototype.hasOwnProperty.call(state.ui.fabConfigs, pathname)) return state;
+
       const newConfigs = { ...state.ui.fabConfigs };
       delete newConfigs[pathname];
       logger.debug('FAB', 'Config limpiada', { pathname });

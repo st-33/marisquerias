@@ -114,7 +114,8 @@ export default function RootLayout() {
 }
 
 function GlobalFabSlot() {
-  const pathname = usePathname();
+  const rawPathname = usePathname();
+  const pathname = (rawPathname ? rawPathname.replace(/\/+$/, '') : '') || '/';
   const displayConfig = useFabForRoute(pathname);
 
   if (!displayConfig || displayConfig.enabled === false || displayConfig.items.length === 0) {
