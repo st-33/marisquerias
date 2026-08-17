@@ -4,7 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -47,6 +47,14 @@ export default function VariantEditor({
   const [optionForm, setOptionForm] = useState<Partial<VariantOption>>({});
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [editingOption, setEditingOption] = useState<{ gKey: string; oKey: string } | null>(null);
+  const safeVisible = useMemo(
+    () => ({ digital: true, mesero: true, ventaCrudo: true, ...(visible || {}) }),
+    [visible]
+  );
+  const groupEntries = useMemo(
+    () => Object.entries(variantes.grupos || {}),
+    [variantes.grupos]
+  );
 
   const updateVariantes = (updates: Partial<Producto['variantes']>) => {
     onChange({ ...variantes, ...updates });
@@ -162,7 +170,7 @@ export default function VariantEditor({
   };
 
   const toggleVisible = (key: 'digital' | 'mesero' | 'ventaCrudo') => {
-    onVisibleChange?.({ ...visible, [key]: !visible?.[key] });
+    onVisibleChange?.({ ...safeVisible, [key]: !safeVisible[key] });
   };
 
   const toggleGroupObligatorio = (groupKey: string) => {
@@ -209,7 +217,13 @@ export default function VariantEditor({
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.containerContent}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+    >
       {/* VISIBILIDAD */}
       <CollapsibleSection
         title="Visibilidad"
@@ -219,11 +233,11 @@ export default function VariantEditor({
         <View style={styles.visibilityRow}>
           <Pressable
             onPress={() => toggleVisible('digital')}
-            style={[styles.visibilityBtn, visible?.digital && styles.visibilityBtnActive]}
+            style={[styles.visibilityBtn, safeVisible.digital && styles.visibilityBtnActive]}
           >
             <Ionicons name="phone-portrait-outline" size={16} color="#fff" />
             <Text style={styles.visibilityText}>Digital</Text>
-            {visible?.digital && (
+            {safeVisible.digital && (
               <View style={styles.checkmark}>
                 <Ionicons name="checkmark" size={12} color="#fff" />
               </View>
@@ -231,11 +245,11 @@ export default function VariantEditor({
           </Pressable>
           <Pressable
             onPress={() => toggleVisible('mesero')}
-            style={[styles.visibilityBtn, visible?.mesero && styles.visibilityBtnActive]}
+            style={[styles.visibilityBtn, safeVisible.mesero && styles.visibilityBtnActive]}
           >
             <Ionicons name="person-outline" size={16} color="#fff" />
             <Text style={styles.visibilityText}>Mesero</Text>
-            {visible?.mesero && (
+            {safeVisible.mesero && (
               <View style={styles.checkmark}>
                 <Ionicons name="checkmark" size={12} color="#fff" />
               </View>
@@ -244,11 +258,11 @@ export default function VariantEditor({
           {showVentaCrudo && (
             <Pressable
               onPress={() => toggleVisible('ventaCrudo')}
-              style={[styles.visibilityBtn, visible?.ventaCrudo && styles.visibilityBtnActiveAlt]}
+              style={[styles.visibilityBtn, safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt]}
             >
               <Ionicons name="storefront-outline" size={16} color="#fff" />
               <Text style={styles.visibilityText}>V. Crudo</Text>
-              {visible?.ventaCrudo && (
+              {safeVisible.ventaCrudo && (
                 <View style={styles.checkmark}>
                   <Ionicons name="checkmark" size={12} color="#fff" />
                 </View>
@@ -280,15 +294,15 @@ export default function VariantEditor({
           <Ionicons name="options-outline" size={20} color={theme.colors.primary} />
           <Text style={styles.sectionTitle}>Grupos de Variantes</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{Object.keys(variantes.grupos || {}).length}</Text>
+            <Text style={styles.badgeText}>{groupEntries.length}</Text>
           </View>
         </View>
 
-        {Object.entries(variantes.grupos || {}).map(([key, group]) => (
+        {groupEntries.map(([key, group], index) => (
           <CollapsibleSection
             key={key}
             title={group.titulo}
-            badge={Object.keys(group.opciones).length}
+            badge={Object.keys(group.opciones || {}).length}
             icon={
               <Ionicons
                 name={group.tipo === 'single' ? 'radio-button-on-outline' : 'checkbox-outline'}
@@ -296,7 +310,7 @@ export default function VariantEditor({
                 color={group.obligatorio ? '#f59e0b' : theme.colors.textSecondary}
               />
             }
-            defaultExpanded={key === activeGroup}
+            defaultExpanded={key === activeGroup || (!activeGroup && index === 0)}
           >
             <View style={styles.groupMeta}>
               <View style={styles.metaChips}>
@@ -367,7 +381,7 @@ export default function VariantEditor({
                     Fin
                   </Text>
                 </Pressable>
-                {Object.entries(variantes.grupos || {}).map(
+                {groupEntries.map(
                   ([gId, g]) =>
                     gId !== key && (
                       <Pressable
@@ -414,7 +428,7 @@ export default function VariantEditor({
                     Ninguno
                   </Text>
                 </Pressable>
-                {Object.entries(variantes.grupos || {}).map(
+                {groupEntries.map(
                   ([gId, g]) =>
                     gId !== key && (
                       <Pressable
@@ -441,7 +455,7 @@ export default function VariantEditor({
 
             {/* OPCIONES */}
             <View style={styles.optionsContainer}>
-              {Object.entries(group.opciones).map(([oKey, opt]) => (
+              {Object.entries(group.opciones || {}).map(([oKey, opt]) => (
                 <View key={oKey} style={styles.optionRow}>
                   <VariantChip
                     titulo={opt.titulo}
@@ -642,6 +656,7 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  containerContent: { paddingBottom: 24 },
   section: { marginBottom: 20 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   sectionTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', flex: 1 },

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -55,6 +56,7 @@ type ModalType = 'addCat' | 'addProd' | 'editProd' | null;
 
 type FormState = {
   id: string;
+  activo: boolean;
   nombre: string;
   precio: string;
   categoriaId: string;
@@ -70,17 +72,54 @@ type FormState = {
 
 const createEmptyForm = (): FormState => ({
   id: '',
+  activo: true,
   nombre: '',
   precio: '',
   categoriaId: '',
   variantes: {} as Producto['variantes'],
-  visible: { digital: true, mesero: true } as Producto['visible'],
+  visible: { digital: true, mesero: true, ventaCrudo: true } as Producto['visible'],
   prepMin: 0,
   receta: {} as Producto['receta'],
   usarConfigPersonalizada: false,
   enviarACocina: true,
   saltarPreparando: false,
   unidad: 'pza',
+});
+
+type ProductFormPayload = Omit<FormState, 'id' | 'activo' | 'categoriaId'>;
+
+const productoToFormState = (producto: Producto): FormState => ({
+  id: producto.id,
+  activo: producto.activo ?? true,
+  nombre: producto.nombre,
+  precio: producto.precio != null ? String(producto.precio) : '',
+  categoriaId: producto.categoriaId,
+  variantes: producto.variantes || {},
+  visible: {
+    digital: true,
+    mesero: true,
+    ventaCrudo: true,
+    ...(producto.visible || {}),
+  } as Producto['visible'],
+  prepMin: producto.prepMin || 0,
+  receta: producto.receta || {},
+  usarConfigPersonalizada: producto.usarConfigPersonalizada || false,
+  enviarACocina: producto.enviarACocina ?? true,
+  saltarPreparando: producto.saltarPreparando ?? false,
+  unidad: (producto.unidad as FormState['unidad']) || 'pza',
+});
+
+const formStateToPayload = (form: FormState): ProductFormPayload => ({
+  nombre: form.nombre,
+  precio: form.precio,
+  variantes: form.variantes,
+  visible: { ...form.visible },
+  prepMin: form.prepMin,
+  receta: form.receta,
+  usarConfigPersonalizada: form.usarConfigPersonalizada,
+  enviarACocina: form.enviarACocina,
+  saltarPreparando: form.saltarPreparando,
+  unidad: form.unidad,
 });
 
 export interface MenuLabels {
@@ -225,34 +264,15 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
     if (isSaving) return;
     setIsSaving(true);
     try {
+      const payload = formStateToPayload(formData);
       if (showModal === 'addProd') {
         await actions.crearProductoConValidacion({
-          nombre: formData.nombre,
-          precio: formData.precio,
+          ...payload,
           categoriaId: formData.categoriaId,
-          variantes: formData.variantes,
-          visible: formData.visible,
-          prepMin: formData.prepMin,
-          receta: formData.receta,
-          usarConfigPersonalizada: formData.usarConfigPersonalizada,
-          enviarACocina: formData.enviarACocina,
-          saltarPreparando: formData.saltarPreparando,
-          unidad: formData.unidad,
         });
         showToast('Producto creado', 'success');
       } else {
-        await actions.actualizarProductoConValidacion(formData.id, {
-          nombre: formData.nombre,
-          precio: formData.precio,
-          variantes: formData.variantes,
-          visible: formData.visible,
-          prepMin: formData.prepMin,
-          receta: formData.receta,
-          usarConfigPersonalizada: formData.usarConfigPersonalizada,
-          enviarACocina: formData.enviarACocina,
-          saltarPreparando: formData.saltarPreparando,
-          unidad: formData.unidad,
-        });
+        await actions.actualizarProductoConValidacion(formData.id, payload);
         showToast('Producto actualizado', 'success');
       }
       setFormData(createEmptyForm());
@@ -393,20 +413,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                       key={prod.id}
                       producto={prod}
                       onEdit={() => {
-                        setFormData({
-                          id: prod.id,
-                          nombre: prod.nombre,
-                          precio: prod.precio ? String(prod.precio) : '',
-                          categoriaId: prod.categoriaId,
-                          variantes: prod.variantes || {},
-                          visible: prod.visible || { digital: true, mesero: true },
-                          prepMin: prod.prepMin || 0,
-                          receta: prod.receta || {},
-                          usarConfigPersonalizada: prod.usarConfigPersonalizada || false,
-                          enviarACocina: prod.enviarACocina ?? true,
-                          saltarPreparando: prod.saltarPreparando ?? false,
-                          unidad: (prod.unidad as any) || 'pza',
-                        });
+                        setFormData(productoToFormState(prod));
                         setEditingTab('basico');
                         setShowModal('editProd');
                       }}
@@ -419,20 +426,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                         }
                       }}
                       onRecipe={() => {
-                        setFormData({
-                          id: prod.id,
-                          nombre: prod.nombre,
-                          precio: prod.precio ? String(prod.precio) : '',
-                          categoriaId: prod.categoriaId,
-                          variantes: prod.variantes || {},
-                          visible: prod.visible || { digital: true, mesero: true },
-                          prepMin: prod.prepMin || 0,
-                          receta: prod.receta || {},
-                          usarConfigPersonalizada: prod.usarConfigPersonalizada || false,
-                          enviarACocina: prod.enviarACocina ?? true,
-                          saltarPreparando: prod.saltarPreparando ?? false,
-                          unidad: (prod.unidad as any) || 'pza',
-                        });
+                        setFormData(productoToFormState(prod));
                         setEditingTab('receta');
                         setShowModal('editProd');
                       }}
@@ -452,7 +446,11 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
       </View>
 
       {showModal && (
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+        >
           <View style={[styles.modalCard, showModal !== 'addCat' && styles.modalCardLarge]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
@@ -535,7 +533,13 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   </Pressable>
                 </View>
 
-                <ScrollView style={styles.modalFormScroll}>
+                <ScrollView
+                  style={styles.modalFormScroll}
+                  contentContainerStyle={styles.modalFormContent}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
                   {editingTab === 'basico' && (
                     <View style={styles.formSection}>
                       <Text style={styles.inputLabel}>Nombre del Producto *</Text>
@@ -713,8 +717,17 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                     <VariantEditor
                       variantes={formData.variantes}
                       onChange={(newVariantes) =>
-                        setFormData({ ...formData, variantes: newVariantes })
+                        setFormData((current) => ({ ...current, variantes: newVariantes }))
                       }
+                      visible={formData.visible}
+                      onVisibleChange={(visible) =>
+                        setFormData((current) => ({ ...current, visible }))
+                      }
+                      prepMin={formData.prepMin}
+                      onPrepMinChange={(prepMin) =>
+                        setFormData((current) => ({ ...current, prepMin }))
+                      }
+                      showVentaCrudo={l.showVentaCrudo}
                     />
                   )}
 
@@ -752,7 +765,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
               </View>
             )}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       )}
     </View>
   );
@@ -957,6 +970,9 @@ const styles = StyleSheet.create({
   },
   modalFormScroll: {
     maxHeight: 400,
+  },
+  modalFormContent: {
+    paddingBottom: theme.spacing.sm,
   },
   formSection: {
     gap: theme.spacing.xs,
