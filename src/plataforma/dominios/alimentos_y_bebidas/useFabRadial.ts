@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export type FabItem = {
   key: string;
@@ -21,15 +21,6 @@ export function useFabRadial(itemsInput: FabItem[], initialActiveKey: string, vi
   const [expanded, setExpanded] = useState(false);
   const [activeKey, setActiveKey] = useState(safeInitialKey);
   const [offset, setOffset] = useState(0);
-
-  const [prevSafeKey, setPrevSafeKey] = useState(safeInitialKey);
-  if (safeInitialKey !== prevSafeKey) {
-    setPrevSafeKey(safeInitialKey);
-    if (safeInitialKey) {
-      setActiveKey(safeInitialKey);
-      setOffset(0);
-    }
-  }
 
   const len = items.length;
   const visible = useMemo(() => {

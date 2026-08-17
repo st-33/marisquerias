@@ -12,7 +12,8 @@ import { useAuthGuard } from '../src/plataforma/core/security';
 import { ThemeProvider } from '../src/compartido/temas';
 import { theme } from '../src/compartido/theme';
 import { useBootstrapper } from '../src/plataforma/base/estado/useBootstrapper';
-import { useAppListeners, useStore } from '../src/plataforma/core/store';
+import { useAppListeners, useFabForRoute, useStore } from '../src/plataforma/core/store';
+import { normalizePathname } from '../src/plataforma/core/navigation/normalizePathname';
 import { HardwareProvider } from '../src/plataforma/providers/HardwareProvider';
 import { NotificationsAudioProvider } from '../src/plataforma/providers/NotificationsAudioProvider';
 import { TenantConfigProvider } from '../src/plataforma/providers/TenantConfigProvider';
@@ -79,10 +80,6 @@ export default function RootLayout() {
     };
   }, []);
 
-  const fabConfigs = useStore((state) => state.ui.fabConfigs);
-  const displayConfig = fabConfigs[pathname] ?? null;
-  const hasFabActions = (displayConfig?.items?.length ?? 0) > 0;
-
   return (
     <ThemeProvider tenantPath={tenantPath || ''}>
       <HardwareProvider>
@@ -107,19 +104,32 @@ export default function RootLayout() {
                   <Stack.Screen name="_role/venta-crudo" />
                 </Stack>
 
-                {hasFabActions && displayConfig && (
-                  <FabRadial
-                    items={displayConfig.items}
-                    initialKey={displayConfig.initialKey}
-                    position={displayConfig.position ?? 'bottom-right'}
-                  />
-                )}
+                <GlobalFabSlot />
               </View>
             </NotificationsAudioProvider>
           </GestureHandlerRootView>
         </TenantConfigProvider>
       </HardwareProvider>
     </ThemeProvider>
+  );
+}
+
+function GlobalFabSlot() {
+  const rawPathname = usePathname();
+  const pathname = normalizePathname(rawPathname);
+  const displayConfig = useFabForRoute(pathname);
+
+  if (!displayConfig || displayConfig.enabled === false || displayConfig.items.length === 0) {
+    return null;
+  }
+
+  return (
+    <FabRadial
+      key={`${pathname}:${displayConfig.initialKey ?? ''}`}
+      items={displayConfig.items}
+      initialKey={displayConfig.initialKey}
+      position={displayConfig.position ?? 'bottom-right'}
+    />
   );
 }
 

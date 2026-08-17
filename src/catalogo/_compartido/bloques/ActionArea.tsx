@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Animated, Platform, Pressable, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 import { formatMoney } from '../../../compartido/utils/formatters';
 import { useAlternatingSounds } from '../../../plataforma/dominios/alimentos_y_bebidas/useAlternatingSounds';
 
@@ -50,6 +52,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
     onPaid,
   } = props;
   const insets = useSafeAreaInsets();
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
 
   // 🔊 Sonidos alternantes para botón AÑADIR
   const { playSound: playAddSound, loadSounds, cleanup: cleanupSounds } = useAlternatingSounds();
@@ -82,6 +86,9 @@ function ActionAreaComponent(props: ActionAreaProps) {
   // 🔊 Handler con sonido para AÑADIR
   const handleAddWithSound = () => {
     playAddSound(); // 🔊 Sonido alternante
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     onAdd();
   };
 
@@ -89,7 +96,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
     <View
       style={{
         borderTopWidth: 1,
-        borderTopColor: COLORS.bg.primary,
+        borderTopColor: COLORS.bg.elevated,
         paddingHorizontal: SPACING.lg + 2,
         paddingTop: SPACING.xs - 1,
         paddingBottom: Math.max(18, insets.bottom + 4),
@@ -112,18 +119,19 @@ function ActionAreaComponent(props: ActionAreaProps) {
       >
         <View
           style={{
-            backgroundColor: COLORS.bg.secondary,
-            borderRadius: RADIUS.md - 1,
+            backgroundColor: COLORS.bg.tertiary,
+            borderRadius: RADIUS.lg,
             paddingVertical: 7,
             paddingHorizontal: SPACING.md,
             borderWidth: 1,
             borderColor: COLORS.bg.elevated,
+            ...SHADOWS.sm,
           }}
         >
           <View
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
           >
-            <View>
+            <View style={{ flex: 1 }}>
               <Text
                 style={{
                   color: COLORS.text.tertiary,
@@ -136,12 +144,14 @@ function ActionAreaComponent(props: ActionAreaProps) {
               </Text>
               <Text
                 style={{
-                  color: COLORS.text.secondary,
-                  fontSize: 12,
-                  marginTop: 2,
+                  color: COLORS.text.muted,
+                  fontSize: TYPOGRAPHY.sizes.sm,
+                  fontWeight: TYPOGRAPHY.weights.semibold,
+                  marginTop: 5,
                 }}
               >
-                {pendingCount + liveItemsCount} items
+                {pendingCount + liveItemsCount}{' '}
+                {pendingCount + liveItemsCount === 1 ? 'item' : 'items'}
               </Text>
             </View>
             <Text
@@ -157,15 +167,21 @@ function ActionAreaComponent(props: ActionAreaProps) {
         </View>
       </Animated.View>
 
-      <View style={{ flexDirection: 'row', gap: SPACING.lg, marginTop: SPACING.sm }}>
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.sm }}
+      >
         {/* 🔊 Botón AÑADIR con sonido */}
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Añadir producto al pedido"
           onPress={handleAddWithSound}
           style={({ pressed }) => ({
-            backgroundColor: 'transparent',
-            borderWidth: 3,
+            backgroundColor: COLORS.alpha.primary10,
+            borderWidth: 1.5,
             borderColor: COLORS.primary,
             flex: 1,
+            minHeight: 54,
+            paddingHorizontal: SPACING.md,
             paddingVertical: 12,
             borderRadius: RADIUS.xl + 1,
             alignItems: 'center',
@@ -192,18 +208,22 @@ function ActionAreaComponent(props: ActionAreaProps) {
         {pendingCount > 0 ? (
           // CASO 1: Hay items pendientes → Botón ENVIAR
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Enviar pedido a Cocina"
             onPress={onSend}
             disabled={!mode || isSending}
             style={({ pressed }) => ({
-              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.warning,
-              flex: 1.5,
+              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
+              flex: 1.35,
+              minHeight: 54,
+              paddingHorizontal: SPACING.md,
               paddingVertical: 14,
               borderRadius: RADIUS.lg,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed || isSending ? 0.95 : 1,
               transform: [{ scale: pressed && !isSending ? 0.98 : 1 }],
-              ...(!mode || isSending ? {} : SHADOWS.warning),
+              ...(!mode || isSending ? {} : SHADOWS.primary),
             })}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>
@@ -269,6 +289,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: isPrinting ? COLORS.bg.elevated : COLORS.primary,
                   flex: showPaidButton ? 1.2 : 1.5,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',
@@ -317,6 +339,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: COLORS.success,
                   flex: 1.5,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',
@@ -348,6 +372,8 @@ function ActionAreaComponent(props: ActionAreaProps) {
                 style={({ pressed }) => ({
                   backgroundColor: COLORS.warning,
                   flex: 1.3,
+                  minHeight: 54,
+                  paddingHorizontal: SPACING.md,
                   paddingVertical: 14,
                   borderRadius: RADIUS.lg,
                   alignItems: 'center',

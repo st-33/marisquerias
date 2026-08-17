@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../base/_persistencia';
 import { InventoryV2Repository } from '../../../base/_persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../base/hooks';
-import { useItemsPedido, usePedido, usePedidos, useProductos, useStore } from '../../../core/store';
+import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../core/store';
 import { createLogger } from '../../../core/utils/logger';
 
 import { useGestionarMesas } from './gestionarMesas';
@@ -44,6 +44,9 @@ export type OrderItem = {
   variantes?: Record<string, string[]>;
   variantLabels?: string[];
   inventoryDeducted?: boolean;
+  inventoryError?: string | null;
+  inventoryErrorCode?: string | null;
+  inventoryErrorAt?: number | null;
   productId?: string;
 };
 
@@ -99,6 +102,7 @@ export function useMeseroLogic({
     addItem: addDraftItem,
     removeItem: removeDraftItem,
     incrementItem: incrementDraftItem,
+    decrementItem: decrementDraftItem,
     clear: clearDrafts,
     isOnline,
   } = useSharedDrafts({
@@ -154,6 +158,13 @@ export function useMeseroLogic({
     [incrementDraftItem]
   );
 
+  const decrementPendingItem = useCallback(
+    async (index: number, subpedidoId: string = 'default') => {
+      await decrementDraftItem(index);
+    },
+    [decrementDraftItem]
+  );
+
   // 3. Hook de Procesamiento de Pedido
   const { isSending, lastError, puentePedidoId, sendOrder, sendOrderWithValidation } =
     useProcesarPedido({
@@ -169,8 +180,6 @@ export function useMeseroLogic({
   // Store y Selectores
   const pedidosDelStore = usePedidos();
   const productosDelStore = useProductos();
-  const draftsDelStore = useStore((s: any) => s.drafts || {});
-
   const decoratedTables = useMemo(() => {
     return tables.map((table) => {
       // 1. Obtener pedido activo de la mesa
@@ -193,8 +202,10 @@ export function useMeseroLogic({
       const hasReady = items.some((it: any) => (it.estado || 'nuevo') === 'listo');
 
       // 3. Obtener drafts de la mesa
-      const drafts = draftsDelStore[table.id] || [];
-      const hasPending = drafts.length > 0;
+      // Los borradores sólo se consideran para la mesa activa. La fuente de verdad
+      // está acotada por tenantPath + mesaId en useSharedDrafts; no leer el slice
+      // global keyed únicamente por mesa evita arrastres al cambiar de tenant.
+      const hasPending = table.id === selectedTable && activePendingItems.length > 0;
 
       return {
         ...table,
@@ -203,7 +214,7 @@ export function useMeseroLogic({
         hasPending,
       };
     });
-  }, [tables, pedidosDelStore, draftsDelStore]);
+  }, [tables, pedidosDelStore, selectedTable, activePendingItems]);
 
   const getProductoDelStore = useCallback(
     (productoId: string) => productosDelStore[productoId] || null,
@@ -249,6 +260,9 @@ export function useMeseroLogic({
       variantes: detalleItem.variantes,
       variantLabels: detalleItem.variantLabels,
       inventoryDeducted: detalleItem.inventoryDeducted,
+      inventoryError: detalleItem.inventoryError,
+      inventoryErrorCode: detalleItem.inventoryErrorCode,
+      inventoryErrorAt: detalleItem.inventoryErrorAt,
       productId: detalleItem.productId,
     }));
   }, [pedidoActivoId, itemsDelPedido]);
@@ -313,18 +327,24 @@ export function useMeseroLogic({
 
         const item = liveItemsRef.current.find((it) => it.id === itemId);
 
+        if (inventoryAutoDiscount && !item) {
+          return { success: false, error: 'No se encontró el ítem para validar inventario' };
+        }
+
         if (inventoryAutoDiscount && item && !item.inventoryDeducted) {
-          (async () => {
-            try {
-              await descontarStockDeItem({
-                item,
-                pedidoActivoId: table.pedidoActivoId!,
-                itemId,
-              });
-            } catch (bgError) {
-              log.error('💥 Error crítico en descontar stock:', bgError);
-            }
-          })();
+          const inventoryResult = await descontarStockDeItem({
+            item,
+            pedidoActivoId: table.pedidoActivoId!,
+            itemId,
+          });
+
+          if (!inventoryResult.success) {
+            return {
+              success: false,
+              error: inventoryResult.error,
+              inventoryCode: inventoryResult.code,
+            };
+          }
         }
 
         await pedidosRepo.actualizarEstadoItem(table.pedidoActivoId, itemId, 'entregado');
@@ -411,6 +431,7 @@ export function useMeseroLogic({
     addPendingItem,
     removePendingItem,
     incrementPendingItem,
+    decrementPendingItem,
     clearPendingItems,
     sendOrder,
     sendOrderWithValidation,

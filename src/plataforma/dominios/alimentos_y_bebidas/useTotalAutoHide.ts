@@ -2,12 +2,10 @@
  * 🕐 HOOK - AUTO-HIDE DEL TOTAL
  *
  * Oculta el total automáticamente después de 3 segundos para dar más espacio a la comanda.
- * Se muestra nuevamente cuando:
- * - La mesera selecciona una mesa
- * - Se agrega un nuevo item
+ * Se muestra nuevamente cuando cambia la mesa o cambia la cantidad de items.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type UseTotalAutoHideProps = {
   mesaSeleccionada: string | null;
@@ -21,29 +19,33 @@ export function useTotalAutoHide({
   liveItemsCount,
 }: UseTotalAutoHideProps) {
   const currentCount = pendingCount + liveItemsCount;
-  const [prevMesa, setPrevMesa] = useState(mesaSeleccionada);
-  const [prevCount, setPrevCount] = useState(currentCount);
-  const [showUntil, setShowUntil] = useState(0);
-  const [now, setNow] = useState(() => Date.now());
-
-  if (mesaSeleccionada !== prevMesa) {
-    setPrevMesa(mesaSeleccionada);
-    setShowUntil(mesaSeleccionada ? Date.now() + 3000 : 0);
-  } else if (currentCount > prevCount) {
-    setPrevCount(currentCount);
-    if (mesaSeleccionada) {
-      setShowUntil(Date.now() + 3000);
-    }
-  } else if (currentCount !== prevCount) {
-    setPrevCount(currentCount);
-  }
+  const previousMesaRef = useRef(mesaSeleccionada);
+  const previousCountRef = useRef(currentCount);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (showUntil > Date.now()) {
-      const timer = setTimeout(() => setNow(Date.now()), Math.max(0, showUntil - Date.now() + 50));
-      return () => clearTimeout(timer);
-    }
-  }, [showUntil]);
+    const mesaChanged = mesaSeleccionada !== previousMesaRef.current;
+    const countChanged = currentCount !== previousCountRef.current;
 
-  return mesaSeleccionada !== null && now < showUntil;
+    previousMesaRef.current = mesaSeleccionada;
+    previousCountRef.current = currentCount;
+
+    if (!mesaSeleccionada) {
+      const hideId = setTimeout(() => setIsVisible(false), 0);
+      return () => clearTimeout(hideId);
+    }
+
+    if (!mesaChanged && !countChanged) {
+      return;
+    }
+
+    const showId = setTimeout(() => setIsVisible(true), 0);
+    const hideId = setTimeout(() => setIsVisible(false), 3000);
+    return () => {
+      clearTimeout(showId);
+      clearTimeout(hideId);
+    };
+  }, [mesaSeleccionada, currentCount]);
+
+  return mesaSeleccionada !== null && isVisible;
 }

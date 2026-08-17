@@ -29,6 +29,9 @@ export type PedidoItem = {
   agregadoAtISO?: string; // ISO string
   impreso?: boolean;
   inventoryDeducted?: boolean; // ✅ NUEVO: Si ya se descontó del inventario
+  inventoryError?: string | null;
+  inventoryErrorCode?: string | null;
+  inventoryErrorAt?: number | null;
 };
 
 export type Pedido = {

@@ -1,8 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
-import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
 import { ActionArea } from './ActionArea';
 import { OrderList } from './OrderList';
 import { TablesGrid } from './TablesGrid';
@@ -60,6 +59,7 @@ export type PuestoMandoProps = {
   onRequestBill: () => void;
   onMarkPaid: () => void;
   onIncrementPending: (index: number) => void;
+  onDecrementPending: (index: number) => void;
   onRemovePending: (index: number) => void;
   onMarkDelivered: (itemId: string) => void;
   getProduct: (productId: string) => any | null;
@@ -69,10 +69,10 @@ export type PuestoMandoProps = {
 const staticStyles = StyleSheet.create({
   layout: {
     flex: 1,
-    paddingTop: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.sm,
-    gap: SPACING.lg,
+    paddingTop: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.xs,
+    gap: SPACING.sm,
   },
   orderContent: {
     flex: 1,
@@ -82,29 +82,6 @@ const staticStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.md,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.md,
-  },
-  badgeText: {
-    fontSize: TYPOGRAPHY.sizes.sm,
-    fontWeight: TYPOGRAPHY.weights.semibold,
   },
   emptyState: {
     flex: 1,
@@ -126,7 +103,6 @@ export function PuestoMando(props: PuestoMandoProps) {
     isSending,
     isPrinting,
     canSend,
-    hasReadyItems,
     hasUndelivered,
     allItemsDelivered,
     hasPrinted,
@@ -139,6 +115,7 @@ export function PuestoMando(props: PuestoMandoProps) {
     onRequestBill,
     onMarkPaid,
     onIncrementPending,
+    onDecrementPending,
     onRemovePending,
     onMarkDelivered,
     getProduct,
@@ -150,7 +127,8 @@ export function PuestoMando(props: PuestoMandoProps) {
 
   // 🎨 COLORES DINÁMICOS según tema activo
   const COLORS = useThemedColors();
-  const SHADOWS_T = useThemedShadows();
+  const { width } = useWindowDimensions();
+  const isWideLayout = width >= 900;
 
   // Estilos que dependen del tema
   const themedStyles = useMemo(
@@ -162,21 +140,12 @@ export function PuestoMando(props: PuestoMandoProps) {
         },
         gridWrapper: {
           flex: 3,
-          backgroundColor: COLORS.bg.secondary,
-          borderRadius: RADIUS.xl,
-          borderWidth: 1,
-          borderColor: COLORS.bg.elevated,
-          padding: SPACING.md,
+          backgroundColor: 'transparent',
           overflow: 'hidden',
-          ...SHADOWS_T.md,
         },
         orderWrapper: {
-          flex: 7,
-          backgroundColor: COLORS.bg.secondary,
-          borderRadius: RADIUS.xl,
-          borderWidth: 1,
-          borderColor: COLORS.bg.elevated,
-          padding: SPACING.md,
+          flex: isWideLayout ? 7 : 1,
+          backgroundColor: 'transparent',
           overflow: 'hidden',
         },
         headerTitle: {
@@ -191,7 +160,7 @@ export function PuestoMando(props: PuestoMandoProps) {
           textAlign: 'center',
         },
       }),
-    [COLORS, SHADOWS_T]
+    [COLORS, isWideLayout]
   );
 
   // Total auto hide recibido por props
@@ -204,8 +173,13 @@ export function PuestoMando(props: PuestoMandoProps) {
 
   return (
     <View style={themedStyles.container}>
-      <View style={staticStyles.layout}>
-        <View style={themedStyles.gridWrapper}>
+      <View style={[staticStyles.layout, { flexDirection: isWideLayout ? 'row' : 'column' }]}>
+        <View
+          style={[
+            themedStyles.gridWrapper,
+            !isWideLayout && { flex: 0, minHeight: 252, maxHeight: 320 },
+          ]}
+        >
           {showGridLoading ? (
             <View style={staticStyles.emptyState}>
               <ActivityIndicator color={COLORS.primary} size="large" />
@@ -218,7 +192,6 @@ export function PuestoMando(props: PuestoMandoProps) {
               mode={mesaSeleccionada ? 'table' : null}
               liveItems={itemsEnCurso}
               pendingCount={pendingCount}
-              indicators={undefined}
               onPressTable={async (id, isFree) => {
                 await onSelectMesa(id);
                 if (isFree) {
@@ -231,16 +204,6 @@ export function PuestoMando(props: PuestoMandoProps) {
         </View>
 
         <View style={themedStyles.orderWrapper}>
-          <View style={staticStyles.header}>
-            <View style={staticStyles.badgeRow}>
-              {hasReadyItems && (
-                <View style={[staticStyles.badge, { backgroundColor: COLORS.alpha.success20 }]}>
-                  <Ionicons name="flash" size={16} color={COLORS.success} />
-                  <Text style={[staticStyles.badgeText, { color: COLORS.success }]}>RETIRA YA</Text>
-                </View>
-              )}
-            </View>
-          </View>
           <View style={staticStyles.orderContent}>
             {mesaSeleccionada ? (
               <OrderList
@@ -248,16 +211,12 @@ export function PuestoMando(props: PuestoMandoProps) {
                 liveItems={itemsEnCurso}
                 getProduct={getProduct}
                 onIncPending={onIncrementPending}
+                onDecPending={onDecrementPending}
                 onRemovePending={onRemovePending}
                 onMarkDelivered={onMarkDelivered}
               />
             ) : (
-              <View style={staticStyles.emptyState}>
-                <Ionicons name="walk" size={56} color={COLORS.text.muted} />
-                <Text style={themedStyles.emptyText}>
-                  Selecciona una mesa para empezar a tomar nota
-                </Text>
-              </View>
+              <View style={{ flex: 1 }} />
             )}
 
             {showOrderLoading && (

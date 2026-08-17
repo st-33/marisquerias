@@ -1,22 +1,10 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
-import {
-  LayoutAnimation,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  UIManager,
-  View,
-} from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { TableBadge, type TableIndicator } from '../../../compartido/componentes/ui/TableBadge';
-import { COLORS, RADIUS, SHADOWS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../../../compartido/constantes/theme';
+import { useThemedColors, useThemedShadows } from '../../../compartido/hooks/useThemedColors';
 import { OrderItem } from '../../../plataforma/dominios/marisqueria/mesero/useMeseroLogic';
-
-// Habilitar LayoutAnimation en Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 export type TableState = 'libre' | 'ocupada' | 'cuenta';
 
@@ -42,13 +30,6 @@ type TablesGridProps = {
   };
 };
 
-const tileColor = (s: TableState) =>
-  s === 'libre'
-    ? COLORS.table.free
-    : s === 'ocupada'
-      ? COLORS.table.occupied
-      : COLORS.table.billing;
-
 function TablesGridComponent(props: TablesGridProps) {
   const {
     tables,
@@ -62,21 +43,18 @@ function TablesGridComponent(props: TablesGridProps) {
     layoutOptions,
   } = props;
 
-  const {
-    minTileWidth = 85, // Ancho mínimo para asegurar legibilidad
-    tileHeight = 95, // 🔥 Aumentado para que se vean 2 filas completas
-    gap = SPACING.md,
-  } = layoutOptions ?? {};
-
+  const { minTileWidth = 76, gap = SPACING.sm } = layoutOptions ?? {};
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const tileHeight = layoutOptions?.tileHeight ?? (containerWidth > 500 ? 124 : 84);
+  const COLORS = useThemedColors();
+  const SHADOWS = useThemedShadows();
 
-  // 🎯 GRID FIJO: 4 COLUMNAS (2 filas visibles)
+  // 🎯 GRID RESPONSIVE: 2 columnas en móvil, 3 en tablet compacta, 4 en web/tablet ancha
   // Si hay más de 8 mesas (2 filas x 4 cols), se hace scroll vertical
   const tileWidth = useMemo(() => {
     if (containerWidth === 0) return minTileWidth;
 
-    // 🔥 FORZAR 4 COLUMNAS SIEMPRE
-    const numColumns = 4;
+    const numColumns = containerWidth >= 900 ? 6 : containerWidth >= 600 ? 5 : 4;
 
     // Calcular ancho exacto para llenar el contenedor
     const totalGapSpace = (numColumns - 1) * gap;
@@ -94,6 +72,13 @@ function TablesGridComponent(props: TablesGridProps) {
       return true;
     });
   }, [tables]);
+
+  const tileColor = (state: TableState) =>
+    state === 'libre'
+      ? COLORS.table.free
+      : state === 'ocupada'
+        ? COLORS.table.occupied
+        : COLORS.table.billing;
 
   const renderTile = (
     id: string,
@@ -130,21 +115,11 @@ function TablesGridComponent(props: TablesGridProps) {
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: gap,
-          // Efectos visuales
-          opacity: pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.96 : 1 }],
+          opacity: pressed ? 0.88 : 1,
+          transform: [{ scale: pressed ? 0.97 : 1 }],
           borderWidth: isSelected ? 3 : 0,
-          borderColor: isSelected ? COLORS.primary : 'transparent',
-          // Sombra fractal (más profunda si está seleccionado)
-          ...(isSelected
-            ? {
-                shadowColor: COLORS.primary,
-                shadowOpacity: 0.5,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: 8,
-              }
-            : SHADOWS.sm),
+          borderColor: isSelected ? COLORS.primaryLight : 'transparent',
+          ...(isSelected ? SHADOWS.primary : SHADOWS.sm),
         })}
       >
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
@@ -213,8 +188,6 @@ function TablesGridComponent(props: TablesGridProps) {
       onLayout={(e) => {
         const w = e.nativeEvent.layout.width;
         if (Math.abs(containerWidth - w) > 10) {
-          // Debounce simple
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setContainerWidth(w);
         }
       }}
@@ -235,17 +208,14 @@ function TablesGridComponent(props: TablesGridProps) {
           }}
         >
           {/* 1. Renderizar Mesas */}
-          {validTables.map((t) =>
-            renderTile(t.id, t.state, false, () => onPressTable(t.id, t.state === 'libre'))
+          {validTables.map((table) =>
+            renderTile(table.id, table.state, false, () =>
+              onPressTable(table.id, table.state === 'libre')
+            )
           )}
 
-          {/* 2. Renderizar Para Llevar (siempre al final, como un ciudadano más del grid) */}
+          {/* Salida operativa para pedidos sin mesa */}
           {renderTile('takeaway', 'takeaway', true, onSelectTakeaway)}
-
-          {/* 3. Elementos fantasma para alinear la última fila a la izquierda si usamos space-between */}
-          {[...Array(6)].map((_, i) => (
-            <View key={`ghost-${i}`} style={{ width: tileWidth, height: 0 }} />
-          ))}
         </View>
       </ScrollView>
     </View>

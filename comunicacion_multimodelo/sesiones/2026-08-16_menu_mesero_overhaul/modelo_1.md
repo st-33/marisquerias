@@ -247,3 +247,77 @@ El siguiente movimiento del Modelo 1 es recibir el plan del Modelo 3, contrastar
 ## Estado actualizado tras la exportación Web
 
 La exportación Web es una señal positiva de compilación, pero no cambia los bloqueos funcionales. Siguen pendientes la decisión de contrato para stock insuficiente, la reproducción del FAB por pathname, la conexión correcta del auto-hide de tres segundos, la corrección de TypeScript por `expo-env.d.ts`, la sincronización del lockfile y la reducción de errores de lint. Android no se declara validado porque no se ejecutó un dispositivo o emulador en esta sesión.
+
+
+## Registro de vigilancia — aprobación del plan del Modelo 3
+
+| Campo | Registro |
+|---|---|
+| HORA | `2026-08-17 06:59:35 UTC` |
+| MODELO | Modelo 1 |
+| ORIGEN | Instrucción explícita del usuario / aprobación del plan técnico del Modelo 3 |
+| ACCIÓN | Se autoriza el inicio de la intervención del Modelo 3 sobre `ProductPickerOverlay.tsx`, `VariantsModal.tsx`, `PuestoMando.tsx`, `ActionArea.tsx`, `OrderItemCard.tsx` y `MeseroScreen.tsx` únicamente para la integración necesaria del auto-hide y total |
+| ÁREA | Equipo Mesero / reconstrucción visual e interacción |
+| HALLAZGO | El working tree se encontraba limpio al inicio de la vigilancia; la rama `main` estaba adelantada dos commits documentales respecto a `origin/main` |
+| EVIDENCIA | `git status --short --branch`: `## main...origin/main [ahead 2]` |
+| IMPACTO | La construcción puede comenzar sin mezclar cambios funcionales previos; la bitácora oficial queda modificada localmente para registrar la autorización |
+| DECISIÓN | Vigilar que no se modifiquen contratos del store central ni se eliminen `useProductSelector` o `useVariantSelector`; no realizar commits hasta recibir working tree final validado en Web y Android |
+| ACCIÓN SIGUIENTE | Inspeccionar los cambios del working tree, comparar archivos autorizados y verificar dependencias compartidas |
+| ESPERANDO A | Modelo 3: intervención y entrega del working tree validado |
+| ESTADO | CONSTRUYENDO / VIGILANCIA ACTIVA |
+
+### Criterios de rechazo durante la vigilancia
+
+El Modelo 1 reportará como **RECHAZADO** cualquier cambio que elimine o sustituya sin justificación el consumo del store central, `useProductSelector`, `useVariantSelector`, el contrato de variantes, los flags de visibilidad o la integración funcional con `MeseroScreen`. También quedará pendiente de validación cualquier cambio en archivos compartidos que no documente su impacto en Administrador/Menú, Web y Android.
+
+La bitácora queda actualizada localmente, pero **no se ha realizado commit** conforme a la instrucción recibida.
+
+
+### Registro de vigilancia 001 — working tree sin intervención del Modelo 3
+
+| Campo | Registro |
+|---|---|
+| HORA | `2026-08-17 07:00:30 UTC` |
+| MODELO | Modelo 1 |
+| ORIGEN | Inspección activa posterior a la aprobación |
+| ACCIÓN | Se comparó el working tree con `HEAD` y se verificaron hashes de los archivos autorizados y protegidos |
+| ÁREA | ProductPickerOverlay, VariantsModal, PuestoMando, ActionArea, OrderItemCard, MeseroScreen, store central y hooks del Mesero |
+| HALLAZGO | No hay modificaciones del Modelo 3 todavía. El único archivo modificado frente a `HEAD` es esta bitácora, cuya actualización no ha sido committeada |
+| EVIDENCIA | `git diff --name-status` reportó únicamente `M comunicacion_multimodelo/sesiones/2026-08-16_menu_mesero_overhaul/modelo_1.md`; los hashes de los archivos protegidos coinciden con la línea base |
+| IMPACTO | No existe aún un working tree constructor que validar; los contratos y hooks permanecen intactos |
+| DECISIÓN | Mantener estado de vigilancia activa y no ejecutar commit |
+| ACCIÓN SIGUIENTE | Repetir la inspección cuando el Modelo 3 entregue cambios o indique que terminó la intervención |
+| ESPERANDO A | Modelo 3 |
+| ESTADO | VIGILANCIA / ESPERANDO |
+
+
+## 2026-08-17 — Consolidación del diff UI/UX y parches operativos del Modelo 1
+
+**Estado:** validado en working tree; pendiente de commit y publicación remota.
+
+Por instrucción operativa, se aplicó sobre `main` el diff relevante entregado por el Modelo 3 desde `origin/manus/reconstruccion-operativa-inicial`, limitado al flujo Mesero y sus dependencias de UI/FAB. Quedaron validados explícitamente los cuatro archivos principales solicitados: `ProductPickerOverlay.tsx`, `VariantsModal.tsx`, `ActionArea.tsx` y `PuestoMando.tsx`. También se integraron las modificaciones necesarias de `OrderItemCard.tsx`, `OrderList.tsx`, `MeseroScreen.tsx`, `TablesGrid.tsx`, `useMeseroLogic.ts` y los componentes/controladores del FAB.
+
+### Parche FAB Radial
+
+Se eliminó la discrepancia de claves de ruta mediante la nueva utilidad común `src/plataforma/core/navigation/normalizePathname.ts`, usada por `app/_layout.tsx` y `usePuenteAccionesFlotantes.ts`. La utilidad convierte rutas vacías en `/` y elimina una o varias barras finales, por lo que el registro y la lectura del FAB usan exactamente la misma clave. `GlobalFabSlot` incorpora además una clave estable por ruta e `initialKey` para reiniciar el estado visual al cambiar de pantalla. Se añadió cobertura para raíz, ruta normal y múltiples barras finales.
+
+### Parche de inventario
+
+`descontarInventario.ts` dejó de absorber silenciosamente las excepciones en una tarea background. Ahora devuelve un resultado estructurado, clasifica `Stock insuficiente para itemId=camaron-1` como `INSUFFICIENT_STOCK`, persiste `inventoryError`, `inventoryErrorCode` e `inventoryErrorAt` mediante `PedidosRepository.actualizarItem`, y solo marca el item como `entregado` después de completar correctamente el descuento. `useMeseroLogic.ts` espera el resultado y bloquea la transición cuando falla; `MeseroScreen.tsx` muestra el motivo al Mesero mediante una alerta. Se conservaron `useProductSelector`, `useVariantSelector` y los contratos del store central.
+
+### Auto-hide y compatibilidad
+
+Se conectó `useTotalAutoHide` a `MeseroScreen`/`PuestoMando` para mostrar el total durante tres segundos después de seleccionar mesa o cambiar la cantidad de items. Se retiraron sincronizaciones de estado durante render/efecto que impedían el lint limpio. Se restauró `expo-env.d.ts`, se completó el helper `getVariantOptionLabel` requerido por el diff del Modelo 3 y se extendió el contrato persistido del item con metadatos de inventario.
+
+### Validaciones ejecutadas
+
+| Validación | Resultado |
+|---|---|
+| Jest completo | **20 suites, 117 tests: todos pasan** |
+| TypeScript (`npm run check-types`) | **Pasa sin errores** |
+| ESLint focalizado sobre archivos modificados | **Pasa sin errores ni advertencias** |
+| Exportación Web (`npx expo export --platform web`) | **Pasa; 17 rutas estáticas exportadas, incluida `/_role/mesero`** |
+| `git diff --check` | **Pasa** |
+| Android | No se ejecutó una compilación Android en este entorno; no se declara validación Android inexistente. |
+
+La rama todavía no tiene el commit oficial de esta consolidación. El siguiente paso autorizado es `git add`, crear el commit solicitado y ejecutar `git push origin main` después de una última inspección del diff staged.

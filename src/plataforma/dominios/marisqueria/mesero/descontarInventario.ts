@@ -11,8 +11,15 @@ import { canonicalizeString } from '../../../core/domain/itemCanonical';
 import { useStore } from '../../../core/store';
 import { SincronizadorCocina } from '../../../dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
 import { createLogger } from '../../../core/utils/logger';
+import {
+  classifyInventoryError,
+  type InventoryDeductionResult,
+  type InventoryErrorCode,
+} from './inventoryErrors';
 
 const log = createLogger('descontarInventario');
+
+export { classifyInventoryError } from './inventoryErrors';
 
 type DescontarInventarioProps = {
   inventarioV2Repo: InventoryV2Repository;
@@ -53,20 +60,55 @@ export function useDescontarInventario({
     [inventarioV2Repo]
   );
 
+  const persistInventoryError = useCallback(
+    async ({
+      pedidoActivoId,
+      itemId,
+      error,
+      code,
+    }: {
+      pedidoActivoId: string;
+      itemId: string;
+      error: string;
+      code: InventoryErrorCode;
+    }) => {
+      try {
+        await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
+          inventoryError: error,
+          inventoryErrorCode: code,
+          inventoryErrorAt: Date.now(),
+        });
+      } catch (persistError) {
+        log.error('💥 No se pudo persistir el error de inventario:', persistError);
+      }
+    },
+    [pedidosRepo]
+  );
+
   const descontarStockDeItem = useCallback(
-    async (params: { item: any; pedidoActivoId: string; itemId: string }) => {
+    async (params: {
+      item: any;
+      pedidoActivoId: string;
+      itemId: string;
+    }): Promise<InventoryDeductionResult> => {
       const { item, pedidoActivoId, itemId } = params;
       if (!inventoryAutoDiscount || !item || item.inventoryDeducted) {
-        return;
+        return { success: true, skipped: true };
       }
 
       try {
-        log.info(`📦 (Background) Descontando inventario: ${item.nombre}`);
+        log.info(`📦 Descontando inventario: ${item.nombre}`);
 
         const productoId = item.productId ?? item.productoId;
         if (!productoId) {
-          log.warn('⚠️ Item sin productoId/productId. Skip descuento.');
-          return;
+          const error = 'No se puede descontar inventario: el item no tiene productId';
+          await persistInventoryError({
+            pedidoActivoId,
+            itemId,
+            error,
+            code: 'INVENTORY_DEDUCTION_FAILED',
+          });
+          return { success: false, error, code: 'INVENTORY_DEDUCTION_FAILED', itemId };
         }
 
         const producto = getProductoDelStore(productoId);
@@ -120,6 +162,12 @@ export function useDescontarInventario({
           );
           const itemsSalida = itemsSalidaRaw.filter((x) => !!x.itemId && Number(x.cantidad) > 0);
 
+          if (itemsSalida.length === 0) {
+            throw new Error(
+              `No hay ingredientes válidos para descontar del producto ${productoId}`
+            );
+          }
+
           await inventarioV2Repo.registrarSalidaMultiple({
             items: itemsSalida,
             areaId: finalAreaId,
@@ -133,12 +181,13 @@ export function useDescontarInventario({
             },
           });
 
-          if (itemsSalida.length > 0) {
-            await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
-              inventoryDeducted: true,
-            });
-          }
-          return;
+          await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
+            inventoryDeducted: true,
+            inventoryError: null,
+            inventoryErrorCode: null,
+            inventoryErrorAt: null,
+          });
+          return { success: true };
         }
 
         // Fallback Inventario V1 (legacy)
@@ -149,12 +198,31 @@ export function useDescontarInventario({
         if (resultado.success) {
           await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
             inventoryDeducted: true,
+            inventoryError: null,
+            inventoryErrorCode: null,
+            inventoryErrorAt: null,
           });
-        } else {
-          log.warn('⚠️ Error background descontando:', resultado.error);
+          return { success: true };
         }
-      } catch (bgError) {
-        log.error('💥 Error crítico en background:', bgError);
+
+        const failure = classifyInventoryError(resultado.error || 'Error al descontar inventario');
+        await persistInventoryError({
+          pedidoActivoId,
+          itemId,
+          error: failure.message,
+          code: failure.code,
+        });
+        return { success: false, error: failure.message, code: failure.code, itemId };
+      } catch (inventoryError) {
+        const failure = classifyInventoryError(inventoryError);
+        log.error('💥 Error de inventario controlado:', inventoryError);
+        await persistInventoryError({
+          pedidoActivoId,
+          itemId,
+          error: failure.message,
+          code: failure.code,
+        });
+        return { success: false, error: failure.message, code: failure.code, itemId };
       }
     },
     [
@@ -162,6 +230,7 @@ export function useDescontarInventario({
       getProductoDelStore,
       inventarioV2Repo,
       pedidosRepo,
+      persistInventoryError,
       resolveInventoryV2ItemId,
     ]
   );

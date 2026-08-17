@@ -13,6 +13,7 @@ import { useHardware } from '../../../compartido/hooks/useHardware';
 import { useItemStatusListener } from '../../../compartido/hooks/useItemStatusListener';
 import { useNotifications } from '../../../compartido/hooks/useNotifications';
 import { logger } from '../../../compartido/utils/logger';
+import { useTotalAutoHide } from '../../../plataforma/dominios/alimentos_y_bebidas/useTotalAutoHide';
 import {
   BluetoothPrinterModal,
   ProductPickerOverlay,
@@ -25,7 +26,7 @@ import {
   useVariantSelector,
 } from '../../../plataforma/dominios/marisqueria/mesero';
 
-export function MeseroScreen() {
+function MeseroScreenContent() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const tenantId = useStore((s) => s.sesion.tenantId) || '';
   const access_code = useStore((s) => s.sesion.access_code) || '';
@@ -100,6 +101,7 @@ export function MeseroScreen() {
     addPendingItem,
     removePendingItem,
     incrementPendingItem,
+    decrementPendingItem,
     sendOrderWithValidation,
     requestBill,
     printBillWithConnectionCheck,
@@ -167,6 +169,17 @@ export function MeseroScreen() {
     }
   }, [printBillWithConnectionCheck, hasPrinted]);
 
+  const handleMarkDelivered = useCallback(
+    async (itemId: string) => {
+      const result = await markAsDelivered(itemId);
+      if (result && result.success === false && result.error) {
+        Alert.alert('No se pudo entregar', result.error);
+      }
+      return result;
+    },
+    [markAsDelivered]
+  );
+
   const handlePrinterConnected = useCallback(() => {
     logger.debug('[MeseroScreen.tsx]', '✅ Impresora conectada, cerrando modal');
     closeModal();
@@ -213,6 +226,12 @@ export function MeseroScreen() {
     setShowProductPicker(true);
   }, [cancelSelection]);
 
+  const isTotalVisible = useTotalAutoHide({
+    mesaSeleccionada: selectedTable,
+    pendingCount: activePendingItems.length,
+    liveItemsCount: liveItems.length,
+  });
+
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
@@ -236,6 +255,7 @@ export function MeseroScreen() {
         pendingCount={activePendingItems.length}
         liveItemsCount={liveItems.length}
         activeOrderId={selectedTable}
+        isTotalVisible={isTotalVisible}
         onSelectMesa={selectTable}
         onAddItem={handleAddItem}
         onSend={handleSend}
@@ -243,8 +263,9 @@ export function MeseroScreen() {
         onRequestBill={requestBill}
         onMarkPaid={markAsPaid}
         onIncrementPending={(index) => incrementPendingItem(index, activeSubpedidoId)}
+        onDecrementPending={(index) => decrementPendingItem(index, activeSubpedidoId)}
         onRemovePending={(index) => removePendingItem(index, activeSubpedidoId)}
-        onMarkDelivered={markAsDelivered}
+        onMarkDelivered={handleMarkDelivered}
         getProduct={getProduct}
       />
 
@@ -286,6 +307,11 @@ export function MeseroScreen() {
       />
     </View>
   );
+}
+
+export function MeseroScreen() {
+  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  return <MeseroScreenContent key={tenantPath || 'no-tenant'} />;
 }
 
 export default MeseroScreen;
