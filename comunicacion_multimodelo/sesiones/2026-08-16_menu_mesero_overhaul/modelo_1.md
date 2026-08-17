@@ -224,3 +224,26 @@ Se necesita confirmar: la semántica administrativa de disponibilidad frente a s
 ## Próxima acción
 
 El siguiente movimiento del Modelo 1 es recibir el plan del Modelo 3, contrastarlo contra este mapa y registrar cualquier divergencia antes de que se modifique código. En paralelo, debe recibirse del Modelo 2 la semántica de disponibilidad/inventario y el payload administrativo de variantes. Después de la construcción, el Modelo 1 comprobará el flujo completo **Administrador desactiva → estado persiste → Mesero recibe → selector respeta → pedido opera**, en Web y Android, además de verificar que no haya regresión en sincronización, persistencia, impresión y cierre de mesa.
+
+
+### Registro 008 — Exportación Web
+
+| Campo | Registro |
+|---|---|
+| HORA | `2026-08-17 05:40–05:42 UTC` |
+| MODELO | Modelo 1 |
+| ORIGEN | Validación de plataforma disponible en el entorno |
+| ACCIÓN | Se ejecutó `npx expo export --platform web --output-dir .expo/export-web` |
+| ÁREA | Web / Expo Router / Metro |
+| ARCHIVO O RUTA | `.expo/export-web` |
+| HALLAZGO | La exportación Web terminó correctamente y generó los bundles de entrada y las rutas estáticas, incluida `/_role/mesero` y las rutas Admin. Metro reportó advertencia de configuración Sentry ausente, pero no impidió la exportación |
+| EVIDENCIA | Salida de Expo: `Exported: .expo/export-web`; verificación de bundle: `WEB_EXPORT=OK` |
+| IMPACTO | El proyecto puede compilarse para Web en el estado actual; esto no demuestra todavía que el flujo visual, el FAB, el total ni la sincronización se comporten correctamente en runtime |
+| DECISIÓN | Registrar Web como `EXPORTADO`, no como `VALIDADO`; conservar pendiente la comprobación interactiva y la validación Android |
+| ACCIÓN SIGUIENTE | Modelo 3 debe probar el flujo visual en Web y Android después de su intervención; Modelo 1 debe verificar el flujo completo |
+| ESPERANDO A | Modelo 3 y acceso a ejecución Android/dispositivo |
+| ESTADO | EXPORTADO; VALIDACIÓN FUNCIONAL PENDIENTE |
+
+## Estado actualizado tras la exportación Web
+
+La exportación Web es una señal positiva de compilación, pero no cambia los bloqueos funcionales. Siguen pendientes la decisión de contrato para stock insuficiente, la reproducción del FAB por pathname, la conexión correcta del auto-hide de tres segundos, la corrección de TypeScript por `expo-env.d.ts`, la sincronización del lockfile y la reducción de errores de lint. Android no se declara validado porque no se ejecutó un dispositivo o emulador en esta sesión.
