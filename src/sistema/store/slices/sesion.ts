@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
-import type { ContratoSesion } from '../../../plataforma/core/types/contratos';
+import type { ContratoSesion } from '../../../sistema/tipos/contratos';
 import { validarRutaTenant, descomponerRutaTenant } from '../../rtdb/rutas/RutaTenant';
 import {
   resetTenantLifecycle,

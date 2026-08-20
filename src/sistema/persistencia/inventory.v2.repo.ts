@@ -17,7 +17,7 @@ import {
   limitToLast,
 } from 'firebase/database';
 import { z } from 'zod';
-import { stripVoidDeep } from '../../plataforma/core/domain/itemCanonical';
+import { stripVoidDeep } from '../../logica/dominio/itemCanonical';
 import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
 
 // --- Esquemas de Datos ---

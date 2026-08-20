@@ -13,7 +13,7 @@ import { MesasRepository, PedidosRepository } from '../../../sistema/persistenci
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../plataforma/base/hooks';
 import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../sistema/store';
-import { createLogger } from '../../../plataforma/core/utils/logger';
+import { createLogger } from '../../../sistema/utilidades/logger';
 
 import { useGestionarMesas } from './gestionarMesas';
 import { useDescontarInventario } from './descontarInventario';

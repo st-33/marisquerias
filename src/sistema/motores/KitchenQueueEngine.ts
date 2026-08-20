@@ -9,7 +9,7 @@
  * - Centraliza toda la lógica de ordenamiento, priorización y marcado de órdenes.
  */
 
-import { ComandoPOS } from '../../plataforma/base/tipos/contratos';
+import { ComandoPOS } from '../../sistema/tipos/pos';
 
 export type ItemCocina = {
   id: string;

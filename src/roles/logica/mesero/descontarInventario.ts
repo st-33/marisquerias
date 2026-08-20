@@ -7,10 +7,10 @@
 import { useRef, useCallback } from 'react';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
 import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repo';
-import { canonicalizeString } from '../../../plataforma/core/domain/itemCanonical';
+import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
-import { createLogger } from '../../../plataforma/core/utils/logger';
+import { createLogger } from '../../../sistema/utilidades/logger';
 import {
   classifyInventoryError,
   type InventoryDeductionResult,

@@ -10,8 +10,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ComandoOrdenLista, ItemPendiente } from '../../../plataforma/base/tipos/contratos';
-import { comandosPOS } from '../../../plataforma/core/commands/CommandQueue';
+import type { ComandoOrdenLista, ItemPendiente } from '../../../sistema/tipos/pos';
+import { comandosPOS } from '../../../sistema/commands/CommandQueue';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS DE CONTRATO VISUAL

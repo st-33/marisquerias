@@ -8,7 +8,7 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { enqueuePrintIdempotent } from '../../../sistema/impresion/legacy/printService';
-import { createLogger } from '../../../plataforma/core/utils/logger';
+import { createLogger } from '../../../sistema/utilidades/logger';
 import { usePrintPolicies } from './usePrintPolicies';
 
 const log = createLogger('gestionarImpresion');

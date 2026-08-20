@@ -11,7 +11,7 @@
  */
 
 import { Database, ref, onValue, off } from 'firebase/database';
-import { resolver } from '../../plataforma/core/utils/paths';
+import { resolver } from '../../sistema/utilidades/paths';
 
 export type NotificacionCocina = {
   mesaId: string;

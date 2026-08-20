@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { useStore } from '../../../src/sistema/store';
-import type { FabItem } from '../../../src/plataforma/core/types/contratos';
+import type { FabItem } from '../../../src/sistema/tipos/contratos';
 
 export default function Admin() {
   const features = useStore((s) => s.negocio.features);

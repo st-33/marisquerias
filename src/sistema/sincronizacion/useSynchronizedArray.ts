@@ -29,7 +29,7 @@ import {
   synchronizationService,
   type SynchronizableItem,
 } from './SynchronizationService';
-import { createLogger } from '../../plataforma/core/utils/logger';
+import { createLogger } from '../../sistema/utilidades/logger';
 
 const log = createLogger('useSynchronizedArray');
 

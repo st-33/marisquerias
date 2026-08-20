@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../src/plataforma/core/fabrica';
+import { useScreenResolver } from '../../src/composicion';
 
 export default function RolesContainer() {
   const resolved = useScreenResolver('selector_roles');

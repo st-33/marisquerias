@@ -7,7 +7,7 @@
 import { useState, useCallback } from 'react';
 import { PedidosRepository, MesasRepository } from '../../../sistema/persistencia';
 import { PendingItem } from './useMeseroLogic';
-import { createLogger } from '../../../plataforma/core/utils/logger';
+import { createLogger } from '../../../sistema/utilidades/logger';
 
 const log = createLogger('procesarPedido');
 

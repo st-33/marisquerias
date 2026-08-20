@@ -7,8 +7,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Database } from 'firebase/database';
 import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
-import { normalizeFeatures, type FlatFeatures } from '../../plataforma/core/utils/features';
-import type { Feature } from '../../plataforma/core/types/contratos';
+import { normalizeFeatures, type FlatFeatures } from '../../sistema/utilidades/features';
+import type { Feature } from '../../sistema/tipos/contratos';
 
 type UseRolesLoaderProps = {
   db: Database;

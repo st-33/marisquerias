@@ -1,5 +1,5 @@
 import { DispositivoVinculado } from './dispositivo-vinculado';
-import type { Feature } from '../../../plataforma/core/types/contratos';
+import type { Feature } from '../../../sistema/tipos/contratos';
 
 /**
  * 📦 RESULTADO DE LA OPERACIÓN DE INSTALACIÓN

@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
-import type { ContratoNegocio } from '../../../plataforma/core/types/contratos';
-import { setFeature as setFeatureHelper } from '../../../plataforma/core/types/contratos';
+import type { ContratoNegocio } from '../../../sistema/tipos/contratos';
+import { setFeature as setFeatureHelper } from '../../../sistema/tipos/contratos';
 import { storage, getTenantStorageKey } from './sesion';
 
 type SessionContext = { sesion: { tenantPath: string | null } };

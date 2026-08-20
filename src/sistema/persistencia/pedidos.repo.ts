@@ -6,9 +6,9 @@
 
 import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
-import { ensureNumberTimestamp } from '../../plataforma/core/domain/normalizers';
+import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
 import { RtdbSpooler } from '../impresion/legacy/rtdbSpooler';
-import { resolver } from '../../plataforma/core/utils/paths';
+import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidTenantPath } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../plataforma/dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
 

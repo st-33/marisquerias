@@ -9,7 +9,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useCategorias, useProductos } from '../../../sistema/store';
-import type { Product } from '../../../plataforma/base/tipos/contratos';
+import type { Product } from '../../../sistema/tipos/pos';
 export type { Product };
 
 type UseProductSelectorProps = Record<string, never>;

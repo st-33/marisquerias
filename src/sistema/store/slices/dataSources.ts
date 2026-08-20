@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
-import type { ContratoDataSources } from '../../../plataforma/core/types/contratos';
+import type { ContratoDataSources } from '../../../sistema/tipos/contratos';
 import { getTenantStorageKey } from './sesion';
 
 type SessionContext = { sesion: { tenantPath: string | null } };

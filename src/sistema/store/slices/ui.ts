@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
-import type { ContratoUI, FabConfig } from '../../../plataforma/core/types/contratos';
+import type { ContratoUI, FabConfig } from '../../../sistema/tipos/contratos';
 
 export interface AccionesUI {
   setFabConfigForRoute: (pathname: string, config: FabConfig | null) => void;

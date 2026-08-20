@@ -17,7 +17,7 @@
  */
 
 import { Database, get, ref, runTransaction } from 'firebase/database';
-import { resolver } from '../../plataforma/core/utils/paths';
+import { resolver } from '../../sistema/utilidades/paths';
 
 type ItemParaEnviar = {
   productId?: string;

@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
-import type { FabConfig, FabItem } from '../../plataforma/base/tipos/contratos';
+import type { FabConfig, FabItem } from '../../sistema/tipos/contratos';
 import { ejecutarAccionFab } from './fabAction';
 
 const BUBBLE_SIZE = 64;

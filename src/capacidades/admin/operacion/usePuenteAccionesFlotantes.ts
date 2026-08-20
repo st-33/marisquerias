@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { logger } from '../../../sistema/monitoreo';
 import { useStore } from '../../../sistema/store';
 import { normalizePathname } from '../../../sistema/navegacion/normalizePathname';
-import type { FabConfig } from '../../../plataforma/core/types/contratos';
+import type { FabConfig } from '../../../sistema/tipos/contratos';
 
 /**
  * Hook "puente" para que una pantalla configure el FAB global.

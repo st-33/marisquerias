@@ -39,10 +39,10 @@ import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventoryV2';
 // Import local para uso interno en selectores
 import type { ItemBase, PedidoBase } from './slices/operacion';
 
-import type { TipoDispositivo } from '../../plataforma/core/types/contratos';
+import type { TipoDispositivo } from '../../sistema/tipos/contratos';
 
 // Tipos centralizados
-export * from '../../plataforma/core/types/contratos';
+export * from '../../sistema/tipos/contratos';
 export type {
   CategoriaBase,
   DraftItem,

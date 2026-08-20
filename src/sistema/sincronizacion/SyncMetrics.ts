@@ -4,7 +4,7 @@
  * Sistema de observabilidad para validar y monitorear el sistema unificado.
  */
 
-import { createLogger } from '../../plataforma/core/utils/logger';
+import { createLogger } from '../../sistema/utilidades/logger';
 
 const log = createLogger('SyncMetrics');
 

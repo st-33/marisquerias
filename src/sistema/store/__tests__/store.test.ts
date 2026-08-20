@@ -1,7 +1,7 @@
 // Mock de Dependencias Nativas y de Almacenamiento
 // Ahora importamos los elementos bajo prueba
 import { useStore, cargarEstadoPersistido } from '../index';
-import type { DispositivoConfig } from '../../../plataforma/core/types/contratos';
+import type { DispositivoConfig } from '../../../sistema/tipos/contratos';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getActiveTenantPath,

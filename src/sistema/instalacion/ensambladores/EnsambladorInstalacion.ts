@@ -8,8 +8,8 @@ import { resolverConfiguracionInicial } from '../runtime/resolver-configuracion-
 import { DispositivoVinculado } from '../contratos/dispositivo-vinculado';
 import { ResultadoInstalacion } from '../contratos/resultado-instalacion';
 import { logger } from '../../monitoreo';
-import { normalizeFeatures } from '../../../plataforma/core/utils/features';
-import type { Feature } from '../../../plataforma/core/types/contratos';
+import { normalizeFeatures } from '../../../sistema/utilidades/features';
+import type { Feature } from '../../../sistema/tipos/contratos';
 
 function adaptFeatures(flat: Record<string, boolean>): Record<string, Feature> {
   const adapted: Record<string, Feature> = {};

@@ -13,8 +13,8 @@
  */
 
 import { Database, onValue, ref, runTransaction } from 'firebase/database';
-import { createLogger } from '../../plataforma/core/utils/logger';
-import { syncDebugger, SyncDebugger } from '../../plataforma/core/utils/syncDebugger';
+import { createLogger } from '../../sistema/utilidades/logger';
+import { syncDebugger, SyncDebugger } from '../../sistema/utilidades/syncDebugger';
 import { syncMetrics } from './SyncMetrics';
 
 const log = createLogger('SynchronizationService');

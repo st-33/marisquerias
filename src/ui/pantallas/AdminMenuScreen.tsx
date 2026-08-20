@@ -27,7 +27,7 @@ import { theme } from '../../compartido/theme';
 import type { Producto } from '../../sistema/persistencia';
 import { getRtdb } from '../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../sistema/store';
-import type { FabItem } from '../../plataforma/core/types/contratos';
+import type { FabItem } from '../../sistema/tipos/contratos';
 import {
   useAdminFeatures,
   useMenuManagement,

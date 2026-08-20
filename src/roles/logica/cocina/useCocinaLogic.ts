@@ -14,8 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PedidosRepository, type PedidoItem } from '../../../sistema/persistencia';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../plataforma/base/hooks';
-import { canonicalizeString } from '../../../plataforma/core/domain/itemCanonical';
-import { normalizePedido } from '../../../plataforma/core/domain/normalizers';
+import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
+import { normalizePedido } from '../../../logica/dominio/normalizers';
 import { createModuleLogger } from '../../../sistema/monitoreo';
 // 🔌 DOGMA V2: Leer datos del store centralizado
 import { useCategorias, usePedidos, useProductos, useStore } from '../../../sistema/store';
