@@ -1,4 +1,4 @@
 export * from './tipos';
-export * from './FallbackScreen';
-export * from './ScreenRegistry';
-export * from './useScreenResolver';
+export * from './PantallaAlternativa';
+export * from './registroPantallas';
+export * from './resolvedorPantalla';

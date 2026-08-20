@@ -17,9 +17,9 @@ import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallba
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
-import { useTenantConfig } from '../../sistema/providers/TenantConfigProvider';
+import { useConfiguracionTenant } from '../../sistema/proveedores/ProveedorConfiguracionTenant';
 import { usePosConfig } from './usePosConfig';
-import { useFeatureFlag } from '../../negocio/roles/FeatureManager';
+import { useCaracteristica } from '../../negocio/roles/GestorCaracteristicas';
 
 function stripUndefinedDeep<T>(input: T): T {
   if (input === undefined) return null as any;
@@ -63,7 +63,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
 
-  useTenantConfig();
+  useConfiguracionTenant();
   const { config: posConfig, loading: configLoading } = usePosConfig(db, tenantPath);
   const menuRepo = useMemo(() => new MenuRepository(db, tenantPath), [db, tenantPath]);
   const salesRepo = useMemo(() => new SimpleSalesRepo(db, tenantPath), [db, tenantPath]);
@@ -74,10 +74,10 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       .then(setDeviceId)
       .catch((err) => console.error('[MostradorPro] Error obteniendo deviceId:', err));
   }, []);
-  const isInventarioEnabled = useFeatureFlag('inventario', true);
-  const isImpresionEnabled = useFeatureFlag('impresion', true);
-  const isBasculaEnabled = useFeatureFlag('bascula', true);
-  const isDeliveryEnabled = useFeatureFlag('delivery', true);
+  const isInventarioEnabled = useCaracteristica('inventario', true);
+  const isImpresionEnabled = useCaracteristica('impresion', true);
+  const isBasculaEnabled = useCaracteristica('bascula', true);
+  const isDeliveryEnabled = useCaracteristica('delivery', true);
 
   const rawInventoryAutoDiscount = useStore(
     (s) => s.negocio.features?.inventory_auto_discount?.enabled ?? true

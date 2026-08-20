@@ -7,19 +7,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Database } from 'firebase/database';
 import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
-import { normalizeFeatures, type FlatFeatures } from '../../sistema/utilidades/features';
+import { normalizarCaracteristicas, type CaracteristicasPlanas } from '../../sistema/utilidades/caracteristicas';
 import type { Feature } from '../../sistema/tipos/contratos';
 
-type UseRolesLoaderProps = {
+type PropsCargadorRoles = {
   db: Database;
   tenantPath: string;
   onFeaturesLoaded?: (features: Record<string, Feature>) => void;
 };
 
 /**
- * Adapta features planas (FlatFeatures) al formato normalizado del store
+ * Adapta features planas (CaracteristicasPlanas) al formato normalizado del store
  */
-function adaptFeatures(flat: FlatFeatures): Record<string, Feature> {
+function adaptarCaracteristicas(flat: CaracteristicasPlanas): Record<string, Feature> {
   const adapted: Record<string, Feature> = {};
   for (const [key, value] of Object.entries(flat)) {
     adapted[key] = { enabled: value };
@@ -27,7 +27,7 @@ function adaptFeatures(flat: FlatFeatures): Record<string, Feature> {
   return adapted;
 }
 
-export function useRolesLoader({ db, tenantPath, onFeaturesLoaded }: UseRolesLoaderProps) {
+export function useCargadorRoles({ db, tenantPath, onFeaturesLoaded }: PropsCargadorRoles) {
   const tenantRepo = useState(() => new TenantRepository(db, tenantPath))[0];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,17 +59,17 @@ export function useRolesLoader({ db, tenantPath, onFeaturesLoaded }: UseRolesLoa
         }
 
         // Normalizar a formato plano
-        const flat = normalizeFeatures(rawFeat);
+        const flat = normalizarCaracteristicas(rawFeat);
 
         // Adaptar al formato del store
-        const adapted = adaptFeatures(flat);
+        const adapted = adaptarCaracteristicas(flat);
 
         // Notificar al callback si está disponible
         onFeaturesLoaded?.(adapted);
 
         setLoading(false);
       } catch (err: any) {
-        console.error('[useRolesLoader] Error cargando features:', err);
+        console.error('[useCargadorRoles] Error cargando features:', err);
         setError(err?.message || 'Error desconocido');
         setLoading(false);
       }

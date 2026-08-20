@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../../src/composicion';
+import { useResolvedorPantalla } from '../../../src/composicion';
 
 export default function AdminTablesContainer() {
-  const resolved = useScreenResolver('admin_tables');
+  const resolved = useResolvedorPantalla('admin_tables');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

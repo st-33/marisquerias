@@ -16,9 +16,9 @@ import {
 
 import { useSesion } from '../../../src/sistema/store';
 import type { Order } from '../../../src/sistema/servicios/TicketFormatter';
-import { useHardware, type Device } from '../../../src/sistema/providers/HardwareProvider';
+import { useHardware, type Device } from '../../../src/sistema/proveedores/ProveedorHardware';
 import { servicioFierros } from '../../../src/sistema/impresion/fierros';
-import { useTenantConfig } from '../../../src/sistema/providers/TenantConfigProvider';
+import { useConfiguracionTenant } from '../../../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useDevicesManagement } from '../../../src/capacidades/admin';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;
@@ -41,7 +41,7 @@ export default function AdminDeviceSettings() {
     config: tenantConfig,
     isLoading: isConfigLoading,
     error: configError,
-  } = useTenantConfig();
+  } = useConfiguracionTenant();
 
   const [scannedDevices, setScannedDevices] = useState<Device[]>([]);
   const [isScanning, setIsScanning] = useState(false);

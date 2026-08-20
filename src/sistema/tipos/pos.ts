@@ -103,7 +103,7 @@ export type ComandoPOS = {
 
 /**
  * Payload del evento ORDER_DRAFT_READY.
- * Se encola en la CommandQueue cuando el mesero envía la orden a cocina.
+ * Se encola en la ColaComandos cuando el mesero envía la orden a cocina.
  */
 export type ComandoOrdenLista = ComandoPOS & {
   tipo: 'ORDER_DRAFT_READY';

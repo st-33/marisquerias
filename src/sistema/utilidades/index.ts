@@ -1,4 +1,4 @@
-export * from './features';
+export * from './caracteristicas';
 export * from './healthcheck';
 export * from './logCleaner';
 export * from './logger';

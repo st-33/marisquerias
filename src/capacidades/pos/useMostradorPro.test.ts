@@ -86,8 +86,8 @@ jest.mock('../usePosConfig', () => ({
   }),
 }));
 
-jest.mock('../../sistema/providers/TenantConfigProvider', () => ({
-  useTenantConfig: jest.fn(),
+jest.mock('../../sistema/providers/ProveedorConfiguracionTenant', () => ({
+  useConfiguracionTenant: jest.fn(),
 }));
 
 // Mock SQLiteStorageAdapter

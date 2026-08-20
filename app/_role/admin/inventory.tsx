@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../../src/composicion';
+import { useResolvedorPantalla } from '../../../src/composicion';
 
 export default function AdminInventoryContainer() {
-  const resolved = useScreenResolver('admin_inventory');
+  const resolved = useResolvedorPantalla('admin_inventory');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

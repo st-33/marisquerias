@@ -1,17 +1,17 @@
 import type { ComponentType } from 'react';
 
-type ContratoSlots<Contrato> = {
+type ContratoEspacios<Contrato> = {
   [NombreSlot in keyof Contrato]: object;
 };
 
-export type SlotRegistry<Contrato extends ContratoSlots<Contrato>> = {
+export type RegistroEspacios<Contrato extends ContratoEspacios<Contrato>> = {
   readonly [NombreSlot in keyof Contrato]: Readonly<
     Record<string, ComponentType<Contrato[NombreSlot]>>
   >;
 };
 
-export function defineSlotRegistry<Contrato extends ContratoSlots<Contrato>>() {
-  return <const Registro extends SlotRegistry<Contrato>>(
+export function definirRegistroEspacios<Contrato extends ContratoEspacios<Contrato>>() {
+  return <const Registro extends RegistroEspacios<Contrato>>(
     registro: Registro
   ): Readonly<Registro> => {
     const copia = Object.fromEntries(
@@ -25,11 +25,11 @@ export function defineSlotRegistry<Contrato extends ContratoSlots<Contrato>>() {
   };
 }
 
-export function resolveSlotOverride<
-  Contrato extends ContratoSlots<Contrato>,
+export function resolverSobrescrituraEspacio<
+  Contrato extends ContratoEspacios<Contrato>,
   NombreSlot extends Extract<keyof Contrato, string>
 >(
-  registro: SlotRegistry<Contrato>,
+  registro: RegistroEspacios<Contrato>,
   nombreSlot: NombreSlot,
   rawId: unknown
 ): ComponentType<Contrato[NombreSlot]> | undefined {

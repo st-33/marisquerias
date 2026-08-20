@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { RenderSlot } from '../RenderSlot';
-import { defineSlotRegistry, resolveSlotOverride } from '../slotRegistry';
-import { SlotErrorBoundary, type SlotFallbackProps } from '../SlotErrorBoundary';
+import { RenderizadorEspacio } from '../RenderizadorEspacio';
+import { definirRegistroEspacios, resolverSobrescrituraEspacio } from '../registroEspacios';
+import { LimiteErrorEspacio, type PropsAlternativaEspacio } from '../LimiteErrorEspacio';
 
 interface DemoProps {
   label: string;
@@ -22,7 +22,7 @@ function OverrideComponent({ label }: DemoProps) {
   return React.createElement('slot-output', { testID: 'override' }, `override:${label}`);
 }
 
-function FallbackComponent({ slotId, error }: SlotFallbackProps) {
+function FallbackComponent({ slotId, error }: PropsAlternativaEspacio) {
   return React.createElement(
     'slot-fallback',
     { testID: 'fallback', slotId },
@@ -30,7 +30,7 @@ function FallbackComponent({ slotId, error }: SlotFallbackProps) {
   );
 }
 
-const registry = defineSlotRegistry<DemoSlots>()({
+const registry = definirRegistroEspacios<DemoSlots>()({
   tarjeta_producto: {
     panaderia_compacta: OverrideComponent,
   },
@@ -72,21 +72,21 @@ afterAll(() => {
 
 describe('slotRegistry', () => {
   test('resuelve únicamente IDs string registrados en la allowlist local', () => {
-    expect(resolveSlotOverride(registry, 'tarjeta_producto', 'panaderia_compacta')).toBe(
+    expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 'panaderia_compacta')).toBe(
       OverrideComponent
     );
-    expect(resolveSlotOverride(registry, 'tarjeta_producto', 'desconocida')).toBeUndefined();
-    expect(resolveSlotOverride(registry, 'tarjeta_producto', null)).toBeUndefined();
-    expect(resolveSlotOverride(registry, 'tarjeta_producto', 42)).toBeUndefined();
+    expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 'desconocida')).toBeUndefined();
+    expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', null)).toBeUndefined();
+    expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 42)).toBeUndefined();
     expect(
-      resolveSlotOverride(registry, 'tarjeta_producto', {
+      resolverSobrescrituraEspacio(registry, 'tarjeta_producto', {
         module: 'panaderia_compacta',
       })
     ).toBeUndefined();
   });
 
   test('no contiene ejecución o carga dinámica basada en strings remotos', () => {
-    const fuente = fs.readFileSync(path.resolve(__dirname, '../slotRegistry.ts'), 'utf8');
+    const fuente = fs.readFileSync(path.resolve(__dirname, '../registroEspacios.ts'), 'utf8');
     expect(fuente).not.toMatch(/\beval\s*\(/);
     expect(fuente).not.toMatch(/\brequire\s*\(/);
     expect(fuente).not.toMatch(/\bimport\s*\(/);
@@ -94,13 +94,13 @@ describe('slotRegistry', () => {
   });
 });
 
-describe('RenderSlot', () => {
+describe('RenderizadorEspacio', () => {
   test('renderiza el componente base cuando no recibe override', () => {
     let renderer: ReactTestRenderer | undefined;
 
     act(() => {
       renderer = create(
-        <RenderSlot
+        <RenderizadorEspacio
           slotId="tarjeta_producto"
           baseComponent={BaseComponent}
           componentProps={{ label: 'demo' }}
@@ -119,7 +119,7 @@ describe('RenderSlot', () => {
 
     act(() => {
       renderer = create(
-        <RenderSlot
+        <RenderizadorEspacio
           slotId="tarjeta_producto"
           baseComponent={BaseComponent}
           overrideComponent={OverrideComponent}
@@ -136,7 +136,7 @@ describe('RenderSlot', () => {
   });
 });
 
-describe('SlotErrorBoundary', () => {
+describe('LimiteErrorEspacio', () => {
   class FallaEnConstructor extends React.Component {
     constructor(props: object) {
       super(props);
@@ -172,14 +172,14 @@ describe('SlotErrorBoundary', () => {
 
     act(() => {
       renderer = create(
-        <SlotErrorBoundary
+        <LimiteErrorEspacio
           slotId="tarjeta_producto"
           fallbackComponent={FallbackComponent}
           onError={onError}
           resetKey="version-1"
         >
           <Falla />
-        </SlotErrorBoundary>
+        </LimiteErrorEspacio>
       );
     });
 
@@ -206,13 +206,13 @@ describe('SlotErrorBoundary', () => {
 
     act(() => {
       renderer = create(
-        <SlotErrorBoundary
+        <LimiteErrorEspacio
           slotId="tarjeta_producto"
           fallbackComponent={FallbackComponent}
           onError={onError}
         >
           <FallaEnRender />
-        </SlotErrorBoundary>
+        </LimiteErrorEspacio>
       );
     });
 
@@ -235,13 +235,13 @@ describe('SlotErrorBoundary', () => {
     let renderer: ReactTestRenderer | undefined;
     act(() => {
       renderer = create(
-        <SlotErrorBoundary
+        <LimiteErrorEspacio
           slotId="tarjeta_producto"
           fallbackComponent={FallbackComponent}
           resetKey="version-1"
         >
           <ComponenteRecuperable />
-        </SlotErrorBoundary>
+        </LimiteErrorEspacio>
       );
     });
     expect(renderer!.root.findByProps({ testID: 'fallback' })).toBeDefined();
@@ -249,13 +249,13 @@ describe('SlotErrorBoundary', () => {
     debeFallar = false;
     act(() => {
       renderer!.update(
-        <SlotErrorBoundary
+        <LimiteErrorEspacio
           slotId="tarjeta_producto"
           fallbackComponent={FallbackComponent}
           resetKey="version-2"
         >
           <ComponenteRecuperable />
-        </SlotErrorBoundary>
+        </LimiteErrorEspacio>
       );
     });
 

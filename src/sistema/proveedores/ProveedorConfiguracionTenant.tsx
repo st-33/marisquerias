@@ -3,7 +3,7 @@ import React, { createContext, ReactNode, useContext, useEffect, useRef, useStat
 import { getRtdb } from '../firebase';
 import { useStore } from '../store';
 
-export interface TenantConfig {
+export interface ConfiguracionTenant {
   ticket: {
     header: string;
     footer: string;
@@ -12,20 +12,20 @@ export interface TenantConfig {
   features?: Record<string, boolean>;
 }
 
-interface TenantConfigContextType {
-  config: TenantConfig | null;
+interface ConfiguracionTenantContextType {
+  config: ConfiguracionTenant | null;
   isLoading: boolean;
   error: Error | null;
 }
 
-const TenantConfigContext = createContext<TenantConfigContextType | undefined>(undefined);
+const ConfiguracionTenantContext = createContext<ConfiguracionTenantContextType | undefined>(undefined);
 
-interface TenantConfigProviderProps {
+interface ProveedorConfiguracionTenantProps {
   children: ReactNode;
   tenantId?: string;
 }
 
-export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
+export const ProveedorConfiguracionTenant: React.FC<ProveedorConfiguracionTenantProps> = ({
   children,
   tenantId: propTenantId,
 }) => {
@@ -35,7 +35,7 @@ export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
   const effectivePath = propTenantId ? `tenants/${propTenantId}` : sessionTenantPath;
 
   // 1. Estados base del proveedor
-  const [config, setConfig] = useState<TenantConfig | null>(null);
+  const [config, setConfig] = useState<ConfiguracionTenant | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!effectivePath);
   const [error, setError] = useState<Error | null>(null);
 
@@ -66,7 +66,7 @@ export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
       configRef,
       (snapshot) => {
         if (snapshot.exists()) {
-          setConfig(snapshot.val() as TenantConfig);
+          setConfig(snapshot.val() as ConfiguracionTenant);
           setError(null);
         } else {
           setConfig({
@@ -77,7 +77,7 @@ export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
         setIsLoading(false);
       },
       (err) => {
-        console.error('[TenantConfigProvider] Error reading config', err);
+        console.error('[ProveedorConfiguracionTenant] Error reading config', err);
         setError(err);
         setIsLoading(false);
       }
@@ -95,7 +95,7 @@ export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
         }
       },
       (err) => {
-        console.error('[TenantConfigProvider] Error reading flags', err);
+        console.error('[ProveedorConfiguracionTenant] Error reading flags', err);
       }
     );
 
@@ -106,16 +106,16 @@ export const TenantConfigProvider: React.FC<TenantConfigProviderProps> = ({
   }, [effectivePath, setFeatures]);
 
   return (
-    <TenantConfigContext.Provider value={{ config, isLoading, error }}>
+    <ConfiguracionTenantContext.Provider value={{ config, isLoading, error }}>
       {children}
-    </TenantConfigContext.Provider>
+    </ConfiguracionTenantContext.Provider>
   );
 };
 
-export const useTenantConfig = (): TenantConfigContextType => {
-  const context = useContext(TenantConfigContext);
+export const useConfiguracionTenant = (): ConfiguracionTenantContextType => {
+  const context = useContext(ConfiguracionTenantContext);
   if (context === undefined) {
-    throw new Error('useTenantConfig must be used within a TenantConfigProvider');
+    throw new Error('useConfiguracionTenant must be used within a ProveedorConfiguracionTenant');
   }
   return context;
 };

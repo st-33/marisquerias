@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppState, type AppStateStatus, LogBox, View } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
-import { isFeatureEnabled } from '../src/negocio/roles/FeatureManager';
+import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HubManager } from '../src/sistema/impresion/legacy/HubManager';
@@ -14,9 +14,9 @@ import { theme } from '../src/compartido/theme';
 import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
-import { HardwareProvider } from '../src/sistema/providers/HardwareProvider';
-import { NotificationsAudioProvider } from '../src/sistema/providers/NotificationsAudioProvider';
-import { TenantConfigProvider } from '../src/sistema/providers/TenantConfigProvider';
+import { ProveedorHardware } from '../src/sistema/proveedores/ProveedorHardware';
+import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
+import { ProveedorConfiguracionTenant } from '../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
 
 LogBox.ignoreLogs(['Unable to activate keep awake']);
@@ -49,7 +49,7 @@ export default function RootLayout() {
     const matchedRoute = Object.keys(ROUTE_FEATURES).find((route) => pathname.startsWith(route));
     if (matchedRoute) {
       const requiredFeature = ROUTE_FEATURES[matchedRoute];
-      const isEnabled = isFeatureEnabled(requiredFeature, true);
+      const isEnabled = estaCaracteristicaHabilitada(requiredFeature, true);
 
       if (!isEnabled) {
         logger.warn(
@@ -82,14 +82,14 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider tenantPath={tenantPath || ''}>
-      <HardwareProvider>
-        <TenantConfigProvider>
+      <ProveedorHardware>
+        <ProveedorConfiguracionTenant>
           <GlobalHubManager />
 
           <GestureHandlerRootView
             style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
           >
-            <NotificationsAudioProvider>
+            <ProveedorAudioNotificaciones>
               <View style={{ flex: 1 }}>
                 <Stack
                   screenOptions={{
@@ -106,10 +106,10 @@ export default function RootLayout() {
 
                 <GlobalFabSlot />
               </View>
-            </NotificationsAudioProvider>
+            </ProveedorAudioNotificaciones>
           </GestureHandlerRootView>
-        </TenantConfigProvider>
-      </HardwareProvider>
+        </ProveedorConfiguracionTenant>
+      </ProveedorHardware>
     </ThemeProvider>
   );
 }

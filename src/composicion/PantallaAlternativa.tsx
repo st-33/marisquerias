@@ -1,19 +1,19 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export interface FallbackScreenProps {
+export interface PropsPantallaAlternativa {
   role?: string;
   niche?: string | null;
   category?: string | null;
   message?: string;
 }
 
-export function FallbackScreen({
+export function PantallaAlternativa({
   role = 'desconocido',
   niche,
   category,
   message,
-}: FallbackScreenProps) {
+}: PropsPantallaAlternativa) {
   return (
     <View style={styles.container}>
       <View style={styles.card}>

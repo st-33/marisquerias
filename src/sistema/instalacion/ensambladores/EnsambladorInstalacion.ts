@@ -8,7 +8,7 @@ import { resolverConfiguracionInicial } from '../runtime/resolver-configuracion-
 import { DispositivoVinculado } from '../contratos/dispositivo-vinculado';
 import { ResultadoInstalacion } from '../contratos/resultado-instalacion';
 import { logger } from '../../monitoreo';
-import { normalizeFeatures } from '../../../sistema/utilidades/features';
+import { normalizarCaracteristicas } from '../../../sistema/utilidades/caracteristicas';
 import type { Feature } from '../../../sistema/tipos/contratos';
 
 function adaptFeatures(flat: Record<string, boolean>): Record<string, Feature> {
@@ -215,7 +215,7 @@ export class EnsambladorInstalacion {
         const featuresSnap = await get(ref(this.db, `${resolvedCode.tenantPath}/features`));
         rawFeat = featuresSnap.exists() ? featuresSnap.val() : {};
       }
-      const flat = normalizeFeatures(rawFeat);
+      const flat = normalizarCaracteristicas(rawFeat);
       const features = adaptFeatures(flat);
 
       await AsyncStorage.setItem(STORAGE_KEY_VINCULADO, JSON.stringify(dispositivoVinculado));

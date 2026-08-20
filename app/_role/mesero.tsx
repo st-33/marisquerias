@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../src/composicion';
+import { useResolvedorPantalla } from '../../src/composicion';
 
 export default function MeseroContainer() {
-  const resolved = useScreenResolver('mesero');
+  const resolved = useResolvedorPantalla('mesero');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

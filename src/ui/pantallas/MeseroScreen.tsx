@@ -33,7 +33,7 @@ function MeseroScreenContent() {
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
-  // 🖨️ Conexión con HardwareProvider (Centralizado)
+  // 🖨️ Conexión con ProveedorHardware (Centralizado)
   const { isConnected, connectedDevice } = useHardware();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
 

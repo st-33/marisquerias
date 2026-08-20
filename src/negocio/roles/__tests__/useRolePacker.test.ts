@@ -1,5 +1,5 @@
-import { useRolePacker } from '../useRolePacker';
 import { onValue, ref } from 'firebase/database';
+import { useEmpaquetadorRoles } from '../empaquetadorRoles';
 import type { Database } from 'firebase/database';
 import React from 'react';
 
@@ -9,7 +9,7 @@ jest.mock('firebase/database', () => ({
   off: jest.fn(),
 }));
 
-describe('useRolePacker — Autoridad Remota', () => {
+describe('useEmpaquetadorRoles — Autoridad Remota', () => {
   const dbMock = {} as Database;
   const tenantPath = 'marisquerias/el-arrecife';
 
@@ -60,7 +60,7 @@ describe('useRolePacker — Autoridad Remota', () => {
       return jest.fn();
     });
 
-    const getRoles = useRolePacker({ db: dbMock, tenantPath }).getRolesHabilitados;
+    const getRoles = useEmpaquetadorRoles({ db: dbMock, tenantPath }).getRolesHabilitados;
 
     // Simulate mount
     if (effectCallback) effectCallback();
@@ -84,17 +84,17 @@ describe('useRolePacker — Autoridad Remota', () => {
       return jest.fn();
     });
 
-    const getRoles = useRolePacker({ db: dbMock, tenantPath }).getRolesHabilitados;
+    const getRoles = useEmpaquetadorRoles({ db: dbMock, tenantPath }).getRolesHabilitados;
 
     // Simulate mount
     if (effectCallback) effectCallback();
 
     // Call getRoles after state has updated (simulated by mocking useState returns)
-    // We need to re-render conceptually. Let's just call useRolePacker again to get the updated closure if needed.
-    // In our simplistic mock, useRolePacker reads `mockState` through the first useState.
+    // We need to re-render conceptually. Let's just call useEmpaquetadorRoles again to get the updated closure if needed.
+    // In our simplistic mock, useEmpaquetadorRoles reads `mockState` through the first useState.
 
     // Mock the state as it would be after setConfig(configData)
-    const { getRolesHabilitados } = useRolePacker({ db: dbMock, tenantPath });
+    const { getRolesHabilitados } = useEmpaquetadorRoles({ db: dbMock, tenantPath });
 
     const rolesHabilitados = getRolesHabilitados();
 

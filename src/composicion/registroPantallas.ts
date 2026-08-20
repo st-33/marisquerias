@@ -12,7 +12,7 @@ import { MostradorAdminScreen } from '../ui/pantallas/MostradorAdminScreen';
  * 🏭 SCREEN REGISTRY GLOBAL (MARISQUERÍAS)
  * Mapa centralizado de resolución de vistas por rol.
  */
-export const SCREEN_REGISTRY: Record<string, { Screen: React.ComponentType<any> }> = {
+export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<any> }> = {
   selector_roles: {
     Screen: RolesScreen,
   },

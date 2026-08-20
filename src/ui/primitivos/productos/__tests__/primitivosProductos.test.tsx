@@ -194,7 +194,7 @@ describe('Primitivos atómicos de catálogo', () => {
 
     for (const archivo of archivos) {
       const fuente = fs.readFileSync(path.resolve(__dirname, '..', archivo), 'utf8');
-      expect(fuente).not.toMatch(/firebase|zustand|TenantConfig|RenderSlot|slotRegistry/);
+      expect(fuente).not.toMatch(/firebase|zustand|ConfiguracionTenant|RenderizadorEspacio|slotRegistry/);
     }
   });
 });

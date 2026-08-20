@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../../src/composicion';
+import { useResolvedorPantalla } from '../../../src/composicion';
 
 export default function AdminMenuContainer() {
-  const resolved = useScreenResolver('admin_menu');
+  const resolved = useResolvedorPantalla('admin_menu');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

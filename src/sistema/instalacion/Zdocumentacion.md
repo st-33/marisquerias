@@ -46,16 +46,16 @@ Este módulo implementa la arquitectura formal para la instalación y vinculaci�
 
 ## 3. Estructura de Archivos
 
-- `src/plataforma/instalacion/index.ts`: Punto de entrada y exportaciones públicas.
-- `src/plataforma/instalacion/Zdocumentacion.md`: Este documento de arquitectura.
-- `src/plataforma/instalacion/contratos/contrato-instalacion.ts`: Datos de entrada requeridos para la instalación.
-- `src/plataforma/instalacion/contratos/resultado-instalacion.ts`: Tipo unión que representa el éxito o falla del ensamblaje.
-- `src/plataforma/instalacion/contratos/dispositivo-vinculado.ts`: Contrato de datos del dispositivo persistido y activo.
-- `src/plataforma/instalacion/vinculacion/generar-device-id-adi.ts`: Genera y recupera el `deviceIdADI` inmutable.
-- `src/plataforma/instalacion/vinculacion/resolver-access-code.ts`: Valida y traduce el código de acceso en un path multi-tenant.
-- `src/plataforma/instalacion/runtime/resolver-configuracion-inicial.ts`: Carga los roles permitidos, módulos y flags desde RTDB.
-- `src/plataforma/instalacion/ensambladores/EnsambladorInstalacion.ts`: Orquestador principal del proceso de instalación.
-- `src/plataforma/instalacion/pruebas/ensamblador-instalacion.test.ts`: Pruebas de integración simulando Firebase y almacenamiento local.
+- `src/sistema/instalacion/index.ts`: Punto de entrada y exportaciones públicas.
+- `src/sistema/instalacion/Zdocumentacion.md`: Este documento de arquitectura.
+- `src/sistema/instalacion/contratos/contrato-instalacion.ts`: Datos de entrada requeridos para la instalación.
+- `src/sistema/instalacion/contratos/resultado-instalacion.ts`: Tipo unión que representa el éxito o falla del ensamblaje.
+- `src/sistema/instalacion/contratos/dispositivo-vinculado.ts`: Contrato de datos del dispositivo persistido y activo.
+- `src/sistema/instalacion/vinculacion/generar-device-id-adi.ts`: Genera y recupera el `deviceIdADI` inmutable.
+- `src/sistema/instalacion/vinculacion/resolver-access-code.ts`: Valida y traduce el código de acceso en un path multi-tenant.
+- `src/sistema/instalacion/runtime/resolver-configuracion-inicial.ts`: Carga los roles permitidos, módulos y flags desde RTDB.
+- `src/sistema/instalacion/ensambladores/EnsambladorInstalacion.ts`: Orquestador principal del proceso de instalación.
+- `src/sistema/instalacion/pruebas/ensamblador-instalacion.test.ts`: Pruebas de integración simulando Firebase y almacenamiento local.
 
 ---
 

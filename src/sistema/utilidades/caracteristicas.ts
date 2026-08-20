@@ -1,11 +1,11 @@
-export type FlatFeatures = Record<string, boolean>;
+export type CaracteristicasPlanas = Record<string, boolean>;
 
 function truthy(v: any): boolean {
   return v === true || v === 'true' || v === 1;
 }
 
-export function normalizeFeatures(input: any): FlatFeatures {
-  const out: FlatFeatures = {};
+export function normalizarCaracteristicas(input: any): CaracteristicasPlanas {
+  const out: CaracteristicasPlanas = {};
   if (!input) return out;
 
   const src = input.caracteristicas ? input.caracteristicas : input;

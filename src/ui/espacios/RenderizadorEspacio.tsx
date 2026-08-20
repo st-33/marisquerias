@@ -1,21 +1,21 @@
 import React, { type ComponentType } from 'react';
 import {
-  SlotErrorBoundary,
-  type SlotErrorHandler,
-  type SlotFallbackProps,
-} from './SlotErrorBoundary';
+  LimiteErrorEspacio,
+  type ManejadorErrorEspacio,
+  type PropsAlternativaEspacio,
+} from './LimiteErrorEspacio';
 
-export interface RenderSlotProps<ComponentProps extends object> {
+export interface PropsRenderizadorEspacio<ComponentProps extends object> {
   slotId: string;
   baseComponent: ComponentType<ComponentProps>;
   overrideComponent?: ComponentType<ComponentProps> | null;
-  fallbackComponent: ComponentType<SlotFallbackProps>;
+  fallbackComponent: ComponentType<PropsAlternativaEspacio>;
   componentProps: ComponentProps;
-  onError?: SlotErrorHandler;
+  onError?: ManejadorErrorEspacio;
   resetKey?: unknown;
 }
 
-export function RenderSlot<ComponentProps extends object>({
+export function RenderizadorEspacio<ComponentProps extends object>({
   slotId,
   baseComponent,
   overrideComponent,
@@ -23,17 +23,17 @@ export function RenderSlot<ComponentProps extends object>({
   componentProps,
   onError,
   resetKey,
-}: RenderSlotProps<ComponentProps>) {
+}: PropsRenderizadorEspacio<ComponentProps>) {
   const ComponenteSeleccionado = overrideComponent ?? baseComponent;
 
   return (
-    <SlotErrorBoundary
+    <LimiteErrorEspacio
       fallbackComponent={fallbackComponent}
       onError={onError}
       resetKey={resetKey ?? ComponenteSeleccionado}
       slotId={slotId}
     >
       <ComponenteSeleccionado {...componentProps} />
-    </SlotErrorBoundary>
+    </LimiteErrorEspacio>
   );
 }

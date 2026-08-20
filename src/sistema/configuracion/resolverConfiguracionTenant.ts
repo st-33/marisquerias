@@ -212,7 +212,7 @@ function resolverObjeto(
   return resultado;
 }
 
-export function resolveTenantConfig<T>(
+export function resolverConfiguracionTenant<T>(
   rawConfig: unknown,
   defaultConfig: T,
   schema?: ZodType<T>

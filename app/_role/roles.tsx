@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../src/composicion';
+import { useResolvedorPantalla } from '../../src/composicion';
 
 export default function RolesContainer() {
-  const resolved = useScreenResolver('selector_roles');
+  const resolved = useResolvedorPantalla('selector_roles');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

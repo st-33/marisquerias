@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../src/composicion';
+import { useResolvedorPantalla } from '../../src/composicion';
 
 export default function MostradorContainer() {
-  const resolved = useScreenResolver('mostrador');
+  const resolved = useResolvedorPantalla('mostrador');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

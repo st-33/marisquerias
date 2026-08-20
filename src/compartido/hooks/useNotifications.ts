@@ -8,11 +8,11 @@
  *
  * AUDIO: /assets/sounds/huge.wav
  *
- * FIX: Usa NotificationsAudioProvider para evitar "AudioPlayer already released"
+ * FIX: Usa ProveedorAudioNotificaciones para evitar "AudioPlayer already released"
  */
 
 import { useCallback } from 'react';
-import { useNotificationsAudio } from '../../sistema/providers/NotificationsAudioProvider';
+import { useAudioNotificaciones } from '../../sistema/proveedores/ProveedorAudioNotificaciones';
 
 export type NotificationType =
   | 'item_listo' // Item de cocina → listo (mesero)
@@ -28,7 +28,7 @@ export type NotificationPayload = {
 
 export function useNotifications() {
   // 🔊 Usar el audio provider global (fix para "AudioPlayer already released")
-  const { playNotificationSound } = useNotificationsAudio();
+  const { playNotificationSound } = useAudioNotificaciones();
 
   /**
    * Reproducir sonido de notificación

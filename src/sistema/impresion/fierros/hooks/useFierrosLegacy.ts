@@ -8,7 +8,7 @@
  *
  * USO EN MIGRACIÓN:
  * ```diff
- * - import { useHardware } from 'src/sistema/providers/HardwareProvider';
+ * - import { useHardware } from 'src/sistema/proveedores/ProveedorHardware';
  * + import { useHardware } from 'src/sistema/impresion/fierros/hooks/useFierrosLegacy';
  * ```
  */

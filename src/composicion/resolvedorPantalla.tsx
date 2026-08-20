@@ -1,17 +1,17 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../sistema/store';
 import { descomponerRutaTenant } from '../sistema/rtdb/rutas/RutaTenant';
-import { FallbackScreen } from './FallbackScreen';
-import { SCREEN_REGISTRY } from './ScreenRegistry';
+import { PantallaAlternativa } from './PantallaAlternativa';
+import { REGISTRO_PANTALLAS } from './registroPantallas';
 import type { ScreenRegistroEntrada, ScreenResuelto, TargetNichoEntrada } from './tipos';
 
-export function useScreenResolver(roleKey: string): ScreenResuelto {
+export function useResolvedorPantalla(roleKey: string): ScreenResuelto {
   const sesion = useStore((s) => s.sesion);
 
   return useMemo(() => {
     if (!roleKey) {
       return {
-        Screen: () => <FallbackScreen role={roleKey} message="No se especificó un rol válido." />,
+        Screen: () => <PantallaAlternativa role={roleKey} message="No se especificó un rol válido." />,
         props: {},
         loading: false,
         error: 'Key de rol inválida',
@@ -20,11 +20,11 @@ export function useScreenResolver(roleKey: string): ScreenResuelto {
       };
     }
 
-    const roleEntry = SCREEN_REGISTRY[roleKey];
+    const roleEntry = REGISTRO_PANTALLAS[roleKey];
     if (!roleEntry || !roleEntry.Screen) {
       return {
         Screen: () => (
-          <FallbackScreen role={roleKey} niche={sesion.niche} category={sesion.category} />
+          <PantallaAlternativa role={roleKey} niche={sesion.niche} category={sesion.category} />
         ),
         props: {},
         loading: false,

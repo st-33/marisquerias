@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { resolveTenantConfig } from '../tenantConfigResolver';
+import { resolverConfiguracionTenant } from '../resolverConfiguracionTenant';
 
 const defaultConfig = {
   ticket: {
@@ -31,7 +31,7 @@ const schemaConfig = z.object({
   bloques: z.array(z.record(z.string(), z.unknown())),
 });
 
-describe('resolveTenantConfig', () => {
+describe('resolverConfiguracionTenant', () => {
   test('fusiona solo objetos planos y claves conocidas e ignora undefined', () => {
     const rawConfig = {
       ticket: {
@@ -47,7 +47,7 @@ describe('resolveTenantConfig', () => {
       propiedadRemota: 'descartar',
     };
 
-    expect(resolveTenantConfig(rawConfig, defaultConfig)).toEqual({
+    expect(resolverConfiguracionTenant(rawConfig, defaultConfig)).toEqual({
       ticket: {
         header: 'Panadería Aurora',
         footer: 'Gracias',
@@ -65,13 +65,13 @@ describe('resolveTenantConfig', () => {
     const instanciaConPrototipo = Object.assign(Object.create({ heredada: true }), {
       ticket: { header: 'No confiable' },
     });
-    expect(resolveTenantConfig(instanciaConPrototipo, defaultConfig)).toEqual(defaultConfig);
-    expect(resolveTenantConfig(null, defaultConfig)).toEqual(defaultConfig);
-    expect(resolveTenantConfig(['config'], defaultConfig)).toEqual(defaultConfig);
+    expect(resolverConfiguracionTenant(instanciaConPrototipo, defaultConfig)).toEqual(defaultConfig);
+    expect(resolverConfiguracionTenant(null, defaultConfig)).toEqual(defaultConfig);
+    expect(resolverConfiguracionTenant(['config'], defaultConfig)).toEqual(defaultConfig);
   });
 
   test('acepta null solo cuando la configuración base permite null e ignora tipos incorrectos', () => {
-    const result = resolveTenantConfig(
+    const result = resolverConfiguracionTenant(
       {
         ticket: {
           header: null,
@@ -87,7 +87,7 @@ describe('resolveTenantConfig', () => {
 
     expect(result).toEqual(defaultConfig);
 
-    const conMetadata = resolveTenantConfig(
+    const conMetadata = resolverConfiguracionTenant(
       {
         ticket: {
           metadata: 'configuración válida',
@@ -103,7 +103,7 @@ describe('resolveTenantConfig', () => {
       categories: ['pan dulce'],
     };
 
-    const result = resolveTenantConfig(rawConfig, defaultConfig);
+    const result = resolverConfiguracionTenant(rawConfig, defaultConfig);
 
     expect(result.categories).toEqual(['pan dulce']);
     expect(result.categories).not.toBe(rawConfig.categories);
@@ -111,7 +111,7 @@ describe('resolveTenantConfig', () => {
   });
 
   test('rechaza atómicamente arreglos incompatibles o sin contrato inferible cuando no hay schema', () => {
-    const result = resolveTenantConfig(
+    const result = resolverConfiguracionTenant(
       {
         categories: ['pan dulce', 7],
         bloques: [{ id: 'compacto' }],
@@ -136,7 +136,7 @@ describe('resolveTenantConfig', () => {
       ],
     };
 
-    const result = resolveTenantConfig(rawConfig, defaultConfig, schemaConfig);
+    const result = resolverConfiguracionTenant(rawConfig, defaultConfig, schemaConfig);
 
     expect(result.ticket.metadata).toBe('configuración validada');
     expect(result.bloques).toEqual(rawConfig.bloques);
@@ -145,7 +145,7 @@ describe('resolveTenantConfig', () => {
   });
 
   test('descarta el arreglo completo cuando un elemento no cumple el schema', () => {
-    const result = resolveTenantConfig(
+    const result = resolverConfiguracionTenant(
       {
         categories: ['pan dulce', 7],
       },
@@ -176,7 +176,7 @@ describe('resolveTenantConfig', () => {
       ]
     }`);
 
-    const result = resolveTenantConfig(rawConfig, defaultConfig, schemaConfig);
+    const result = resolverConfiguracionTenant(rawConfig, defaultConfig, schemaConfig);
     const bloque = result.bloques[0];
 
     expect(result.ticket.header).toBe('Seguro');
@@ -208,7 +208,7 @@ describe('resolveTenantConfig', () => {
     const baseSnapshot = JSON.parse(JSON.stringify(base));
     const rawSnapshot = JSON.parse(JSON.stringify(raw));
 
-    const result = resolveTenantConfig(raw, base);
+    const result = resolverConfiguracionTenant(raw, base);
 
     expect(result).not.toBe(base);
     expect(result).not.toBe(raw);
@@ -228,7 +228,7 @@ describe('resolveTenantConfig', () => {
   });
 
   test('usa safeParse y vuelve a un clon fresco del default cuando el schema rechaza el resultado', () => {
-    const result = resolveTenantConfig(
+    const result = resolverConfiguracionTenant(
       {
         ticket: {
           header: '',
@@ -268,7 +268,7 @@ describe('resolveTenantConfig', () => {
         },
       }));
 
-    const result = resolveTenantConfig(
+    const result = resolverConfiguracionTenant(
       {
         ticket: {
           header: '  Panadería Aurora  ',

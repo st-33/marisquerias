@@ -19,7 +19,7 @@ import {
 // ---- REPARACIÓN TEMPORAL ---
 // El hook 'useBluetoothClassic' ha sido eliminado.
 // Se inyecta un hook falso para prevenir errores de compilación.
-// TODO: Reemplazar esto con el futuro 'useHardware()' del HardwareProvider.
+// TODO: Reemplazar esto con el futuro 'useHardware()' del ProveedorHardware.
 type PlaceholderBluetoothDevice = {
   id: string;
   name: string;

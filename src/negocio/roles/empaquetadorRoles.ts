@@ -39,12 +39,12 @@ export type ConfiguracionNegocio = {
   features: Record<string, boolean>;
 };
 
-type UseRolePackerProps = {
+type PropsEmpaquetadorRoles = {
   db: Database;
   tenantPath: string;
 };
 
-export function useRolePacker({ db, tenantPath }: UseRolePackerProps) {
+export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles) {
   const [config, setConfig] = useState<ConfiguracionNegocio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

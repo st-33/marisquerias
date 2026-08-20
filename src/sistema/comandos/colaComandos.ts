@@ -1,15 +1,15 @@
 import type { ComandoOrdenLista } from '../tipos/pos';
 
-export interface Command<T> {
+export interface Comando<T> {
   execute(): Promise<T>;
   rollback?(): Promise<void>;
 }
 
-export class CommandQueue {
+export class ColaComandos {
   private queue: (() => Promise<void>)[] = [];
   private isProcessing = false;
 
-  async add<T>(command: Command<T>): Promise<T> {
+  async add<T>(command: Comando<T>): Promise<T> {
     return new Promise((resolve, reject) => {
       const task = async () => {
         try {
@@ -20,7 +20,7 @@ export class CommandQueue {
             try {
               await command.rollback();
             } catch (rollbackError) {
-              console.error('[CommandQueue] Error en rollback', rollbackError);
+              console.error('[ColaComandos] Error en rollback', rollbackError);
             }
           }
           reject(error);
@@ -50,7 +50,7 @@ export class CommandQueue {
     }
 
     task().catch((error) => {
-      console.error('[CommandQueue] Error procesando comando', error);
+      console.error('[ColaComandos] Error procesando comando', error);
       this.processNext();
     });
   }
@@ -75,7 +75,7 @@ export class CommandQueue {
         await executor(cmd);
       } catch (error) {
         console.error(
-          `[CommandQueue] ORDER_DRAFT_READY falló — draftId: ${cmd.draftId} | op: ${cmd.operationId}`,
+          `[ColaComandos] ORDER_DRAFT_READY falló — draftId: ${cmd.draftId} | op: ${cmd.operationId}`,
           error
         );
         // No hace rollback automático: el idempotente permite reintentar con mismo operationId.
@@ -98,4 +98,4 @@ export class CommandQueue {
  * - Una sola cola por proceso (no por componente).
  * - Los módulos importan esta instancia, nunca crean una nueva.
  */
-export const comandosPOS = new CommandQueue();
+export const comandosPOS = new ColaComandos();

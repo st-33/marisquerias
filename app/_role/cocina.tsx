@@ -4,10 +4,10 @@
  */
 
 import React from 'react';
-import { useScreenResolver } from '../../src/composicion';
+import { useResolvedorPantalla } from '../../src/composicion';
 
 export default function CocinaContainer() {
-  const resolved = useScreenResolver('cocina');
+  const resolved = useResolvedorPantalla('cocina');
 
   if (resolved.loading || !resolved.Screen) {
     return null;

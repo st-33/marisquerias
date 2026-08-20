@@ -22,7 +22,7 @@ type NotificationsAudioContextType = {
 
 const NotificationsAudioContext = createContext<NotificationsAudioContextType | null>(null);
 
-function NotificationsAudioProviderWeb({ children }: { children: React.ReactNode }) {
+function ProveedorAudioNotificacionesWeb({ children }: { children: React.ReactNode }) {
   const playNotificationSound = () => {
     return;
   };
@@ -34,7 +34,7 @@ function NotificationsAudioProviderWeb({ children }: { children: React.ReactNode
   );
 }
 
-function NotificationsAudioProviderNative({ children }: { children: React.ReactNode }) {
+function ProveedorAudioNotificacionesNative({ children }: { children: React.ReactNode }) {
   const player = useAudioPlayer(require('@assets/sounds/huge.wav'));
   const isPlayerReady = useRef(false);
 
@@ -96,20 +96,20 @@ function NotificationsAudioProviderNative({ children }: { children: React.ReactN
   );
 }
 
-export function NotificationsAudioProvider({ children }: { children: React.ReactNode }) {
+export function ProveedorAudioNotificaciones({ children }: { children: React.ReactNode }) {
   if (Platform.OS === 'web') {
-    return <NotificationsAudioProviderWeb>{children}</NotificationsAudioProviderWeb>;
+    return <ProveedorAudioNotificacionesWeb>{children}</ProveedorAudioNotificacionesWeb>;
   }
-  return <NotificationsAudioProviderNative>{children}</NotificationsAudioProviderNative>;
+  return <ProveedorAudioNotificacionesNative>{children}</ProveedorAudioNotificacionesNative>;
 }
 
 /**
  * Hook para usar el audio de notificaciones
  */
-export function useNotificationsAudio() {
+export function useAudioNotificaciones() {
   const context = useContext(NotificationsAudioContext);
   if (!context) {
-    throw new Error('useNotificationsAudio debe usarse dentro de NotificationsAudioProvider');
+    throw new Error('useAudioNotificaciones debe usarse dentro de ProveedorAudioNotificaciones');
   }
   return context;
 }

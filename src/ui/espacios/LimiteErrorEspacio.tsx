@@ -1,44 +1,44 @@
 import React, { Component, type ComponentType, type ErrorInfo, type ReactNode } from 'react';
 
-export interface SlotFallbackProps {
+export interface PropsAlternativaEspacio {
   slotId: string;
   error: Error;
 }
 
-export interface SlotErrorContext {
+export interface ContextoErrorEspacio {
   slotId: string;
   componentStack: string | null;
 }
 
-export type SlotErrorHandler = (error: Error, context: SlotErrorContext) => void;
+export type ManejadorErrorEspacio = (error: Error, context: ContextoErrorEspacio) => void;
 
-export interface SlotErrorBoundaryProps {
+export interface PropsLimiteErrorEspacio {
   children: ReactNode;
-  fallbackComponent: ComponentType<SlotFallbackProps>;
-  onError?: SlotErrorHandler;
+  fallbackComponent: ComponentType<PropsAlternativaEspacio>;
+  onError?: ManejadorErrorEspacio;
   resetKey?: unknown;
   slotId: string;
 }
 
-interface SlotErrorBoundaryState {
+interface EstadoLimiteErrorEspacio {
   error: Error | null;
   resetKey: unknown;
 }
 
-export class SlotErrorBoundary extends Component<SlotErrorBoundaryProps, SlotErrorBoundaryState> {
-  state: SlotErrorBoundaryState = {
+export class LimiteErrorEspacio extends Component<PropsLimiteErrorEspacio, EstadoLimiteErrorEspacio> {
+  state: EstadoLimiteErrorEspacio = {
     error: null,
     resetKey: this.props.resetKey,
   };
 
-  static getDerivedStateFromError(error: Error): Partial<SlotErrorBoundaryState> {
+  static getDerivedStateFromError(error: Error): Partial<EstadoLimiteErrorEspacio> {
     return { error };
   }
 
   static getDerivedStateFromProps(
-    props: SlotErrorBoundaryProps,
-    state: SlotErrorBoundaryState
-  ): Partial<SlotErrorBoundaryState> | null {
+    props: PropsLimiteErrorEspacio,
+    state: EstadoLimiteErrorEspacio
+  ): Partial<EstadoLimiteErrorEspacio> | null {
     if (!Object.is(props.resetKey, state.resetKey)) {
       return {
         error: null,

@@ -14,7 +14,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { Platform, Vibration } from 'react-native';
 import { SoundBank } from '../../../sistema/audio/soundBank';
 import { useStore } from '../../../sistema/store';
-import { useRolePacker } from '../../../negocio/roles/useRolePacker';
+import { useEmpaquetadorRoles } from '../../../negocio/roles/empaquetadorRoles';
 
 import { getRtdb } from '../../../sistema/firebase';
 
@@ -39,7 +39,7 @@ export function useRoleSelectorLogic() {
   }, []);
 
   // Obtener roles habilitados
-  const { loading, getRolesHabilitados } = useRolePacker({ db, tenantPath });
+  const { loading, getRolesHabilitados } = useEmpaquetadorRoles({ db, tenantPath });
 
   const roles = useMemo((): RolInfo[] => {
     const habilitados = getRolesHabilitados();

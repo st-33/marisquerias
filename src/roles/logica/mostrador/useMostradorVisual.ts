@@ -6,12 +6,12 @@
  * - NO llama a Firebase. NO llama a AsyncStorage. NO hace I/O directo.
  * - Sirve de pasarela limpia entre los componentes visuales y el Core Ciego.
  * - Cuando el mesero confirma la orden, construye un ComandoOrdenLista y lo
- *   encola en la CommandQueue singleton — sin esperar la escritura en SQLite.
+ *   encola en la ColaComandos singleton — sin esperar la escritura en SQLite.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComandoOrdenLista, ItemPendiente } from '../../../sistema/tipos/pos';
-import { comandosPOS } from '../../../sistema/commands/CommandQueue';
+import { comandosPOS } from '../../../sistema/comandos/colaComandos';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TIPOS DE CONTRATO VISUAL
@@ -26,7 +26,7 @@ export type MesaSeleccionada = {
 
 /** Callbacks que el Core debe inyectar para que el hook pueda delegar. */
 export type CallbacksCore = {
-  /** Persistir el draft enviado en SQLite (executor inyectado en la CommandQueue) */
+  /** Persistir el draft enviado en SQLite (executor inyectado en la ColaComandos) */
   onOrdenLista: (cmd: ComandoOrdenLista) => Promise<void>;
   /** Agregar ítem al borrador del Core */
   onAgregarItem: (mesaId: string, item: ItemPendiente) => Promise<void>;
@@ -67,7 +67,7 @@ export type MostradorVisualState = {
   // ── Pasarelas al Core (delegadas) ─────────────────────────────────────────
   /**
    * Confirma la orden del mesero.
-   * Construye el ComandoOrdenLista y lo encola en la CommandQueue sin bloquear la UI.
+   * Construye el ComandoOrdenLista y lo encola en la ColaComandos sin bloquear la UI.
    * La escritura en SQLite ocurre en background mediante el executor inyectado.
    */
   confirmarOrden: (draftId: string, items: ItemPendiente[]) => void;
@@ -141,7 +141,7 @@ export function useMostradorVisual({
   // ── Pasarela al Core: ORDER_DRAFT_READY ──────────────────────────────────
 
   /**
-   * Construye el sobre idempotente y lo encola en la CommandQueue.
+   * Construye el sobre idempotente y lo encola en la ColaComandos.
    * Fire-and-forget: la UI responde INSTANTÁNEAMENTE.
    * El executor (callbacks.onOrdenLista) corre en background sin bloquear disco.
    */

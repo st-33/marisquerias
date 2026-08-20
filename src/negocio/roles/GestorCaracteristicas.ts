@@ -1,7 +1,7 @@
 import { useStore } from '../../sistema/store';
 
 /** Resuelve una feature anidada del tenant. */
-export function getFeatureValue(
+export function obtenerValorCaracteristica(
   features: Record<string, any> | undefined,
   path: string
 ): boolean | undefined {
@@ -24,16 +24,16 @@ export function getFeatureValue(
 }
 
 /** Hook reactivo para verificar una feature flag. */
-export function useFeatureFlag(flagPath: string, defaultValue = false): boolean {
+export function useCaracteristica(flagPath: string, defaultValue = false): boolean {
   return useStore((state) => {
-    const value = getFeatureValue(state.negocio?.features, flagPath);
+    const value = obtenerValorCaracteristica(state.negocio?.features, flagPath);
     return value !== undefined ? value : defaultValue;
   });
 }
 
 /** Verificación imperativa fuera de componentes React. */
-export function isFeatureEnabled(flagPath: string, defaultValue = false): boolean {
+export function estaCaracteristicaHabilitada(flagPath: string, defaultValue = false): boolean {
   const features = useStore.getState().negocio?.features;
-  const value = getFeatureValue(features, flagPath);
+  const value = obtenerValorCaracteristica(features, flagPath);
   return value !== undefined ? value : defaultValue;
 }
