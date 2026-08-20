@@ -19,7 +19,7 @@ import type { Order } from '../../../src/sistema/servicios/TicketFormatter';
 import { useHardware, type Device } from '../../../src/sistema/providers/HardwareProvider';
 import { servicioFierros } from '../../../src/sistema/impresion/fierros';
 import { useTenantConfig } from '../../../src/sistema/providers/TenantConfigProvider';
-import { useDevicesManagement } from '../../../src/plataforma/dominios/alimentos_y_bebidas';
+import { useDevicesManagement } from '../../../src/capacidades/admin';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;
 type TabActiva = 'impresoras' | 'basculas';

@@ -6,7 +6,7 @@
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Categoria, type Producto } from '../../sistema/persistencia';
-import { RepositorioInventario } from '../../plataforma/dominios/alimentos_y_bebidas/infraestructura/repositorios';
+import { RepositorioInventario } from '../../sistema/persistencia/contratos-inventario';
 import { useStore } from '../../sistema/store';
 import { validarProductoParaEliminar } from './menuSafety';
 

@@ -11,7 +11,7 @@ import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
-import { useAppStateSync } from '../../../plataforma/base/hooks';
+import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
 import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../sistema/store';
 import { createLogger } from '../../../sistema/utilidades/logger';
 

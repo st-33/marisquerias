@@ -32,7 +32,7 @@ import {
   useAdminFeatures,
   useMenuManagement,
   usePuenteAccionesFlotantes,
-} from '../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../capacidades';
 
 // --- UTILS ---
 async function confirmAction(

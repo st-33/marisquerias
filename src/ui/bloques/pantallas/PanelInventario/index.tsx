@@ -21,7 +21,7 @@ import {
   type AreaInventario,
   type IdSeccionInventario,
   type InsumoInventario,
-} from '../../../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../../../capacidades';
 
 type PanelInventarioProps = {
   db: Database;

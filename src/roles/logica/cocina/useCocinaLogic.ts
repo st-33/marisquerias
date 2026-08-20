@@ -13,7 +13,7 @@ import { ref, update } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PedidosRepository, type PedidoItem } from '../../../sistema/persistencia';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
-import { useAppStateSync } from '../../../plataforma/base/hooks';
+import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
 import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { normalizePedido } from '../../../logica/dominio/normalizers';
 import { createModuleLogger } from '../../../sistema/monitoreo';

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { AppState, type AppStateStatus, LogBox, View } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
-import { isFeatureEnabled } from '../src/plataforma/core/features/FeatureManager';
+import { isFeatureEnabled } from '../src/negocio/roles/FeatureManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HubManager } from '../src/sistema/impresion/legacy/HubManager';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import FabRadial from '../src/catalogo/_compartido/bloques/FabRadial';
+import FabRadial from '../src/ui/bloques/FabRadial';
 import { useAuthGuard } from '../src/sistema/seguridad';
 import { ThemeProvider } from '../src/compartido/temas';
 import { theme } from '../src/compartido/theme';

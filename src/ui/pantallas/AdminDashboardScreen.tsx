@@ -21,7 +21,7 @@ import {
   useAlertasInteligentes,
   usePrediccionStock,
   usePuenteAccionesFlotantes,
-} from '../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../capacidades';
 import type { FabItem } from '../../sistema/tipos/contratos';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];

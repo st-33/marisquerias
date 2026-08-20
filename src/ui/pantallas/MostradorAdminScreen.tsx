@@ -19,7 +19,7 @@ import {
   useAdminFeatures,
   useVentaCrudoAdmin,
   usePosConfig,
-} from '../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../capacidades';
 
 export function MostradorAdminScreen() {
   const router = useRouter();

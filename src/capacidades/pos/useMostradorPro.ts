@@ -19,7 +19,7 @@ import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
 import { useTenantConfig } from '../../sistema/providers/TenantConfigProvider';
 import { usePosConfig } from './usePosConfig';
-import { useFeatureFlag } from '../../plataforma/core/features';
+import { useFeatureFlag } from '../../negocio/roles/FeatureManager';
 
 function stripUndefinedDeep<T>(input: T): T {
   if (input === undefined) return null as any;

@@ -10,7 +10,7 @@ import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
 import { RtdbSpooler } from '../impresion/legacy/rtdbSpooler';
 import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidTenantPath } from '../rtdb/guards';
-import { SincronizadorCocina } from '../../plataforma/dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
+import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 
 export type PedidoItem = {
   id: string;

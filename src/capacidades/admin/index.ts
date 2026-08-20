@@ -1,6 +1,7 @@
 export * from './useAdminFeatures';
 export * from './useAdminLogic';
 export * from './useAdminMetrics';
+export * from './useAdminRepart';
 export * from './useAdminTools';
 export * from './useAlertasInteligentes';
 export * from './useDevicesManagement';

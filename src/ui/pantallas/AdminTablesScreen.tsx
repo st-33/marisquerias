@@ -22,7 +22,7 @@ import { useStore } from '../../sistema/store';
 import {
   useMesasManagement,
   usePuenteAccionesFlotantes,
-} from '../../plataforma/dominios/alimentos_y_bebidas';
+} from '../../capacidades';
 import type { FabItem } from '../../sistema/tipos/contratos';
 
 // --- COMPONENTS ---
