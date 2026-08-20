@@ -9,17 +9,17 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-export type BadgeStatusVariant = 'success' | 'warning' | 'info' | 'neutral';
+export type VarianteInsigniaEstado = 'success' | 'warning' | 'info' | 'neutral';
 
-export interface BadgeStatusProps extends AccessibilityProps {
-  variant: BadgeStatusVariant;
+export interface InsigniaEstadoProps extends AccessibilityProps {
+  variant: VarianteInsigniaEstado;
   text: string;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   testID?: string;
 }
 
-const estilosPorVariante: Record<BadgeStatusVariant, { contenedor: ViewStyle; texto: TextStyle }> =
+const estilosPorVariante: Record<VarianteInsigniaEstado, { contenedor: ViewStyle; texto: TextStyle }> =
   {
     success: {
       contenedor: { backgroundColor: '#DCFCE7', borderColor: '#86EFAC' },
@@ -39,7 +39,7 @@ const estilosPorVariante: Record<BadgeStatusVariant, { contenedor: ViewStyle; te
     },
   };
 
-export function BadgeStatus({
+export function InsigniaEstado({
   variant,
   text,
   style,
@@ -47,7 +47,7 @@ export function BadgeStatus({
   testID,
   accessibilityRole,
   ...accessibilityProps
-}: BadgeStatusProps) {
+}: InsigniaEstadoProps) {
   const estilos = estilosPorVariante[variant];
 
   return (

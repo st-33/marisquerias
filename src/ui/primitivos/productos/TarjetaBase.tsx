@@ -11,7 +11,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-export interface CardShellProps extends AccessibilityProps {
+export interface TarjetaBaseProps extends AccessibilityProps {
   header?: ReactNode;
   media?: ReactNode;
   content: ReactNode;
@@ -23,7 +23,7 @@ export interface CardShellProps extends AccessibilityProps {
   testID?: string;
 }
 
-export function CardShell({
+export function TarjetaBase({
   header,
   media,
   content,
@@ -36,7 +36,7 @@ export function CardShell({
   accessibilityState,
   accessibilityRole,
   ...accessibilityProps
-}: CardShellProps) {
+}: TarjetaBaseProps) {
   const estiloRaiz =
     typeof style === 'function'
       ? (estado: PressableStateCallbackType) => [styles.contenedor, style(estado)]

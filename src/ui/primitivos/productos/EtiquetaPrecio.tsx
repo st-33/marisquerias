@@ -1,25 +1,25 @@
 import React from 'react';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-export interface PriceFormatter {
+export interface FormateadorPrecio {
   format(amount: number): string;
 }
 
-export interface PriceTagProps extends Omit<TextProps, 'children'> {
+export interface EtiquetaPrecioProps extends Omit<TextProps, 'children'> {
   amount: number;
   locale?: string | readonly string[];
   currency?: string;
-  formatter?: PriceFormatter;
+  formatter?: FormateadorPrecio;
 }
 
-export function PriceTag({
+export function EtiquetaPrecio({
   amount,
   locale = 'es-MX',
   currency = 'MXN',
   formatter,
   style,
   ...textProps
-}: PriceTagProps) {
+}: EtiquetaPrecioProps) {
   const texto =
     formatter?.format(amount) ??
     new Intl.NumberFormat(locale, {

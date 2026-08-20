@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import React, { type ReactElement } from 'react';
-import { BadgeStatus } from '../BadgeStatus';
-import { CardShell } from '../CardShell';
-import { PriceTag } from '../PriceTag';
-import { QuantityStepper } from '../QuantityStepper';
+import { InsigniaEstado } from '../InsigniaEstado';
+import { TarjetaBase } from '../TarjetaBase';
+import { EtiquetaPrecio } from '../EtiquetaPrecio';
+import { ControlCantidad } from '../ControlCantidad';
 
 jest.mock('react-native', () => ({
   Pressable: 'Pressable',
@@ -35,11 +35,11 @@ function obtenerCallback(elemento: ElementoPrueba, prop: string): (...args: unkn
 }
 
 describe('Primitivos atómicos de catálogo', () => {
-  test('CardShell compone regiones, estilos, interacción y accesibilidad sin sombras forzadas', () => {
+  test('TarjetaBase compone regiones, estilos, interacción y accesibilidad sin sombras forzadas', () => {
     const onPress = jest.fn();
     const style = { margin: 12 };
     const contentStyle = { padding: 20 };
-    const tree = CardShell({
+    const tree = TarjetaBase({
       header: 'header',
       media: 'media',
       content: 'content',
@@ -88,8 +88,8 @@ describe('Primitivos atómicos de catálogo', () => {
     );
   });
 
-  test('CardShell conserva el estilo táctil inyectado según pressed', () => {
-    const tree = CardShell({
+  test('TarjetaBase conserva el estilo táctil inyectado según pressed', () => {
+    const tree = TarjetaBase({
       content: 'content',
       style: ({ pressed }) => ({ opacity: pressed ? 0.7 : 1 }),
     }) as ElementoPrueba;
@@ -103,8 +103,8 @@ describe('Primitivos atómicos de catálogo', () => {
     );
   });
 
-  test('PriceTag formatea únicamente el monto final con locale, currency o formatter inyectado', () => {
-    const localeTree = PriceTag({
+  test('EtiquetaPrecio formatea únicamente el monto final con locale, currency o formatter inyectado', () => {
+    const localeTree = EtiquetaPrecio({
       amount: 1234.5,
       locale: 'en-US',
       currency: 'USD',
@@ -116,15 +116,15 @@ describe('Primitivos atómicos de catálogo', () => {
     const formatter = {
       format: jest.fn((amount: number) => `FINAL:${amount}`),
     };
-    const injectedTree = PriceTag({ amount: 87.25, formatter }) as ElementoPrueba;
+    const injectedTree = EtiquetaPrecio({ amount: 87.25, formatter }) as ElementoPrueba;
     expect(injectedTree.props.children).toBe('FINAL:87.25');
     expect(formatter.format).toHaveBeenCalledWith(87.25);
   });
 
-  test('QuantityStepper emite intenciones y expone estados y etiquetas accesibles', () => {
+  test('ControlCantidad emite intenciones y expone estados y etiquetas accesibles', () => {
     const onIncrease = jest.fn();
     const onDecrease = jest.fn();
-    const tree = QuantityStepper({
+    const tree = ControlCantidad({
       value: 2,
       onIncrease,
       onDecrease,
@@ -150,10 +150,10 @@ describe('Primitivos atómicos de catálogo', () => {
     expect(onIncrease).toHaveBeenCalledTimes(1);
   });
 
-  test('QuantityStepper no emite intenciones cuando el control correspondiente está bloqueado', () => {
+  test('ControlCantidad no emite intenciones cuando el control correspondiente está bloqueado', () => {
     const onIncrease = jest.fn();
     const onDecrease = jest.fn();
-    const tree = QuantityStepper({
+    const tree = ControlCantidad({
       value: 0,
       onIncrease,
       onDecrease,
@@ -174,9 +174,9 @@ describe('Primitivos atómicos de catálogo', () => {
   });
 
   test.each(['success', 'warning', 'info', 'neutral'] as const)(
-    'BadgeStatus presenta texto con variante explícita %s',
+    'InsigniaEstado presenta texto con variante explícita %s',
     (variant) => {
-      const tree = BadgeStatus({
+      const tree = InsigniaEstado({
         variant,
         text: 'Estado explícito',
         accessibilityLabel: `Estado ${variant}`,
@@ -190,7 +190,7 @@ describe('Primitivos atómicos de catálogo', () => {
   );
 
   test('los primitivos no dependen de tenant, slots, Firebase ni reglas de negocio', () => {
-    const archivos = ['CardShell.tsx', 'PriceTag.tsx', 'QuantityStepper.tsx', 'BadgeStatus.tsx'];
+    const archivos = ['TarjetaBase.tsx', 'EtiquetaPrecio.tsx', 'ControlCantidad.tsx', 'InsigniaEstado.tsx'];
 
     for (const archivo of archivos) {
       const fuente = fs.readFileSync(path.resolve(__dirname, '..', archivo), 'utf8');

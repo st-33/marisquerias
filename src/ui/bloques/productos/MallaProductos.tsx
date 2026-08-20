@@ -1,7 +1,7 @@
 import React from 'react';
 import { FlatList, type FlatListProps, type ListRenderItem } from 'react-native';
 
-export type GridCatalogoProps<Item> = Omit<
+export type MallaProductosProps<Item> = Omit<
   FlatListProps<Item>,
   'data' | 'renderItem' | 'keyExtractor' | 'numColumns'
 > & {
@@ -11,18 +11,18 @@ export type GridCatalogoProps<Item> = Omit<
   numColumns: number;
 };
 
-export function GridCatalogo<Item>({
+export function MallaProductos<Item>({
   items,
   renderItem,
   keyExtractor,
   numColumns,
   ...flatListProps
-}: GridCatalogoProps<Item>) {
+}: MallaProductosProps<Item>) {
   return (
     <FlatList
       {...flatListProps}
       data={items}
-      key={`grid-catalogo-columns-${numColumns}`}
+      key={`grid-productos-columns-${numColumns}`}
       keyExtractor={keyExtractor}
       numColumns={numColumns}
       renderItem={renderItem}

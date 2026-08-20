@@ -18,7 +18,6 @@ module.exports = function (api) {
           root: ['./'],
           alias: {
             '@assets': './assets',
-            '@plataforma': './src/plataforma',
             '@compartido': './src/compartido',
           },
           extensions: ['.js', '.jsx', '.ts', '.tsx', '.wav', '.mp3', '.png', '.jpg', '.jpeg'],

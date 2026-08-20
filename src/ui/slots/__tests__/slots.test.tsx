@@ -90,7 +90,7 @@ describe('slotRegistry', () => {
     expect(fuente).not.toMatch(/\beval\s*\(/);
     expect(fuente).not.toMatch(/\brequire\s*\(/);
     expect(fuente).not.toMatch(/\bimport\s*\(/);
-    expect(fuente).not.toMatch(/catalogo\/nichos|@nichos/);
+    expect(fuente).not.toMatch(/plataforma|@nichos/);
   });
 });
 

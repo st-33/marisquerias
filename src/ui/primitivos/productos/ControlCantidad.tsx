@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-export interface QuantityStepperProps {
+export interface ControlCantidadProps {
   value: number;
   onIncrease: () => void;
   onDecrease: () => void;
@@ -25,7 +25,7 @@ export interface QuantityStepperProps {
   testID?: string;
 }
 
-export function QuantityStepper({
+export function ControlCantidad({
   value,
   onIncrease,
   onDecrease,
@@ -39,7 +39,7 @@ export function QuantityStepper({
   buttonStyle,
   valueStyle,
   testID,
-}: QuantityStepperProps) {
+}: ControlCantidadProps) {
   const aumentoBloqueado = disabled || !canIncrease;
   const decrementoBloqueado = disabled || !canDecrease;
 

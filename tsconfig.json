@@ -17,12 +17,9 @@
     "types": ["node", "jest"],
     "paths": {
       "@assets/*": ["./assets/*"],
-      "@plataforma/*": ["./src/plataforma/*"],
       "@compartido/*": ["./src/compartido/*"],
       "@ecosistema/*": ["./src/compartido/ecosistema/*"],
       "@temas/*": ["./src/compartido/temas/*"],
-      "@core/*": ["./src/plataforma/core/*"],
-      "@base/*": ["./src/plataforma/base/*"],
       "@components/*": ["./src/compartido/componentes/*"],
       "@hooks/*": ["./src/compartido/hooks/*"],
       "@lib/*": ["./lib/*"]
