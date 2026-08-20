@@ -1,11 +1,5 @@
-export * from './rules';
-export * from './useMeseroLogic';
-export * from './usePrintPolicies';
-export * from './useProductSelector';
-export * from './useSharedDrafts';
-export * from './useVariantSelector';
-
-export * from './descontarInventario';
-export * from './gestionarImpresion';
-export * from './gestionarMesas';
-export * from './procesarPedido';
+/**
+ * Compatibility facade: implementation moved by MODELO B.
+ * Keep this entrypoint while consumers migrate to the new responsibility-based path.
+ */
+export * from '../../../../roles/logica/mesero';

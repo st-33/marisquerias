@@ -1,2 +1,5 @@
-export * from './useCocinaAudio';
-export * from './useCocinaLogic';
+/**
+ * Compatibility facade: implementation moved by MODELO B.
+ * Keep this entrypoint while consumers migrate to the new responsibility-based path.
+ */
+export * from '../../../../roles/logica/cocina';

@@ -1,5 +1,5 @@
-import type { FabItem } from '../../../plataforma/base/tipos/contratos';
-
-export function ejecutarAccionFab(item: FabItem): void {
-  item.onPress?.();
-}
+/**
+ * Compatibility facade: implementation moved by MODELO B.
+ * Keep this entrypoint while consumers migrate to the new responsibility-based path.
+ */
+export * from '../../../ui/bloques/fabAction';
