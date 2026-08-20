@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import type { TicketTemplate } from '../../../plataforma/base/_persistencia';
+import type { TicketTemplate } from '../../../sistema/persistencia';
 
 type Props = {
   roles: string[];

@@ -24,7 +24,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { logger } from '../../core/monitoring';
+import { logger } from '../../../sistema/monitoreo';
 
 export function useAppStateSync(onBecomeActive?: () => void) {
   const [currentAppState, setCurrentAppState] = useState(AppState.currentState);

@@ -7,17 +7,17 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MenuRepository, type Producto } from '../../base/_persistencia';
-import { InventoryV2Repository } from '../../base/_persistencia/inventory.v2.repo';
-import type { Categoria } from '../../base/_persistencia/menu.repo';
-import { SimpleSalesRepo } from '../../base/_persistencia/SimpleSalesRepo';
-import { getRtdb } from '../../core/firebase';
-import { SQLiteStorageAdapter } from '../../core/offline/storage/SQLiteStorageAdapter';
-import { OfflinePrintFallback } from '../../core/services/OfflinePrintFallback';
-import { DespachadorCola } from '../../nucleo/sistema-impresion/cola/DespachadorCola';
-import { useStore } from '../../core/store';
-import { resolverDeviceIdADI } from '../../instalacion/vinculacion/generar-device-id-adi';
-import { useTenantConfig } from '../../providers/TenantConfigProvider';
+import { MenuRepository, type Producto } from '../../../sistema/persistencia';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
+import type { Categoria } from '../../../sistema/persistencia/menu.repo';
+import { SimpleSalesRepo } from '../../../sistema/persistencia/SimpleSalesRepo';
+import { getRtdb } from '../../../sistema/firebase';
+import { SQLiteStorageAdapter } from '../../../sistema/offline/storage/SQLiteStorageAdapter';
+import { OfflinePrintFallback } from '../../../sistema/servicios/OfflinePrintFallback';
+import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
+import { useStore } from '../../../sistema/store';
+import { resolverDeviceIdADI } from '../../../sistema/instalacion/vinculacion/generar-device-id-adi';
+import { useTenantConfig } from '../../../sistema/providers/TenantConfigProvider';
 import { usePosConfig } from './usePosConfig';
 import { useFeatureFlag } from '../../core/features';
 

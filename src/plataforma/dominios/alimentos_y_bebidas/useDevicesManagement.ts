@@ -6,19 +6,19 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import type { Database } from 'firebase/database';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
+import { useStore, type AppStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
 import {
   DevicesRepository,
   type TicketConfig,
   type HubConfig,
-} from '../../base/_persistencia/devices.repo';
+} from '../../../sistema/persistencia/devices.repo';
 import {
   mergeWithDefaultPolicies,
   DEFAULT_PRINT_POLICIES,
   type PrintPolicies,
   type PrinterRef,
-} from '../../core/printing/policies';
+} from '../../../sistema/impresion/legacy/policies';
 
 type UseDevicesManagementProps = {
   db?: Database;

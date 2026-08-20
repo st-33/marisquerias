@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { AdminLayout } from '../../../compartido/componentes/layouts/AdminLayout';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { useStore } from '../../../sistema/store';
 import { PanelInventario } from '../bloques/pantallas/PanelInventario';
 
 export function AdminInventoryScreen() {

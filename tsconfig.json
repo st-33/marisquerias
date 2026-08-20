@@ -25,7 +25,7 @@
       "@base/*": ["./src/plataforma/base/*"],
       "@components/*": ["./src/compartido/componentes/*"],
       "@hooks/*": ["./src/compartido/hooks/*"],
-      "@lib/*": ["../lib/*"]
+      "@lib/*": ["./lib/*"]
     }
   },
   "files": ["app/index.tsx", "app/_layout.tsx", "expo-env.d.ts"],

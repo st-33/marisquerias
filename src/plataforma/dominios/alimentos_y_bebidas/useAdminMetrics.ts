@@ -5,14 +5,14 @@ import {
   normalizeMesa,
   normalizePedido,
 } from '../../core/domain/normalizers';
-import { logger } from '../../core/monitoring/logger';
+import { logger } from '../../../sistema/monitoreo/logger';
 import {
   useInventoryCatalog,
   useMesas,
   useMissingAssignments,
   usePedidos,
   useVentas,
-} from '../../core/store';
+} from '../../../sistema/store';
 import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
 
 /**

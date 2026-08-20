@@ -11,7 +11,7 @@
 
 import type { Database } from 'firebase/database';
 import { useEffect, useRef } from 'react';
-import { usePedidos } from '../../plataforma/core/store';
+import { usePedidos } from '../../sistema/store';
 
 export type ItemReadyCallback = (data: {
   mesaId: string;

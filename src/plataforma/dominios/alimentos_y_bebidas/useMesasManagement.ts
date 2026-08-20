@@ -11,7 +11,7 @@ import {
   type EstadoMesa,
   type Mesa,
   type MesaLayoutInput,
-} from '../../base/_persistencia';
+} from '../../../sistema/persistencia';
 
 type UseMesasManagementProps = {
   db: Database;

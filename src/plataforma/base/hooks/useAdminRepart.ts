@@ -6,12 +6,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { Database } from 'firebase/database';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
+import { useStore, type AppStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
 import {
   RepartoAjustesRepository,
   type AjustesReparto,
-} from '../_persistencia/reparto-ajustes.repo';
+} from '../../../sistema/persistencia/reparto-ajustes.repo';
 
 type UseAdminRepartProps = {
   db?: Database;

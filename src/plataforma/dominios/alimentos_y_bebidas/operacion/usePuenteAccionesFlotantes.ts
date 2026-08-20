@@ -1,8 +1,8 @@
 import { usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { logger } from '../../../core/monitoring';
-import { useStore } from '../../../core/store';
-import { normalizePathname } from '../../../core/navigation/normalizePathname';
+import { logger } from '../../../../sistema/monitoreo';
+import { useStore } from '../../../../sistema/store';
+import { normalizePathname } from '../../../../sistema/navegacion/normalizePathname';
 import type { FabConfig } from '../../../core/types/contratos';
 
 /**

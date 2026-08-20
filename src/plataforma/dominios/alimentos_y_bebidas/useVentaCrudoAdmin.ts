@@ -6,9 +6,9 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import type { Database } from 'firebase/database';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
-import { InventoryV2Repository } from '../../base/_persistencia/inventory.v2.repo';
+import { useStore, type AppStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
 
 type UseVentaCrudoAdminProps = {
   db?: Database;

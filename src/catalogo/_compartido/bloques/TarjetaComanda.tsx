@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useThemedColors } from '../../../compartido/hooks/useThemedColors';
-import type { OrdenCocina } from '../../../plataforma/core/engines/KitchenQueueEngine';
+import type { OrdenCocina } from '../../../sistema/motores/KitchenQueueEngine';
 import { AnimatedPressable } from './AnimatedPressable';
 import { Badge } from './Badge';
 

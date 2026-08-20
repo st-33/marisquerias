@@ -5,8 +5,8 @@ import {
   type TicketTemplate,
   type TicketTemplatesPorRol,
   type TicketTemplateElemento,
-} from '../../base/_persistencia';
-import { DEFAULT_TICKET_TEMPLATES } from '../../core/printing/defaultTicketTemplates';
+} from '../../../sistema/persistencia';
+import { DEFAULT_TICKET_TEMPLATES } from '../../../sistema/impresion/legacy/defaultTicketTemplates';
 
 type UseTicketTemplatesProps = {
   db: Database;

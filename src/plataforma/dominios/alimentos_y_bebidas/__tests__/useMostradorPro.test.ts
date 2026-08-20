@@ -1,8 +1,8 @@
 import React from 'react';
 import { useMostradorPro } from '../useMostradorPro';
-import { SQLiteStorageAdapter } from '../../../core/offline/storage/SQLiteStorageAdapter';
-import { OfflinePrintFallback } from '../../../core/services/OfflinePrintFallback';
-import { DespachadorCola } from '../../../nucleo/sistema-impresion/cola/DespachadorCola';
+import { SQLiteStorageAdapter } from '../../../../sistema/offline/storage/SQLiteStorageAdapter';
+import { OfflinePrintFallback } from '../../../../sistema/servicios/OfflinePrintFallback';
+import { DespachadorCola } from '../../../../sistema/impresion/fierros/cola/DespachadorCola';
 
 // Mock react
 jest.mock('react', () => {

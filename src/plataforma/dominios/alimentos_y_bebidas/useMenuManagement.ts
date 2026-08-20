@@ -5,9 +5,9 @@
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MenuRepository, type Categoria, type Producto } from '../../base/_persistencia';
+import { MenuRepository, type Categoria, type Producto } from '../../../sistema/persistencia';
 import { RepositorioInventario } from './infraestructura/repositorios';
-import { useStore } from '../../core/store';
+import { useStore } from '../../../sistema/store';
 import { validarProductoParaEliminar } from './menuSafety';
 
 type UseMenuManagementProps = {

@@ -17,8 +17,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../../compartido/componentes/ui/Toast';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { useStore } from '../../../sistema/store';
 import {
   useMesasManagement,
   usePuenteAccionesFlotantes,

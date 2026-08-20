@@ -9,7 +9,7 @@ import type { Database } from 'firebase/database';
 import {
   RepartoAjustesRepository,
   type AjustesReparto,
-} from '../../base/_persistencia/reparto-ajustes.repo';
+} from '../../../sistema/persistencia/reparto-ajustes.repo';
 
 export function useAdminRepart({ db, tenantPath }: { db: Database; tenantPath: string }) {
   const ajustesRepo = useMemo(() => new RepartoAjustesRepository(db, tenantPath), [db, tenantPath]);

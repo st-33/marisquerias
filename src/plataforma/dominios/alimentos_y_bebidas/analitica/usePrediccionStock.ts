@@ -6,8 +6,8 @@
  */
 
 import { useMemo } from 'react';
-import { useInventoryV2Store, useOperacionStore } from '../../../core/store';
-import type { PrediccionPlatillo } from '../../../core/store/slices/inventoryV2';
+import { useInventoryV2Store, useOperacionStore } from '../../../../sistema/store';
+import type { PrediccionPlatillo } from '../../../../sistema/store/slices/inventoryV2';
 
 export type { PrediccionPlatillo };
 

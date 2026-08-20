@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { useCategorias, useProductos } from '../../../core/store';
+import { useCategorias, useProductos } from '../../../../sistema/store';
 import type { Product } from '../../../base/tipos/contratos';
 export type { Product };
 

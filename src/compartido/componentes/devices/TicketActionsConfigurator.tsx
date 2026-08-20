@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import type { TicketTemplateAcciones } from '../../../plataforma/base/_persistencia';
+import type { TicketTemplateAcciones } from '../../../sistema/persistencia';
 
 type Props = {
   acciones: TicketTemplateAcciones;

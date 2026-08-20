@@ -24,9 +24,9 @@ import RecipeEditor from '../bloques/RecipeEditor';
 import VariantEditor from '../bloques/VariantEditor';
 import { useToast } from '../../../compartido/componentes/ui/Toast';
 import { theme } from '../../../compartido/theme';
-import type { Producto } from '../../../plataforma/base/_persistencia';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../plataforma/core/store';
+import type { Producto } from '../../../sistema/persistencia';
+import { getRtdb } from '../../../sistema/firebase';
+import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../sistema/store';
 import type { FabItem } from '../../../plataforma/core/types/contratos';
 import {
   useAdminFeatures,

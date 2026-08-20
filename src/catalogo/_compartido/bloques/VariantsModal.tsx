@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getVariantOptionLabel, type Producto } from '../../../plataforma/base/_persistencia';
+import { getVariantOptionLabel, type Producto } from '../../../sistema/persistencia';
 import { theme } from '@compartido/theme';
 import { formatMoney } from '../../../compartido/utils/formatters';
 import {

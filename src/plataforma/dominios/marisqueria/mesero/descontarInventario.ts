@@ -5,10 +5,10 @@
  */
 
 import { useRef, useCallback } from 'react';
-import { InventoryV2Repository } from '../../../base/_persistencia/inventory.v2.repo';
-import { PedidosRepository } from '../../../base/_persistencia/pedidos.repo';
+import { InventoryV2Repository } from '../../../../sistema/persistencia/inventory.v2.repo';
+import { PedidosRepository } from '../../../../sistema/persistencia/pedidos.repo';
 import { canonicalizeString } from '../../../core/domain/itemCanonical';
-import { useStore } from '../../../core/store';
+import { useStore } from '../../../../sistema/store';
 import { SincronizadorCocina } from '../../../dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
 import { createLogger } from '../../../core/utils/logger';
 import {

@@ -7,7 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform } from 'react-native';
-import { descomponerRutaTenant } from '../../plataforma/core/rtdb/rutas/RutaTenant';
+import { descomponerRutaTenant } from '../../sistema/rtdb/rutas/RutaTenant';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

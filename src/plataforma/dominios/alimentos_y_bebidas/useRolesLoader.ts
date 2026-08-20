@@ -6,7 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { Database } from 'firebase/database';
-import { TenantRepository } from '../../base/_persistencia/tenant.repo';
+import { TenantRepository } from '../../../sistema/persistencia/tenant.repo';
 import { normalizeFeatures, type FlatFeatures } from '../../core/utils/features';
 import type { Feature } from '../../core/types/contratos';
 

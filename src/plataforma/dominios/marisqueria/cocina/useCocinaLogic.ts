@@ -11,14 +11,14 @@
 import type { Database } from 'firebase/database';
 import { ref, update } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PedidosRepository, type PedidoItem } from '../../../base/_persistencia';
-import { InventoryV2Repository } from '../../../base/_persistencia/inventory.v2.repo';
+import { PedidosRepository, type PedidoItem } from '../../../../sistema/persistencia';
+import { InventoryV2Repository } from '../../../../sistema/persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../base/hooks';
 import { canonicalizeString } from '../../../core/domain/itemCanonical';
 import { normalizePedido } from '../../../core/domain/normalizers';
-import { createModuleLogger } from '../../../core/monitoring';
+import { createModuleLogger } from '../../../../sistema/monitoreo';
 // 🔌 DOGMA V2: Leer datos del store centralizado
-import { useCategorias, usePedidos, useProductos, useStore } from '../../../core/store';
+import { useCategorias, usePedidos, useProductos, useStore } from '../../../../sistema/store';
 import { SincronizadorCocina } from '../../../dominios/alimentos_y_bebidas/sincronizacion/SincronizadorCocina';
 import { useCocinaAudio } from './useCocinaAudio';
 

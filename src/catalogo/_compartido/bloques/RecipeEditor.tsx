@@ -15,7 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { Producto } from '../../../plataforma/base/_persistencia';
+import type { Producto } from '../../../sistema/persistencia';
 
 export type ItemInventario = {
   id: string;

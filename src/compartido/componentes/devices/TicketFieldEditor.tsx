@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import type { TicketTemplateElemento } from '../../../plataforma/base/_persistencia';
+import type { TicketTemplateElemento } from '../../../sistema/persistencia';
 
 type Props = {
   elemento: TicketTemplateElemento;

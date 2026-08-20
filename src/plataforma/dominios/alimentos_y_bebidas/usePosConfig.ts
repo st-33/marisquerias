@@ -1,7 +1,7 @@
 import { Database, onValue, ref, set } from 'firebase/database';
 import { useEffect, useState, useMemo } from 'react';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
+import { useStore, type AppStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
 
 export interface PosConfig {
   allowNegativeStock: boolean;

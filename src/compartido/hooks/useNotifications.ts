@@ -12,7 +12,7 @@
  */
 
 import { useCallback } from 'react';
-import { useNotificationsAudio } from '../../plataforma/providers/NotificationsAudioProvider';
+import { useNotificationsAudio } from '../../sistema/providers/NotificationsAudioProvider';
 
 export type NotificationType =
   | 'item_listo' // Item de cocina → listo (mesero)

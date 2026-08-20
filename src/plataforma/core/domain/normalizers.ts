@@ -15,7 +15,7 @@
  * - Loguear cuando se detecten datos raros
  */
 
-import { logger } from '../monitoring';
+import { logger } from '../../../sistema/monitoreo';
 import type { ItemStatus, OrderStatus } from './status';
 import { toItemCanonical, toOrderCanonical } from './status';
 

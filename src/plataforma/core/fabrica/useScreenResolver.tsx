@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { useStore } from '../store';
-import { descomponerRutaTenant } from '../rtdb/rutas/RutaTenant';
+import { useStore } from '../../../sistema/store';
+import { descomponerRutaTenant } from '../../../sistema/rtdb/rutas/RutaTenant';
 import { FallbackScreen } from './FallbackScreen';
 import { SCREEN_REGISTRY } from './ScreenRegistry';
 import type { ScreenRegistroEntrada, ScreenResuelto, TargetNichoEntrada } from './tipos';

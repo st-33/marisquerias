@@ -6,8 +6,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useStore } from '../../../plataforma/core/store';
-import { getRtdb } from '../../../plataforma/core/firebase';
+import { useStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
 import { useNotifications } from '../../../compartido/hooks/useNotifications';
 import { useStoreNotifications } from '../../../compartido/hooks/useStoreNotifications';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';

@@ -3,7 +3,7 @@ import { PanResponder, Pressable, StyleSheet, Text, TextInput, View } from 'reac
 import type {
   TicketTemplate,
   TicketTemplateElemento,
-} from '../../../plataforma/base/_persistencia';
+} from '../../../sistema/persistencia';
 
 const TICKET_WIDTH = 280;
 const TICKET_HEIGHT = 500;

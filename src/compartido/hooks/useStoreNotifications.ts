@@ -7,8 +7,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useMesas, usePedidos } from '../../plataforma/core/store';
-import type { Mesa } from '../../plataforma/base/_persistencia/mesas.repo';
+import { useMesas, usePedidos } from '../../sistema/store';
+import type { Mesa } from '../../sistema/persistencia/mesas.repo';
 
 export type StoreNotificationCallback = (data: {
   mesaId: string;

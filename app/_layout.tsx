@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react';
 import { AppState, type AppStateStatus, LogBox, View } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
-import { logger } from '../src/plataforma/core/monitoring';
+import { logger } from '../src/sistema/monitoreo';
 import { isFeatureEnabled } from '../src/plataforma/core/features/FeatureManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { HubManager } from '../src/plataforma/core/printing/HubManager';
+import { HubManager } from '../src/sistema/impresion/legacy/HubManager';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FabRadial from '../src/catalogo/_compartido/bloques/FabRadial';
-import { useAuthGuard } from '../src/plataforma/core/security';
+import { useAuthGuard } from '../src/sistema/seguridad';
 import { ThemeProvider } from '../src/compartido/temas';
 import { theme } from '../src/compartido/theme';
-import { useBootstrapper } from '../src/plataforma/base/estado/useBootstrapper';
-import { useAppListeners, useFabForRoute, useStore } from '../src/plataforma/core/store';
-import { normalizePathname } from '../src/plataforma/core/navigation/normalizePathname';
-import { HardwareProvider } from '../src/plataforma/providers/HardwareProvider';
-import { NotificationsAudioProvider } from '../src/plataforma/providers/NotificationsAudioProvider';
-import { TenantConfigProvider } from '../src/plataforma/providers/TenantConfigProvider';
-import { useInicializacionServiciosTenant } from '../src/plataforma/instalacion/hooks/useInicializacionServiciosTenant';
+import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
+import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
+import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
+import { HardwareProvider } from '../src/sistema/providers/HardwareProvider';
+import { NotificationsAudioProvider } from '../src/sistema/providers/NotificationsAudioProvider';
+import { TenantConfigProvider } from '../src/sistema/providers/TenantConfigProvider';
+import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
 
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');

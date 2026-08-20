@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Text, View } from 'react-native';
-import { useStore } from '../../../plataforma/core/store';
+import { useStore } from '../../../sistema/store';
 import { RoleSelectorElite } from '../../marisqueria';
 
 export function RolesScreen() {

@@ -3,7 +3,7 @@ import {
   playSoundEvent,
   preloadSoundEvent,
   stopSoundEvent,
-} from '../../../core/audio/soundNotifications';
+} from '../../../../sistema/audio/soundNotifications';
 import type { OrdenCocina } from './useCocinaLogic';
 
 /**

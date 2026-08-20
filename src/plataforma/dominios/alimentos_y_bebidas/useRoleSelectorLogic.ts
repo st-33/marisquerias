@@ -12,11 +12,11 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo } from 'react';
 import { Platform, Vibration } from 'react-native';
-import { SoundBank } from '../../core/audio/soundBank';
-import { useStore } from '../../core/store';
+import { SoundBank } from '../../../sistema/audio/soundBank';
+import { useStore } from '../../../sistema/store';
 import { useRolePacker } from '../../negocios/useRolePacker';
 
-import { getRtdb } from '../../core/firebase';
+import { getRtdb } from '../../../sistema/firebase';
 
 export interface RolInfo {
   id: string;

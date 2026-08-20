@@ -1,4 +1,4 @@
-import { useStore } from '../store';
+import { useStore } from '../../../sistema/store';
 
 /**
  * 🚩 FEATURE MANAGER (Jefe de Capacidades)

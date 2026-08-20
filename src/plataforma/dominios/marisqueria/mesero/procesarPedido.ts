@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { PedidosRepository, MesasRepository } from '../../../base/_persistencia';
+import { PedidosRepository, MesasRepository } from '../../../../sistema/persistencia';
 import { PendingItem } from './useMeseroLogic';
 import { createLogger } from '../../../core/utils/logger';
 

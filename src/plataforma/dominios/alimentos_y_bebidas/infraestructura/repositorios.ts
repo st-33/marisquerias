@@ -3,7 +3,7 @@ import {
   type InventoryAreaV2,
   type InventoryItemV2,
   type InventorySectionId,
-} from '../../../base/_persistencia/inventory.v2.repo';
+} from '../../../../sistema/persistencia/inventory.v2.repo';
 
 export { InventoryV2Repository as RepositorioInventario };
 

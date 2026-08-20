@@ -11,8 +11,8 @@ import { SalesDistributionPieChart } from '../../../compartido/componentes/chart
 import { SalesLineChart } from '../../../compartido/componentes/charts/SalesLineChart';
 import { TopProductsBarChart } from '../../../compartido/componentes/charts/TopProductsBarChart';
 import { AdminLayout } from '../../../compartido/componentes/layouts/AdminLayout';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useStore } from '../../../plataforma/core/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { useStore } from '../../../sistema/store';
 import { useNotifications } from '../../../compartido/hooks/useNotifications';
 import { useStoreNotifications } from '../../../compartido/hooks/useStoreNotifications';
 import { logger } from '../../../compartido/utils/logger';

@@ -15,7 +15,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { hardwareService } from '../../../plataforma/core/services/HardwareService';
+import { hardwareService } from '../../../sistema/servicios/HardwareService';
 import { useMostradorPro } from '../../../plataforma/dominios/alimentos_y_bebidas/useMostradorPro';
 
 // --- COMPONENTES AUXILIARES ---

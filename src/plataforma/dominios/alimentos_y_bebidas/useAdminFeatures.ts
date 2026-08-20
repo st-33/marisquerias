@@ -1,9 +1,9 @@
 // src/verticales/admin/logica/useAdminFeatures.ts
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import { useStore, type AppStore } from '../../core/store';
-import { getRtdb } from '../../core/firebase';
-import { TenantRepository } from '../../base/_persistencia/tenant.repo';
+import { useStore, type AppStore } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { TenantRepository } from '../../../sistema/persistencia/tenant.repo';
 import type { TenantFeatures } from './useAdminLogic'; // reuse type
 import { estaFeatureAdminHabilitada } from './menuSafety';
 

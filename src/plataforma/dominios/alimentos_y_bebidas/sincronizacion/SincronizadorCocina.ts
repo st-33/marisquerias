@@ -3,8 +3,8 @@
  * Descuenta automáticamente el inventario cuando Kitchen comienza a preparar items
  */
 
-import { getRtdb } from '../../../core/firebase';
-import { useInventoryV2Store, useOperacionStore, useStore } from '../../../core/store';
+import { getRtdb } from '../../../../sistema/firebase';
+import { useInventoryV2Store, useOperacionStore, useStore } from '../../../../sistema/store';
 
 export type DescuentoResult = {
   success: boolean;

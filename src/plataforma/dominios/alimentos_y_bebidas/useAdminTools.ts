@@ -1,6 +1,6 @@
 import { Database } from 'firebase/database';
 import { useState } from 'react';
-import { MenuRepository } from '../../base/_persistencia';
+import { MenuRepository } from '../../../sistema/persistencia';
 
 // Mappings for cleaning IDs (Same as script)
 const ID_MAPPING: Record<string, string> = {

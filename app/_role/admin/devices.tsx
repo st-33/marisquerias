@@ -14,11 +14,11 @@ import {
   View,
 } from 'react-native';
 
-import { useSesion } from '../../../src/plataforma/core/store';
-import { Order } from '../../../src/plataforma/core/services/TicketFormatter';
-import { useHardware, Device } from '../../../src/plataforma/providers/HardwareProvider';
-import { servicioFierros } from '../../../src/plataforma/nucleo/sistema-impresion';
-import { useTenantConfig } from '../../../src/plataforma/providers/TenantConfigProvider';
+import { useSesion } from '../../../src/sistema/store';
+import type { Order } from '../../../src/sistema/servicios/TicketFormatter';
+import { useHardware, type Device } from '../../../src/sistema/providers/HardwareProvider';
+import { servicioFierros } from '../../../src/sistema/impresion/fierros';
+import { useTenantConfig } from '../../../src/sistema/providers/TenantConfigProvider';
 import { useDevicesManagement } from '../../../src/plataforma/dominios/alimentos_y_bebidas';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;

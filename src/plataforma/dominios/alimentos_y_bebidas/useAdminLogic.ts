@@ -1,7 +1,7 @@
 // src/verticales/admin/logica/useAdminLogic.ts
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
-import { TenantRepository } from '../../base/_persistencia';
+import { TenantRepository } from '../../../sistema/persistencia';
 import { useAdminFeatures } from './useAdminFeatures';
 import { useAdminMetrics } from './useAdminMetrics';
 

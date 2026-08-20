@@ -20,12 +20,12 @@
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MenuRepository, type Producto } from '../../base/_persistencia';
+import { MenuRepository, type Producto } from '../../../sistema/persistencia';
 import {
   hardwareService,
   type CodigoResult,
   type PesoResult,
-} from '../../core/services/HardwareService';
+} from '../../../sistema/servicios/HardwareService';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS

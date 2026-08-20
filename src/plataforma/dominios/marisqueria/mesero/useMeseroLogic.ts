@@ -9,10 +9,10 @@
 
 import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MesasRepository, PedidosRepository } from '../../../base/_persistencia';
-import { InventoryV2Repository } from '../../../base/_persistencia/inventory.v2.repo';
+import { MesasRepository, PedidosRepository } from '../../../../sistema/persistencia';
+import { InventoryV2Repository } from '../../../../sistema/persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../base/hooks';
-import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../core/store';
+import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../../sistema/store';
 import { createLogger } from '../../../core/utils/logger';
 
 import { useGestionarMesas } from './gestionarMesas';

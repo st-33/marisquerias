@@ -10,7 +10,7 @@ import {
   useInventoryCatalog,
   useInventorySections,
   useInventoryV2Store,
-} from '../../../core/store';
+} from '../../../../sistema/store';
 import type { AreaInventario, InsumoInventario } from '../infraestructura/repositorios';
 
 type UseInventarioAvanzadoProps = {

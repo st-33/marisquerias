@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
-import { useStore } from '../../../src/plataforma/core/store';
+import { useStore } from '../../../src/sistema/store';
 import type { FabItem } from '../../../src/plataforma/core/types/contratos';
 
 export default function Admin() {

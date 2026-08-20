@@ -6,9 +6,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, StatusBar, View } from 'react-native';
 import { NotificationToast } from '../../../compartido/componentes/NotificationToast';
-import { getRtdb } from '../../../plataforma/core/firebase';
-import { useImmersiveMode } from '../../../plataforma/core/navigation/ImmersiveMode';
-import { useStore } from '../../../plataforma/core/store';
+import { getRtdb } from '../../../sistema/firebase';
+import { useImmersiveMode } from '../../../sistema/navegacion/ImmersiveMode';
+import { useStore } from '../../../sistema/store';
 import { useHardware } from '../../../compartido/hooks/useHardware';
 import { useItemStatusListener } from '../../../compartido/hooks/useItemStatusListener';
 import { useNotifications } from '../../../compartido/hooks/useNotifications';

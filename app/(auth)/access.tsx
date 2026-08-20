@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '../../src/plataforma/core/security';
+import { useAuth } from '../../src/sistema/seguridad';
 
 export default function Access() {
   const [code, setCode] = useState('');

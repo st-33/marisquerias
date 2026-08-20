@@ -15,7 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import type { Producto, VariantGroup, VariantOption } from '../../../plataforma/base/_persistencia';
+import type { Producto, VariantGroup, VariantOption } from '../../../sistema/persistencia';
 import { theme } from '@compartido/theme';
 import { CollapsibleSection } from './menu/CollapsibleSection';
 import { VariantChip } from './menu/VariantChip';
