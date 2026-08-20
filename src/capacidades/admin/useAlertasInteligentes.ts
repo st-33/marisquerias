@@ -4,7 +4,7 @@
  * Transforma datos pasivos en acciones activas
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePrediccionStock, type PrediccionPlatillo } from './analitica/usePrediccionStock';
 
 export type AlertaInteligente = {
@@ -40,6 +40,9 @@ export function useAlertasInteligentes({
   umbralBajo = 5,
 }: UseAlertasInteligentesProps = {}): UseAlertasInteligentesResult {
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
+  // Mantener un timestamp estable para la generación de alertas.
+  const [ahora] = useState(() => Date.now());
+
   // Generar alertas basadas en predicciones
   const alertas = useMemo(() => {
     if (loadingPredicciones) {
@@ -47,8 +50,6 @@ export function useAlertasInteligentes({
     }
 
     const nuevasAlertas: AlertaInteligente[] = [];
-    const ahora = Date.now();
-
     predicciones.forEach((pred: PrediccionPlatillo) => {
       // ALERTA CRÍTICA: Producto no producible (cantidad = 0)
       if (pred.cantidadPosible === 0) {
@@ -101,7 +102,7 @@ export function useAlertasInteligentes({
     });
 
     return nuevasAlertas;
-  }, [predicciones, loadingPredicciones, umbralBajo]);
+  }, [ahora, predicciones, loadingPredicciones, umbralBajo]);
 
   // Categorizar alertas por severidad
   const alertasCriticas = useMemo(() => alertas.filter((a) => a.severidad === 'alta'), [alertas]);

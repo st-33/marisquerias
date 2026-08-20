@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import type {
-  TicketTemplate,
-  TicketTemplateElemento,
-} from '../../../sistema/persistencia';
+import type { TicketTemplate, TicketTemplateElemento } from '../../../sistema/persistencia';
 
 const TICKET_WIDTH = 280;
 const TICKET_HEIGHT = 500;

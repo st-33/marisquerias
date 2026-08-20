@@ -60,10 +60,10 @@ export function shouldLog(module: string, level: 'error' | 'warn' | 'info' | 'de
     level === 'error'
       ? LogLevel.ERROR
       : level === 'warn'
-      ? LogLevel.WARN
-      : level === 'info'
-      ? LogLevel.INFO
-      : LogLevel.DEBUG;
+        ? LogLevel.WARN
+        : level === 'info'
+          ? LogLevel.INFO
+          : LogLevel.DEBUG;
 
   return messageLevel <= configLevel;
 }

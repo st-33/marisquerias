@@ -120,9 +120,8 @@ export async function registerDevice(tenantPath: string): Promise<void> {
       throw new Error(`Intento de registrar dispositivo en ruta inválida/legacy: ${tenantPath}`);
     }
 
-    const { resolverDeviceIdADI } = await import(
-      '../instalacion/vinculacion/generar-device-id-adi'
-    );
+    const { resolverDeviceIdADI } =
+      await import('../instalacion/vinculacion/generar-device-id-adi');
     const deviceIdADI = await resolverDeviceIdADI();
     const deviceInfo = await getDeviceInfo();
 

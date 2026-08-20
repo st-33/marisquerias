@@ -288,12 +288,12 @@ export function AdminDashboardScreen() {
               {dateFilter === 'hoy'
                 ? 'Ventas de Hoy'
                 : dateFilter === 'ayer'
-                ? 'Ventas de Ayer'
-                : dateFilter === 'hace3dias'
-                ? 'Ventas últimos 3 días'
-                : dateFilter === 'semana'
-                ? 'Ventas de esta Semana'
-                : 'Ventas de este Mes'}
+                  ? 'Ventas de Ayer'
+                  : dateFilter === 'hace3dias'
+                    ? 'Ventas últimos 3 días'
+                    : dateFilter === 'semana'
+                      ? 'Ventas de esta Semana'
+                      : 'Ventas de este Mes'}
             </Text>
             <Text style={styles.mainMetricValue}>
               ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
@@ -399,21 +399,21 @@ export function AdminDashboardScreen() {
                     p.estadoStock === 'agotado' || stockSuficiente === false
                       ? '#ef4444'
                       : p.estadoStock === 'critico'
-                      ? '#f59e0b'
-                      : p.estadoStock === 'bajo'
-                      ? '#eab308'
-                      : '#10b981';
+                        ? '#f59e0b'
+                        : p.estadoStock === 'bajo'
+                          ? '#eab308'
+                          : '#10b981';
 
                   const estadoText =
                     p.estadoStock === 'agotado'
                       ? 'AGOTADO'
                       : p.estadoStock === 'critico'
-                      ? 'CRÍTICO'
-                      : p.estadoStock === 'bajo'
-                      ? 'BAJO'
-                      : stockSuficiente
-                      ? 'OK'
-                      : 'REVISAR';
+                        ? 'CRÍTICO'
+                        : p.estadoStock === 'bajo'
+                          ? 'BAJO'
+                          : stockSuficiente
+                            ? 'OK'
+                            : 'REVISAR';
 
                   const platilloId = p.productoId || p.platilloId || `pred-${idx}`;
                   const nombrePlatillo = p.productoNombre || p.nombrePlatillo || 'Platillo';
@@ -449,8 +449,8 @@ export function AdminDashboardScreen() {
                                 ? '∞'
                                 : '0'
                               : p.diasRestantes === 999
-                              ? '∞'
-                              : p.diasRestantes}
+                                ? '∞'
+                                : p.diasRestantes}
                           </Text>
                           <Text style={styles.predMetricLabel}>Días rest.</Text>
                         </View>

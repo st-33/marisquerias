@@ -4,10 +4,13 @@
  * SEPARACIÓN SAGRADA: Solo lógica, cero UI
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { Database } from 'firebase/database';
 import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
-import { normalizarCaracteristicas, type CaracteristicasPlanas } from '../../sistema/utilidades/caracteristicas';
+import {
+  normalizarCaracteristicas,
+  type CaracteristicasPlanas,
+} from '../../sistema/utilidades/caracteristicas';
 import type { Feature } from '../../sistema/tipos/contratos';
 
 type PropsCargadorRoles = {

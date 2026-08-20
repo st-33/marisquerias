@@ -5,7 +5,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -109,18 +109,19 @@ export function BluetoothPrinterModal({
         '[BluetoothPrinterModal] 🔄 Intentando conexión automática a:',
         defaultPrinter.name
       );
-      autoConnect();
+      const timer = setTimeout(() => {
+        void autoConnect();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [visible, defaultPrinter, isConnected, attemptingConnection, autoConnect]);
 
-  // Resetear flag cuando el modal se cierra
-  useEffect(() => {
-    if (!visible) {
-      hasNotifiedConnection.current = false;
-      setConnectionError(null);
-      setShowManualScan(false);
-    }
-  }, [visible]);
+  const handleCancel = useCallback(() => {
+    hasNotifiedConnection.current = false;
+    setConnectionError(null);
+    setShowManualScan(false);
+    onCancel();
+  }, [onCancel]);
 
   // Si se conecta exitosamente, notificar al padre (SOLO UNA VEZ)
   // Si se conecta exitosamente, notificar al padre y DESCONECTAR (para liberar recurso)
@@ -172,7 +173,7 @@ export function BluetoothPrinterModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           {/* Header */}
@@ -181,7 +182,7 @@ export function BluetoothPrinterModal({
               <Ionicons name="print" size={24} color="#3b82f6" />
               <Text style={styles.title}>Conectar Impresora</Text>
             </View>
-            <Pressable onPress={onCancel} hitSlop={20}>
+            <Pressable onPress={handleCancel} hitSlop={20}>
               <Ionicons name="close" size={24} color="#9ca3af" />
             </Pressable>
           </View>
@@ -210,8 +211,8 @@ export function BluetoothPrinterModal({
                   {connectionError
                     ? `⚠️ ${connectionError}`
                     : defaultPrinter
-                    ? 'No se pudo conectar automáticamente. Selecciona una impresora:'
-                    : 'No hay impresora predeterminada. Escanea para encontrar una:'}
+                      ? 'No se pudo conectar automáticamente. Selecciona una impresora:'
+                      : 'No hay impresora predeterminada. Escanea para encontrar una:'}
                 </Text>
 
                 <Pressable
@@ -268,7 +269,7 @@ export function BluetoothPrinterModal({
             <View style={styles.footer}>
               {!isConnected && (
                 <Pressable
-                  onPress={onCancel}
+                  onPress={handleCancel}
                   style={({ pressed }) => [styles.cancelButton, pressed && styles.buttonPressed]}
                 >
                   <Text style={styles.cancelButtonText}>Cancelar</Text>

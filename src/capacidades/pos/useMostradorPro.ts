@@ -180,8 +180,8 @@ export function useMostradorPro(props?: UseMostradorProProps) {
         typeof it?.productoId === 'string'
           ? it.productoId
           : typeof it?.productId === 'string'
-          ? it.productId
-          : null;
+            ? it.productId
+            : null;
 
       return stripUndefinedDeep({
         id: it?.id,

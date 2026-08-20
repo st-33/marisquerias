@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '../constantes/theme';
@@ -19,6 +19,13 @@ type SyncStatusPanelProps = {
 };
 
 export function SyncStatusPanel({ isOnline, lastSync, events, mesaId }: SyncStatusPanelProps) {
+  const [ahora, setAhora] = useState(() => Date.now());
+
+  useEffect(() => {
+    const reloj = setInterval(() => setAhora(Date.now()), 1000);
+    return () => clearInterval(reloj);
+  }, []);
+
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString('es-MX', {
@@ -50,7 +57,7 @@ export function SyncStatusPanel({ isOnline, lastSync, events, mesaId }: SyncStat
     }
   };
 
-  const timeSinceLastSync = lastSync > 0 ? Date.now() - lastSync : null;
+  const timeSinceLastSync = lastSync > 0 ? ahora - lastSync : null;
   const syncStatus = timeSinceLastSync !== null && timeSinceLastSync < 5000 ? 'ACTIVO' : 'IDLE';
 
   return (

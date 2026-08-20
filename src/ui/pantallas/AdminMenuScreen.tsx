@@ -28,11 +28,7 @@ import type { Producto } from '../../sistema/persistencia';
 import { getRtdb } from '../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../sistema/store';
 import type { FabItem } from '../../sistema/tipos/contratos';
-import {
-  useAdminFeatures,
-  useMenuManagement,
-  usePuenteAccionesFlotantes,
-} from '../../capacidades';
+import { useAdminFeatures, useMenuManagement, usePuenteAccionesFlotantes } from '../../capacidades';
 
 // --- UTILS ---
 async function confirmAction(
@@ -457,8 +453,8 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                 {showModal === 'addCat'
                   ? 'Nueva Categoría'
                   : showModal === 'addProd'
-                  ? 'Nuevo Producto'
-                  : 'Editar Producto'}
+                    ? 'Nuevo Producto'
+                    : 'Editar Producto'}
               </Text>
               <Pressable onPress={() => setShowModal(null)}>
                 <Ionicons name="close" size={24} color="#94a3b8" />

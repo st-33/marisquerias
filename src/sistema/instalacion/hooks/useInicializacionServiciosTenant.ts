@@ -53,8 +53,7 @@ export function useInicializacionServiciosTenant({ estadoInstalacion, tenantPath
         await ensureTenantBootstrap(db, tenantPath);
         if (cancelled || !isCurrentTenantLifecycle(tenantPath, generation)) return;
 
-        const { SQLiteStorageAdapter } =
-          await import('../../offline/storage/SQLiteStorageAdapter');
+        const { SQLiteStorageAdapter } = await import('../../offline/storage/SQLiteStorageAdapter');
         await SQLiteStorageAdapter.initialize();
         if (cancelled || !isCurrentTenantLifecycle(tenantPath, generation)) return;
 

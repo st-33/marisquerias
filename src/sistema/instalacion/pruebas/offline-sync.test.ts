@@ -11,7 +11,7 @@ jest.mock('@react-native-community/netinfo', () => ({
 }));
 
 // Mock monitoring to prevent loading ESM Sentry module
-jest.mock('../../core/monitoring', () => ({
+jest.mock('../../monitoreo', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -32,7 +32,7 @@ jest.mock('firebase/database', () => {
 });
 
 // Mock SQLiteStorageAdapter
-jest.mock('../../core/offline/storage/SQLiteStorageAdapter', () => ({
+jest.mock('../../offline/storage/SQLiteStorageAdapter', () => ({
   SQLiteStorageAdapter: {
     getVentasPendientes: jest.fn().mockResolvedValue([]),
     markVentaSynced: jest.fn().mockResolvedValue(undefined),
@@ -47,7 +47,7 @@ jest.mock('../../core/offline/storage/SQLiteStorageAdapter', () => ({
 // Mock Zustand Store
 const mockAjustarStockDelta = jest.fn().mockResolvedValue(undefined);
 const mockAjustarStockDeltaSeccion = jest.fn().mockResolvedValue(undefined);
-jest.mock('../../core/store', () => ({
+jest.mock('../../store', () => ({
   useStore: {
     getState: () => ({
       ajustarStockDelta: mockAjustarStockDelta,

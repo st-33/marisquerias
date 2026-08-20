@@ -83,7 +83,7 @@ export function useTicketTemplates({ db, tenantPath, usuarioId }: UseTicketTempl
         const seleccionado =
           prev.seleccionado && roles.includes(prev.seleccionado)
             ? prev.seleccionado
-            : roles[0] ?? null;
+            : (roles[0] ?? null);
         return { porRol: nuevoPorRol, seleccionado };
       });
       setLoading(false);

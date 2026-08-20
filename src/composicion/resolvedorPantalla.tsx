@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../sistema/store';
-import { descomponerRutaTenant } from '../sistema/rtdb/rutas/RutaTenant';
 import { PantallaAlternativa } from './PantallaAlternativa';
 import { REGISTRO_PANTALLAS } from './registroPantallas';
-import type { ScreenRegistroEntrada, ScreenResuelto, TargetNichoEntrada } from './tipos';
+import type { ScreenResuelto } from './tipos';
 
 export function useResolvedorPantalla(roleKey: string): ScreenResuelto {
   const sesion = useStore((s) => s.sesion);
@@ -11,7 +10,9 @@ export function useResolvedorPantalla(roleKey: string): ScreenResuelto {
   return useMemo(() => {
     if (!roleKey) {
       return {
-        Screen: () => <PantallaAlternativa role={roleKey} message="No se especificó un rol válido." />,
+        Screen: () => (
+          <PantallaAlternativa role={roleKey} message="No se especificó un rol válido." />
+        ),
         props: {},
         loading: false,
         error: 'Key de rol inválida',

@@ -3,10 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { SPACING } from '../../compartido/constantes/theme';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 
-import {
-  OrderItem,
-  PendingItem,
-} from '../../roles/logica/mesero/useMeseroLogic';
+import { OrderItem, PendingItem } from '../../roles/logica/mesero/useMeseroLogic';
 import { Product } from '../../roles/logica/mesero/useProductSelector';
 import { OrderItemCard } from './OrderItemCard';
 

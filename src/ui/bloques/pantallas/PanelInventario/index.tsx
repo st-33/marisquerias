@@ -15,13 +15,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { theme } from '@compartido/theme';
-import {
-  useInventarioAvanzado,
-  usePuenteAccionesFlotantes,
-  type AreaInventario,
-  type IdSeccionInventario,
-  type InsumoInventario,
-} from '../../../../capacidades';
+import { useInventarioAvanzado, usePuenteAccionesFlotantes } from '../../../../capacidades/admin';
+import type {
+  AreaInventario,
+  IdSeccionInventario,
+  InsumoInventario,
+} from '../../../../sistema/persistencia/contratos-inventario';
 
 type PanelInventarioProps = {
   db: Database;

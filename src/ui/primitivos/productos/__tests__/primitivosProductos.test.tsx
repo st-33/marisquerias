@@ -190,11 +190,18 @@ describe('Primitivos atómicos de catálogo', () => {
   );
 
   test('los primitivos no dependen de tenant, slots, Firebase ni reglas de negocio', () => {
-    const archivos = ['TarjetaBase.tsx', 'EtiquetaPrecio.tsx', 'ControlCantidad.tsx', 'InsigniaEstado.tsx'];
+    const archivos = [
+      'TarjetaBase.tsx',
+      'EtiquetaPrecio.tsx',
+      'ControlCantidad.tsx',
+      'InsigniaEstado.tsx',
+    ];
 
     for (const archivo of archivos) {
       const fuente = fs.readFileSync(path.resolve(__dirname, '..', archivo), 'utf8');
-      expect(fuente).not.toMatch(/firebase|zustand|ConfiguracionTenant|RenderizadorEspacio|slotRegistry/);
+      expect(fuente).not.toMatch(
+        /firebase|zustand|ConfiguracionTenant|RenderizadorEspacio|slotRegistry/
+      );
     }
   });
 });

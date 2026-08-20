@@ -51,10 +51,7 @@ export default function VariantEditor({
     () => ({ digital: true, mesero: true, ventaCrudo: true, ...(visible || {}) }),
     [visible]
   );
-  const groupEntries = useMemo(
-    () => Object.entries(variantes.grupos || {}),
-    [variantes.grupos]
-  );
+  const groupEntries = useMemo(() => Object.entries(variantes.grupos || {}), [variantes.grupos]);
 
   const updateVariantes = (updates: Partial<Producto['variantes']>) => {
     onChange({ ...variantes, ...updates });
@@ -258,7 +255,10 @@ export default function VariantEditor({
           {showVentaCrudo && (
             <Pressable
               onPress={() => toggleVisible('ventaCrudo')}
-              style={[styles.visibilityBtn, safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt]}
+              style={[
+                styles.visibilityBtn,
+                safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt,
+              ]}
             >
               <Ionicons name="storefront-outline" size={16} color="#fff" />
               <Text style={styles.visibilityText}>V. Crudo</Text>

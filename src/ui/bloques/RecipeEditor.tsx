@@ -113,20 +113,20 @@ export default function RecipeEditor({
                 capacidad === null
                   ? 'analytics-outline'
                   : capacidad === 0
-                  ? 'alert-circle'
-                  : capacidad < 5
-                  ? 'warning'
-                  : 'checkmark-circle'
+                    ? 'alert-circle'
+                    : capacidad < 5
+                      ? 'warning'
+                      : 'checkmark-circle'
               }
               size={20}
               color={
                 capacidad === null
                   ? '#8b5cf6'
                   : capacidad === 0
-                  ? '#dc2626'
-                  : capacidad < 5
-                  ? '#f59e0b'
-                  : '#10b981'
+                    ? '#dc2626'
+                    : capacidad < 5
+                      ? '#f59e0b'
+                      : '#10b981'
               }
             />
             <Text style={styles.previewTitle}>Capacidad de Producción</Text>

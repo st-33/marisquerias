@@ -75,7 +75,9 @@ describe('slotRegistry', () => {
     expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 'panaderia_compacta')).toBe(
       OverrideComponent
     );
-    expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 'desconocida')).toBeUndefined();
+    expect(
+      resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 'desconocida')
+    ).toBeUndefined();
     expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', null)).toBeUndefined();
     expect(resolverSobrescrituraEspacio(registry, 'tarjeta_producto', 42)).toBeUndefined();
     expect(

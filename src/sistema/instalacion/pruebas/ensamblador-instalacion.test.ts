@@ -35,7 +35,7 @@ jest.mock('firebase/database', () => ({
   serverTimestamp: jest.fn(() => 1234567890),
 }));
 
-jest.mock('../../core/monitoring', () => ({
+jest.mock('../../monitoreo', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -45,7 +45,7 @@ jest.mock('../../core/monitoring', () => ({
   setUser: jest.fn(),
 }));
 
-jest.mock('../../core/bootstrap/ensureTenant', () => ({
+jest.mock('../../ciclo_de_vida/ensureTenant', () => ({
   ensureTenantBootstrap: jest.fn().mockResolvedValue(undefined),
 }));
 

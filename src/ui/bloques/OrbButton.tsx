@@ -135,8 +135,8 @@ export function OrbButton({
   const size = esPrincipal
     ? Math.round(180 * SCALE)
     : esSecundario
-    ? Math.round(170 * SCALE)
-    : Math.round(160 * SCALE);
+      ? Math.round(170 * SCALE)
+      : Math.round(160 * SCALE);
 
   // [11Ene8:47.pm] iconSize: 55% del tamaño del botón para que quepa dentro del círculo
   const iconSize = Math.round(size * 0.55);

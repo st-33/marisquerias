@@ -4,7 +4,10 @@ import type { DeviceQueuePort, SpoolJob, SpoolerPort } from './ports';
 import { buildJobId } from './ports';
 
 export class RtdbSpooler implements SpoolerPort, DeviceQueuePort {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {}
 
   private jobPath(jobId: string) {
     return `${this.tenantPath}/spool/jobs/${jobId}`;

@@ -19,10 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToast } from '../../compartido/componentes/ui/Toast';
 import { getRtdb } from '../../sistema/firebase';
 import { useStore } from '../../sistema/store';
-import {
-  useMesasManagement,
-  usePuenteAccionesFlotantes,
-} from '../../capacidades';
+import { useMesasManagement, usePuenteAccionesFlotantes } from '../../capacidades';
 import type { FabItem } from '../../sistema/tipos/contratos';
 
 // --- COMPONENTS ---
@@ -319,8 +316,8 @@ export function AdminTablesScreen() {
                     backgroundColor: isSelected
                       ? '#3b82f640'
                       : editMode
-                      ? '#1e293b'
-                      : `${statusColor}15`,
+                        ? '#1e293b'
+                        : `${statusColor}15`,
                   },
                 ]}
               >

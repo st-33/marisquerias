@@ -27,7 +27,7 @@ export function definirRegistroEspacios<Contrato extends ContratoEspacios<Contra
 
 export function resolverSobrescrituraEspacio<
   Contrato extends ContratoEspacios<Contrato>,
-  NombreSlot extends Extract<keyof Contrato, string>
+  NombreSlot extends Extract<keyof Contrato, string>,
 >(
   registro: RegistroEspacios<Contrato>,
   nombreSlot: NombreSlot,

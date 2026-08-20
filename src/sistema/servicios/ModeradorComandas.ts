@@ -36,7 +36,10 @@ type ResultadoDistribucion = {
 };
 
 export class ModeradorComandas {
-  constructor(private db: Database, private tenantPath: string) {}
+  constructor(
+    private db: Database,
+    private tenantPath: string
+  ) {}
 
   /**
    * 🎯 DISTRIBUIR ITEMS DE UNA COMANDA

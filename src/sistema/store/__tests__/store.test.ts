@@ -58,7 +58,7 @@ jest.mock('../../firebase', () => ({
 }));
 
 // Mock de monitoring
-jest.mock('../../monitoring', () => ({
+jest.mock('../../monitoreo', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -69,14 +69,14 @@ jest.mock('../../monitoring', () => ({
 }));
 
 // Mock de deviceBinding para logout
-jest.mock('../../security', () => ({
+jest.mock('../../seguridad', () => ({
   deviceBinding: {
     unregisterDevice: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
 // Mock de EnsambladorInstalacion para logout
-jest.mock('../../../instalacion', () => ({
+jest.mock('../../instalacion', () => ({
   EnsambladorInstalacion: jest.fn().mockImplementation(() => ({
     desvincularLocalmente: jest.fn().mockResolvedValue(undefined),
   })),

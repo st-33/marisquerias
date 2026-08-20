@@ -18,7 +18,9 @@ interface ConfiguracionTenantContextType {
   error: Error | null;
 }
 
-const ConfiguracionTenantContext = createContext<ConfiguracionTenantContextType | undefined>(undefined);
+const ConfiguracionTenantContext = createContext<ConfiguracionTenantContextType | undefined>(
+  undefined
+);
 
 interface ProveedorConfiguracionTenantProps {
   children: ReactNode;

@@ -120,7 +120,10 @@ export const syncMetrics = new SyncMetricsCollector();
 
 // Cleanup automático cada hora
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    syncMetrics.cleanup();
-  }, 60 * 60 * 1000);
+  setInterval(
+    () => {
+      syncMetrics.cleanup();
+    },
+    60 * 60 * 1000
+  );
 }

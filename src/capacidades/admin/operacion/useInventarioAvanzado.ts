@@ -11,7 +11,10 @@ import {
   useInventorySections,
   useInventoryV2Store,
 } from '../../../sistema/store';
-import type { AreaInventario, InsumoInventario } from '../../../sistema/persistencia/contratos-inventario';
+import type {
+  AreaInventario,
+  InsumoInventario,
+} from '../../../sistema/persistencia/contratos-inventario';
 
 type UseInventarioAvanzadoProps = {
   db: Database;

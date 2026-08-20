@@ -25,7 +25,10 @@ interface EstadoLimiteErrorEspacio {
   resetKey: unknown;
 }
 
-export class LimiteErrorEspacio extends Component<PropsLimiteErrorEspacio, EstadoLimiteErrorEspacio> {
+export class LimiteErrorEspacio extends Component<
+  PropsLimiteErrorEspacio,
+  EstadoLimiteErrorEspacio
+> {
   state: EstadoLimiteErrorEspacio = {
     error: null,
     resetKey: this.props.resetKey,

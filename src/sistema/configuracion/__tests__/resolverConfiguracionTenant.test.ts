@@ -65,7 +65,9 @@ describe('resolverConfiguracionTenant', () => {
     const instanciaConPrototipo = Object.assign(Object.create({ heredada: true }), {
       ticket: { header: 'No confiable' },
     });
-    expect(resolverConfiguracionTenant(instanciaConPrototipo, defaultConfig)).toEqual(defaultConfig);
+    expect(resolverConfiguracionTenant(instanciaConPrototipo, defaultConfig)).toEqual(
+      defaultConfig
+    );
     expect(resolverConfiguracionTenant(null, defaultConfig)).toEqual(defaultConfig);
     expect(resolverConfiguracionTenant(['config'], defaultConfig)).toEqual(defaultConfig);
   });

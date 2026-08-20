@@ -21,8 +21,7 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
     jest.clearAllMocks();
     mockState = null;
     stateSetter = jest.fn((val: unknown) => {
-      mockState =
-        typeof val === 'function' ? (val as (state: unknown) => unknown)(mockState) : val;
+      mockState = typeof val === 'function' ? (val as (state: unknown) => unknown)(mockState) : val;
     });
 
     jest.spyOn(React, 'useEffect').mockImplementation((cb) => {
@@ -83,8 +82,6 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
       });
       return jest.fn();
     });
-
-    const getRoles = useEmpaquetadorRoles({ db: dbMock, tenantPath }).getRolesHabilitados;
 
     // Simulate mount
     if (effectCallback) effectCallback();

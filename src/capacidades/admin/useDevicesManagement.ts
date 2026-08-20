@@ -64,7 +64,7 @@ export function useDevicesManagement(props?: UseDevicesManagementProps) {
   // Estado: Configuración de ticket
   const [rawTicketConfig, setRawTicketConfig] = useState<Partial<TicketConfig> | null>(null);
   const ticketConfig = useMemo(
-    () => ({ ...DEFAULT_TICKET_CONFIG, ...(rawTicketConfig || {}) } as TicketConfig),
+    () => ({ ...DEFAULT_TICKET_CONFIG, ...(rawTicketConfig || {}) }) as TicketConfig,
     [rawTicketConfig]
   );
 

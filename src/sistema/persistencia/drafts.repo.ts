@@ -97,7 +97,10 @@ export async function inicializarSchemaDrafts(): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export class DraftsLocalRepo {
-  constructor(private readonly tenantId: string, private readonly deviceId: string) {}
+  constructor(
+    private readonly tenantId: string,
+    private readonly deviceId: string
+  ) {}
 
   // ── DRAFTS ────────────────────────────────────────────────────────────────
 

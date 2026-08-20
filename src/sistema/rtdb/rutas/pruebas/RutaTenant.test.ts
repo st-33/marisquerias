@@ -10,7 +10,7 @@ jest.mock('firebase/database', () => ({
   update: jest.fn(),
 }));
 
-jest.mock('../../../monitoring', () => ({
+jest.mock('../../../monitoreo', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),

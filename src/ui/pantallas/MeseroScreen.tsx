@@ -14,17 +14,8 @@ import { useItemStatusListener } from '../../compartido/hooks/useItemStatusListe
 import { useNotifications } from '../../compartido/hooks/useNotifications';
 import { logger } from '../../compartido/utils/logger';
 import { useTotalAutoHide } from '../../capacidades/mesero/useTotalAutoHide';
-import {
-  BluetoothPrinterModal,
-  ProductPickerOverlay,
-  PuestoMando,
-  VariantsModal,
-} from '..';
-import {
-  useMeseroLogic,
-  useProductSelector,
-  useVariantSelector,
-} from '../../roles/logica/mesero';
+import { BluetoothPrinterModal, ProductPickerOverlay, PuestoMando, VariantsModal } from '..';
+import { useMeseroLogic, useProductSelector, useVariantSelector } from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';

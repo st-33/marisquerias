@@ -6,7 +6,7 @@
  * - Deslizar desde abajo → Home/Salir
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Dimensions, PanResponder } from 'react-native';
 import { router } from 'expo-router';
 
@@ -31,75 +31,95 @@ export function useGestureNavigation(config: GestureConfig = {}) {
     startX: 0,
     startY: 0,
   });
+  const configRef = useRef({ enableBackGesture, enableHomeGesture, onBack, onHome });
+  const metricsRef = useRef({ height, SWIPE_THRESHOLD, HOME_THRESHOLD });
 
-  // PanResponder para gestos
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: (evt) => {
-          const { locationX, locationY } = evt.nativeEvent;
+  useEffect(() => {
+    configRef.current = { enableBackGesture, enableHomeGesture, onBack, onHome };
+    metricsRef.current = { height, SWIPE_THRESHOLD, HOME_THRESHOLD };
+  }, [
+    enableBackGesture,
+    enableHomeGesture,
+    height,
+    HOME_THRESHOLD,
+    onBack,
+    onHome,
+    SWIPE_THRESHOLD,
+  ]);
 
-          // Detectar inicio de gesto de back (borde izquierdo)
-          if (enableBackGesture && locationX < EDGE_THRESHOLD) {
-            gestureState.current.isBackGesture = true;
-            gestureState.current.startX = locationX;
-            return true;
-          }
+  // PanResponder para gestos. Se crea una vez y consulta refs actualizadas.
+  // eslint-disable-next-line react-hooks/refs -- PanResponder es una instancia imperativa estable.
+  const [panResponder] = useState(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: (evt) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        const currentConfig = configRef.current;
 
-          // Detectar inicio de gesto de home (borde inferior)
-          if (enableHomeGesture && locationY > height - EDGE_THRESHOLD) {
-            gestureState.current.isHomeGesture = true;
-            gestureState.current.startY = locationY;
-            return true;
-          }
+        // Detectar inicio de gesto de back (borde izquierdo)
+        if (currentConfig.enableBackGesture && locationX < EDGE_THRESHOLD) {
+          gestureState.current.isBackGesture = true;
+          gestureState.current.startX = locationX;
+          return true;
+        }
 
-          return false;
-        },
+        // Detectar inicio de gesto de home (borde inferior)
+        if (
+          currentConfig.enableHomeGesture &&
+          locationY > metricsRef.current.height - EDGE_THRESHOLD
+        ) {
+          gestureState.current.isHomeGesture = true;
+          gestureState.current.startY = locationY;
+          return true;
+        }
 
-        onMoveShouldSetPanResponder: () => {
-          return gestureState.current.isBackGesture || gestureState.current.isHomeGesture;
-        },
+        return false;
+      },
 
-        onPanResponderMove: (evt, gestureState) => {
-          // Aquí podrías agregar feedback visual si quieres
-        },
+      onMoveShouldSetPanResponder: () => {
+        return gestureState.current.isBackGesture || gestureState.current.isHomeGesture;
+      },
 
-        onPanResponderRelease: (evt, gesture) => {
-          const { dx, dy } = gesture;
+      onPanResponderMove: () => {
+        // Aquí podrías agregar feedback visual si quieres
+      },
 
-          // Gesto de BACK (deslizar desde izquierda hacia derecha)
-          if (gestureState.current.isBackGesture && dx > SWIPE_THRESHOLD) {
-            if (onBack) {
-              const handled = onBack();
-              if (handled !== false) {
-                router.back();
-              }
-            } else {
+      onPanResponderRelease: (_evt, gesture) => {
+        const { dx, dy } = gesture;
+        const currentConfig = configRef.current;
+        const currentMetrics = metricsRef.current;
+
+        // Gesto de BACK (deslizar desde izquierda hacia derecha)
+        if (gestureState.current.isBackGesture && dx > currentMetrics.SWIPE_THRESHOLD) {
+          if (currentConfig.onBack) {
+            const handled = currentConfig.onBack();
+            if (handled !== false) {
               router.back();
             }
+          } else {
+            router.back();
           }
+        }
 
-          // Gesto de HOME (deslizar desde abajo hacia arriba)
-          if (gestureState.current.isHomeGesture && Math.abs(dy) > HOME_THRESHOLD) {
-            if (onHome) {
-              onHome();
-            } else {
-              // Salir de la app (Android)
-              BackHandler.exitApp();
-            }
+        // Gesto de HOME (deslizar desde abajo hacia arriba)
+        if (gestureState.current.isHomeGesture && Math.abs(dy) > currentMetrics.HOME_THRESHOLD) {
+          if (currentConfig.onHome) {
+            currentConfig.onHome();
+          } else {
+            // Salir de la app (Android)
+            BackHandler.exitApp();
           }
+        }
 
-          // Reset
-          gestureState.current.isBackGesture = false;
-          gestureState.current.isHomeGesture = false;
-        },
+        // Reset
+        gestureState.current.isBackGesture = false;
+        gestureState.current.isHomeGesture = false;
+      },
 
-        onPanResponderTerminate: () => {
-          gestureState.current.isBackGesture = false;
-          gestureState.current.isHomeGesture = false;
-        },
-      }),
-    [enableBackGesture, enableHomeGesture, height, SWIPE_THRESHOLD, HOME_THRESHOLD, onBack, onHome]
+      onPanResponderTerminate: () => {
+        gestureState.current.isBackGesture = false;
+        gestureState.current.isHomeGesture = false;
+      },
+    })
   );
 
   // Manejar botón físico de back (si existe)
