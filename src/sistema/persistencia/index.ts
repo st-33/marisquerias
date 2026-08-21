@@ -9,6 +9,16 @@
 export { PedidosRepository } from './pedidos.repo';
 export type { Pedido, PedidoItem } from './pedidos.repo';
 
+export { RegistroVentasRepository } from './registroVentas.repo';
+export type {
+  CanalRegistroVenta,
+  EntradaRegistroVenta,
+  EstadoRegistroVenta,
+  OrigenRegistroVenta,
+  RegistroVenta,
+  ResumenItemVenta,
+} from './registroVentas.repo';
+
 export * from './mesas.repo';
 
 export { getVariantOptionLabel, MenuRepository } from './menu.repo';

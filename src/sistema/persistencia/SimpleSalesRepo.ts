@@ -1,5 +1,6 @@
 import { push, ref, set, type Database } from 'firebase/database';
 
+import { RegistroVentasRepository } from './registroVentas.repo';
 import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
 
 export interface VentaSimple {
@@ -45,6 +46,21 @@ export class SimpleSalesRepo {
     });
 
     await set(targetRef, payload);
+
+    try {
+      await new RegistroVentasRepository(this.db, this.tenantPath).registrarMostrador({
+        id: ventaId,
+        total: venta.total,
+        metodoPago: venta.metodoPago,
+        items: venta.items,
+        timestamp: venta.timestamp,
+        usuario: venta.usuario,
+      });
+    } catch (error) {
+      // La venta legacy ya quedó registrada; la proyección puede reintentarse sin duplicar.
+      console.warn('[SimpleSalesRepo] Proyección de historial pendiente:', error);
+    }
+
     return ventaId;
   }
 }

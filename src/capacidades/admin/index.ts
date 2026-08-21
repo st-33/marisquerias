@@ -1,5 +1,6 @@
 export * from './useAdminFeatures';
 export * from './useAdminLogic';
+export * from './useRegistroVentasDelDia';
 export * from './useAdminMetrics';
 export * from './useAdminRepart';
 export * from './useAdminTools';

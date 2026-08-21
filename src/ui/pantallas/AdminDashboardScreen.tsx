@@ -11,6 +11,7 @@ import { SalesDistributionPieChart } from '../../compartido/componentes/charts/S
 import { SalesLineChart } from '../../compartido/componentes/charts/SalesLineChart';
 import { TopProductsBarChart } from '../../compartido/componentes/charts/TopProductsBarChart';
 import { AdminLayout } from '../../compartido/componentes/layouts/AdminLayout';
+import { RegistroVentasDia } from '../bloques/RegistroVentasDia';
 import { getRtdb } from '../../sistema/firebase';
 import { useStore } from '../../sistema/store';
 import { useNotifications } from '../../compartido/hooks/useNotifications';
@@ -21,6 +22,7 @@ import {
   useAlertasInteligentes,
   usePrediccionStock,
   usePuenteAccionesFlotantes,
+  useRegistroVentasDelDia,
 } from '../../capacidades';
 import type { FabItem } from '../../sistema/tipos/contratos';
 
@@ -105,6 +107,17 @@ export function AdminDashboardScreen() {
 
   // 🧠 CEREBRO: Hook de lógica pura
   const { metrics, loading, actions, features, dateFilter } = useAdminLogic({ db, tenantPath });
+  const fechaDelDia = useMemo(() => {
+    const fecha = new Date();
+    fecha.setHours(12, 0, 0, 0);
+    return fecha.getTime();
+  }, []);
+  const {
+    registros: ventasDelDia,
+    loading: ventasDelDiaLoading,
+    error: ventasDelDiaError,
+    recargar: recargarVentasDelDia,
+  } = useRegistroVentasDelDia({ db, tenantPath, timestamp: fechaDelDia });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
 
@@ -293,6 +306,13 @@ export function AdminDashboardScreen() {
               subpedidos finalizados
             </Text>
           </View>
+
+          <RegistroVentasDia
+            registros={ventasDelDia}
+            loading={ventasDelDiaLoading}
+            error={ventasDelDiaError}
+            onReload={recargarVentasDelDia}
+          />
 
           {/* Grid de métricas secundarias */}
           <View style={styles.metricsGrid}>

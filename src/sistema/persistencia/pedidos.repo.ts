@@ -11,6 +11,7 @@ import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidTenantPath } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
+import { RegistroVentasRepository } from './registroVentas.repo';
 
 export type PedidoItem = {
   id: string;
@@ -57,6 +58,10 @@ export type Pedido = {
   cerrado?: boolean;
   pagadoAt?: number;
   pagadoAtISO?: string;
+  registroVentaId?: string;
+  registroVentaNumero?: number;
+  registroVentaEstado?: 'pendiente' | 'registrado' | 'error';
+  registroVentaError?: string | null;
   _seqItems?: number; // Secuencia interna para IDs de items
 };
 
@@ -529,18 +534,49 @@ export class PedidosRepository {
    * Cerrar pedido (pagado)
    */
   async cerrar(pedidoId: string): Promise<void> {
+    const pedidoActual = await this.obtenerPorId(pedidoId);
+    if (!pedidoActual) throw new Error('Pedido no encontrado');
+
     const now = ensureNumberTimestamp(Date.now());
+    const pedidoCerrado: Pedido = {
+      ...pedidoActual,
+      id: pedidoId,
+      cerrado: true,
+      estatus: 'cerrado',
+      pagadoAt: now,
+      pagadoAtISO: this.toISO(now),
+    };
+
     await this.actualizar(pedidoId, {
       cerrado: true,
       estatus: 'cerrado',
       pagadoAt: now,
       pagadoAtISO: this.toISO(now),
+      registroVentaEstado: 'pendiente',
+      registroVentaError: null,
     });
+
+    try {
+      const registro = await new RegistroVentasRepository(this.db, this.tenantPath).registrarPedido(
+        pedidoCerrado,
+        now
+      );
+      await this.actualizar(pedidoId, {
+        registroVentaId: registro.origenId,
+        registroVentaNumero: registro.numero,
+        registroVentaEstado: 'registrado',
+        registroVentaError: null,
+      });
+    } catch (error) {
+      await this.actualizar(pedidoId, {
+        registroVentaEstado: 'error',
+        registroVentaError: error instanceof Error ? error.message : String(error),
+      });
+    }
+
     // Intentar limpiar índice por mesa
     try {
-      const snap = await get(ref(this.db, `${this.getBasePath()}/${pedidoId}`));
-      const v = (snap.val() as any) || {};
-      const mesaId = v?.mesaId;
+      const mesaId = pedidoActual.mesaId;
       if (mesaId) {
         await remove(ref(this.db, `${this.tenantPath}/pedidos_por_mesa/${mesaId}/${pedidoId}`));
       }
