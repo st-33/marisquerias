@@ -6,7 +6,7 @@ import { AdminMenuScreen } from '../ui/roles/administrador/menu/AdminMenuScreen'
 import { AdminTablesScreen } from '../ui/roles/administrador/mesas/AdminTablesScreen';
 import { AdminInventoryScreen } from '../ui/roles/administrador/inventario/AdminInventoryScreen';
 import { MostradorPro } from '../ui/bloques/MostradorPro';
-import { MostradorAdminScreen } from '../ui/pantallas/MostradorAdminScreen';
+import { MostradorAdminScreen } from '../ui/roles/administrador/mostrador/MostradorAdminScreen';
 
 /**
  * 🏭 SCREEN REGISTRY GLOBAL (MARISQUERÍAS)

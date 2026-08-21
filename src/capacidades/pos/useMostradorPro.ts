@@ -18,7 +18,7 @@ import { DespachadorCola } from '../../sistema/impresion/fierros/cola/Despachado
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
 import { useConfiguracionTenant } from '../../sistema/proveedores/ProveedorConfiguracionTenant';
-import { usePosConfig } from './usePosConfig';
+import { usePosConfig } from '../mostrador/usePosConfig';
 import { useCaracteristica } from '../../negocio/roles/GestorCaracteristicas';
 
 function stripUndefinedDeep<T>(input: T): T {

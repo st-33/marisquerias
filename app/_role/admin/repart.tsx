@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
-import { useAdminRepart } from '../../../src/capacidades/admin';
+import { useAdminRepart } from '../../../src/capacidades/reparto';
 
 function Card({
   title,

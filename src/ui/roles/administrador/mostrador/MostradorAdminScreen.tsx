@@ -15,7 +15,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useAdminFeatures, useVentaCrudoAdmin, usePosConfig } from '../../capacidades';
+import { useAdminFeatures } from '../../../../capacidades/admin';
+import { usePosConfig, useVentaCrudoAdmin } from '../../../../capacidades/mostrador';
 
 export function MostradorAdminScreen() {
   const router = useRouter();

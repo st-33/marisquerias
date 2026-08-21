@@ -77,7 +77,7 @@ jest.mock('../../sistema/instalacion/vinculacion/generar-device-id-adi', () => (
 }));
 
 // Mock custom config hooks
-jest.mock('../usePosConfig', () => ({
+jest.mock('../mostrador/usePosConfig', () => ({
   usePosConfig: jest.fn().mockReturnValue({
     config: {
       allowNegativeStock: false,

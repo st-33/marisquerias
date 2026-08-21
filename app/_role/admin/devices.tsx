@@ -18,7 +18,7 @@ import { useSesion } from '../../../src/sistema/store';
 import { useFierros } from '../../../src/sistema/impresion/fierros';
 import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
 import { useConfiguracionTenant } from '../../../src/sistema/proveedores/ProveedorConfiguracionTenant';
-import { useDevicesManagement } from '../../../src/capacidades/admin';
+import { useDevicesManagement } from '../../../src/capacidades/dispositivos';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;
 type TabActiva = 'impresoras' | 'basculas';

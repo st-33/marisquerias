@@ -7,3 +7,6 @@ export * from './metricas';
 export * from './menu';
 export * from './mesas';
 export * from './inventario';
+export * from './dispositivos';
+export * from './reparto';
+export * from './mostrador';
