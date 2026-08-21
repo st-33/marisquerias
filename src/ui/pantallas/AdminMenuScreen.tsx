@@ -158,7 +158,14 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
   const { width } = useWindowDimensions();
   const IS_MOBILE = width < 768;
 
-  const { categorias, loading, actions, getProductosPorCategoria } = useMenuManagement({
+  const {
+    categorias,
+    loading,
+    actions,
+    getProductosPorCategoria,
+    validacionActive,
+    validandoActive,
+  } = useMenuManagement({
     db,
     tenantPath,
   });
@@ -212,6 +219,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
             return;
           }
           setFormData({ ...createEmptyForm(), categoriaId: activeCat });
+          actions.setRecetaEnEdicion(null);
           setEditingTab('basico');
           setShowModal('addProd');
         },
@@ -272,6 +280,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
         showToast('Producto actualizado', 'success');
       }
       setFormData(createEmptyForm());
+      actions.setRecetaEnEdicion(null);
       setShowModal(null);
     } catch (err: any) {
       showToast(err?.message || 'Error al guardar producto', 'error');
@@ -385,6 +394,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   style={styles.btnPrimary}
                   onPress={() => {
                     setFormData({ ...createEmptyForm(), categoriaId: activeCategoryObj.id });
+                    actions.setRecetaEnEdicion(null);
                     setEditingTab('basico');
                     setShowModal('addProd');
                   }}
@@ -409,7 +419,9 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                       key={prod.id}
                       producto={prod}
                       onEdit={() => {
-                        setFormData(productoToFormState(prod));
+                        const nextForm = productoToFormState(prod);
+                        setFormData(nextForm);
+                        actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
                         setEditingTab('basico');
                         setShowModal('editProd');
                       }}
@@ -422,7 +434,9 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                         }
                       }}
                       onRecipe={() => {
-                        setFormData(productoToFormState(prod));
+                        const nextForm = productoToFormState(prod);
+                        setFormData(nextForm);
+                        actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
                         setEditingTab('receta');
                         setShowModal('editProd');
                       }}
@@ -730,12 +744,13 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   {editingTab === 'receta' && (
                     <RecipeEditor
                       receta={formData.receta}
-                      onRecetaChange={(newReceta) =>
-                        setFormData({ ...formData, receta: newReceta })
-                      }
+                      onRecetaChange={(newReceta) => {
+                        setFormData((current) => ({ ...current, receta: newReceta }));
+                        actions.setRecetaEnEdicion(newReceta?.ingredientes || null);
+                      }}
                       itemsInventario={itemsInventario as any}
-                      validacion={null}
-                      validando={false}
+                      validacion={validacionActive}
+                      validando={validandoActive}
                     />
                   )}
                 </ScrollView>

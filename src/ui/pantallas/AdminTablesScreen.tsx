@@ -65,7 +65,8 @@ export function AdminTablesScreen() {
   );
   const [, setLayoutDirty] = useState(false);
   const [activeMesaId, setActiveMesaId] = useState<string | null>(null);
-  const [newQuantity, setNewQuantity] = useState(cantidad);
+  const [quantityOverride, setQuantityOverride] = useState<number | null>(null);
+  const newQuantity = quantityOverride ?? cantidad;
 
   const canvasRef = useRef<View | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: width - 48, height: 600 });
@@ -74,20 +75,6 @@ export function AdminTablesScreen() {
     startY: 0,
   }));
   const { showToast, ToastComponent } = useToast();
-
-  const [prevCantidad, setPrevCantidad] = useState(cantidad);
-  if (cantidad !== prevCantidad) {
-    setPrevCantidad(cantidad);
-    setNewQuantity(cantidad);
-  }
-
-  const [prevMesas, setPrevMesas] = useState(mesas);
-  if (mesas !== prevMesas) {
-    setPrevMesas(mesas);
-    setDraftLayout(
-      mesas.reduce((acc, m) => ({ ...acc, [m.id]: { posX: m.posX, posY: m.posY } }), {})
-    );
-  }
 
   // --- DRAG & DROP LOGIC ---
   const createMesaPanResponder = (mesaId: string) => {
@@ -148,6 +135,7 @@ export function AdminTablesScreen() {
     if (newQuantity === cantidad) return;
     try {
       const res = await actions.aplicarCantidad(newQuantity);
+      setQuantityOverride(null);
       if (res.bloqueadas.length > 0) {
         Alert.alert('Atención', `No se eliminaron mesas ocupadas: ${res.bloqueadas.join(', ')}`);
       } else {
@@ -175,9 +163,7 @@ export function AdminTablesScreen() {
           onPress: () => {
             setEditMode(false);
             setLayoutDirty(false);
-            setDraftLayout(
-              mesas.reduce((acc, m) => ({ ...acc, [m.id]: { posX: m.posX, posY: m.posY } }), {})
-            );
+            setDraftLayout({});
           },
         },
       ];
@@ -229,12 +215,12 @@ export function AdminTablesScreen() {
               <Text style={styles.quantityLabel}>Mesas Totales:</Text>
               <Pressable
                 style={styles.btnQty}
-                onPress={() => setNewQuantity(Math.max(1, newQuantity - 1))}
+                onPress={() => setQuantityOverride(Math.max(1, newQuantity - 1))}
               >
                 <Ionicons name="remove" size={16} color="white" />
               </Pressable>
               <Text style={styles.quantityValue}>{newQuantity}</Text>
-              <Pressable style={styles.btnQty} onPress={() => setNewQuantity(newQuantity + 1)}>
+              <Pressable style={styles.btnQty} onPress={() => setQuantityOverride(newQuantity + 1)}>
                 <Ionicons name="add" size={16} color="white" />
               </Pressable>
               {newQuantity !== cantidad && (
@@ -298,7 +284,7 @@ export function AdminTablesScreen() {
 
             let statusColor = '#10b981'; // Libre
             if (mesa.estado === 'ocupada') statusColor = '#ef4444';
-            if ((mesa.estado as any) === 'cuenta_pedida') statusColor = '#f59e0b';
+            if (mesa.estado === 'solicitar_cuenta') statusColor = '#f59e0b';
             if ((mesa.estado as any) === 'pagado') statusColor = '#3b82f6';
 
             const panResponder = createMesaPanResponder(mesa.id);

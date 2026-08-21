@@ -51,9 +51,11 @@ export default function AdminDeviceSettings() {
   const { tenantPath } = useSesion();
   const { hubConfig, actions: deviceActions } = useDevicesManagement();
 
-  const [isHubEnabled, setIsHubEnabled] = useState(false);
   const [hubDeviceId, setHubDeviceId] = useState<string>('hub_local');
-  const [hubDestino, setHubDestino] = useState<HubDestino>(null);
+
+  const isHubEnabled = hubConfig?.enabled === true;
+  const hubDestino: HubDestino = hubConfig?.destination ?? null;
+  const effectiveHubDeviceId = hubConfig?.deviceId || hubDeviceId;
 
   // 📑 TABS
   const [tabActiva, setTabActiva] = useState<TabActiva>('impresoras');
@@ -64,50 +66,33 @@ export default function AdminDeviceSettings() {
     setIsScanning(false);
   };
 
-  // Cargar estado del Hub al inicio
+  // La configuración operativa del Hub vive en RTDB; AsyncStorage solo conserva una identidad local
+  // si el Hub todavía no tiene `deviceId` cloud.
   useEffect(() => {
-    (async () => {
+    let activo = true;
+
+    const cargarIdentidadLocal = async () => {
       try {
-        const [enabled, destino, deviceId] = await Promise.all([
-          AsyncStorage.getItem('adi_hub_mode_enabled'),
-          AsyncStorage.getItem('adi_hub_destino'),
-          AsyncStorage.getItem('adi_hub_device_id'),
-        ]);
-
-        setIsHubEnabled(enabled === 'true');
-        setHubDestino((destino as HubDestino) || null);
-
-        if (deviceId) {
-          setHubDeviceId(deviceId);
-        } else {
-          const generated = dispositivoActivo?.direccion
-            ? `hub_${dispositivoActivo.direccion}`
-            : `hub_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
-          await AsyncStorage.setItem('adi_hub_device_id', generated);
-          setHubDeviceId(generated);
+        if (hubConfig?.deviceId) return;
+        const storedDeviceId = await AsyncStorage.getItem('adi_hub_device_id');
+        const generated = dispositivoActivo?.direccion
+          ? `hub_${dispositivoActivo.direccion}`
+          : 'hub_local';
+        const nextDeviceId = storedDeviceId || generated;
+        if (!storedDeviceId) {
+          await AsyncStorage.setItem('adi_hub_device_id', nextDeviceId);
         }
+        if (activo) setHubDeviceId(nextDeviceId);
       } catch (e) {
-        console.warn('No se pudo cargar config de Hub', e);
+        console.warn('No se pudo cargar identidad local de Hub', e);
       }
-    })();
-  }, [dispositivoActivo?.direccion]);
+    };
 
-  // Sincronizar con la nube cuando esté disponible
-  useEffect(() => {
-    if (hubConfig) {
-      const enabled = !!hubConfig.enabled;
-      if (isHubEnabled !== enabled) {
-        /* eslint-disable-next-line react-hooks/set-state-in-effect */
-        setIsHubEnabled(enabled);
-      }
-      if (hubConfig.destination !== undefined && hubDestino !== hubConfig.destination) {
-        setHubDestino(hubConfig.destination);
-      }
-      if (hubConfig.deviceId && hubDeviceId !== hubConfig.deviceId) {
-        setHubDeviceId(hubConfig.deviceId);
-      }
-    }
-  }, [hubConfig, isHubEnabled, hubDestino, hubDeviceId]);
+    void cargarIdentidadLocal();
+    return () => {
+      activo = false;
+    };
+  }, [dispositivoActivo?.direccion, hubConfig?.deviceId]);
 
   const toggleHubMode = async (value: boolean) => {
     if (value && !hubDestino) {
@@ -119,15 +104,12 @@ export default function AdminDeviceSettings() {
     }
 
     try {
-      setIsHubEnabled(value);
-      await AsyncStorage.setItem('adi_hub_mode_enabled', String(value));
-
-      // 🔥 SYNC TO CLOUD via useDevicesManagement
+      // La nube es la única autoridad de habilitación, destino y timestamp del Hub.
       await deviceActions.establecerHubConfig({
         enabled: value,
         destination: hubDestino,
         updatedAt: Date.now(),
-        deviceId: hubDeviceId,
+        deviceId: effectiveHubDeviceId,
       });
     } catch {
       Alert.alert('Error', 'No se pudo sincronizar el Hub con la nube');
@@ -139,12 +121,9 @@ export default function AdminDeviceSettings() {
       Alert.alert('Hub activo', 'Desactiva el Hub Central antes de cambiar el destino');
       return;
     }
-    setHubDestino(destino);
-    await AsyncStorage.setItem('adi_hub_destino', destino || '');
-
-    // Sync destination change to cloud via useDevicesManagement
     await deviceActions.actualizarHubConfig({
       destination: destino,
+      deviceId: effectiveHubDeviceId,
       updatedAt: Date.now(),
     });
   };

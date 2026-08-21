@@ -221,7 +221,7 @@ export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: Panel
               key: 'main',
               label: 'Acciones',
               icon: <Ionicons name="add" size={30} color="white" />,
-              onPress: () => {},
+              onPress: () => setShowItemModal(true),
             },
             {
               key: 'add_item',
