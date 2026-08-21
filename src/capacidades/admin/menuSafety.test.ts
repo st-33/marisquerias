@@ -24,7 +24,7 @@ describe('seguridad del menú administrativo', () => {
 
   test('la pantalla usa la eliminación validada y no la operación cruda', () => {
     const fuente = fs.readFileSync(
-      path.resolve(__dirname, '../../../../ui/pantallas/AdminMenuScreen.tsx'),
+      path.resolve(__dirname, '../../../ui/roles/administrador/menu/AdminMenuScreen.tsx'),
       'utf8'
     );
 

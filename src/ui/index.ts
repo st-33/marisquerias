@@ -9,7 +9,7 @@ export * from './bloques/MostradorPro';
 export * from './bloques/OrbButton';
 export * from './bloques/OrderItemCard';
 export * from './bloques/OrderList';
-export { PanelInventario } from './bloques/pantallas/PanelInventario';
+export { PanelInventario } from './roles/administrador/inventario/PanelInventario';
 export * from './bloques/ProductPickerOverlay';
 export { PuestoMando } from './bloques/PuestoMando';
 export type {

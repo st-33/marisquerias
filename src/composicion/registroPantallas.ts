@@ -2,9 +2,9 @@ import { RolesScreen } from '../ui/pantallas/RolesScreen';
 import { CocinaScreen } from '../ui/pantallas/CocinaScreen';
 import { MeseroScreen } from '../ui/pantallas/MeseroScreen';
 import { AdminDashboardScreen } from '../ui/roles/administrador/metricas/AdminDashboardScreen';
-import { AdminMenuScreen } from '../ui/pantallas/AdminMenuScreen';
-import { AdminTablesScreen } from '../ui/pantallas/AdminTablesScreen';
-import { AdminInventoryScreen } from '../ui/pantallas/AdminInventoryScreen';
+import { AdminMenuScreen } from '../ui/roles/administrador/menu/AdminMenuScreen';
+import { AdminTablesScreen } from '../ui/roles/administrador/mesas/AdminTablesScreen';
+import { AdminInventoryScreen } from '../ui/roles/administrador/inventario/AdminInventoryScreen';
 import { MostradorPro } from '../ui/bloques/MostradorPro';
 import { MostradorAdminScreen } from '../ui/pantallas/MostradorAdminScreen';
 

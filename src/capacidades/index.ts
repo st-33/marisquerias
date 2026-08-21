@@ -4,3 +4,6 @@ export * from './mesero';
 export * from './ui';
 export * from './cocina';
 export * from './metricas';
+export * from './menu';
+export * from './mesas';
+export * from './inventario';
