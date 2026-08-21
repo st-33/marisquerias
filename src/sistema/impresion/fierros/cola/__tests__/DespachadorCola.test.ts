@@ -166,4 +166,60 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
 
     expect(mockGet).not.toHaveBeenCalled();
   });
+
+  it('encola un trabajo remoto en jobs y en la cola Hub del canal', async () => {
+    const job = await DespachadorCola.encolarRemoto(dbMock, tenantPath, {
+      idTrabajo: 'job_cuenta_v1_pedido-1',
+      idPedido: 'pedido-1',
+      proposito: 'cuenta',
+      canal: 'standard',
+      templateVersion: 'v1',
+      payload: { mesaId: 'mesa-1' },
+    });
+
+    expect(job).toMatchObject({
+      jobId: 'job_cuenta_v1_pedido-1',
+      orderId: 'pedido-1',
+      purpose: 'cuenta',
+      channel: 'standard',
+      state: 'pendiente_impresion',
+      templateVersion: 'v1',
+    });
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: `${tenantPath}/spool/jobs/job_cuenta_v1_pedido-1`,
+      }),
+      expect.objectContaining({ jobId: 'job_cuenta_v1_pedido-1' })
+    );
+    expect(mockSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: `${tenantPath}/spool/hub/queue/job_cuenta_v1_pedido-1`,
+      }),
+      true
+    );
+  });
+
+  it('no duplica un trabajo remoto pendiente ni uno ya exitoso', async () => {
+    const existente = {
+      jobId: 'job_cuenta_v1_pedido-2',
+      orderId: 'pedido-2',
+      purpose: 'cuenta',
+      channel: 'standard',
+      state: 'pendiente_impresion',
+      attempts: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    mockGet.mockResolvedValue(makeSnapshot(existente, existente.jobId));
+
+    const job = await DespachadorCola.encolarRemotoIdempotente(dbMock, tenantPath, {
+      idTrabajo: existente.jobId,
+      idPedido: existente.orderId,
+      proposito: 'cuenta',
+      canal: 'standard',
+    });
+
+    expect(job).toEqual(existente);
+    expect(mockSet).not.toHaveBeenCalled();
+  });
 });
