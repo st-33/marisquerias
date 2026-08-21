@@ -113,7 +113,7 @@ export default function AdminDeviceSettings() {
     if (value && !hubDestino) {
       Alert.alert(
         'Selecciona destino',
-        'Primero debes elegir si este Hub es para Restaurante o Venta y Crudo'
+        'Primero debes elegir si este Hub es para Restaurante o Mostrador'
       );
       return;
     }
@@ -196,7 +196,7 @@ export default function AdminDeviceSettings() {
       Alert.alert('Imprimiendo...', 'Enviando un ticket de prueba.');
 
       if (hubDestino === 'venta_crudo') {
-        // Test Venta Crudo format (Weighted items)
+        // Test Mostrador format (Weighted items)
         await imprimirTicketVenta(
           {
             items: [
@@ -322,7 +322,7 @@ export default function AdminDeviceSettings() {
                       Restaurante
                     </Text>
                   </Pressable>
-                  {/* VENTA Y CRUDO OPTION - FEATURE GATED */}
+                  {/* MOSTRADOR OPTION - FEATURE GATED */}
                   {tenantConfig?.features?.module_venta_crudo !== false && (
                     <Pressable
                       style={[
@@ -344,7 +344,7 @@ export default function AdminDeviceSettings() {
                           hubDestino === 'venta_crudo' && styles.destinoTextActive,
                         ]}
                       >
-                        Venta y Crudo
+                        Mostrador
                       </Text>
                     </Pressable>
                   )}
@@ -366,7 +366,7 @@ export default function AdminDeviceSettings() {
                     <Text style={[styles.hubDesc, !hubDestino && styles.textDisabled]}>
                       {hubDestino
                         ? `Convertir en servidor de impresión para ${
-                            hubDestino === 'restaurante' ? 'Restaurante' : 'Venta y Crudo'
+                            hubDestino === 'restaurante' ? 'Restaurante' : 'Mostrador'
                           }`
                         : 'Selecciona un destino arriba para activar'}
                     </Text>
@@ -472,7 +472,7 @@ export default function AdminDeviceSettings() {
               <Text style={styles.sectionTitle}>Básculas Conectadas</Text>
               {isScanning && <ActivityIndicator size="small" color="#3b82f6" />}
             </View>
-            <Text style={styles.sectionDesc}>Conecta básculas digitales para Venta y Crudo.</Text>
+            <Text style={styles.sectionDesc}>Conecta básculas digitales para Mostrador.</Text>
 
             {basculaActiva ? (
               <View style={styles.connectedView}>

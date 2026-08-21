@@ -176,11 +176,11 @@ export function CategorySidebar({
                         style={{ transform: [{ scale: 0.6 }] }}
                       />
                     </View>
-                    {/* Canal Venta y Crudo - GATED */}
+                    {/* Canal Mostrador - GATED */}
                     {showVentaCrudo && (
                       <View style={styles.switchRow}>
                         <Text style={[styles.switchText, { fontSize: 11, color: '#94a3b8' }]}>
-                          · Visible en Venta y Crudo
+                          · Visible en Mostrador
                         </Text>
                         <Switch
                           value={cat.herencia.ventaCrudo === true}

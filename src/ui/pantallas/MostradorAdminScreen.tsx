@@ -71,7 +71,7 @@ export function MostradorAdminScreen() {
           <Ionicons name="arrow-back" size={24} color="white" />
         </Pressable>
         <View>
-          <Text style={styles.headerTitle}>Canal: Venta y Crudo</Text>
+          <Text style={styles.headerTitle}>Canal: Mostrador</Text>
           <Text style={styles.headerSubtitle}>Gobierno y Supervisión</Text>
         </View>
         <Ionicons name="storefront" size={24} color="#f59e0b" style={{ marginLeft: 'auto' }} />

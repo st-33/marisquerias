@@ -4,11 +4,8 @@
  * Orquesta la impresión remota cuando el dispositivo actúa como Hub Central.
  * Se monta globalmente en _layout.tsx y reacciona al EstadoHub (Zustand).
  *
- * DIFERENCIAS CON HubManager.tsx LEGACY:
- * - ❌ No usa polling de AsyncStorage cada 5 segundos
- * - ✅ Reacciona instantáneamente via Zustand (useEstadoHub)
- * - ✅ Usa el nuevo ServicioFierros en lugar de HardwareService
- * - ✅ Nombres en español
+ * Orquestación reactiva mediante Zustand y el controlador canónico ServicioFierros.
+ * No utiliza polling de AsyncStorage para detectar cambios de configuración.
  */
 
 import NetInfo from '@react-native-community/netinfo';

@@ -279,7 +279,7 @@ export interface DispositivoConfig {
  *
  * ARQUITECTURA DE ABSTRACCIÓN:
  * - Cada tipo de dispositivo implementa una interfaz específica
- * - El servicio HardwareService gestiona el ciclo de vida de dispositivos
+ * - ServicioFierros gestiona el ciclo de vida de dispositivos
  * - Los módulos de negocio (mesero, cocina, admin) usan el servicio, no los drivers directamente
  *
  * EXTENSIBILIDAD:

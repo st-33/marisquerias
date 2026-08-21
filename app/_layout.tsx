@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AppState, type AppStateStatus, LogBox, View } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
 import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { HubManager } from '../src/sistema/impresion/legacy/HubManager';
+import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorHub';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FabRadial from '../src/ui/bloques/FabRadial';
 import { useAuthGuard } from '../src/sistema/seguridad';
@@ -84,7 +82,7 @@ export default function RootLayout() {
     <ThemeProvider tenantPath={tenantPath || ''}>
       <ProveedorFierros>
         <ProveedorConfiguracionTenant>
-          <GlobalHubManager />
+          <GestorHubGlobal tenantPath={tenantPath || null} />
 
           <GestureHandlerRootView
             style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
@@ -129,43 +127,6 @@ function GlobalFabSlot() {
       items={displayConfig.items}
       initialKey={displayConfig.initialKey}
       position={displayConfig.position ?? 'bottom-right'}
-    />
-  );
-}
-
-// D. --- Componente Auxiliar para aislar la lógica del Hub ---
-function GlobalHubManager() {
-  const [isHubEnabled, setIsHubEnabled] = useState(false);
-  const [hubDeviceId, setHubDeviceId] = useState('hub_local');
-  const [hubDestination, setHubDestination] = useState<string>('standard');
-
-  const tenantPath = useStore((s) => s.sesion.tenantPath);
-
-  useEffect(() => {
-    const checkHubStatus = async () => {
-      const enabled = await AsyncStorage.getItem('adi_hub_mode_enabled');
-      setIsHubEnabled(enabled === 'true');
-
-      const storedId = await AsyncStorage.getItem('adi_hub_device_id');
-      if (storedId) setHubDeviceId(storedId);
-
-      const storedDestino = await AsyncStorage.getItem('adi_hub_destino');
-      if (storedDestino) setHubDestination(storedDestino);
-    };
-
-    checkHubStatus();
-    const interval = setInterval(checkHubStatus, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!isHubEnabled || !tenantPath) return null;
-
-  return (
-    <HubManager
-      enabled={true}
-      tenantPath={tenantPath}
-      deviceId={hubDeviceId}
-      channel={hubDestination === 'restaurante' ? 'standard' : hubDestination}
     />
   );
 }

@@ -10,7 +10,7 @@
  * MIGRADO DE: core/services/PrintSpooler.ts
  * CAMBIOS:
  * - Nombres en español
- * - Usa ServicioFierros en lugar de hardwareService
+ * - Usa ServicioFierros como controlador canónico
  * - Tipos del nuevo sistema
  */
 

@@ -15,7 +15,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { hardwareService } from '../../sistema/servicios/HardwareService';
+import { useFierros } from '../../sistema/impresion/fierros';
 import { useMostradorPro } from '../../capacidades/pos/useMostradorPro';
 
 // --- COMPONENTES AUXILIARES ---
@@ -96,6 +96,7 @@ export function MostradorPro() {
     actions,
     isBasculaEnabled,
   } = useMostradorPro();
+  const { basculaActiva, leerPeso } = useFierros();
 
   const [search, setSearch] = useState('');
   const [selectedCatId, setSelectedCatId] = useState<string | null>(null);
@@ -108,24 +109,34 @@ export function MostradorPro() {
 
   // --- Lectura de Báscula en Tiempo Real ---
   useEffect(() => {
-    if (!selectedProduct || selectedProduct.unidad !== 'kg' || showKeypad || !isBasculaEnabled) {
+    if (
+      !selectedProduct ||
+      selectedProduct.unidad !== 'kg' ||
+      showKeypad ||
+      !isBasculaEnabled ||
+      !basculaActiva
+    ) {
       return;
     }
     const timer = setInterval(async () => {
-      const res = await hardwareService.leerPeso();
-      if (res.success) {
-        setWeight(res.peso || 0);
+      try {
+        const res = await leerPeso({ esperarEstable: true });
+        if (res.exito) {
+          setWeight(res.peso || 0);
+        }
+      } catch {
+        setWeight(0);
       }
     }, 300);
     return () => clearInterval(timer);
-  }, [selectedProduct, showKeypad, isBasculaEnabled]);
+  }, [selectedProduct, showKeypad, isBasculaEnabled, basculaActiva, leerPeso]);
 
   const handleProductPress = (item: any) => {
     if (item.unidad === 'kg') {
       setSelectedProduct(item);
       setWeight(0);
-      // Si la flag de bascula esta apagada o fisica no responde, forzar keypad
-      if (!isBasculaEnabled || !hardwareService.hasScale()) {
+      // Si la flag de báscula está apagada o no hay báscula activa, forzar keypad
+      if (!isBasculaEnabled || !basculaActiva) {
         setShowKeypad(true);
       }
     } else {
@@ -149,7 +160,7 @@ export function MostradorPro() {
           {/* Header con Info & Status */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>VENTA Y CRUDO</Text>
+              <Text style={styles.title}>MOSTRADOR</Text>
               <Text style={styles.subtitle}>SISTEMA DE DESPACHO PROFESIONAL</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>

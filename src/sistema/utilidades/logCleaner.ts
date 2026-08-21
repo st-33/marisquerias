@@ -36,7 +36,6 @@ const LOG_CONFIG: Record<string, LogLevel> = {
   ItemStatusListener: LogLevel.WARN,
 
   // Verbosos: solo errores
-  HardwareService: LogLevel.ERROR,
   usePrinterConnection: LogLevel.ERROR,
   BluetoothPrinterModal: LogLevel.ERROR,
 
