@@ -15,9 +15,8 @@ import {
 } from 'react-native';
 
 import { useSesion } from '../../../src/sistema/store';
-import type { Order } from '../../../src/sistema/servicios/TicketFormatter';
-import { useHardware, type Device } from '../../../src/sistema/proveedores/ProveedorHardware';
-import { servicioFierros } from '../../../src/sistema/impresion/fierros';
+import { useFierros } from '../../../src/sistema/impresion/fierros';
+import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
 import { useConfiguracionTenant } from '../../../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useDevicesManagement } from '../../../src/capacidades/admin';
 
@@ -26,24 +25,25 @@ type TabActiva = 'impresoras' | 'basculas';
 
 export default function AdminDeviceSettings() {
   const {
-    scan,
-    connect,
-    connectScale,
-    disconnect,
-    print,
-    isConnecting,
-    isConnected,
-    connectedDevice,
-    connectedScale,
+    escanear,
+    conectarImpresora,
+    conectarBascula,
+    desconectar,
+    imprimirCuenta,
+    imprimirTicketVenta,
+    estaConectando,
+    estaConectado,
+    dispositivoActivo,
+    basculaActiva,
     error: hardwareError,
-  } = useHardware();
+  } = useFierros();
   const {
     config: tenantConfig,
     isLoading: isConfigLoading,
     error: configError,
   } = useConfiguracionTenant();
 
-  const [scannedDevices, setScannedDevices] = useState<Device[]>([]);
+  const [scannedDevices, setScannedDevices] = useState<DispositivoFierro[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
@@ -80,8 +80,8 @@ export default function AdminDeviceSettings() {
         if (deviceId) {
           setHubDeviceId(deviceId);
         } else {
-          const generated = connectedDevice?.address
-            ? `hub_${connectedDevice.address}`
+          const generated = dispositivoActivo?.direccion
+            ? `hub_${dispositivoActivo.direccion}`
             : `hub_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
           await AsyncStorage.setItem('adi_hub_device_id', generated);
           setHubDeviceId(generated);
@@ -90,7 +90,7 @@ export default function AdminDeviceSettings() {
         console.warn('No se pudo cargar config de Hub', e);
       }
     })();
-  }, [connectedDevice?.address]);
+  }, [dispositivoActivo?.direccion]);
 
   // Sincronizar con la nube cuando esté disponible
   useEffect(() => {
@@ -153,7 +153,7 @@ export default function AdminDeviceSettings() {
     setIsScanning(true);
     setScannedDevices([]);
     try {
-      const devices = await scan();
+      const devices = await escanear();
       setScannedDevices(devices);
     } catch (e: any) {
       Alert.alert('Error al escanear', e.message);
@@ -162,24 +162,24 @@ export default function AdminDeviceSettings() {
     }
   };
 
-  const handleConnectPrinter = async (device: Device) => {
+  const handleConnectPrinter = async (device: DispositivoFierro) => {
     try {
-      await connect(device);
+      await conectarImpresora(device);
     } catch (e: any) {
       Alert.alert('Error de Conexión', e.message);
     }
   };
 
-  const handleConnectScale = async (device: Device) => {
+  const handleConnectScale = async (device: DispositivoFierro) => {
     try {
-      await connectScale(device);
+      await conectarBascula(device);
     } catch (e: any) {
       Alert.alert('Error al conectar báscula', e.message);
     }
   };
 
   const handleTestPrint = useCallback(async () => {
-    if (!isConnected || !tenantConfig) {
+    if (!estaConectado || !tenantConfig) {
       Alert.alert(
         'Error',
         'Asegúrese de que la impresora esté conectada y la configuración cargada.'
@@ -197,7 +197,7 @@ export default function AdminDeviceSettings() {
 
       if (hubDestino === 'venta_crudo') {
         // Test Venta Crudo format (Weighted items)
-        await servicioFierros.imprimirTicketVenta(
+        await imprimirTicketVenta(
           {
             items: [
               {
@@ -225,19 +225,24 @@ export default function AdminDeviceSettings() {
         );
       } else {
         // Standard Restaurant format
-        const testOrder: Order = {
-          items: [
-            { nombre: 'Producto de Prueba 1', precio: 10.0, cantidad: 2 },
-            { nombre: 'Producto de Prueba 2', precio: 5.5, cantidad: 1 },
-          ],
-          total: 25.5,
-        };
-        await print(testOrder, ticketConfig);
+        await imprimirCuenta(
+          {
+            mesaId: 'PRUEBA',
+            tipo: 'local',
+            items: [
+              { nombre: 'Producto de Prueba 1', precio: 10.0, cantidad: 2 },
+              { nombre: 'Producto de Prueba 2', precio: 5.5, cantidad: 1 },
+            ],
+            totales: { subtotal: 25.5, total: 25.5 },
+            timestamp: Date.now(),
+          },
+          { rol: 'admin', nombreNegocio: ticketConfig.nombreNegocio }
+        );
       }
     } catch (e: any) {
       Alert.alert('Error de Impresión', e.message);
     }
-  }, [isConnected, tenantConfig, print, hubDestino]);
+  }, [estaConectado, tenantConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
 
   if (isConfigLoading) {
     return (
@@ -386,16 +391,16 @@ export default function AdminDeviceSettings() {
 
               {hardwareError && <Text style={styles.errorText}>{hardwareError}</Text>}
 
-              {isConnected && connectedDevice ? (
+              {estaConectado && dispositivoActivo ? (
                 <View style={styles.connectedView}>
                   <View style={styles.connectedInfo}>
                     <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
                     <View>
-                      <Text style={styles.successText}>{connectedDevice.name}</Text>
-                      <Text style={styles.deviceAddress}>{connectedDevice.address}</Text>
+                      <Text style={styles.successText}>{dispositivoActivo.nombre}</Text>
+                      <Text style={styles.deviceAddress}>{dispositivoActivo.direccion}</Text>
                     </View>
                   </View>
-                  <Pressable style={styles.buttonOutline} onPress={disconnect}>
+                  <Pressable style={styles.buttonOutline} onPress={desconectar}>
                     <Text style={styles.buttonOutlineText}>Desconectar</Text>
                   </Pressable>
                 </View>
@@ -408,22 +413,22 @@ export default function AdminDeviceSettings() {
                 </Pressable>
               )}
 
-              {!isConnected &&
+              {!estaConectado &&
                 scannedDevices.map((device) => (
                   <Pressable
-                    key={device.address}
+                    key={device.direccion}
                     style={styles.deviceItem}
                     onPress={() => {
-                      setConnectingDeviceId(device.address);
+                      setConnectingDeviceId(device.direccion);
                       handleConnectPrinter(device).finally(() => setConnectingDeviceId(null));
                     }}
-                    disabled={isConnecting}
+                    disabled={estaConectando}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.deviceText}>{device.name}</Text>
-                      <Text style={styles.deviceAddress}>{device.address}</Text>
+                      <Text style={styles.deviceText}>{device.nombre}</Text>
+                      <Text style={styles.deviceAddress}>{device.direccion}</Text>
                     </View>
-                    {isConnecting && connectingDeviceId === device.address ? (
+                    {estaConectando && connectingDeviceId === device.direccion ? (
                       <ActivityIndicator color="#3b82f6" />
                     ) : (
                       <Ionicons name="chevron-forward" size={20} color="#475569" />
@@ -469,17 +474,17 @@ export default function AdminDeviceSettings() {
             </View>
             <Text style={styles.sectionDesc}>Conecta básculas digitales para Venta y Crudo.</Text>
 
-            {connectedScale ? (
+            {basculaActiva ? (
               <View style={styles.connectedView}>
                 <View style={styles.connectedInfo}>
                   <Ionicons name="scale" size={24} color="#22c55e" />
                   <View>
-                    <Text style={styles.successText}>{connectedScale.name}</Text>
-                    <Text style={styles.deviceAddress}>{connectedScale.address}</Text>
+                    <Text style={styles.successText}>{basculaActiva.nombre}</Text>
+                    <Text style={styles.deviceAddress}>{basculaActiva.direccion}</Text>
                     <Text style={[styles.deviceAddress, { color: '#f59e0b' }]}>ID Lógico: #1</Text>
                   </View>
                 </View>
-                {/* TODO: Add disconnect scale method if available */}
+                {/* TODO: Add desconectar scale method if available */}
               </View>
             ) : (
               <View style={styles.emptyState}>
@@ -497,19 +502,19 @@ export default function AdminDeviceSettings() {
 
             {scannedDevices.map((device) => (
               <Pressable
-                key={device.address}
+                key={device.direccion}
                 style={styles.deviceItem}
                 onPress={() => {
-                  setConnectingDeviceId(device.address);
+                  setConnectingDeviceId(device.direccion);
                   handleConnectScale(device).finally(() => setConnectingDeviceId(null));
                 }}
-                disabled={isConnecting}
+                disabled={estaConectando}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.deviceText}>{device.name}</Text>
-                  <Text style={styles.deviceAddress}>{device.address}</Text>
+                  <Text style={styles.deviceText}>{device.nombre}</Text>
+                  <Text style={styles.deviceAddress}>{device.direccion}</Text>
                 </View>
-                {isConnecting && connectingDeviceId === device.address ? (
+                {estaConectando && connectingDeviceId === device.direccion ? (
                   <ActivityIndicator color="#3b82f6" />
                 ) : (
                   <Ionicons name="add-circle-outline" size={24} color="#3b82f6" />
@@ -524,9 +529,9 @@ export default function AdminDeviceSettings() {
       {tabActiva === 'impresoras' && (
         <View style={styles.footerActions}>
           <Pressable
-            style={[styles.buttonSave, (!isConnected || isConnecting) && styles.buttonDisabled]}
+            style={[styles.buttonSave, (!estaConectado || estaConectando) && styles.buttonDisabled]}
             onPress={handleTestPrint}
-            disabled={!isConnected || isConnecting}
+            disabled={!estaConectado || estaConectando}
           >
             <Ionicons name="receipt" size={20} color="#fff" />
             <Text style={styles.buttonText}>Imprimir Prueba</Text>

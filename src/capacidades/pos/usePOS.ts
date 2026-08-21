@@ -12,7 +12,7 @@
  * SEPARACIÓN SAGRADA:
  * - Este hook NUNCA renderiza UI
  * - Solo maneja estado, suscripciones y acciones
- * - Usa repositorios y HardwareService para acceder a datos/dispositivos
+ * - Usa repositorios y el contrato canónico de fierros para acceder a dispositivos
  *
  * REUTILIZABLE en cualquier negocio de venta al público (tienda de abarrotes,
  * carnicería, panadería, marisquería, etc.)
@@ -21,11 +21,7 @@
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../sistema/persistencia';
-import {
-  hardwareService,
-  type CodigoResult,
-  type PesoResult,
-} from '../../sistema/servicios/HardwareService';
+import { useFierros } from '../../sistema/impresion/fierros';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -89,6 +85,13 @@ interface UsePOSProps {
 export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
   // Repositorios
   const menuRepo = useMemo(() => new MenuRepository(db, tenantPath), [db, tenantPath]);
+  const {
+    basculaActiva,
+    estaConectado,
+    leerPeso,
+    tararBascula: tararBasculaHardware,
+    imprimirTicketVenta,
+  } = useFierros();
 
   // Estado
   const [carrito, setCarrito] = useState<ItemVenta[]>([]);
@@ -158,60 +161,15 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
    * Escanear código de barras y agregar al carrito
    */
   const escanearProducto = useCallback(async () => {
-    if (!hardwareService.hasScanner()) {
-      throw new Error('No hay escáner configurado');
-    }
-
-    const result: CodigoResult = await hardwareService.escanearCodigo();
-
-    if (!result.success || !result.codigo) {
-      throw new Error(result.message || 'Error al escanear código');
-    }
-
-    setUltimoEscaneado(result.codigo);
-
-    // Buscar producto por código de barras
-    const producto = Object.values(productos).find(
-      (p) => p.codigoBarras === result.codigo && p.visible?.mesero !== false
-    );
-
-    if (!producto) {
-      throw new Error(`Producto no encontrado: ${result.codigo}`);
-    }
-
-    // Agregar al carrito
-    await agregarAlCarrito(producto.id, 1);
-
-    return result.codigo;
-  }, [productos]);
+    throw new Error('No hay escáner configurado');
+  }, []);
 
   /**
    * Activar modo escaneo continuo
    */
   const activarEscaneoContinuo = useCallback(async () => {
-    if (!hardwareService.hasScanner()) {
-      throw new Error('No hay escáner configurado');
-    }
-
-    const stopScanning = await hardwareService.escanearContinuo(async (result) => {
-      if (!result.success || !result.codigo) return;
-
-      setUltimoEscaneado(result.codigo);
-
-      // Buscar producto por código de barras
-      const producto = Object.values(productos).find(
-        (p) => p.codigoBarras === result.codigo && p.visible?.mesero !== false
-      );
-
-      if (producto) {
-        await agregarAlCarrito(producto.id, 1);
-      }
-    });
-
-    setModoEscaneo(true);
-
-    return stopScanning;
-  }, [productos]);
+    throw new Error('No hay escáner configurado');
+  }, []);
 
   /**
    * Desactivar modo escaneo continuo
@@ -248,7 +206,7 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
    */
   const pesarProducto = useCallback(
     async (productoId: string) => {
-      if (!hardwareService.hasScale()) {
+      if (!basculaActiva) {
         throw new Error('No hay báscula configurada');
       }
 
@@ -258,13 +216,10 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
       }
 
       // Leer peso
-      const result: PesoResult = await hardwareService.leerPeso({
-        aplicarTara: true,
-        esperarEstabilidad: true,
-      });
+      const result = await leerPeso({ esperarEstable: true });
 
-      if (!result.success || !result.peso) {
-        throw new Error(result.message || 'Error al leer peso');
+      if (!result.exito || !result.peso) {
+        throw new Error(result.mensaje || 'Error al leer peso');
       }
 
       // Agregar al carrito con el peso
@@ -272,25 +227,25 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
 
       return result;
     },
-    [productos]
+    [productos, basculaActiva, leerPeso, agregarAlCarrito]
   );
 
   /**
    * Tarar báscula
    */
   const tararBascula = useCallback(async () => {
-    if (!hardwareService.hasScale()) {
+    if (!basculaActiva) {
       throw new Error('No hay báscula configurada');
     }
 
-    const result = await hardwareService.tararBascula();
+    const result = await tararBasculaHardware();
 
-    if (!result.success) {
-      throw new Error(result.message || 'Error al tarar báscula');
+    if (!result.exito) {
+      throw new Error(result.mensaje || 'Error al tarar báscula');
     }
 
     return result;
-  }, []);
+  }, [basculaActiva, tararBasculaHardware]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACCIONES - CARRITO CONTINUACIÓN
@@ -362,17 +317,21 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
       };
 
       // Imprimir ticket de venta
-      if (hardwareService.hasPrinter()) {
-        await hardwareService.imprimirTicketVenta({
-          items: carrito.map((item) => ({
-            nombre: item.nombre,
-            cantidad: item.cantidad,
-            precio: item.precio,
-            peso: item.peso,
-          })),
-          total: totales.total,
-          timestamp: venta.timestamp,
-        });
+      if (estaConectado) {
+        await imprimirTicketVenta(
+          {
+            items: carrito.map((item) => ({
+              nombre: item.nombre,
+              cantidad: item.cantidad,
+              precio: item.precio,
+              unidad: item.unidad === 'otro' ? 'pza' : item.unidad,
+              subtotal: item.subtotal,
+            })),
+            total: totales.total,
+            timestamp: venta.timestamp,
+          },
+          { nombreNegocio: 'VENTA Y CRUDO', mensajeFinal: 'Gracias' }
+        );
       }
 
       // Limpiar carrito
@@ -380,7 +339,7 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
 
       return venta;
     },
-    [carrito, vendedor, calcularTotales, limpiarCarrito]
+    [carrito, vendedor, calcularTotales, limpiarCarrito, estaConectado, imprimirTicketVenta]
   );
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -416,8 +375,8 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
     completarVenta,
 
     // Hardware
-    tieneBascula: hardwareService.hasScale(),
-    tieneEscaner: hardwareService.hasScanner(),
-    tieneImpresora: hardwareService.hasPrinter(),
+    tieneBascula: Boolean(basculaActiva),
+    tieneEscaner: false,
+    tieneImpresora: estaConectado,
   };
 }

@@ -16,39 +16,12 @@ import {
   View,
 } from 'react-native';
 
-// ---- REPARACIÓN TEMPORAL ---
-// El hook 'useBluetoothClassic' ha sido eliminado.
-// Se inyecta un hook falso para prevenir errores de compilación.
-// TODO: Reemplazar esto con el futuro 'useHardware()' del ProveedorHardware.
-type PlaceholderBluetoothDevice = {
-  id: string;
-  name: string;
-  address: string;
-};
-
-type PlaceholderConnectArgs = {
-  id: string;
-  name: string;
-};
-
-const useBluetoothClassic_placeholder = () => ({
-  devices: [] as PlaceholderBluetoothDevice[],
-  isScanning: false,
-  isConnected: false,
-  connectedDevice: null as PlaceholderBluetoothDevice | null,
-  scan: async () => {
-    console.warn("Función 'scan' no implementada.");
-  },
-  connect: async (_args: PlaceholderConnectArgs) => {
-    console.warn("Función 'connect' no implementada.");
-    return false;
-  },
-});
-// -----------------------------
+import { useFierros } from '../../sistema/impresion/fierros';
+import type { DispositivoFierro } from '../../sistema/impresion/fierros/contratos/tipos';
 
 type BluetoothPrinterModalProps = {
   visible: boolean;
-  defaultPrinter: { address: string; name: string } | null;
+  defaultPrinter: DispositivoFierro | null;
   onConnected: () => void;
   onCancel: () => void;
 };
@@ -59,13 +32,20 @@ export function BluetoothPrinterModal({
   onConnected,
   onCancel,
 }: BluetoothPrinterModalProps) {
-  const { devices, isScanning, isConnected, connectedDevice, scan, connect } =
-    useBluetoothClassic_placeholder();
+  const { escanear, estaEscaneando, estaConectado, dispositivoActivo, conectarImpresora } =
+    useFierros();
 
+  const [dispositivos, setDispositivos] = useState<DispositivoFierro[]>([]);
   const [attemptingConnection, setAttemptingConnection] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [showManualScan, setShowManualScan] = useState(false);
   const hasNotifiedConnection = React.useRef(false);
+
+  const escanearDispositivos = useCallback(async () => {
+    const encontrados = await escanear();
+    setDispositivos(encontrados);
+    return encontrados;
+  }, [escanear]);
 
   // Auto-conectar cuando el modal se abre y hay impresora predeterminada
   const autoConnect = React.useCallback(async () => {
@@ -75,16 +55,8 @@ export function BluetoothPrinterModal({
     setConnectionError(null);
 
     try {
-      console.log('[BluetoothPrinterModal] Conectando a:', defaultPrinter.address);
-      const success = await connect({
-        id: defaultPrinter.address,
-        name: defaultPrinter.name,
-      });
-
-      if (!success) {
-        // No lanzar un error, solo registrarlo. La lógica de reintento se encargará.
-        console.warn('[BluetoothPrinterModal] Intento de conexión no exitoso.');
-      }
+      console.log('[BluetoothPrinterModal] Conectando a:', defaultPrinter.direccion);
+      await conectarImpresora(defaultPrinter);
     } catch (error: any) {
       // 🔥 FIX: Falla silenciosamente en el intento automático.
       // No actualices el estado de la UI para permitir que la lógica de reintento externa funcione.
@@ -95,7 +67,7 @@ export function BluetoothPrinterModal({
     } finally {
       setAttemptingConnection(false);
     }
-  }, [defaultPrinter, connect]);
+  }, [defaultPrinter, conectarImpresora]);
 
   useEffect(() => {
     // 🛡️ GUARD: No intentar conectar Bluetooth en web
@@ -104,17 +76,17 @@ export function BluetoothPrinterModal({
       return;
     }
 
-    if (visible && defaultPrinter && !isConnected && !attemptingConnection) {
+    if (visible && defaultPrinter && !estaConectado && !attemptingConnection) {
       console.log(
         '[BluetoothPrinterModal] 🔄 Intentando conexión automática a:',
-        defaultPrinter.name
+        defaultPrinter.nombre
       );
       const timer = setTimeout(() => {
         void autoConnect();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [visible, defaultPrinter, isConnected, attemptingConnection, autoConnect]);
+  }, [visible, defaultPrinter, estaConectado, attemptingConnection, autoConnect]);
 
   const handleCancel = useCallback(() => {
     hasNotifiedConnection.current = false;
@@ -126,7 +98,7 @@ export function BluetoothPrinterModal({
   // Si se conecta exitosamente, notificar al padre (SOLO UNA VEZ)
   // Si se conecta exitosamente, notificar al padre y DESCONECTAR (para liberar recurso)
   useEffect(() => {
-    if (isConnected && connectedDevice && visible && !hasNotifiedConnection.current) {
+    if (estaConectado && dispositivoActivo && visible && !hasNotifiedConnection.current) {
       console.log('[BluetoothPrinterModal] ✅ Conectado exitosamente');
       hasNotifiedConnection.current = true;
 
@@ -140,12 +112,12 @@ export function BluetoothPrinterModal({
         // No llamamos disconnect() aquí explícitamente porque al cerrar el modal
         // o al desmontar, el hook useBluetoothClassic debería limpiar,
         // PERO para estar seguros que liberamos para otros:
-        // await disconnect(connectedDevice.address); // (Opcional, depende de la implementación de useBluetoothClassic)
+        // await desconectar(); // (Opcional, depende de la implementación de useBluetoothClassic)
         // Por ahora confiamos en que al imprimir se hace connect/disconnect atomic.
         // Solo cerramos el modal visualmente si el padre lo maneja.
       }, 500);
     }
-  }, [isConnected, connectedDevice, visible, onConnected]);
+  }, [estaConectado, dispositivoActivo, visible, onConnected]);
 
   // Clean up on unmount or close
   useEffect(() => {
@@ -155,16 +127,10 @@ export function BluetoothPrinterModal({
     };
   }, []);
 
-  const handleManualConnect = async (device: { id: string; name: string; address: string }) => {
+  const handleManualConnect = async (device: DispositivoFierro) => {
     try {
       setAttemptingConnection(true);
-      const success = await connect({
-        id: device.address,
-        name: device.name,
-      });
-      if (!success) {
-        setConnectionError('No se pudo conectar');
-      }
+      await conectarImpresora(device);
     } catch (error: any) {
       setConnectionError(error?.message || 'Error al conectar');
     } finally {
@@ -194,15 +160,15 @@ export function BluetoothPrinterModal({
               <View style={styles.centerContent}>
                 <ActivityIndicator size="large" color="#3b82f6" />
                 <Text style={styles.statusText}>
-                  Conectando a {defaultPrinter?.name || 'impresora'}...
+                  Conectando a {defaultPrinter?.nombre || 'impresora'}...
                 </Text>
               </View>
-            ) : isConnected && connectedDevice ? (
+            ) : estaConectado && dispositivoActivo ? (
               // Conectado
               <View style={styles.centerContent}>
                 <Ionicons name="checkmark-circle" size={64} color="#16a34a" />
                 <Text style={styles.successText}>¡Conectado exitosamente!</Text>
-                <Text style={styles.deviceName}>{connectedDevice.name}</Text>
+                <Text style={styles.deviceName}>{dispositivoActivo.nombre}</Text>
               </View>
             ) : showManualScan || !defaultPrinter ? (
               // Escaneo manual
@@ -216,26 +182,26 @@ export function BluetoothPrinterModal({
                 </Text>
 
                 <Pressable
-                  onPress={scan}
-                  disabled={isScanning}
+                  onPress={() => void escanearDispositivos()}
+                  disabled={estaEscaneando}
                   style={({ pressed }) => [styles.scanButton, pressed && styles.buttonPressed]}
                 >
-                  {isScanning ? (
+                  {estaEscaneando ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
                     <Ionicons name="search" size={20} color="#ffffff" />
                   )}
                   <Text style={styles.scanButtonText}>
-                    {isScanning ? 'Buscando...' : 'Escanear Dispositivos'}
+                    {estaEscaneando ? 'Buscando...' : 'Escanear Dispositivos'}
                   </Text>
                 </Pressable>
 
                 {/* Lista de dispositivos */}
-                {devices.length > 0 && (
+                {dispositivos.length > 0 && (
                   <View style={styles.devicesList}>
-                    {devices.map((device) => (
+                    {dispositivos.map((device) => (
                       <Pressable
-                        key={device.id}
+                        key={device.direccion}
                         onPress={() => handleManualConnect(device)}
                         disabled={attemptingConnection}
                         style={({ pressed }) => [
@@ -245,8 +211,8 @@ export function BluetoothPrinterModal({
                       >
                         <Ionicons name="print-outline" size={20} color="#3b82f6" />
                         <View style={styles.deviceInfo}>
-                          <Text style={styles.deviceName}>{device.name}</Text>
-                          <Text style={styles.deviceAddress}>{device.address}</Text>
+                          <Text style={styles.deviceName}>{device.nombre}</Text>
+                          <Text style={styles.deviceAddress}>{device.direccion}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#6b7280" />
                       </Pressable>
@@ -259,7 +225,7 @@ export function BluetoothPrinterModal({
               <View style={styles.centerContent}>
                 <ActivityIndicator size="large" color="#3b82f6" />
                 <Text style={styles.statusText}>Preparando impresora predeterminada...</Text>
-                <Text style={styles.deviceNameSub}>{defaultPrinter?.name}</Text>
+                <Text style={styles.deviceNameSub}>{defaultPrinter?.nombre}</Text>
               </View>
             )}
           </View>
@@ -267,7 +233,7 @@ export function BluetoothPrinterModal({
           {/* Footer */}
           {!attemptingConnection && (
             <View style={styles.footer}>
-              {!isConnected && (
+              {!estaConectado && (
                 <Pressable
                   onPress={handleCancel}
                   style={({ pressed }) => [styles.cancelButton, pressed && styles.buttonPressed]}

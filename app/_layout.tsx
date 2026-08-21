@@ -14,7 +14,7 @@ import { theme } from '../src/compartido/theme';
 import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
-import { ProveedorHardware } from '../src/sistema/proveedores/ProveedorHardware';
+import { ProveedorFierros } from '../src/sistema/impresion/fierros';
 import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
 import { ProveedorConfiguracionTenant } from '../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
@@ -82,7 +82,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider tenantPath={tenantPath || ''}>
-      <ProveedorHardware>
+      <ProveedorFierros>
         <ProveedorConfiguracionTenant>
           <GlobalHubManager />
 
@@ -109,7 +109,7 @@ export default function RootLayout() {
             </ProveedorAudioNotificaciones>
           </GestureHandlerRootView>
         </ProveedorConfiguracionTenant>
-      </ProveedorHardware>
+      </ProveedorFierros>
     </ThemeProvider>
   );
 }

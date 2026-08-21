@@ -14,7 +14,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
-import { hardwareService } from './HardwareService';
+import { servicioFierros } from '../impresion/fierros';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -82,9 +82,7 @@ class OfflinePrintFallbackClass {
    */
   private async checkBluetoothStatus(): Promise<void> {
     try {
-      // Usar el hardwareService existente para verificar conexión
-      const status = hardwareService.getState();
-      this.isBluetoothConnected = status.isConnected;
+      this.isBluetoothConnected = servicioFierros.estaConectado;
     } catch (error) {
       this.isBluetoothConnected = false;
     }
@@ -120,28 +118,77 @@ class OfflinePrintFallbackClass {
   }
 
   /**
-   * Imprime directamente vía Bluetooth usando el hardware service existente
+   * Imprime directamente vía Bluetooth usando el contrato canónico de fierros.
    */
   private async printViaBluetooth(job: OfflinePrintJob): Promise<{ success: boolean }> {
     const { type, payload } = job;
 
     switch (type) {
-      case 'comanda':
-        await hardwareService.imprimirComanda(payload, { rol: 'cocina' });
+      case 'comanda': {
+        const resultado = await servicioFierros.imprimirComanda(
+          {
+            mesaId: payload.mesaId || '0',
+            tipo: payload.tipo || 'local',
+            items: (payload.items || []).map((item: any) => ({
+              nombre: item.nombre,
+              cantidad: item.cantidad,
+              variantes: item.variantes,
+              notas: item.notas,
+            })),
+            timestamp: payload.timestamp || Date.now(),
+          },
+          { rol: 'cocina' }
+        );
+        if (!resultado.exito) throw new Error(resultado.mensaje || 'Error al imprimir comanda');
         break;
-      case 'cuenta':
-        await hardwareService.imprimirCuenta(payload, {
-          rol: 'caja',
-          tenantName: payload.businessName || 'Restaurante',
-        });
+      }
+      case 'cuenta': {
+        const resultado = await servicioFierros.imprimirCuenta(
+          {
+            mesaId: payload.mesaId || '0',
+            tipo: payload.tipo || 'local',
+            items: (payload.items || []).map((item: any) => ({
+              nombre: item.nombre,
+              cantidad: item.cantidad,
+              precio: item.precio || 0,
+              variantes: item.variantes,
+            })),
+            totales: {
+              subtotal: payload.totales?.subtotal || payload.subtotal || 0,
+              total: payload.totales?.total || payload.total || 0,
+            },
+            timestamp: payload.timestamp || Date.now(),
+          },
+          {
+            rol: 'caja',
+            nombreNegocio: payload.businessName || 'Restaurante',
+          }
+        );
+        if (!resultado.exito) throw new Error(resultado.mensaje || 'Error al imprimir cuenta');
         break;
-      case 'venta_crudo':
-        await hardwareService.imprimirTicketVenta(payload, {
-          nombreNegocio: payload.businessName || 'NEGOCIO',
-          encabezado: payload.businessName || 'TICKET',
-          mensajeFinal: payload.footer || '¡Gracias!',
-        });
+      }
+      case 'venta_crudo': {
+        const resultado = await servicioFierros.imprimirTicketVenta(
+          {
+            items: (payload.items || []).map((item: any) => ({
+              nombre: item.nombre || '',
+              cantidad: item.cantidad || 0,
+              precio: item.precio || 0,
+              unidad: item.unidad === 'kg' || item.unidad === 'lt' ? item.unidad : 'pza',
+              subtotal: item.subtotal || (item.precio || 0) * (item.cantidad || 0),
+            })),
+            total: payload.total || 0,
+            timestamp: payload.timestamp || Date.now(),
+          },
+          {
+            nombreNegocio: payload.businessName || 'NEGOCIO',
+            encabezado: payload.businessName || 'TICKET',
+            mensajeFinal: payload.footer || '¡Gracias!',
+          }
+        );
+        if (!resultado.exito) throw new Error(resultado.mensaje || 'Error al imprimir venta');
         break;
+      }
       default:
         throw new Error(`Tipo de impresión no soportado: ${type}`);
     }

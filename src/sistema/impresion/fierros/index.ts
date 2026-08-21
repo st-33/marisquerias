@@ -69,9 +69,6 @@ export {
   useFierros,
 } from './hooks/useFierros';
 
-// Hook legacy para compatibilidad
-export { useHardware } from './hooks/useFierrosLegacy';
-
 // ═══════════════════════════════════════════════════════════════════════════
 // ESTADO HUB (Zustand)
 // ═══════════════════════════════════════════════════════════════════════════

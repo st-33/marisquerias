@@ -9,7 +9,7 @@ import { NotificationToast } from '../../compartido/componentes/NotificationToas
 import { getRtdb } from '../../sistema/firebase';
 import { useImmersiveMode } from '../../sistema/navegacion/ImmersiveMode';
 import { useStore } from '../../sistema/store';
-import { useHardware } from '../../compartido/hooks/useHardware';
+import { useFierros } from '../../sistema/impresion/fierros';
 import { useItemStatusListener } from '../../compartido/hooks/useItemStatusListener';
 import { useNotifications } from '../../compartido/hooks/useNotifications';
 import { logger } from '../../compartido/utils/logger';
@@ -24,22 +24,22 @@ function MeseroScreenContent() {
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
-  // 🖨️ Conexión con ProveedorHardware (Centralizado)
-  const { isConnected, connectedDevice } = useHardware();
+  // 🖨️ Conexión con el proveedor canónico de fierros
+  const { estaConectado, dispositivoActivo } = useFierros();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
 
   // Helper para garantizar conexión (compatible con useMeseroLogic)
   const ensureConnection = useCallback(async (): Promise<boolean> => {
-    if (isConnected && connectedDevice) {
+    if (estaConectado && dispositivoActivo) {
       return true;
     }
     setShowPrinterModal(true);
     return false;
-  }, [isConnected, connectedDevice]);
+  }, [estaConectado, dispositivoActivo]);
 
   // Wrapper para cerrar modal
   const closeModal = useCallback(() => setShowPrinterModal(false), []);
-  const defaultPrinter = connectedDevice;
+  const defaultPrinter = dispositivoActivo;
 
   // Modo inmersivo: ocultar status bar y navigation bar
   useImmersiveMode(true);
