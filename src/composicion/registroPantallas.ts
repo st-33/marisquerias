@@ -1,7 +1,7 @@
 import { RolesScreen } from '../ui/pantallas/RolesScreen';
 import { CocinaScreen } from '../ui/pantallas/CocinaScreen';
 import { MeseroScreen } from '../ui/pantallas/MeseroScreen';
-import { AdminDashboardScreen } from '../ui/pantallas/AdminDashboardScreen';
+import { AdminDashboardScreen } from '../ui/roles/administrador/metricas/AdminDashboardScreen';
 import { AdminMenuScreen } from '../ui/pantallas/AdminMenuScreen';
 import { AdminTablesScreen } from '../ui/pantallas/AdminTablesScreen';
 import { AdminInventoryScreen } from '../ui/pantallas/AdminInventoryScreen';

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { RegistroVenta } from '../../sistema/persistencia/registroVentas.repo';
+import type { RegistroVenta } from '../../../../sistema/persistencia/registroVentas.repo';
 
 function formatMesa(mesaId?: string): string {
   if (!mesaId) return 'Mostrador';

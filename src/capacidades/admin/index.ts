@@ -1,7 +1,4 @@
 export * from './useAdminFeatures';
-export * from './useAdminLogic';
-export * from './useRegistroVentasDelDia';
-export * from './useAdminMetrics';
 export * from './useAdminRepart';
 export * from './useAdminTools';
 export * from './useAlertasInteligentes';
@@ -10,7 +7,6 @@ export * from './useMenuManagement';
 export * from './useMesasManagement';
 export * from './useTicketTemplates';
 export * from './menuSafety';
-export * from './metricasVendedores';
 export * from './analitica/usePrediccionStock';
 export * from './operacion/useInventarioAvanzado';
 export * from './operacion/usePuenteAccionesFlotantes';

@@ -7,24 +7,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { SalesDistributionPieChart } from '../../compartido/componentes/charts/SalesDistributionPieChart';
-import { SalesLineChart } from '../../compartido/componentes/charts/SalesLineChart';
-import { TopProductsBarChart } from '../../compartido/componentes/charts/TopProductsBarChart';
-import { AdminLayout } from '../../compartido/componentes/layouts/AdminLayout';
-import { RegistroVentasDia } from '../bloques/RegistroVentasDia';
-import { getRtdb } from '../../sistema/firebase';
-import { useStore } from '../../sistema/store';
-import { useNotifications } from '../../compartido/hooks/useNotifications';
-import { useStoreNotifications } from '../../compartido/hooks/useStoreNotifications';
-import { logger } from '../../compartido/utils/logger';
+import { SalesDistributionPieChart } from '../../../../compartido/componentes/charts/SalesDistributionPieChart';
+import { SalesLineChart } from '../../../../compartido/componentes/charts/SalesLineChart';
+import { TopProductsBarChart } from '../../../../compartido/componentes/charts/TopProductsBarChart';
+import { AdminLayout } from '../../../../compartido/componentes/layouts/AdminLayout';
+import { RegistroVentasDia } from './RegistroVentasDia';
+import { getRtdb } from '../../../../sistema/firebase';
+import { useStore } from '../../../../sistema/store';
+import { useNotifications } from '../../../../compartido/hooks/useNotifications';
+import { useStoreNotifications } from '../../../../compartido/hooks/useStoreNotifications';
+import { logger } from '../../../../compartido/utils/logger';
 import {
-  useAdminLogic,
   useAlertasInteligentes,
   usePrediccionStock,
   usePuenteAccionesFlotantes,
-  useRegistroVentasDelDia,
-} from '../../capacidades';
-import type { FabItem } from '../../sistema/tipos/contratos';
+} from '../../../../capacidades/admin';
+import { useAdminLogic, useRegistroVentasDelDia } from '../../../../capacidades/metricas';
+import type { FabItem } from '../../../../sistema/tipos/contratos';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
 

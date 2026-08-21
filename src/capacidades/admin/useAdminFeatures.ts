@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
 import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
-import type { TenantFeatures } from './useAdminLogic'; // reuse type
+import type { TenantFeatures } from '../metricas/useAdminLogic'; // reuse type
 import { estaFeatureAdminHabilitada } from './menuSafety';
 
 type UseAdminFeaturesProps = {

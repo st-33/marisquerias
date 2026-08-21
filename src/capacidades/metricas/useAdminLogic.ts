@@ -2,7 +2,7 @@
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
 import { TenantRepository } from '../../sistema/persistencia';
-import { useAdminFeatures } from './useAdminFeatures';
+import { useAdminFeatures } from '../admin/useAdminFeatures';
 import { useAdminMetrics } from './useAdminMetrics';
 
 // ==================== TIPOS ====================

@@ -1,4 +1,4 @@
-import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
+import { acumularVendedorSeguro, type ResumenVendedor } from '../metricasVendedores';
 
 describe('acumularVendedorSeguro', () => {
   test.each(['__proto__', 'prototype', 'constructor'])(
