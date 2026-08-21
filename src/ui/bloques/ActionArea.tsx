@@ -23,6 +23,7 @@ type ActionAreaProps = {
   isCollapsed?: boolean;
   isPrinting?: boolean;
   isSending?: boolean;
+  canSend?: boolean;
   permissionToPrint: boolean;
   onAdd: () => void;
   onSend: () => void;
@@ -44,6 +45,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
     isCollapsed,
     isPrinting,
     isSending,
+    canSend = true,
     permissionToPrint,
     onAdd,
     onSend,
@@ -211,9 +213,9 @@ function ActionAreaComponent(props: ActionAreaProps) {
             accessibilityRole="button"
             accessibilityLabel="Enviar pedido a Cocina"
             onPress={onSend}
-            disabled={!mode || isSending}
+            disabled={!mode || !canSend || isSending}
             style={({ pressed }) => ({
-              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
+              backgroundColor: !mode || !canSend || isSending ? COLORS.bg.elevated : COLORS.primary,
               flex: 1.35,
               minHeight: 54,
               paddingHorizontal: SPACING.md,
@@ -223,7 +225,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
               justifyContent: 'center',
               opacity: pressed || isSending ? 0.95 : 1,
               transform: [{ scale: pressed && !isSending ? 0.98 : 1 }],
-              ...(!mode || isSending ? {} : SHADOWS.primary),
+              ...(!mode || !canSend || isSending ? {} : SHADOWS.primary),
             })}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm }}>

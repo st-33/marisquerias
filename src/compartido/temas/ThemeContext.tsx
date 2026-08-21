@@ -165,7 +165,7 @@ const defaultTheme: AppTheme = {
 // ═══════════════════════════════════════════════════════════════════
 // CONTEXT
 // ═══════════════════════════════════════════════════════════════════
-interface ThemeContextValue {
+export interface ThemeContextValue {
   theme: AppTheme;
   themeType: ThemeType;
   colors: ThemeColors;
@@ -176,7 +176,11 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const STORAGE_KEY = '@adi_theme_preference';
+const STORAGE_KEY_PREFIX = '@adi_theme_preference:';
+
+function getStorageKey(tenantPath: string): string {
+  return `${STORAGE_KEY_PREFIX}${tenantPath || 'global'}`;
+}
 
 /**
  * Mapa de categorías RTDB → tema visual.
@@ -214,25 +218,35 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, tenantPath = '' }: ThemeProviderProps) {
   const categoryDefault = detectCategoryTheme(tenantPath);
   const [themeType, setThemeType] = useState<ThemeType>(categoryDefault);
-  const [loaded, setLoaded] = useState(false);
+  const [loadedTenantPath, setLoadedTenantPath] = useState<string | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((saved) => {
-        if (saved === 'elite' || saved === 'default') {
-          setThemeType(saved);
-        } else {
-          setThemeType(categoryDefault);
-        }
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-  }, [categoryDefault]);
+    let cancelled = false;
 
-  const setTheme = useCallback((type: ThemeType) => {
-    setThemeType(type);
-    AsyncStorage.setItem(STORAGE_KEY, type).catch(console.warn);
-  }, []);
+    AsyncStorage.getItem(getStorageKey(tenantPath))
+      .then((saved) => {
+        if (cancelled) return;
+        setThemeType(saved === 'elite' || saved === 'default' ? saved : categoryDefault);
+        setLoadedTenantPath(tenantPath);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setThemeType(categoryDefault);
+        setLoadedTenantPath(tenantPath);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryDefault, tenantPath]);
+
+  const setTheme = useCallback(
+    (type: ThemeType) => {
+      setThemeType(type);
+      AsyncStorage.setItem(getStorageKey(tenantPath), type).catch(console.warn);
+    },
+    [tenantPath]
+  );
 
   const toggleTheme = useCallback(() => {
     const next = themeType === 'elite' ? 'default' : 'elite';
@@ -252,7 +266,7 @@ export function ThemeProvider({ children, tenantPath = '' }: ThemeProviderProps)
     [themeType, setTheme, toggleTheme, categoryDefault]
   );
 
-  if (!loaded) return null;
+  if (loadedTenantPath !== tenantPath) return null;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

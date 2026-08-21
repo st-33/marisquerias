@@ -7,8 +7,7 @@ import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorHub'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FabRadial from '../src/ui/bloques/FabRadial';
 import { useAuthGuard } from '../src/sistema/seguridad';
-import { ThemeProvider } from '../src/compartido/temas';
-import { theme } from '../src/compartido/theme';
+import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
@@ -80,35 +79,43 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider tenantPath={tenantPath || ''}>
-      <ProveedorFierros>
-        <ProveedorConfiguracionTenant>
-          <GestorHubGlobal tenantPath={tenantPath || null} />
-
-          <GestureHandlerRootView
-            style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
-          >
-            <ProveedorAudioNotificaciones>
-              <View style={{ flex: 1 }}>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: theme.colors.background },
-                  }}
-                >
-                  <Stack.Screen name="index" options={{ title: 'Inicio' }} />
-                  <Stack.Screen name="(auth)/access" />
-                  <Stack.Screen name="_role/roles" />
-                  <Stack.Screen name="_role/admin/index" />
-                  <Stack.Screen name="_role/venta-crudo" />
-                </Stack>
-
-                <GlobalFabSlot />
-              </View>
-            </ProveedorAudioNotificaciones>
-          </GestureHandlerRootView>
-        </ProveedorConfiguracionTenant>
-      </ProveedorFierros>
+      <RootLayoutContent tenantPath={tenantPath || null} />
     </ThemeProvider>
+  );
+}
+
+function RootLayoutContent({ tenantPath }: { tenantPath: string | null }) {
+  const { theme } = useAppTheme();
+
+  return (
+    <ProveedorFierros>
+      <ProveedorConfiguracionTenant>
+        <GestorHubGlobal tenantPath={tenantPath} />
+
+        <GestureHandlerRootView
+          style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
+        >
+          <ProveedorAudioNotificaciones>
+            <View style={{ flex: 1 }}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: theme.colors.background },
+                }}
+              >
+                <Stack.Screen name="index" options={{ title: 'Inicio' }} />
+                <Stack.Screen name="(auth)/access" />
+                <Stack.Screen name="_role/roles" />
+                <Stack.Screen name="_role/admin/index" />
+                <Stack.Screen name="_role/venta-crudo" />
+              </Stack>
+
+              <GlobalFabSlot />
+            </View>
+          </ProveedorAudioNotificaciones>
+        </GestureHandlerRootView>
+      </ProveedorConfiguracionTenant>
+    </ProveedorFierros>
   );
 }
 

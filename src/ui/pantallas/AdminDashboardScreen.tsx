@@ -116,7 +116,7 @@ export function AdminDashboardScreen() {
         key: 'metricas-home',
         label: 'Métricas',
         icon: <Ionicons name="stats-chart" size={26} color="white" />,
-        onPress: () => {},
+        onPress: () => router.replace('/_role/admin/dashboard'),
       });
     }
 
@@ -165,17 +165,7 @@ export function AdminDashboardScreen() {
       });
     }
 
-    return items.length > 0
-      ? items
-      : [
-          {
-            key: 'metricas-default',
-            label: 'Métricas',
-            icon: <Ionicons name="stats-chart" size={24} color="white" />,
-            onPress: () => {},
-            enabled: false,
-          },
-        ];
+    return items;
   }, [features]);
 
   const fabConfig = useMemo(

@@ -169,8 +169,6 @@ export function PuestoMando(props: PuestoMandoProps) {
   const showGridLoading = loading;
   const showOrderLoading = cartsLoading;
 
-  const handleSend = canSend && !isSending ? onSend : () => {};
-
   return (
     <View style={themedStyles.container}>
       <View style={[staticStyles.layout, { flexDirection: isWideLayout ? 'row' : 'column' }]}>
@@ -237,11 +235,11 @@ export function PuestoMando(props: PuestoMandoProps) {
             hasPrinted={hasPrinted}
             canMarkPaid={canMarkPaid}
             isCollapsed={!isTotalVisibleState}
-            isPrinting={isPrinting}
             isSending={isSending}
+            canSend={canSend}
             permissionToPrint={permissionToPrint}
             onAdd={onAddItem}
-            onSend={handleSend}
+            onSend={onSend}
             onPrintBill={onPrintBill}
             onBill={onRequestBill}
             onPaid={onMarkPaid}
