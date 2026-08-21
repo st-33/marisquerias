@@ -41,7 +41,7 @@ export interface ConfiguracionDespachador {
 type ModoOperacion = 'dispositivo' | 'hub';
 
 /** Trabajo en la cola de Firebase */
-interface TrabajoRTDB {
+export interface TrabajoRTDB {
   jobId: string;
   purpose: PropositoTrabajo;
   state: 'pendiente_impresion' | 'impresion_enviada' | 'exito' | 'fallo';
@@ -49,11 +49,21 @@ interface TrabajoRTDB {
   orderId?: string;
   deviceId?: string;
   payload?: Record<string, any>;
+  templateVersion?: string;
   attempts: number;
   lastError?: string;
   createdAt: number;
   updatedAt: number;
   _lockedBy?: string;
+}
+
+export interface SolicitudTrabajoRemoto {
+  idTrabajo?: string;
+  proposito: PropositoTrabajo;
+  idPedido?: string;
+  canal?: CanalImpresion;
+  payload?: Record<string, any>;
+  templateVersion?: string;
 }
 
 /** Resultado de operación de impresión */
@@ -189,6 +199,83 @@ export class DespachadorCola {
     DespachadorCola.instancias.set(clave, instancia);
 
     return instancia;
+  }
+
+  /**
+   * Obtiene un trabajo por ID sin crear ni reconfigurar una instancia de cola.
+   */
+  public static async obtenerTrabajo(
+    db: Database,
+    tenantPath: string,
+    idTrabajo: string
+  ): Promise<TrabajoRTDB | null> {
+    const snapshot = await get(ref(db, `${tenantPath}/spool/jobs/${idTrabajo}`));
+    return snapshot.exists() ? (snapshot.val() as TrabajoRTDB) : null;
+  }
+
+  /**
+   * Encola directamente en la cola Hub del canal indicado.
+   * No altera el despachador local del dispositivo que solicita la impresión.
+   */
+  public static async encolarRemoto(
+    db: Database,
+    tenantPath: string,
+    solicitud: SolicitudTrabajoRemoto
+  ): Promise<TrabajoRTDB> {
+    const idTrabajo = solicitud.idTrabajo || DespachadorCola.generarIdTrabajo(solicitud.proposito);
+    const ahora = Date.now();
+    const canal =
+      solicitud.canal || (solicitud.proposito === 'venta_crudo' ? 'venta_crudo' : 'standard');
+    const trabajo = limpiarUndefined({
+      jobId: idTrabajo,
+      purpose: solicitud.proposito,
+      state: 'pendiente_impresion' as const,
+      channel: canal,
+      orderId: solicitud.idPedido,
+      payload: solicitud.payload,
+      templateVersion: solicitud.templateVersion,
+      attempts: 0,
+      createdAt: ahora,
+      updatedAt: ahora,
+    }) as TrabajoRTDB;
+
+    await Promise.all([
+      set(ref(db, `${tenantPath}/spool/jobs/${idTrabajo}`), trabajo),
+      set(
+        ref(
+          db,
+          canal === 'standard'
+            ? `${tenantPath}/spool/hub/queue/${idTrabajo}`
+            : `${tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`
+        ),
+        true
+      ),
+    ]);
+
+    return trabajo;
+  }
+
+  /**
+   * Encola en Hub sin duplicar trabajos exitosos o ya pendientes.
+   */
+  public static async encolarRemotoIdempotente(
+    db: Database,
+    tenantPath: string,
+    solicitud: SolicitudTrabajoRemoto
+  ): Promise<TrabajoRTDB> {
+    if (solicitud.idTrabajo) {
+      const existente = await DespachadorCola.obtenerTrabajo(db, tenantPath, solicitud.idTrabajo);
+      if (
+        existente &&
+        (existente.state === 'exito' ||
+          existente.state === 'pendiente_impresion' ||
+          existente.state === 'impresion_enviada')
+      ) {
+        return existente;
+      }
+    }
+
+    return DespachadorCola.encolarRemoto(db, tenantPath, solicitud);
   }
 
   /**
@@ -356,13 +443,15 @@ export class DespachadorCola {
    * Agrega un trabajo a la cola
    */
   async encolar(trabajo: {
+    idTrabajo?: string;
     proposito: PropositoTrabajo;
     idPedido?: string;
     idDispositivo?: string;
     canal?: CanalImpresion;
     payload?: Record<string, any>;
+    templateVersion?: string;
   }): Promise<string> {
-    const idTrabajo = this.generarIdTrabajo(trabajo.proposito);
+    const idTrabajo = trabajo.idTrabajo || DespachadorCola.generarIdTrabajo(trabajo.proposito);
     const ahora = Date.now();
 
     const canal =
@@ -376,6 +465,7 @@ export class DespachadorCola {
       orderId: trabajo.idPedido,
       deviceId: trabajo.idDispositivo,
       payload: trabajo.payload ? limpiarUndefined(trabajo.payload) : undefined,
+      templateVersion: trabajo.templateVersion,
       attempts: 0,
       createdAt: ahora,
       updatedAt: ahora,
@@ -775,7 +865,7 @@ export class DespachadorCola {
     }
   }
 
-  private generarIdTrabajo(proposito: PropositoTrabajo): string {
+  private static generarIdTrabajo(proposito: PropositoTrabajo): string {
     return `${proposito}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   }
 

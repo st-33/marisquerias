@@ -7,7 +7,7 @@
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
-import { enqueuePrintIdempotent } from '../../../sistema/impresion/legacy/printService';
+import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
 import { createLogger } from '../../../sistema/utilidades/logger';
 import { usePrintPolicies } from './usePrintPolicies';
 
@@ -136,13 +136,14 @@ export function useGestionarImpresion({
 
         log.info(`📡 Encolando job: ${jobId}`);
 
-        const job = await enqueuePrintIdempotent(db, tenantPath, {
-          jobId,
-          orderId: pedidoId,
-          purpose: 'cuenta',
+        const job = await DespachadorCola.encolarRemotoIdempotente(db, tenantPath, {
+          idTrabajo: jobId,
+          idPedido: pedidoId,
+          proposito: 'cuenta',
+          canal: 'standard',
           templateVersion: 'v1',
-          payload: payload,
-        } as any);
+          payload,
+        });
 
         log.info('✅ Job encolado', { jobId: job.jobId });
 

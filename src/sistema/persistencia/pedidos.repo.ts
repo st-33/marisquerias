@@ -7,7 +7,7 @@
 import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
-import { RtdbSpooler } from '../impresion/legacy/rtdbSpooler';
+import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidTenantPath } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
@@ -444,24 +444,22 @@ export class PedidosRepository {
           variantes: item.variantes ? Object.values(item.variantes).flat().join(', ') : undefined,
         }));
 
-        const spooler = new RtdbSpooler(this.db, this.tenantPath);
         const jobId = `job_comanda_v1_${pedidoId}_${now}`;
 
         // Fire-and-forget: No bloqueamos el flujo principal
-        spooler
-          .enqueueToHub({
-            jobId,
-            orderId: pedidoId,
-            purpose: 'comanda',
-            templateVersion: 'v1',
-            channel: 'standard', // Comandas van al canal estándar (restaurante)
-            payload: {
-              mesaId: pedido.mesaId,
-              tipo: pedido.tipo,
-              items: comandaItems,
-              timestamp: now,
-            },
-          } as any)
+        DespachadorCola.encolarRemoto(this.db, this.tenantPath, {
+          idTrabajo: jobId,
+          idPedido: pedidoId,
+          proposito: 'comanda',
+          templateVersion: 'v1',
+          canal: 'standard', // Comandas van al canal estándar (restaurante)
+          payload: {
+            mesaId: pedido.mesaId,
+            tipo: pedido.tipo,
+            items: comandaItems,
+            timestamp: now,
+          },
+        })
           .then(() => {
             console.log(`[PedidosRepo] 🖨️ Comanda encolada al Hub: ${jobId}`);
           })
