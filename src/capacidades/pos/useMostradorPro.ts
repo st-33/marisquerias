@@ -213,7 +213,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
     if (isOnline) {
       // ═══════════════════════════════════════════════════════════════════
-      // MODO ONLINE: Comportamiento normal (Firebase + PrintSpooler)
+      // MODO ONLINE: Comportamiento normal (Firebase + DespachadorCola)
       // ═══════════════════════════════════════════════════════════════════
       try {
         await salesRepo.registrarVenta(payload);

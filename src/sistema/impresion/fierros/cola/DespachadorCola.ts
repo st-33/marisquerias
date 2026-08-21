@@ -7,11 +7,8 @@
  * - Transacciones atómicas (lock por instancia)
  * - Garbage collector automático
  *
- * MIGRADO DE: core/services/PrintSpooler.ts
- * CAMBIOS:
- * - Nombres en español
- * - Usa ServicioFierros como controlador canónico
- * - Tipos del nuevo sistema
+ * Motor canónico de cola RTDB para impresión local y remota.
+ * Contrato y nombres del sistema en español.
  */
 
 import type { Database } from 'firebase/database';

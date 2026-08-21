@@ -32,8 +32,8 @@ export function useInicializacionServiciosTenant({ estadoInstalacion, tenantPath
       void import('../../servicios/OfflineInventorySync').then(({ OfflineInventorySync }) => {
         OfflineInventorySync.destroy();
       });
-      void import('../../servicios/PrintSpooler').then(({ PrintSpooler }) => {
-        PrintSpooler.destroyInstance(tenantPath, 'device');
+      void import('../../impresion/fierros/cola/DespachadorCola').then(({ DespachadorCola }) => {
+        DespachadorCola.destruirInstancia(tenantPath, 'dispositivo');
       });
       initializedTenantRef.current = null;
     };
@@ -68,8 +68,14 @@ export function useInicializacionServiciosTenant({ estadoInstalacion, tenantPath
         const deviceId = (await deviceBinding.getStoredDeviceId()) || 'dispositivo_local';
         if (cancelled || !isCurrentTenantLifecycle(tenantPath, generation)) return;
 
-        const { PrintSpooler } = await import('../../servicios/PrintSpooler');
-        PrintSpooler.getInstance(db, tenantPath, deviceId, { autoProcess: true }, 'device');
+        const { DespachadorCola } = await import('../../impresion/fierros/cola/DespachadorCola');
+        DespachadorCola.obtenerInstancia(
+          db,
+          tenantPath,
+          deviceId,
+          { procesamientoAuto: true, canal: 'standard' },
+          'dispositivo'
+        );
 
         logger.info('OFFLINE_BOOT', '✅ Servicios Offline Inicializados', {
           tenantPath,

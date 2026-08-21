@@ -7,7 +7,7 @@
  * 2. Bluetooth directo (cuando offline pero BT disponible)
  * 3. Cola local SQLite (cuando no hay nada más)
  *
- * DOGMA V2: Este servicio es independiente del PrintSpooler principal.
+ * Este servicio es independiente del despachador remoto principal.
  * Se activa automáticamente cuando detecta pérdida de conexión.
  */
 
@@ -95,7 +95,7 @@ class OfflinePrintFallbackClass {
   async print(job: OfflinePrintJob): Promise<PrintResult> {
     await this.checkBluetoothStatus();
 
-    // 1. Si hay internet, delegar al Hub (el caller usará PrintSpooler)
+    // 1. Si hay internet, delegar al Hub mediante la cola remota
     if (this.isOnline) {
       return { success: true, method: 'hub', message: 'Delegado a Hub' };
     }
