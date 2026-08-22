@@ -1,154 +1,122 @@
-import { useMemo } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import { useAppTheme } from '../../temas/ThemeContext';
-import { Card } from '../ui/Card';
+/**
+ * Dirección visual: curva de área viva para el centro de control; usa Gifted
+ * Charts para animación, foco táctil y tooltip sin sacrificar Expo web.
+ */
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import { LineChart } from 'react-native-gifted-charts';
+import { useMemo } from 'react';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useAppTheme } from '../../temas/ThemeContext';
 
 interface SalesLineChartProps {
   data: { label: string; total: number }[];
-  title?: string;
   height?: number;
 }
 
-export const SalesLineChart = ({
-  data,
-  title = 'Tendencia de Ventas',
-  height = 220,
-}: SalesLineChartProps) => {
-  const { theme, isElite } = useAppTheme();
+export const SalesLineChart = ({ data, height = 190 }: SalesLineChartProps) => {
+  const { isElite } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const accent = isElite ? '#5ED0B0' : '#3B82F6';
+  const accentStart = isElite ? '#3C90DA' : '#2563EB';
+  const chartWidth = Math.max(245, Math.min(650, width - 142));
 
-  // 🎨 Configuración de Colores Dinámica
-  const chartConfig = useMemo(() => {
-    return {
-      backgroundGradientFrom: isElite ? '#111115' : '#ffffff',
-      backgroundGradientTo: isElite ? '#0a0a0c' : '#ffffff',
-      decimalPlaces: 0,
-      color: (opacity = 1) =>
-        isElite
-          ? `rgba(197, 160, 89, ${opacity})` // Elite Gold
-          : `rgba(37, 99, 235, ${opacity})`, // Classic Blue
-      labelColor: (opacity = 1) =>
-        isElite ? `rgba(255, 255, 255, ${opacity})` : `rgba(107, 114, 128, ${opacity})`,
-      style: {
-        borderRadius: 16,
-      },
-      propsForDots: {
-        r: '4',
-        strokeWidth: '2',
-        stroke: isElite ? '#fbbf24' : '#2563EB',
-        fill: isElite ? '#000' : '#fff',
-      },
-      propsForBackgroundLines: {
-        strokeDasharray: '5', // Dotted lines
-        stroke: isElite ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-      },
-    };
-  }, [isElite, theme]);
-
-  // Transformar datos para el chart
   const chartData = useMemo(() => {
-    // Si no hay datos, mostramos una línea plana
-    if (!data || data.length === 0) {
-      return {
-        labels: ['0h', '4h', '8h', '12h', '16h', '20h'],
-        datasets: [{ data: [0, 0, 0, 0, 0, 0] }],
-      };
-    }
+    const source = data?.length
+      ? data
+      : [
+          { label: '08:00', total: 0 },
+          { label: '10:00', total: 0 },
+          { label: '12:00', total: 0 },
+          { label: '14:00', total: 0 },
+          { label: '16:00', total: 0 },
+          { label: '18:00', total: 0 },
+        ];
+    const step = Math.max(1, Math.ceil(source.length / 7));
+    return source.map((point, index) => ({
+      value: Math.max(0, Number(point.total) || 0),
+      label: index % step === 0 || index === source.length - 1 ? point.label : '',
+    }));
+  }, [data]);
 
-    // Tomar solo algunos labels para no saturar el eje X
-    const step = Math.ceil(data.length / 6);
-    const labels = data.map((d, i) => (i % step === 0 ? d.label : ''));
-    const values = data.map((d) => d.total);
-
-    return {
-      labels,
-      datasets: [
-        {
-          data: values,
-          color: (opacity = 1) =>
-            isElite ? `rgba(212, 175, 55, ${opacity})` : `rgba(37, 99, 235, ${opacity})`,
-          strokeWidth: 3,
-        },
-      ],
-      legend: [isElite ? 'Ventas (Elite)' : 'Ventas'],
-    };
-  }, [data, isElite]);
+  const max = Math.max(1, ...chartData.map((point) => point.value));
+  const sectionValue = Math.max(1, Math.ceil(max / 4));
+  const maxValue = sectionValue * 4;
 
   return (
-    <Card style={[styles.container, { backgroundColor: theme.colors.card }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
-        {isElite && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>LIVE</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.chartContainer}>
-        <LineChart
-          data={chartData}
-          width={Platform.OS === 'web' ? 500 : SCREEN_WIDTH - 64}
-          height={height}
-          chartConfig={chartConfig}
-          bezier // Curvas suaves
-          style={{
-            marginVertical: 8,
-            borderRadius: 16,
-          }}
-          withInnerLines={true}
-          withOuterLines={false}
-          withVerticalLines={false}
-          yAxisLabel="$"
-          yAxisInterval={1}
-          fromZero
-          segments={4}
-        />
-      </View>
-    </Card>
+    <View style={styles.container}>
+      <LineChart
+        areaChart
+        isAnimated
+        animateOnDataChange
+        animationDuration={720}
+        data={chartData}
+        width={chartWidth}
+        height={Math.max(115, height - 42)}
+        adjustToWidth
+        curved
+        curvature={0.18}
+        color={accent}
+        thickness={3}
+        startFillColor={accentStart}
+        endFillColor={accent}
+        startOpacity={0.42}
+        endOpacity={0.025}
+        initialSpacing={8}
+        endSpacing={8}
+        noOfSections={4}
+        maxValue={maxValue}
+        stepValue={sectionValue}
+        hideYAxisText
+        yAxisThickness={0}
+        xAxisThickness={0}
+        rulesColor="rgba(227,232,242,0.13)"
+        rulesType="dashed"
+        dashWidth={4}
+        dashGap={7}
+        xAxisLabelTextStyle={styles.axisLabel}
+        hideDataPoints
+        pointerConfig={{
+          activatePointersOnLongPress: false,
+          activatePointersInstantlyOnTouch: true,
+          autoAdjustPointerLabelPosition: true,
+          persistPointer: true,
+          pointerColor: '#D4AF37',
+          radius: 6,
+          showPointerStrip: true,
+          pointerStripColor: 'rgba(212,175,55,0.42)',
+          pointerStripWidth: 1,
+          pointerLabelWidth: 126,
+          pointerLabelHeight: 54,
+          pointerLabelComponent: (items: any[]) => {
+            const item = items?.[0] ?? chartData[chartData.length - 1];
+            return (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipLabel}>{item?.label || 'Período'}</Text>
+                <Text style={styles.tooltipValue}>${Number(item?.value ?? 0).toFixed(2)}</Text>
+              </View>
+            );
+          },
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'System', // Usar fuente del sistema o personalizada si existe
-  },
-  chartContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badge: {
-    backgroundColor: 'rgba(251, 191, 36, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  container: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  axisLabel: { color: '#93A0B4', fontSize: 8, fontWeight: '700', marginTop: 5 },
+  tooltip: {
+    backgroundColor: '#101520',
+    borderColor: 'rgba(212,175,55,0.48)',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.5)',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 9,
   },
-  badgeText: {
-    color: '#fbbf24',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
+  tooltipLabel: { color: '#AAB5C8', fontSize: 8, fontWeight: '700' },
+  tooltipValue: { color: '#F6D266', fontSize: 13, fontWeight: '900', marginTop: 2 },
 });

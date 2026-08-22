@@ -4,6 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -24,6 +25,7 @@ import {
 } from '../../../../capacidades/admin';
 import { useAdminLogic, useRegistroVentasDelDia } from '../../../../capacidades/metricas';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
+import { AtmosphereLayer } from '../../../../ui/primitivos/AtmosphereLayer';
 
 const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
 
@@ -47,7 +49,13 @@ function MetricCard({
   containerStyle,
 }: MetricCardProps) {
   return (
-    <View style={[styles.metricCard, containerStyle]}>
+    <LinearGradient
+      colors={[`${color}32`, '#111722']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.metricCard, containerStyle]}
+    >
+      <View pointerEvents="none" style={[styles.metricAura, { backgroundColor: `${color}18` }]} />
       <View style={styles.metricHeader}>
         <View style={[styles.iconBadge, { backgroundColor: `${color}15` }]}>
           <Ionicons name={icon} size={22} color={color} />
@@ -71,7 +79,7 @@ function MetricCard({
       <Text style={styles.metricValue}>{value}</Text>
       <Text style={styles.metricTitle}>{title}</Text>
       {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -203,383 +211,412 @@ export function AdminDashboardScreen() {
 
   return (
     <AdminLayout>
-      <View style={styles.container}>
-        <View style={[styles.header, isMobile && styles.headerMobile]}>
-          <View style={styles.headerLeft}>
-            <Ionicons name="stats-chart" size={26} color="#ffffff" />
-            <Text style={styles.title}>Métricas y Datos</Text>
-          </View>
-          <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
-            {isMobile ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterRow}
-                style={styles.filterRowScroll}
+      <View style={styles.root}>
+        <AtmosphereLayer variant="command" />
+        <View style={styles.contentLayer}>
+          <View style={[styles.header, isMobile && styles.headerMobile]}>
+            <View style={styles.headerLeft}>
+              <Ionicons name="stats-chart" size={26} color="#ffffff" />
+              <Text style={styles.title}>Métricas y Datos</Text>
+            </View>
+            <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
+              {isMobile ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.filterRow}
+                  style={styles.filterRowScroll}
+                >
+                  {[
+                    { key: 'hoy', label: 'Hoy' },
+                    { key: 'ayer', label: 'Ayer' },
+                    { key: 'hace3dias', label: '3 días' },
+                    { key: 'semana', label: 'Semana' },
+                    { key: 'mes', label: 'Mes' },
+                  ].map((filter) => (
+                    <Pressable
+                      key={filter.key}
+                      onPress={() => actions.setDateFilter(filter.key as any)}
+                      style={[
+                        styles.filterBtn,
+                        dateFilter === filter.key && styles.filterBtnActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterBtnText,
+                          dateFilter === filter.key && styles.filterBtnTextActive,
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.filterRow}>
+                  {[
+                    { key: 'hoy', label: 'Hoy' },
+                    { key: 'ayer', label: 'Ayer' },
+                    { key: 'hace3dias', label: '3 días' },
+                    { key: 'semana', label: 'Semana' },
+                    { key: 'mes', label: 'Mes' },
+                  ].map((filter) => (
+                    <Pressable
+                      key={filter.key}
+                      onPress={() => actions.setDateFilter(filter.key as any)}
+                      style={[
+                        styles.filterBtn,
+                        dateFilter === filter.key && styles.filterBtnActive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterBtnText,
+                          dateFilter === filter.key && styles.filterBtnTextActive,
+                        ]}
+                      >
+                        {filter.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+              <Pressable
+                onPress={actions.refreshMetrics}
+                style={({ pressed }) => [styles.refreshBtn, pressed && styles.btnPressed]}
               >
-                {[
-                  { key: 'hoy', label: 'Hoy' },
-                  { key: 'ayer', label: 'Ayer' },
-                  { key: 'hace3dias', label: '3 días' },
-                  { key: 'semana', label: 'Semana' },
-                  { key: 'mes', label: 'Mes' },
-                ].map((filter) => (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => actions.setDateFilter(filter.key as any)}
-                    style={[styles.filterBtn, dateFilter === filter.key && styles.filterBtnActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        dateFilter === filter.key && styles.filterBtnTextActive,
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.filterRow}>
-                {[
-                  { key: 'hoy', label: 'Hoy' },
-                  { key: 'ayer', label: 'Ayer' },
-                  { key: 'hace3dias', label: '3 días' },
-                  { key: 'semana', label: 'Semana' },
-                  { key: 'mes', label: 'Mes' },
-                ].map((filter) => (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => actions.setDateFilter(filter.key as any)}
-                    style={[styles.filterBtn, dateFilter === filter.key && styles.filterBtnActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        dateFilter === filter.key && styles.filterBtnTextActive,
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-            <Pressable
-              onPress={actions.refreshMetrics}
-              style={({ pressed }) => [styles.refreshBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="refresh" size={20} color="#3b82f6" />
-            </Pressable>
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={[
-            styles.contentContainer,
-            isDesktop && contentMaxWidth
-              ? { width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }
-              : null,
-          ]}
-        >
-          {/* Métrica principal - Ventas filtradas */}
-          <View style={styles.mainMetricCard}>
-            <Text style={styles.mainMetricLabel}>
-              {dateFilter === 'hoy'
-                ? 'Ventas de Hoy'
-                : dateFilter === 'ayer'
-                  ? 'Ventas de Ayer'
-                  : dateFilter === 'hace3dias'
-                    ? 'Ventas últimos 3 días'
-                    : dateFilter === 'semana'
-                      ? 'Ventas de esta Semana'
-                      : 'Ventas de este Mes'}
-            </Text>
-            <Text style={styles.mainMetricValue}>
-              ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
-            </Text>
-            <Text style={styles.mainMetricSubtitle}>
-              {metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0}{' '}
-              subpedidos finalizados
-            </Text>
-          </View>
-
-          <RegistroVentasDia
-            registros={ventasDelDia}
-            loading={ventasDelDiaLoading}
-            error={ventasDelDiaError}
-            onReload={recargarVentasDelDia}
-          />
-
-          {/* Grid de métricas secundarias */}
-          <View style={styles.metricsGrid}>
-            <MetricCard
-              title="Promedio por Pedido"
-              value={`$${(metrics?.ticketPromedio ?? 0).toFixed(2)}`}
-              subtitle="Ticket promedio acumulado"
-              icon="receipt"
-              color="#3b82f6"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Vendedor Estrella"
-              value={metrics?.vendedorEstrella?.nombre ?? 'Sin ventas'}
-              subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} (${
-                metrics?.vendedorEstrella?.subpedidos ?? 0
-              } subpedidos)`}
-              icon="trophy"
-              color="#f59e0b"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Platillo Más Vendido"
-              value={metrics?.platilloMasVendido?.nombre ?? 'Sin ventas'}
-              subtitle={`${metrics?.platilloMasVendido?.cantidad ?? 0} unidades vendidas`}
-              icon="flame"
-              color="#ef4444"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Hora Pico de Ventas"
-              value={metrics?.horaPico?.hora ?? 'N/A'}
-              subtitle={`${metrics?.horaPico?.pedidos ?? 0} pedidos en esta hora`}
-              icon="time"
-              color="#8b5cf6"
-              containerStyle={{ width: metricCardWidth }}
-            />
-          </View>
-
-          {/* 🚨 SECCIÓN DE ALERTAS INTELIGENTES */}
-          {tieneAlertas && (
-            <View style={styles.alertsContainer}>
-              <View style={styles.sectionHeaderContainer}>
-                <Ionicons name="warning" size={22} color="#ef4444" />
-                <Text style={styles.sectionTitle}>Alertas del Negocio</Text>
-              </View>
-
-              {alertasCriticas.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardCritical]}>
-                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
-                  </View>
-                </View>
-              ))}
-
-              {alertasMedias.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardMedium]}>
-                  <Ionicons name="warning" size={24} color="#f59e0b" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
-                  </View>
-                </View>
-              ))}
+                <Ionicons name="refresh" size={20} color="#3b82f6" />
+              </Pressable>
             </View>
-          )}
+          </View>
 
-          {/* 🤖 SECCIÓN DE PREDICCIÓN DE STOCK */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderContainer}>
-              <Ionicons name="analytics" size={22} color="#8b5cf6" />
-              <Text style={styles.sectionTitle}>Predicción de Reabastecimiento</Text>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={[
+              styles.contentContainer,
+              isDesktop && contentMaxWidth
+                ? { width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }
+                : null,
+            ]}
+          >
+            {/* Métrica principal - Ventas filtradas */}
+            <View style={styles.mainMetricCard}>
+              <Text style={styles.mainMetricLabel}>
+                {dateFilter === 'hoy'
+                  ? 'Ventas de Hoy'
+                  : dateFilter === 'ayer'
+                    ? 'Ventas de Ayer'
+                    : dateFilter === 'hace3dias'
+                      ? 'Ventas últimos 3 días'
+                      : dateFilter === 'semana'
+                        ? 'Ventas de esta Semana'
+                        : 'Ventas de este Mes'}
+              </Text>
+              <Text style={styles.mainMetricValue}>
+                ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
+              </Text>
+              <Text style={styles.mainMetricSubtitle}>
+                {metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0}{' '}
+                subpedidos finalizados
+              </Text>
             </View>
 
-            {loadingPredicciones ? (
-              <View style={styles.predictionsLoading}>
-                <Text style={styles.loadingText}>Calculando predicciones...</Text>
-              </View>
-            ) : predicciones.length === 0 ? (
-              <View style={styles.emptyPredictions}>
-                <Text style={styles.emptyPredictionsText}>
-                  No hay suficientes datos para generar predicciones
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.predictionsGrid}>
-                {predicciones.map((p: any, idx: number) => {
-                  const stockSuficiente =
-                    p.stockSuficiente ??
-                    (p.estadoStock !== 'agotado' && p.estadoStock !== 'critico');
-                  const estadoColor =
-                    p.estadoStock === 'agotado' || stockSuficiente === false
-                      ? '#ef4444'
-                      : p.estadoStock === 'critico'
-                        ? '#f59e0b'
-                        : p.estadoStock === 'bajo'
-                          ? '#eab308'
-                          : '#10b981';
+            <RegistroVentasDia
+              registros={ventasDelDia}
+              loading={ventasDelDiaLoading}
+              error={ventasDelDiaError}
+              onReload={recargarVentasDelDia}
+            />
 
-                  const estadoText =
-                    p.estadoStock === 'agotado'
-                      ? 'AGOTADO'
-                      : p.estadoStock === 'critico'
-                        ? 'CRÍTICO'
-                        : p.estadoStock === 'bajo'
-                          ? 'BAJO'
-                          : stockSuficiente
-                            ? 'OK'
-                            : 'REVISAR';
+            {/* Grid de métricas secundarias */}
+            <View style={styles.metricsGrid}>
+              <MetricCard
+                title="Promedio por Pedido"
+                value={`$${(metrics?.ticketPromedio ?? 0).toFixed(2)}`}
+                subtitle="Ticket promedio acumulado"
+                icon="receipt"
+                color="#3b82f6"
+                containerStyle={{ width: metricCardWidth }}
+              />
+              <MetricCard
+                title="Vendedor Estrella"
+                value={metrics?.vendedorEstrella?.nombre ?? 'Sin ventas'}
+                subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} (${
+                  metrics?.vendedorEstrella?.subpedidos ?? 0
+                } subpedidos)`}
+                icon="trophy"
+                color="#f59e0b"
+                containerStyle={{ width: metricCardWidth }}
+              />
+              <MetricCard
+                title="Platillo Más Vendido"
+                value={metrics?.platilloMasVendido?.nombre ?? 'Sin ventas'}
+                subtitle={`${metrics?.platilloMasVendido?.cantidad ?? 0} unidades vendidas`}
+                icon="flame"
+                color="#ef4444"
+                containerStyle={{ width: metricCardWidth }}
+              />
+              <MetricCard
+                title="Hora Pico de Ventas"
+                value={metrics?.horaPico?.hora ?? 'N/A'}
+                subtitle={`${metrics?.horaPico?.pedidos ?? 0} pedidos en esta hora`}
+                icon="time"
+                color="#8b5cf6"
+                containerStyle={{ width: metricCardWidth }}
+              />
+            </View>
 
-                  const platilloId = p.productoId || p.platilloId || `pred-${idx}`;
-                  const nombrePlatillo = p.productoNombre || p.nombrePlatillo || 'Platillo';
-                  const promedio = p.cantidadPosible ?? p.promedioDiario ?? 0;
-                  const ingredienteLimitante =
-                    p.ingredienteLimitante || p.fechaRecompraSugerida || 'En orden';
+            {/* 🚨 SECCIÓN DE ALERTAS INTELIGENTES */}
+            {tieneAlertas && (
+              <View style={styles.alertsContainer}>
+                <View style={styles.sectionHeaderContainer}>
+                  <Ionicons name="warning" size={22} color="#ef4444" />
+                  <Text style={styles.sectionTitle}>Alertas del Negocio</Text>
+                </View>
 
-                  return (
-                    <View
-                      key={platilloId}
-                      style={[styles.predictionCard, { width: predictionCardWidth }]}
-                    >
-                      <View style={styles.predictionHeader}>
-                        <Text style={styles.predictionNombre} numberOfLines={1}>
-                          {nombrePlatillo}
-                        </Text>
-                        <View style={[styles.stockBadge, { backgroundColor: `${estadoColor}20` }]}>
-                          <Text style={[styles.stockBadgeText, { color: estadoColor }]}>
-                            {estadoText}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.predictionMetrics}>
-                        <View style={styles.predMetricItem}>
-                          <Text style={styles.predMetricValue}>{promedio}</Text>
-                          <Text style={styles.predMetricLabel}>Porciones posibles</Text>
-                        </View>
-                        <View style={styles.predMetricItem}>
-                          <Text style={[styles.predMetricValue, { color: estadoColor }]}>
-                            {p.diasRestantes === undefined
-                              ? stockSuficiente
-                                ? '∞'
-                                : '0'
-                              : p.diasRestantes === 999
-                                ? '∞'
-                                : p.diasRestantes}
-                          </Text>
-                          <Text style={styles.predMetricLabel}>Días rest.</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.predictionFooter}>
-                        <Ionicons name="cube-outline" size={14} color="#9ca3af" />
-                        <Text style={styles.fechaRecompraText} numberOfLines={1}>
-                          Limitante: {ingredienteLimitante}
-                        </Text>
-                      </View>
+                {alertasCriticas.map((alerta) => (
+                  <View key={alerta.id} style={[styles.alertCard, styles.alertCardCritical]}>
+                    <Ionicons name="alert-circle" size={24} color="#ef4444" />
+                    <View style={styles.alertContent}>
+                      <Text style={styles.alertTitle}>{alerta.titulo}</Text>
+                      <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
                     </View>
-                  );
-                })}
+                  </View>
+                ))}
+
+                {alertasMedias.map((alerta) => (
+                  <View key={alerta.id} style={[styles.alertCard, styles.alertCardMedium]}>
+                    <Ionicons name="warning" size={24} color="#f59e0b" />
+                    <View style={styles.alertContent}>
+                      <Text style={styles.alertTitle}>{alerta.titulo}</Text>
+                      <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
+                    </View>
+                  </View>
+                ))}
               </View>
             )}
-          </View>
 
-          {/* Gráfico de Ventas en el Tiempo */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Ventas en el Tiempo</Text>
-                <Text style={styles.chartSubtitle}>
-                  Evolución por {dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}
-                </Text>
+            {/* 🤖 SECCIÓN DE PREDICCIÓN DE STOCK */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderContainer}>
+                <Ionicons name="analytics" size={22} color="#8b5cf6" />
+                <Text style={styles.sectionTitle}>Predicción de Reabastecimiento</Text>
               </View>
-              <Ionicons name="trending-up" size={24} color="#10b981" />
+
+              {loadingPredicciones ? (
+                <View style={styles.predictionsLoading}>
+                  <Text style={styles.loadingText}>Calculando predicciones...</Text>
+                </View>
+              ) : predicciones.length === 0 ? (
+                <View style={styles.emptyPredictions}>
+                  <Text style={styles.emptyPredictionsText}>
+                    No hay suficientes datos para generar predicciones
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.predictionsGrid}>
+                  {predicciones.map((p: any, idx: number) => {
+                    const stockSuficiente =
+                      p.stockSuficiente ??
+                      (p.estadoStock !== 'agotado' && p.estadoStock !== 'critico');
+                    const estadoColor =
+                      p.estadoStock === 'agotado' || stockSuficiente === false
+                        ? '#ef4444'
+                        : p.estadoStock === 'critico'
+                          ? '#f59e0b'
+                          : p.estadoStock === 'bajo'
+                            ? '#eab308'
+                            : '#10b981';
+
+                    const estadoText =
+                      p.estadoStock === 'agotado'
+                        ? 'AGOTADO'
+                        : p.estadoStock === 'critico'
+                          ? 'CRÍTICO'
+                          : p.estadoStock === 'bajo'
+                            ? 'BAJO'
+                            : stockSuficiente
+                              ? 'OK'
+                              : 'REVISAR';
+
+                    const platilloId = p.productoId || p.platilloId || `pred-${idx}`;
+                    const nombrePlatillo = p.productoNombre || p.nombrePlatillo || 'Platillo';
+                    const promedio = p.cantidadPosible ?? p.promedioDiario ?? 0;
+                    const ingredienteLimitante =
+                      p.ingredienteLimitante || p.fechaRecompraSugerida || 'En orden';
+
+                    return (
+                      <View
+                        key={platilloId}
+                        style={[styles.predictionCard, { width: predictionCardWidth }]}
+                      >
+                        <View style={styles.predictionHeader}>
+                          <Text style={styles.predictionNombre} numberOfLines={1}>
+                            {nombrePlatillo}
+                          </Text>
+                          <View
+                            style={[styles.stockBadge, { backgroundColor: `${estadoColor}20` }]}
+                          >
+                            <Text style={[styles.stockBadgeText, { color: estadoColor }]}>
+                              {estadoText}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.predictionMetrics}>
+                          <View style={styles.predMetricItem}>
+                            <Text style={styles.predMetricValue}>{promedio}</Text>
+                            <Text style={styles.predMetricLabel}>Porciones posibles</Text>
+                          </View>
+                          <View style={styles.predMetricItem}>
+                            <Text style={[styles.predMetricValue, { color: estadoColor }]}>
+                              {p.diasRestantes === undefined
+                                ? stockSuficiente
+                                  ? '∞'
+                                  : '0'
+                                : p.diasRestantes === 999
+                                  ? '∞'
+                                  : p.diasRestantes}
+                            </Text>
+                            <Text style={styles.predMetricLabel}>Días rest.</Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.predictionFooter}>
+                          <Ionicons name="cube-outline" size={14} color="#9ca3af" />
+                          <Text style={styles.fechaRecompraText} numberOfLines={1}>
+                            Limitante: {ingredienteLimitante}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
             </View>
 
-            {metrics.ventasPorHora.length > 0 ? (
-              <SalesLineChart
-                data={metrics.ventasPorHora.map((d: any) => ({
-                  label: d.label,
-                  value: d.monto ?? d.total ?? 0,
-                }))}
-                height={220}
-              />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos para el período seleccionado</Text>
+            {/* Gráfico de Ventas en el Tiempo */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View>
+                  <Text style={styles.chartTitle}>Ventas en el Tiempo</Text>
+                  <Text style={styles.chartSubtitle}>
+                    Evolución por {dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}
+                  </Text>
+                </View>
+                <Ionicons name="trending-up" size={24} color="#10b981" />
               </View>
-            )}
-          </View>
 
-          {/* Gráfico de Distribución de Ventas */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Distribución de Ventas</Text>
-                <Text style={styles.chartSubtitle}>Por tipo de origen</Text>
-              </View>
-              <Ionicons name="pie-chart" size={24} color="#3b82f6" />
+              {metrics.ventasPorHora.length > 0 ? (
+                <SalesLineChart
+                  data={metrics.ventasPorHora.map((d: any) => ({
+                    label: d.label,
+                    total: d.monto ?? d.total ?? 0,
+                  }))}
+                  height={220}
+                />
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>Sin datos para el período seleccionado</Text>
+                </View>
+              )}
             </View>
 
-            {metrics.distribucionVentas.length > 0 ? (
-              <SalesDistributionPieChart
-                title="Distribución de Ventas"
-                data={metrics.distribucionVentas.map((d: any, index: number) => ({
-                  name: d.label || d.name || 'Origen',
-                  population: Number(d.value || d.population || 0),
-                  color: chartPalette[index % chartPalette.length],
-                  legendFontColor: '#94a3b8',
-                  legendFontSize: 12,
-                }))}
-              />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos de distribución</Text>
+            {/* Gráfico de Distribución de Ventas */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View>
+                  <Text style={styles.chartTitle}>Distribución de Ventas</Text>
+                  <Text style={styles.chartSubtitle}>Por tipo de origen</Text>
+                </View>
+                <Ionicons name="pie-chart" size={24} color="#3b82f6" />
               </View>
-            )}
-          </View>
 
-          {/* Top 5 Platillos Más Vendidos */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Top 5 Platillos Más Vendidos</Text>
-                <Text style={styles.chartSubtitle}>Por unidades vendidas</Text>
-              </View>
-              <Ionicons name="bar-chart" size={24} color="#f59e0b" />
+              {metrics.distribucionVentas.length > 0 ? (
+                <SalesDistributionPieChart
+                  title=""
+                  data={metrics.distribucionVentas.map((d: any, index: number) => ({
+                    name: d.label || d.name || 'Origen',
+                    population: Number(d.value || d.population || 0),
+                    color: chartPalette[index % chartPalette.length],
+                    legendFontColor: '#94a3b8',
+                    legendFontSize: 12,
+                  }))}
+                />
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>Sin datos de distribución</Text>
+                </View>
+              )}
             </View>
 
-            {metrics.topPlatillos.length > 0 ? (
-              <TopProductsBarChart title="Top 5 Platillos" data={metrics.topPlatillos} />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos de platillos</Text>
+            {/* Top 5 Platillos Más Vendidos */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View>
+                  <Text style={styles.chartTitle}>Top 5 Platillos Más Vendidos</Text>
+                  <Text style={styles.chartSubtitle}>Por unidades vendidas</Text>
+                </View>
+                <Ionicons name="bar-chart" size={24} color="#f59e0b" />
               </View>
-            )}
-          </View>
-        </ScrollView>
+
+              {metrics.topPlatillos.length > 0 ? (
+                <TopProductsBarChart title="" data={metrics.topPlatillos} />
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Text style={styles.noDataText}>Sin datos de platillos</Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </View>
       </View>
     </AdminLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#080A0F',
+    overflow: 'hidden',
+  },
+  contentLayer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#080A0F',
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#080A0F',
   },
   loadingText: {
-    color: '#9ca3af',
-    fontSize: 16,
+    color: '#B6BCC8',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingVertical: 18,
-    backgroundColor: '#1e293b',
+    paddingVertical: 15,
+    backgroundColor: 'rgba(12,15,23,0.93)',
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: 'rgba(223,229,240,0.12)',
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.23,
+    shadowRadius: 18,
+    zIndex: 30,
   },
   headerMobile: {
     flexDirection: 'column',
@@ -603,9 +640,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    color: '#f8fafc',
-    fontSize: 22,
+    color: '#F4F0E8',
+    fontSize: 21,
     fontWeight: '800',
+    letterSpacing: -0.4,
   },
   filterRow: {
     flexDirection: 'row',
@@ -650,11 +688,16 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   mainMetricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
+    backgroundColor: '#151E31',
+    borderRadius: 22,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#3b82f650',
+    borderColor: 'rgba(151,181,237,0.24)',
+    elevation: 9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.35,
+    shadowRadius: 26,
   },
   mainMetricLabel: {
     color: '#94a3b8',
@@ -678,11 +721,21 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   metricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 14,
+    backgroundColor: '#111722',
+    borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(222,229,242,0.16)',
+    overflow: 'hidden',
+    minHeight: 150,
+  },
+  metricAura: {
+    position: 'absolute',
+    right: -56,
+    top: -78,
+    width: 150,
+    height: 150,
+    borderRadius: 90,
   },
   metricHeader: {
     flexDirection: 'row',
