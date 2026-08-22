@@ -11,6 +11,7 @@ import { useRoleSelectorLogic } from '../../roles/logica/selector/useRoleSelecto
 import { BrandSeal } from './BrandSeal';
 import { LiquidBackground } from './LiquidBackground';
 import { OrbButton } from './OrbButton';
+import { MotionReveal } from '../primitivos/AtmosphereLayer';
 
 export function RoleSelectorElite() {
   const { colors, isElite } = useAppTheme();
@@ -45,8 +46,8 @@ export function RoleSelectorElite() {
       {isElite && <LiquidBackground />}
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <BrandSeal nombreNegocio={nombreNegocio} />
-          <View style={styles.roleStage}>
+          <MotionReveal delay={20} axis="down"><BrandSeal nombreNegocio={nombreNegocio} /></MotionReveal>
+          <MotionReveal delay={110} style={styles.roleStage}>
             <Text style={styles.roleCaption}>Elige tu estación</Text>
             <View style={styles.roleRow}>
               {roles.map((rol, index) => (
@@ -60,15 +61,17 @@ export function RoleSelectorElite() {
                 />
               ))}
             </View>
-          </View>
-          <View style={styles.clientStage}>
+          </MotionReveal>
+          <MotionReveal delay={220} style={styles.clientStage}>
             <Text style={styles.clientCaption}>Explora sin operación</Text>
             <OrbButton icono="restaurant-outline" etiqueta="Menú Cliente" onPress={handleMenuCliente} variant="client" />
-          </View>
+          </MotionReveal>
+          <MotionReveal delay={290}>
           <Pressable accessibilityRole="button" onPress={handleLogout} style={({ pressed }) => [styles.logout, pressed && { opacity: 0.72, transform: [{ scale: 0.98 }] }]}>
             <Ionicons name="arrow-back-circle-outline" size={18} color={colors.textMuted} />
             <Text style={styles.logoutText}>Cambiar de negocio</Text>
           </Pressable>
+          </MotionReveal>
         </View>
       </ScrollView>
       <ThemeToggle position="bottom-right" />

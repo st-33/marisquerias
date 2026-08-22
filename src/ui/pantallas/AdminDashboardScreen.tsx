@@ -19,6 +19,7 @@ import { useAdminLogic, useAlertasInteligentes, usePrediccionStock, usePuenteAcc
 import { getRtdb } from '../../sistema/firebase';
 import { useStore } from '../../sistema/store';
 import type { FabItem } from '../../sistema/tipos/contratos';
+import { AtmosphereLayer, MotionReveal } from '../primitivos/AtmosphereLayer';
 
 const chartPalette = ['#D4AF37', '#64D7A0', '#E6A85C', '#DD6B69', '#8EA3C4', '#6AB7C7'];
 const DASHBOARD_FILTERS = [
@@ -42,15 +43,24 @@ type MetricCardProps = {
 
 function MetricCard({ label, value, detail, icon, tone, wide }: MetricCardProps) {
   const toneStyle = tone === 'green' ? styles.toneGreen : tone === 'blue' ? styles.toneBlue : tone === 'orange' ? styles.toneOrange : styles.toneGold;
+  const gradient: [string, string] = tone === 'green'
+    ? ['rgba(39, 104, 88, 0.46)', '#151A25']
+    : tone === 'blue'
+      ? ['rgba(42, 73, 139, 0.48)', '#151A25']
+      : tone === 'orange'
+        ? ['rgba(113, 70, 36, 0.42)', '#151A25']
+        : ['rgba(105, 82, 30, 0.45)', '#151A25'];
   return (
-    <View style={[styles.metricCard, wide && styles.metricCardWide]}>
+    <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.metricCard, wide && styles.metricCardWide]}>
+      <View pointerEvents="none" style={[styles.metricAura, toneStyle]} />
       <View style={styles.metricTopline}>
         <View style={[styles.metricIcon, toneStyle]}><Ionicons name={icon} size={17} color={tone === 'green' ? '#64D7A0' : tone === 'blue' ? '#76A9FF' : tone === 'orange' ? '#E6A85C' : '#D4AF37'} /></View>
         <View style={[styles.metricTag, toneStyle]}><Text style={styles.metricTagText}>{label}</Text></View>
       </View>
       <Text style={styles.metricValue} numberOfLines={1}>{value}</Text>
+      <View style={[styles.metricRule, toneStyle]} />
       <Text style={styles.metricDetail} numberOfLines={2}>{detail}</Text>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -106,6 +116,8 @@ export function AdminDashboardScreen() {
   return (
     <AdminLayout>
       <View style={styles.root}>
+        <AtmosphereLayer variant="command" />
+        <View style={styles.contentLayer}>
         <View style={[styles.topbar, isCompact && styles.topbarCompact]}>
           <View style={styles.titleRow}>
             <View style={styles.topIcon}><Ionicons name="bar-chart" size={20} color="#E7C46C" /></View>
@@ -128,21 +140,30 @@ export function AdminDashboardScreen() {
         </View>
 
         <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, isWide && styles.scrollWide]} showsVerticalScrollIndicator={false}>
-          <LinearGradient colors={['#252b42', '#171d2a', '#12141b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCard}>
+          <MotionReveal delay={35}>
+          <LinearGradient colors={['#273657', '#161F33', '#0E121B']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCard}>
+            <View pointerEvents="none" style={styles.heroRadiance} />
             <View style={[styles.heroTop, isCompact && styles.heroTopCompact]}>
-              <View style={styles.heroInfo}><Text style={styles.heroKicker}>{dateFilter === 'hoy' ? 'Ventas de hoy' : 'Rendimiento del período'}</Text><Text style={styles.heroAmount}>{money(ventas)}</Text><Text style={styles.heroDetail}>{ordenes} subpedidos finalizados</Text></View>
+              <View style={styles.heroInfo}>
+                <View style={styles.heroKickerRow}><View style={styles.heroLiveDot} /><Text style={styles.heroKicker}>{dateFilter === 'hoy' ? 'Ventas de hoy' : 'Rendimiento del período'}</Text></View>
+                <Text style={styles.heroAmount}>{money(ventas)}</Text>
+                <Text style={styles.heroDetail}>{ordenes} subpedidos finalizados</Text>
+              </View>
               <View style={styles.heroSideCard}><View style={styles.heroSideIcon}><Ionicons name="trending-up" size={16} color="#64D7A0" /></View><View><Text style={styles.heroSideLabel}>Ticket promedio</Text><Text style={styles.heroSideValue}>{money(metrics.ticketPromedio)}</Text></View></View>
             </View>
+            <View style={styles.heroTelemetry}><Ionicons name="pulse-outline" size={13} color="#78D8C2" /><Text style={styles.heroTelemetryText}>{dateFilter === 'hoy' ? 'Monitoreo de caja en tiempo real' : 'Corte histórico consolidado'}</Text></View>
             <View style={styles.heroChartWrap}>{metrics.ventasPorHora.length > 0 ? <SalesLineChart data={metrics.ventasPorHora.map((d: any) => ({ label: d.label, total: d.monto ?? d.total ?? 0 }))} height={isCompact ? 150 : 190} /> : <View style={styles.emptyChart}><Text style={styles.emptyChartText}>Sin datos para el período seleccionado</Text></View>}</View>
           </LinearGradient>
+          </MotionReveal>
 
           <View style={styles.metricGrid}>
-            <MetricCard label="Ticket promedio" value={money(metrics.ticketPromedio)} detail="Acumulado del período" icon="receipt-outline" tone="gold" />
-            <MetricCard label="Pedidos" value={`${ordenes}`} detail="Subpedidos finalizados" icon="file-tray-full-outline" tone="blue" />
-            <MetricCard label="Vendedor estrella" value={metrics.vendedorEstrella?.nombre ?? 'Sin ventas'} detail={money(metrics.vendedorEstrella?.monto)} icon="trophy-outline" tone="gold" />
-            <MetricCard label="Hora pico" value={metrics.horaPico?.hora ?? 'Sin datos'} detail={`${metrics.horaPico?.pedidos ?? 0} pedidos en esta hora`} icon="time-outline" tone="orange" />
+            <MotionReveal delay={90} style={styles.metricMotion}><MetricCard label="Ticket promedio" value={money(metrics.ticketPromedio)} detail="Acumulado del período" icon="receipt-outline" tone="gold" /></MotionReveal>
+            <MotionReveal delay={145} style={styles.metricMotion}><MetricCard label="Pedidos" value={`${ordenes}`} detail="Subpedidos finalizados" icon="file-tray-full-outline" tone="blue" /></MotionReveal>
+            <MotionReveal delay={200} style={styles.metricMotion}><MetricCard label="Vendedor estrella" value={metrics.vendedorEstrella?.nombre ?? 'Sin ventas'} detail={money(metrics.vendedorEstrella?.monto)} icon="trophy-outline" tone="gold" /></MotionReveal>
+            <MotionReveal delay={255} style={styles.metricMotion}><MetricCard label="Hora pico" value={metrics.horaPico?.hora ?? 'Sin datos'} detail={`${metrics.horaPico?.pedidos ?? 0} pedidos en esta hora`} icon="time-outline" tone="orange" /></MotionReveal>
           </View>
 
+          <MotionReveal delay={310}>
           <View style={[styles.dualRow, isCompact && styles.dualRowCompact]}>
             <View style={[styles.alertPanel, isCompact && styles.stackPanel]}>
               <SmallSectionTitle icon="warning-outline" eyebrow="Atención" title="Alertas críticas de inventario" />
@@ -160,22 +181,27 @@ export function AdminDashboardScreen() {
               })}</View>}
             </View>
           </View>
+          </MotionReveal>
 
+          <MotionReveal delay={370}>
           <View style={[styles.chartRow, isCompact && styles.chartRowCompact]}>
             <View style={[styles.lowerChart, isCompact && styles.stackPanel]}><SmallSectionTitle icon="pie-chart-outline" eyebrow="Origen" title="Distribución de ventas" />{metrics.distribucionVentas.length > 0 ? <SalesDistributionPieChart title="" data={metrics.distribucionVentas.map((d: any, index: number) => ({ name: d.label || d.name || 'Origen', population: Number(d.value || d.population || 0), color: chartPalette[index % chartPalette.length], legendFontColor: '#AAB5C9', legendFontSize: 10 }))} /> : <Text style={styles.sectionLoading}>Sin datos de distribución</Text>}</View>
             <View style={[styles.lowerChart, isCompact && styles.stackPanel]}><SmallSectionTitle icon="bar-chart-outline" eyebrow="Rendimiento" title="Top 5 platillos más vendidos" />{metrics.topPlatillos.length > 0 ? <TopProductsBarChart title="" data={metrics.topPlatillos} /> : <Text style={styles.sectionLoading}>Sin datos de platillos</Text>}</View>
           </View>
+          </MotionReveal>
         </ScrollView>
+        </View>
       </View>
     </AdminLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#080A0F' },
+  root: { flex: 1, backgroundColor: '#080A0F', overflow: 'hidden' },
+  contentLayer: { flex: 1 },
   loading: { alignItems: 'center', backgroundColor: '#080A0F', flex: 1, gap: 14, justifyContent: 'center' },
   loadingText: { color: '#B6BCC8', fontSize: 13, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
-  topbar: { alignItems: 'center', backgroundColor: '#11141D', borderBottomColor: 'rgba(223,229,240,0.11)', borderBottomWidth: 1, elevation: 12, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 15, zIndex: 30 },
+  topbar: { alignItems: 'center', backgroundColor: 'rgba(12,15,23,0.93)', borderBottomColor: 'rgba(223,229,240,0.12)', borderBottomWidth: 1, elevation: 12, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.23, shadowRadius: 18, zIndex: 30 },
   topbarCompact: { alignItems: 'flex-start', flexDirection: 'column', gap: 14, paddingHorizontal: 15 },
   titleRow: { alignItems: 'center', flexDirection: 'row', gap: 11 },
   topIcon: { alignItems: 'center', backgroundColor: 'rgba(212,175,55,0.12)', borderRadius: 10, height: 38, justifyContent: 'center', width: 38 },
@@ -202,25 +228,32 @@ const styles = StyleSheet.create({
   utilityButton: { alignItems: 'center', backgroundColor: '#1B202B', borderColor: 'rgba(223,229,240,0.13)', borderRadius: 12, borderWidth: 1, height: 38, justifyContent: 'center', width: 38 },
   pressed: { opacity: 0.78, transform: [{ scale: 0.97 }] },
   scroll: { flex: 1 },
-  scrollContent: { gap: 17, padding: 16, paddingBottom: 92 },
+  scrollContent: { gap: 17, padding: 16, paddingBottom: 108 },
   scrollWide: { alignSelf: 'center', maxWidth: 1360, width: '100%' },
-  heroCard: { borderColor: 'rgba(222,229,242,0.13)', borderRadius: 20, borderWidth: 1, minHeight: 255, overflow: 'hidden', padding: 18 },
+  heroCard: { borderColor: 'rgba(151,181,237,0.24)', borderRadius: 24, borderWidth: 1, elevation: 9, minHeight: 278, overflow: 'hidden', padding: 19, shadowColor: '#000', shadowOffset: { width: 0, height: 14 }, shadowOpacity: 0.35, shadowRadius: 26 },
+  heroRadiance: { backgroundColor: 'rgba(76,134,226,0.17)', borderRadius: 200, height: 260, position: 'absolute', right: -90, top: -118, width: 340 },
   heroTop: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', zIndex: 2 },
   heroTopCompact: { gap: 12 },
   heroInfo: { flex: 1 },
-  heroKicker: { color: '#C8D0DC', fontSize: 12, fontWeight: '700' },
-  heroAmount: { color: '#FFFFFF', fontSize: 37, fontWeight: '900', letterSpacing: -1.1, marginTop: 5 },
+  heroKickerRow: { alignItems: 'center', flexDirection: 'row', gap: 7 },
+  heroLiveDot: { backgroundColor: '#6EE7C0', borderColor: 'rgba(212,255,239,0.7)', borderRadius: 6, borderWidth: 1, height: 8, width: 8 },
+  heroKicker: { color: '#D9E2F3', fontSize: 11, fontWeight: '800', letterSpacing: 0.35 },
+  heroAmount: { color: '#FFFFFF', fontSize: 42, fontWeight: '900', letterSpacing: -1.6, marginTop: 7 },
   heroDetail: { color: '#9FAABA', fontSize: 11, marginTop: 3 },
-  heroSideCard: { alignItems: 'center', backgroundColor: 'rgba(12,16,23,0.52)', borderColor: 'rgba(100,215,160,0.14)', borderRadius: 13, borderWidth: 1, flexDirection: 'row', gap: 9, padding: 11 },
+  heroSideCard: { alignItems: 'center', backgroundColor: 'rgba(7,10,16,0.58)', borderColor: 'rgba(100,215,160,0.24)', borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 9, padding: 11, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 15 },
   heroSideIcon: { alignItems: 'center', backgroundColor: 'rgba(100,215,160,0.11)', borderRadius: 8, height: 28, justifyContent: 'center', width: 28 },
   heroSideLabel: { color: '#AAB5C6', fontSize: 9, fontWeight: '600' },
   heroSideValue: { color: '#F6F1E5', fontSize: 17, fontWeight: '800', marginTop: 2 },
-  heroChartWrap: { bottom: 0, left: 14, opacity: 0.94, position: 'absolute', right: 14, top: 82 },
+  heroTelemetry: { alignItems: 'center', flexDirection: 'row', gap: 6, left: 19, position: 'absolute', top: 100, zIndex: 2 },
+  heroTelemetryText: { color: '#9AB1C4', fontSize: 9, fontWeight: '700', letterSpacing: 0.35 },
+  heroChartWrap: { bottom: 0, left: 14, opacity: 0.96, position: 'absolute', right: 14, top: 120 },
   emptyChart: { alignItems: 'center', height: 155, justifyContent: 'center' },
   emptyChartText: { color: '#AAB3C2', fontSize: 12 },
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  metricCard: { backgroundColor: '#171A24', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 17, borderWidth: 1, flexGrow: 1, flexBasis: 220, minHeight: 142, padding: 14 },
+  metricMotion: { flexBasis: 220, flexGrow: 1 },
+  metricCard: { borderColor: 'rgba(222,229,242,0.16)', borderRadius: 18, borderWidth: 1, flex: 1, minHeight: 150, overflow: 'hidden', padding: 15 },
   metricCardWide: { flexBasis: 310 },
+  metricAura: { borderRadius: 90, height: 150, position: 'absolute', right: -56, top: -78, width: 150 },
   metricTopline: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   metricIcon: { alignItems: 'center', borderRadius: 9, height: 31, justifyContent: 'center', width: 31 },
   toneGold: { backgroundColor: 'rgba(212,175,55,0.13)' },
@@ -229,12 +262,13 @@ const styles = StyleSheet.create({
   toneOrange: { backgroundColor: 'rgba(230,168,92,0.13)' },
   metricTag: { borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 },
   metricTagText: { color: '#E4E8F0', fontSize: 8, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
-  metricValue: { color: '#F7F4EB', fontSize: 22, fontWeight: '900', letterSpacing: -0.6, marginTop: 16 },
+  metricValue: { color: '#F7F4EB', fontSize: 24, fontWeight: '900', letterSpacing: -0.75, marginTop: 16 },
+  metricRule: { height: 2, marginTop: 10, opacity: 0.9, width: 34 },
   metricDetail: { color: '#A7AEBB', fontSize: 10, lineHeight: 14, marginTop: 4 },
   dualRow: { flexDirection: 'row', gap: 15 },
   dualRowCompact: { flexDirection: 'column' },
-  alertPanel: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 0.78, overflow: 'hidden', padding: 14 },
-  predictionPanel: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 1.6, overflow: 'hidden', padding: 14 },
+  alertPanel: { backgroundColor: 'rgba(22,27,38,0.96)', borderColor: 'rgba(222,229,242,0.15)', borderRadius: 20, borderWidth: 1, elevation: 4, flex: 0.78, overflow: 'hidden', padding: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 15 },
+  predictionPanel: { backgroundColor: 'rgba(22,27,38,0.96)', borderColor: 'rgba(222,229,242,0.15)', borderRadius: 20, borderWidth: 1, elevation: 4, flex: 1.6, overflow: 'hidden', padding: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 15 },
   stackPanel: { flex: undefined },
   sectionHeading: { alignItems: 'center', flexDirection: 'row', gap: 9, marginBottom: 12 },
   sectionIcon: { alignItems: 'center', backgroundColor: 'rgba(212,175,55,0.10)', borderRadius: 8, height: 30, justifyContent: 'center', width: 30 },
@@ -262,7 +296,7 @@ const styles = StyleSheet.create({
   limitText: { color: '#8D97A5', fontSize: 8, marginTop: 12 },
   chartRow: { flexDirection: 'row', gap: 15 },
   chartRowCompact: { flexDirection: 'column' },
-  lowerChart: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 1, minHeight: 230, overflow: 'hidden', padding: 14 },
+  lowerChart: { backgroundColor: 'rgba(22,27,38,0.96)', borderColor: 'rgba(222,229,242,0.15)', borderRadius: 20, borderWidth: 1, elevation: 4, flex: 1, minHeight: 230, overflow: 'hidden', padding: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 15 },
 });
 
 export default AdminDashboardScreen;

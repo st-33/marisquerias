@@ -1,9 +1,15 @@
+/**
+ * Dirección visual: parrilla operativa como un mapa de estaciones, con estado
+ * legible por material, rail y halo; nunca cambia la semántica de una mesa.
+ */
+
 import React, { useMemo, useState } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { TableBadge, type TableIndicator } from '../../compartido/componentes/ui/TableBadge';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
-import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
+import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 import { OrderItem } from '../../roles/logica/mesero/useMeseroLogic';
 
 export type TableState = 'libre' | 'ocupada' | 'cuenta';
@@ -24,202 +30,116 @@ type TablesGridProps = {
   onPressTable: (tableId: string, isFree: boolean) => void;
   onSelectTakeaway: () => void;
   layoutOptions?: {
-    minTileWidth?: number; // Ancho mínimo deseado para cada tile
+    minTileWidth?: number;
     tileHeight?: number;
     gap?: number;
   };
 };
 
-function TablesGridComponent(props: TablesGridProps) {
-  const {
-    tables,
-    selectedTable,
-    mode,
-    liveItems,
-    pendingCount,
-    indicators,
-    onPressTable,
-    onSelectTakeaway,
-    layoutOptions,
-  } = props;
+type TileVisual = {
+  colors: [string, string];
+  accent: string;
+  muted: string;
+  label: string;
+};
 
+function visualFor(state: TableState | 'takeaway'): TileVisual {
+  if (state === 'takeaway') return { colors: ['#5C4815', '#211A0D'], accent: '#F5CF65', muted: '#E8C979', label: 'PEDIDO RÁPIDO' };
+  if (state === 'libre') return { colors: ['#195C4A', '#102A29'], accent: '#6DE0B5', muted: '#93E5C5', label: 'DISPONIBLE' };
+  if (state === 'ocupada') return { colors: ['#6C3140', '#2B1821'], accent: '#FF8F9A', muted: '#F5B2B9', label: 'EN SERVICIO' };
+  return { colors: ['#725227', '#2E2315'], accent: '#F4C36A', muted: '#F3D39A', label: 'CUENTA' };
+}
+
+function TablesGridComponent(props: TablesGridProps) {
+  const { tables, selectedTable, mode, liveItems, pendingCount, indicators, onPressTable, onSelectTakeaway, layoutOptions } = props;
   const { minTileWidth = 76, gap = SPACING.sm } = layoutOptions ?? {};
-  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const tileHeight = layoutOptions?.tileHeight ?? (containerWidth > 500 ? 124 : 84);
   const COLORS = useThemedColors();
-  const SHADOWS = useThemedShadows();
 
-  // 🎯 GRID RESPONSIVE: 2 columnas en móvil, 3 en tablet compacta, 4 en web/tablet ancha
-  // Si hay más de 8 mesas (2 filas x 4 cols), se hace scroll vertical
   const tileWidth = useMemo(() => {
     if (containerWidth === 0) return minTileWidth;
-
     const numColumns = containerWidth >= 900 ? 6 : containerWidth >= 600 ? 5 : 4;
-
-    // Calcular ancho exacto para llenar el contenedor
-    const totalGapSpace = (numColumns - 1) * gap;
-    const availableSpace = containerWidth - totalGapSpace;
-    return Math.floor(availableSpace / numColumns);
+    return Math.floor((containerWidth - (numColumns - 1) * gap) / numColumns);
   }, [containerWidth, minTileWidth, gap]);
 
-  // ✅ Filtrar mesas válidas: excluir mesas con datos inconsistentes
   const validTables = useMemo(() => {
     const validStates: TableState[] = ['libre', 'ocupada', 'cuenta'];
-    return (tables || []).filter((t): t is Table => {
-      if (!t || typeof t !== 'object') return false;
-      if (typeof t.id !== 'string' || t.id.length === 0) return false;
-      if (!t.state || !validStates.includes(t.state)) return false;
-      return true;
-    });
+    return (tables || []).filter((table): table is Table => Boolean(table && typeof table.id === 'string' && table.id.length && validStates.includes(table.state)));
   }, [tables]);
 
-  const tileColor = (state: TableState) =>
-    state === 'libre'
-      ? COLORS.table.free
-      : state === 'ocupada'
-        ? COLORS.table.occupied
-        : COLORS.table.billing;
-
-  const renderTile = (
-    id: string,
-    state: TableState | 'takeaway',
-    isTakeaway: boolean = false,
-    onPress: () => void
-  ) => {
+  const renderTile = (id: string, state: TableState | 'takeaway', isTakeaway = false, onPress: () => void) => {
     const isSelected = isTakeaway ? mode === 'takeaway' : selectedTable === id && mode === 'table';
-
-    // Datos para badge (solo si es mesa normal)
-    const mesaData = !isTakeaway ? (tables.find((t) => t.id === id) as any) : null;
-
+    const mesaData = !isTakeaway ? (tables.find((table) => table.id === id) as any) : null;
     const thisMesaPending = isSelected ? pendingCount > 0 : (mesaData?.hasPending ?? false);
-    const thisMesaLiveCount = isSelected
-      ? liveItems.filter((it: OrderItem) => it.estado !== 'entregado').length
-      : (mesaData?.liveCount ?? 0);
-    const thisMesaHasReady = isSelected
-      ? liveItems.some((it: OrderItem) => it.estado === 'listo')
-      : (mesaData?.hasReady ?? false);
-    const mesaIndicator = !isTakeaway ? (indicators?.[id] ?? null) : null;
-
-    const bgColor = isTakeaway ? COLORS.primary : tileColor(state as TableState);
-    const textColor = COLORS.text.primary;
+    const thisMesaLiveCount = isSelected ? liveItems.filter((item) => item.estado !== 'entregado').length : (mesaData?.liveCount ?? 0);
+    const thisMesaHasReady = isSelected ? liveItems.some((item) => item.estado === 'listo') : (mesaData?.hasReady ?? false);
+    const visual = visualFor(state);
 
     return (
       <Pressable
+        accessibilityLabel={isTakeaway ? 'Pedido para llevar' : `Mesa ${id}, ${visual.label.toLowerCase()}`}
+        accessibilityRole="button"
         key={id}
         onPress={onPress}
-        style={({ pressed }) => ({
-          width: tileWidth,
-          height: tileHeight,
-          borderRadius: RADIUS.xl,
-          backgroundColor: bgColor,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: gap,
-          opacity: pressed ? 0.88 : 1,
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-          borderWidth: isSelected ? 3 : 0,
-          borderColor: isSelected ? COLORS.primaryLight : 'transparent',
-          ...(isSelected ? SHADOWS.primary : SHADOWS.sm),
-        })}
+        style={({ pressed }) => [
+          styles.tileShell,
+          {
+            width: tileWidth,
+            height: tileHeight,
+            marginBottom: gap,
+            borderColor: isSelected ? visual.accent : 'rgba(235,241,250,0.12)',
+            shadowColor: isSelected ? visual.accent : '#000',
+          },
+          isSelected && styles.tileSelected,
+          pressed && styles.tilePressed,
+        ]}
       >
-        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-          {isTakeaway ? (
-            <MaterialCommunityIcons name="package-variant-closed" size={24} color={textColor} />
-          ) : (
-            <Ionicons name="people" size={18} color={textColor} />
-          )}
-
-          <Text
-            style={{
-              color: textColor,
-              fontWeight: TYPOGRAPHY.weights.black,
-              fontSize: isTakeaway ? TYPOGRAPHY.sizes.sm : TYPOGRAPHY.sizes.xl,
-              marginTop: 4,
-              textAlign: 'center',
-              flexShrink: 1,
-              width: '100%',
-              paddingHorizontal: 4,
-            }}
-            numberOfLines={2}
-          >
-            {isTakeaway ? 'Para Llevar' : id}
-          </Text>
-
-          {!isTakeaway && (
-            <Text
-              style={{
-                color: textColor,
-                fontSize: 10,
-                opacity: 0.8,
-                fontWeight: '600',
-                flexShrink: 1,
-                textAlign: 'center',
-              }}
-              numberOfLines={1}
-            >
-              {String(state).toUpperCase()}
-            </Text>
-          )}
-        </View>
-
-        {/* Badge Fractal */}
-        {!isTakeaway && (
-          <TableBadge
-            count={thisMesaLiveCount}
-            hasReady={thisMesaHasReady}
-            hasPending={thisMesaPending > 0}
-            indicator={mesaIndicator}
-          />
-        )}
+        <LinearGradient colors={visual.colors} end={{ x: 1, y: 1 }} start={{ x: 0, y: 0 }} style={styles.tileFill}>
+          <View pointerEvents="none" style={[styles.tileGlow, { backgroundColor: `${visual.accent}26` }]} />
+          <View style={[styles.iconPlate, { borderColor: `${visual.accent}55`, backgroundColor: `${visual.accent}18` }]}>
+            {isTakeaway ? <MaterialCommunityIcons name="package-variant-closed" size={20} color={visual.accent} /> : <Ionicons name="people" size={17} color={visual.accent} />}
+          </View>
+          <Text numberOfLines={1} style={styles.tableId}>{isTakeaway ? 'Para llevar' : id}</Text>
+          <View style={styles.statusRow}><View style={[styles.statusDot, { backgroundColor: visual.accent }]} /><Text numberOfLines={1} style={[styles.statusText, { color: visual.muted }]}>{visual.label}</Text></View>
+          <View pointerEvents="none" style={[styles.accentRail, { backgroundColor: visual.accent }]} />
+          {!isTakeaway && <TableBadge count={thisMesaLiveCount} hasReady={thisMesaHasReady} hasPending={thisMesaPending > 0} indicator={indicators?.[id] ?? null} />}
+        </LinearGradient>
       </Pressable>
     );
   };
 
-  // 🎯 Calcular altura mínima para 2 filas completas
-  const minHeightFor2Rows = tileHeight * 2 + gap * 1 + SPACING.xl + SPACING.xs;
+  const minHeightForTwoRows = tileHeight * 2 + gap + SPACING.xl + SPACING.xs;
 
   return (
-    <View
-      style={{
-        flex: 2,
-        width: '100%',
-        minHeight: minHeightFor2Rows, // 🔥 Asegura que 2 filas sean visibles
-      }}
-      onLayout={(e) => {
-        const w = e.nativeEvent.layout.width;
-        if (Math.abs(containerWidth - w) > 10) {
-          setContainerWidth(w);
-        }
-      }}
-    >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: SPACING.xl,
-          paddingTop: SPACING.xs,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between', // Distribución fractal
-            gap: 0, // Usamos marginBottom en los tiles y justifyContent para el gap horizontal
-          }}
-        >
-          {/* 1. Renderizar Mesas */}
-          {validTables.map((table) =>
-            renderTile(table.id, table.state, false, () =>
-              onPressTable(table.id, table.state === 'libre')
-            )
-          )}
-
-          {/* Salida operativa para pedidos sin mesa */}
+    <View style={{ flex: 2, minHeight: minHeightForTwoRows, width: '100%' }} onLayout={(event) => {
+      const nextWidth = event.nativeEvent.layout.width;
+      if (Math.abs(containerWidth - nextWidth) > 10) setContainerWidth(nextWidth);
+    }}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.grid}>
+          {validTables.map((table) => renderTile(table.id, table.state, false, () => onPressTable(table.id, table.state === 'libre')))}
           {renderTile('takeaway', 'takeaway', true, onSelectTakeaway)}
         </View>
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  scrollContent: { paddingBottom: SPACING.xl, paddingTop: SPACING.xs },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  tileShell: { borderRadius: RADIUS.xl, borderWidth: 1, elevation: 4, overflow: 'hidden', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 13 },
+  tileSelected: { borderWidth: 2, elevation: 9, shadowOpacity: 0.42, shadowRadius: 18 },
+  tilePressed: { opacity: 0.86, transform: [{ scale: 0.975 }] },
+  tileFill: { alignItems: 'center', flex: 1, justifyContent: 'center', overflow: 'hidden', paddingHorizontal: 7, position: 'relative' },
+  tileGlow: { borderRadius: 70, height: 118, position: 'absolute', right: -44, top: -58, width: 118 },
+  iconPlate: { alignItems: 'center', borderRadius: 9, borderWidth: 1, height: 28, justifyContent: 'center', width: 28 },
+  tableId: { color: '#F7F9FC', fontSize: TYPOGRAPHY.sizes.xl, fontWeight: TYPOGRAPHY.weights.black, marginTop: 5, paddingHorizontal: 2, textAlign: 'center', width: '100%' },
+  statusRow: { alignItems: 'center', flexDirection: 'row', gap: 4, marginTop: 3 },
+  statusDot: { borderRadius: 4, height: 6, width: 6 },
+  statusText: { fontSize: 7, fontWeight: '900', letterSpacing: 0.7 },
+  accentRail: { bottom: 0, height: 3, left: 0, position: 'absolute', right: 0 },
+});
 
 export const TablesGrid = React.memo(TablesGridComponent);

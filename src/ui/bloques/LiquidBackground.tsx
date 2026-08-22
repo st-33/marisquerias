@@ -5,7 +5,7 @@
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Dimensions, Easing, Platform, StyleSheet, View } from 'react-native';
 import { useAppTheme } from '../../compartido/temas';
 
 // [11Ene8:47.pm] Dimensiones de pantalla para cálculos de posicionamiento
@@ -56,14 +56,14 @@ function FloatingOrb({ size, left, right, top, bottom, delay, duration, color }:
           duration,
           // [11Ene8:47.pm] Easing.inOut(Easing.sin): movimiento tipo onda sinusoidal suave
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
           delay,
         }),
         Animated.timing(animValue, {
           toValue: 0,
           duration,
           easing: Easing.inOut(Easing.sin),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ])
     );
@@ -100,9 +100,8 @@ function FloatingOrb({ size, left, right, top, bottom, delay, duration, color }:
           right,
           top,
           bottom,
-          // [11Ene8:47.pm] backgroundColor/shadowColor: heredan colors.primary del tema
+          // [11Ene8:47.pm] backgroundColor hereda colors.primary del tema
           backgroundColor: color,
-          shadowColor: color,
           transform: [{ translateY }, { translateX }, { scale }],
         },
       ]}
@@ -149,10 +148,5 @@ const styles = StyleSheet.create({
     borderRadius: 1000,
     // [11Ene8:47.pm] opacity: subir = orbes más visibles (actual 10%)
     opacity: 0.1,
-    shadowOffset: { width: 0, height: 0 },
-    // [11Ene8:47.pm] shadowOpacity: intensidad del brillo/sombra del orbe
-    shadowOpacity: 0.4,
-    // [11Ene8:47.pm] shadowRadius: subir = resplandor más difuso/expandido
-    shadowRadius: 90,
   },
 });

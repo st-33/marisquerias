@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
 import { RADIUS } from '../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
@@ -54,30 +55,31 @@ export const OrderItemCard = ({
       entering={FadeInUp.duration(220)}
       layout={Layout.springify()}
       style={{
-        backgroundColor: COLORS.bg.secondary,
         borderRadius: RADIUS.lg,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
         minHeight: 64,
         borderWidth: 1,
-        borderColor: COLORS.bg.elevated,
+        borderColor: `${statusConfig.dotColor}42`,
         borderLeftWidth: 3,
         borderLeftColor: statusConfig.dotColor,
         marginBottom: 8,
+        overflow: 'hidden',
         ...SHADOWS.sm,
       }}
     >
+      <LinearGradient colors={[`${statusConfig.dotColor}19`, COLORS.bg.secondary]} end={{ x: 1, y: 1 }} start={{ x: 0, y: 0 }} style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10 }}>
+      <View pointerEvents="none" style={{ backgroundColor: `${statusConfig.dotColor}18`, borderRadius: 50, height: 92, position: 'absolute', right: -30, top: -58, width: 92 }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text
-          style={{
-            color: COLORS.text.primary,
+        <View style={{ alignItems: 'center', backgroundColor: `${statusConfig.dotColor}20`, borderColor: `${statusConfig.dotColor}48`, borderRadius: 9, borderWidth: 1, height: 32, justifyContent: 'center', width: 32 }}>
+          <Text
+            style={{
+              color: statusConfig.dotColor,
             fontWeight: '900',
-            fontSize: 14,
-            minWidth: 22,
+            fontSize: 12,
           }}
-        >
-          {qty}x
-        </Text>
+          >
+            {qty}x
+          </Text>
+        </View>
 
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
@@ -194,7 +196,7 @@ export const OrderItemCard = ({
                 backgroundColor: statusConfig.dotColor,
               }}
             />
-            <Text style={{ color: statusConfig.color, fontSize: 11, fontWeight: '800' }}>
+            <Text style={{ color: statusConfig.color, fontSize: 10, fontWeight: '900', letterSpacing: 0.45 }}>
               {statusLabel}
             </Text>
           </View>
@@ -205,6 +207,8 @@ export const OrderItemCard = ({
               onPress={onAction}
               style={({ pressed }) => ({
                 backgroundColor: resolvedActionColor,
+                borderColor: `${resolvedActionColor}B3`,
+                borderWidth: 1,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: RADIUS.sm,
@@ -224,6 +228,7 @@ export const OrderItemCard = ({
           )}
         </View>
       )}
+      </LinearGradient>
     </Animated.View>
   );
 };
