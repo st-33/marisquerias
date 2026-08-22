@@ -1,18 +1,25 @@
 /**
- * 🧠 CEREBRO: Gestión de Ventas de Crudo (Admin)
- * Hook de lógica pura para administrar y escuchar ventas
- * SEPARACIÓN SAGRADA: Solo lógica, cero UI
+ * 🧠 CEREBRO: Gestión de Ventas de Mostrador (Admin)
+ * Hook de lógica pura para escuchar el registro financiero diario.
+ * Las salidas de inventario permanecen separadas de las ventas.
  */
 
 import { useEffect, useState, useMemo } from 'react';
 import type { Database } from 'firebase/database';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
-import { InventoryV2Repository } from '../../sistema/persistencia/inventory.v2.repo';
+import {
+  RegistroVentasRepository,
+  type RegistroVenta,
+} from '../../sistema/persistencia/registroVentas.repo';
 
 type UseVentaCrudoAdminProps = {
   db?: Database;
   tenantPath?: string;
+};
+
+export type RegistroVentaMostrador = RegistroVenta & {
+  id: string;
 };
 
 export function useVentaCrudoAdmin(props?: UseVentaCrudoAdminProps) {
@@ -26,34 +33,42 @@ export function useVentaCrudoAdmin(props?: UseVentaCrudoAdminProps) {
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
 
-  const [sales, setSales] = useState<any[]>([]);
+  const [sales, setSales] = useState<RegistroVentaMostrador[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const inventoryRepo = useMemo(() => new InventoryV2Repository(db, tenantPath), [db, tenantPath]);
+  const registroVentasRepo = useMemo(
+    () => new RegistroVentasRepository(db, tenantPath),
+    [db, tenantPath]
+  );
 
   useEffect(() => {
     if (!tenantPath) {
       setTimeout(() => {
+        setSales([]);
         setLoading(false);
       }, 0);
       return;
     }
+
     setTimeout(() => {
       setLoading(true);
     }, 0);
 
-    const unsub = inventoryRepo.suscribirMovimientosRecientes(50, (movements) => {
-      // Filter for 'salida' (Sales) and sort desc
-      const list = Object.entries(movements)
-        .map(([k, v]: any) => ({ ...v, id: k }))
-        .filter((m: any) => m.tipo === 'salida' && m.razon === 'Venta Mostrador')
-        .sort((a: any, b: any) => b.timestamp - a.timestamp);
+    const unsub = registroVentasRepo.suscribirDia(Date.now(), (registros) => {
+      const list = Object.entries(registros)
+        .map(([id, registro]) => ({ ...registro, id }))
+        .filter(
+          (registro): registro is RegistroVentaMostrador =>
+            registro.origen === 'mostrador' &&
+            registro.canal === 'mostrador' &&
+            registro.estado === 'pagada'
+        )
+        .sort((a, b) => b.timestamp - a.timestamp);
       setSales(list);
       setLoading(false);
     });
 
     return unsub;
-  }, [inventoryRepo, tenantPath]);
+  }, [registroVentasRepo, tenantPath]);
 
   return {
     sales,

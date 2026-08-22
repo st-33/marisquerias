@@ -24,12 +24,14 @@ export function MostradorAdminScreen() {
   const { sales } = useVentaCrudoAdmin();
   const { config, updateConfig } = usePosConfig();
   const { features, loading: loadingFeatures } = useAdminFeatures();
+  const mostradorHabilitado =
+    features?.admin_mostrador === true && features?.module_venta_crudo === true;
 
   useEffect(() => {
-    if (!loadingFeatures && !features?.module_venta_crudo) {
-      router.replace('/_role/admin/dashboard');
+    if (!loadingFeatures && !mostradorHabilitado) {
+      router.replace('/_role/roles');
     }
-  }, [loadingFeatures, features, router]);
+  }, [loadingFeatures, mostradorHabilitado, router]);
 
   if (loadingFeatures) {
     return (
@@ -46,24 +48,13 @@ export function MostradorAdminScreen() {
     );
   }
 
-  if (!features?.module_venta_crudo) return null;
+  if (!mostradorHabilitado) return null;
 
   const toggleConfig = (key: keyof typeof config) => {
     updateConfig({ [key]: !config[key as keyof typeof config] });
   };
 
-  const totalHoy = sales.reduce((acc, curr) => {
-    const date = new Date(curr.timestamp);
-    const today = new Date();
-    if (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    ) {
-      return acc + curr.cantidad;
-    }
-    return acc;
-  }, 0);
+  const totalHoy = sales.reduce((acc, sale) => acc + Math.max(0, Number(sale.total || 0)), 0);
 
   return (
     <View style={styles.container}>
@@ -81,12 +72,12 @@ export function MostradorAdminScreen() {
       <ScrollView style={styles.content}>
         <View style={styles.kpiRow}>
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Items Hoy</Text>
-            <Text style={styles.kpiValue}>{totalHoy}</Text>
+            <Text style={styles.kpiLabel}>Ventas Hoy</Text>
+            <Text style={styles.kpiValue}>{totalHoy.toFixed(2)}</Text>
             <Ionicons name="cube-outline" size={20} color="#10b981" style={styles.kpiIcon} />
           </View>
           <View style={styles.kpiCard}>
-            <Text style={styles.kpiLabel}>Movimientos</Text>
+            <Text style={styles.kpiLabel}>Operaciones</Text>
             <Text style={styles.kpiValue}>{sales.length}</Text>
             <Ionicons name="receipt-outline" size={20} color="#3b82f6" style={styles.kpiIcon} />
           </View>
@@ -140,16 +131,18 @@ export function MostradorAdminScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Registro de Salidas (Stock)</Text>
+          <Text style={styles.sectionTitle}>Registro de Ventas</Text>
           <View style={styles.tableCard}>
             <View style={styles.tableHeader}>
               <Text style={[styles.th, { flex: 1 }]}>Hora</Text>
-              <Text style={[styles.th, { flex: 2 }]}>Item</Text>
-              <Text style={[styles.th, { flex: 1, textAlign: 'right' }]}>Cant.</Text>
+              <Text style={[styles.th, { flex: 2 }]}>Venta</Text>
+              <Text style={[styles.th, { flex: 1, textAlign: 'right' }]}>Total</Text>
             </View>
             {sales.map((sale, index) => {
               const date = new Date(sale.timestamp);
               const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const items =
+                sale.resumenItems?.map((item) => item.nombre).join(', ') || 'Sin detalle';
               return (
                 <View
                   key={sale.id}
@@ -159,22 +152,22 @@ export function MostradorAdminScreen() {
                     {time}
                   </Text>
                   <Text style={[styles.td, { flex: 2 }]} numberOfLines={1}>
-                    {sale.itemId}
+                    #{sale.numero} · {items}
                   </Text>
                   <Text
                     style={[
                       styles.td,
-                      { flex: 1, textAlign: 'right', fontWeight: 'bold', color: '#ef4444' },
+                      { flex: 1, textAlign: 'right', fontWeight: 'bold', color: '#10b981' },
                     ]}
                   >
-                    -{sale.cantidad}
+                    ${Number(sale.total || 0).toFixed(2)}
                   </Text>
                 </View>
               );
             })}
             {sales.length === 0 && (
               <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={{ color: '#64748b' }}>Sin movimientos recientes</Text>
+                <Text style={{ color: '#64748b' }}>Sin ventas registradas hoy</Text>
               </View>
             )}
           </View>

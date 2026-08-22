@@ -2,51 +2,57 @@
  * 🖨️ GESTOR HUB (Componente Invisible)
  *
  * Orquesta la impresión remota cuando el dispositivo actúa como Hub Central.
- * Se monta globalmente en _layout.tsx y reacciona al EstadoHub (Zustand).
+ * Se monta globalmente en _layout.tsx y reacciona a la configuración cloud del tenant.
  *
- * Orquestación reactiva mediante Zustand y el controlador canónico ServicioFierros.
- * No utiliza polling de AsyncStorage para detectar cambios de configuración.
+ * La configuración cloud (`tenantPath/config/hub`) es la autoridad de habilitación,
+ * destino e identidad del Hub. AsyncStorage solo conserva compatibilidad local y no
+ * puede activar ni sobrescribir la configuración remota.
  */
 
 import NetInfo from '@react-native-community/netinfo';
-import { ref, set } from 'firebase/database';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getRtdb } from '../../../firebase';
+import { DevicesRepository, type HubConfig } from '../../../persistencia/devices.repo';
 import { DespachadorCola } from '../cola/DespachadorCola';
-import { destinoACanal, useEstadoHub } from '../estado/EstadoHub';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TIPOS
-// ═══════════════════════════════════════════════════════════════════════════
+import { useEstadoHub } from '../estado/EstadoHub';
 
 interface PropiedadesGestorHub {
   /** Path del tenant (ej: "tenants/miNegocio") */
   tenantPath: string;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTE
-// ═══════════════════════════════════════════════════════════════════════════
+type ConfiguracionHubRuntime = {
+  tenantPath: string;
+  config: Partial<HubConfig> | null;
+};
 
 export const GestorHub = ({ tenantPath }: PropiedadesGestorHub) => {
-  // Estado del Hub desde Zustand (REACTIVO, sin polling!)
-  const { habilitado, destino, idDispositivo, enLinea, setEnLinea, inicializar } = useEstadoHub();
+  // Estado local usado únicamente para conectividad del runtime.
+  const { enLinea, setEnLinea } = useEstadoHub();
+  const [configuracionRuntime, setConfiguracionRuntime] = useState<ConfiguracionHubRuntime | null>(
+    null
+  );
 
-  // Refs para cleanup
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const listenerRedRef = useRef<(() => void) | null>(null);
+  const configuracionCloud =
+    configuracionRuntime?.tenantPath === tenantPath ? configuracionRuntime.config : null;
+  const habilitado = configuracionCloud?.enabled === true;
+  const destino = configuracionCloud?.destination ?? null;
+  const idDispositivo = configuracionCloud?.deviceId || 'hub_local';
 
-  // Inicializar estado desde AsyncStorage al montar
+  // La configuración del Hub se lee desde RTDB; no se toma de AsyncStorage ni se escribe aquí.
   useEffect(() => {
-    console.log('[GestorHub] 🔷 Componente MONTADO');
-    console.log('[GestorHub] Estado inicial:', { habilitado, destino, idDispositivo, enLinea });
-    inicializar();
-  }, [inicializar]);
+    if (!tenantPath) return;
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // LISTENER DE RED
-  // ═══════════════════════════════════════════════════════════════════════════
+    const db = getRtdb();
+    const devicesRepo = new DevicesRepository(db, tenantPath);
+    const unsubscribe = devicesRepo.suscribirHubConfig((config) => {
+      setConfiguracionRuntime({ tenantPath, config });
+    });
 
+    return unsubscribe;
+  }, [tenantPath]);
+
+  // Listener de red: conectividad local, no autoridad de configuración.
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const ahora = state.isConnected ?? false;
@@ -54,26 +60,18 @@ export const GestorHub = ({ tenantPath }: PropiedadesGestorHub) => {
 
       if (!ahora) {
         console.log('[GestorHub] 🔴 Red perdida, entrando en modo STANDBY');
-      } else if (ahora && !enLinea) {
-        console.log('[GestorHub] 🟢 Red restaurada');
       }
     });
 
-    listenerRedRef.current = unsubscribe;
+    return unsubscribe;
+  }, [setEnLinea]);
 
-    return () => unsubscribe();
-  }, [enLinea, setEnLinea]);
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CICLO DE VIDA DEL HUB
-  // ═══════════════════════════════════════════════════════════════════════════
-
+  // Ciclo de vida del Hub gobernado por la configuración cloud.
   useEffect(() => {
-    // Condiciones para activar
-    const debeActivar = habilitado && tenantPath && enLinea && destino;
+    const debeActivar = habilitado && Boolean(tenantPath) && enLinea && destino;
 
     if (debeActivar) {
-      console.log('[GestorHub] 🟢 Activando modo HUB...');
+      console.log('[GestorHub] 🟢 Activando modo HUB desde configuración cloud...');
 
       const db = getRtdb();
       if (!db) {
@@ -81,9 +79,7 @@ export const GestorHub = ({ tenantPath }: PropiedadesGestorHub) => {
         return;
       }
 
-      const canal = destinoACanal(destino);
-
-      // 🔥 INTEGRACIÓN: Iniciar DespachadorCola
+      const canal = destino === 'venta_crudo' ? 'venta_crudo' : 'standard';
       const despachador = DespachadorCola.obtenerInstancia(
         db,
         tenantPath,
@@ -101,62 +97,43 @@ export const GestorHub = ({ tenantPath }: PropiedadesGestorHub) => {
         `[GestorHub] ✅ Hub inicializado (canal: ${canal}, dispositivo: ${idDispositivo})`
       );
 
-      // Heartbeat: Avisar que estamos vivos cada 30 segundos
-      heartbeatRef.current = setInterval(async () => {
+      const heartbeatPath = `${tenantPath}/config/hub/heartbeat`;
+      const enviarHeartbeat = async () => {
         try {
-          const heartbeatPath = ref(db, `${tenantPath}/config/hub/heartbeat`);
-          await set(heartbeatPath, Date.now());
+          const { ref, set } = await import('firebase/database');
+          await set(ref(db, heartbeatPath), Date.now());
         } catch (e) {
           console.warn('[GestorHub] Error enviando heartbeat:', e);
         }
+      };
+
+      const heartbeat = setInterval(() => {
+        void enviarHeartbeat();
       }, 30000);
+      void enviarHeartbeat();
 
-      // Enviar heartbeat inicial
-      const heartbeatPath = ref(db, `${tenantPath}/config/hub/heartbeat`);
-      set(heartbeatPath, Date.now()).catch(() => {});
-
-      // Sincronizar config a la nube
-      set(ref(db, `${tenantPath}/config/hub`), {
-        enabled: true,
-        destination: destino,
-        deviceId: idDispositivo,
-        updatedAt: Date.now(),
-      }).catch((e) => console.warn('[GestorHub] Error sincronizando config:', e));
-    } else {
-      console.log(`[GestorHub] 🔴 Hub ${!habilitado ? 'desactivado' : 'en standby'}`, {
-        habilitado,
-        tenantPath: !!tenantPath,
-        enLinea,
-        destino,
-      });
-
-      // Si estaba activo y ahora no, detener despachador
-      if (tenantPath) {
+      return () => {
+        clearInterval(heartbeat);
         DespachadorCola.destruirInstancia(tenantPath, 'hub');
-      }
+      };
     }
 
-    // Cleanup
-    return () => {
-      if (heartbeatRef.current) {
-        clearInterval(heartbeatRef.current);
-        heartbeatRef.current = null;
-      }
+    console.log('[GestorHub] 🔴 Hub en standby según configuración cloud', {
+      habilitado,
+      tenantPath: Boolean(tenantPath),
+      enLinea,
+      destino,
+    });
 
-      // Detener despachador al desmontar
-      if (tenantPath) {
-        DespachadorCola.destruirInstancia(tenantPath, 'hub');
-      }
-    };
+    if (tenantPath) {
+      DespachadorCola.destruirInstancia(tenantPath, 'hub');
+    }
+
+    return undefined;
   }, [habilitado, tenantPath, enLinea, destino, idDispositivo]);
 
-  // Componente invisible
   return null;
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// WRAPPER GLOBAL (para usar en _layout.tsx)
-// ═══════════════════════════════════════════════════════════════════════════
 
 interface PropiedadesGestorHubGlobal {
   /** Función o hook para obtener tenantPath (ej: useSesion) */
@@ -164,8 +141,8 @@ interface PropiedadesGestorHubGlobal {
 }
 
 /**
- * Componente global que se monta en _layout.tsx
- * Solo monta GestorHub si hay tenantPath
+ * Componente global que se monta en _layout.tsx.
+ * Solo monta GestorHub si hay tenantPath.
  */
 export const GestorHubGlobal = ({ tenantPath }: PropiedadesGestorHubGlobal) => {
   if (!tenantPath) {

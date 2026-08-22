@@ -1,10 +1,12 @@
 import type { Database } from 'firebase/database';
-import { get, ref, runTransaction } from 'firebase/database';
-import { RegistroVentasRepository } from '../registroVentas.repo';
+import { get, off, onValue, ref, runTransaction } from 'firebase/database';
+import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repo';
 import type { Pedido } from '../pedidos.repo';
 
 jest.mock('firebase/database', () => ({
   get: jest.fn(),
+  off: jest.fn(),
+  onValue: jest.fn(),
   ref: jest.fn((db, path) => ({ db, path })),
   runTransaction: jest.fn(),
 }));
@@ -31,6 +33,8 @@ describe('RegistroVentasRepository', () => {
   const dia = String(fecha.getDate()).padStart(2, '0');
 
   const mockGet = get as jest.Mock;
+  const mockOff = off as jest.Mock;
+  const mockOnValue = onValue as jest.Mock;
   const mockRef = ref as jest.Mock;
   const mockRunTransaction = runTransaction as jest.Mock;
 
@@ -134,5 +138,37 @@ describe('RegistroVentasRepository', () => {
       total: 580,
       numero: 1,
     });
+  });
+
+  it('suscribe las ventas del día en la ruta financiera y limpia el listener', () => {
+    let callback: ((snap: Snapshot) => void) | undefined;
+    mockOnValue.mockImplementation((_reference, handler) => {
+      callback = handler;
+      return handler;
+    });
+
+    const recibido: Record<string, RegistroVenta> = {};
+    const limpiar = new RegistroVentasRepository(dbMock, tenantPath).suscribirDia(
+      timestamp,
+      (registros) => Object.assign(recibido, registros)
+    );
+
+    callback?.(
+      snapshot({
+        venta_1: {
+          origen: 'mostrador',
+          origenId: 'venta_1',
+          numero: 4,
+          canal: 'mostrador',
+          total: 350,
+          estado: 'pagada',
+          timestamp,
+        },
+      })
+    );
+
+    expect(recibido.venta_1).toMatchObject({ origen: 'mostrador', total: 350 });
+    limpiar();
+    expect(mockOff).toHaveBeenCalledWith(expect.anything(), 'value', callback);
   });
 });

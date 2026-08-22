@@ -382,7 +382,8 @@ export class InventoryV2Repository {
    * Registra toda una venta en una sola transacción atómica:
    * 1. Descuenta stock de todos los items en el área.
    * 2. Registra movimientos individuales (logs).
-   * 3. Guarda el registro maestro de la venta en /ventas_v2.
+   * 3. Conserva el vínculo operativo en el movimiento; el registro financiero pertenece a
+   *    RegistroVentasRepository y no se duplica dentro de inventario.
    */
   async registrarVentaMultiple(params: {
     items: any[];
@@ -393,7 +394,7 @@ export class InventoryV2Repository {
     allowNegative?: boolean;
     metadata?: any;
   }): Promise<string> {
-    const { items, areaId, total, metodoPago, usuario, allowNegative = false, metadata } = params;
+    const { items, areaId, usuario, allowNegative = false } = params;
 
     // 1. Obtener snapshot actual del área para cálculos
     const areaRef = ref(this.db, `${this.baseRef}/areas/${areaId}`);
@@ -405,9 +406,8 @@ export class InventoryV2Repository {
     const updates: Record<string, any> = {};
     const timestamp = Date.now();
 
-    // Generar ID de Venta
-    const ventaRef = push(ref(this.db, `${this.baseRef.replace('inventory_v2', 'ventas_v2')}`));
-    const ventaId = ventaRef.key!;
+    // Identificador operativo del lote; no representa un registro financiero.
+    const operacionId = push(ref(this.db, `${this.baseRef}/movements`)).key!;
 
     // 2. Procesar cada item para el batch update
     for (const item of items) {
@@ -432,38 +432,17 @@ export class InventoryV2Repository {
         cantidad,
         areaId,
         usuario,
-        razon: `Venta #${ventaId}`,
+        razon: `Salida por venta de Mostrador #${operacionId}`,
         timestamp,
         permiteNegativo: allowNegative,
       };
     }
 
-    // 3. Registro de Venta Maestro
-    const ventaPayload: VentaV2 = {
-      id: ventaId,
-      items: items.map((i) => ({
-        productoId: i.productoId,
-        nombre: i.nombre,
-        precio: i.precio,
-        cantidad: i.cantidad,
-        unidad: i.unidad,
-        subtotal: i.subtotal,
-      })),
-      total,
-      metodoPago,
-      areaId,
-      usuario,
-      timestamp,
-      metadata,
-    };
-
-    updates[`${this.baseRef.replace('inventory_v2', 'ventas_v2')}/${ventaId}`] = ventaPayload;
-
-    // 4. Ejecutar ráfaga atómica
+    // 3. Ejecutar únicamente la actualización operativa de inventario.
     await update(ref(this.db), updates);
-    console.log(`[InventoryRepo] ✅ Venta lote registrada con éxito: ${ventaId}`);
+    console.log(`[InventoryRepo] ✅ Salida lote registrada: ${operacionId}`);
 
-    return ventaId;
+    return operacionId;
   }
 
   /**

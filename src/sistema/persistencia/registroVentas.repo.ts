@@ -1,5 +1,5 @@
 import type { Database } from 'firebase/database';
-import { get, ref, runTransaction } from 'firebase/database';
+import { get, off, onValue, ref, runTransaction } from 'firebase/database';
 import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
 import type { Pedido } from './pedidos.repo';
 
@@ -159,5 +159,17 @@ export class RegistroVentasRepository {
       ref(this.db, `${this.getBasePath()}/${fecha.anio}/${fecha.mes}/${fecha.dia}`)
     );
     return (snapshot.val() as Record<string, RegistroVenta> | null) || {};
+  }
+
+  suscribirDia(
+    timestamp: number,
+    callback: (registros: Record<string, RegistroVenta>) => void
+  ): () => void {
+    const fecha = resolverFecha(timestamp);
+    const diaRef = ref(this.db, `${this.getBasePath()}/${fecha.anio}/${fecha.mes}/${fecha.dia}`);
+    const cb = onValue(diaRef, (snapshot) => {
+      callback((snapshot.val() as Record<string, RegistroVenta> | null) || {});
+    });
+    return () => off(diaRef, 'value', cb as any);
   }
 }
