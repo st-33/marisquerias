@@ -1,190 +1,76 @@
 /**
- * 🎭 SELECTOR DE ROLES - THEME-AWARE
- * Usa colores dinámicos según el tema activo (Elite/Default)
+ * Dirección visual: selector circular de referencia con roles como destinos
+ * profundos, halo contenido y accesos secundarios sin botones planos.
  */
 
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { ThemeToggle, useAppTheme } from '../../compartido/temas';
 import { useRoleSelectorLogic } from '../../roles/logica/selector/useRoleSelectorLogic';
 import { BrandSeal } from './BrandSeal';
 import { LiquidBackground } from './LiquidBackground';
 import { OrbButton } from './OrbButton';
-import { StickerLayer } from './StickerLayer';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export function RoleSelectorElite() {
-  const { colors, theme, isElite } = useAppTheme();
+  const { colors, isElite } = useAppTheme();
+  const { width, height } = useWindowDimensions();
+  const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } = useRoleSelectorLogic();
+  const compact = width < 520;
 
-  const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
-    useRoleSelectorLogic();
-
-  // Estilos dinámicos basados en tema
-  const dynamicStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: colors.background,
-        },
-        scrollContainer: {
-          flexGrow: 1,
-          paddingTop: SCREEN_HEIGHT * 0.02,
-          paddingBottom: SCREEN_HEIGHT * 0.08,
-        },
-        contentWrapper: {
-          alignItems: 'center',
-          paddingHorizontal: Math.round(20 * theme.scale),
-          width: '100%',
-          maxWidth: 1000,
-          alignSelf: 'center',
-        },
-        orbGrid: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: roles.length > 4 ? Math.round(18 * theme.scale) : Math.round(25 * theme.scale),
-          width: '100%',
-          paddingHorizontal: 15,
-        },
-        clientAccessButton: {
-          marginTop: SCREEN_HEIGHT * 0.06,
-          paddingVertical: Math.round(14 * theme.scale),
-          paddingHorizontal: Math.round(35 * theme.scale),
-          borderRadius: 50,
-          backgroundColor: isElite ? 'rgba(255,255,255,0.03)' : 'rgba(37,99,235,0.08)',
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.2,
-          shadowRadius: 25,
-          elevation: 5,
-        },
-        clientAccessText: {
-          textTransform: 'uppercase',
-          letterSpacing: Math.round(5 * theme.scale),
-          fontSize: Math.round(11 * theme.scale),
-          fontWeight: '700',
-          color: colors.textMuted,
-        },
-        logoutButton: {
-          marginTop: Math.round(30 * theme.scale),
-          marginBottom: Math.round(25 * theme.scale),
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: Math.round(10 * theme.scale),
-          paddingVertical: Math.round(14 * theme.scale),
-          paddingHorizontal: Math.round(28 * theme.scale),
-          borderRadius: 35,
-          backgroundColor: isElite ? 'rgba(142,121,82,0.08)' : 'rgba(100,116,139,0.08)',
-        },
-        logoutText: {
-          fontSize: Math.round(11 * theme.scale),
-          letterSpacing: 3,
-          color: colors.secondary,
-          fontWeight: '600',
-          textTransform: 'uppercase',
-        },
-        loadingContainer: {
-          flex: 1,
-          backgroundColor: colors.background,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        loadingText: {
-          color: colors.secondary,
-          fontSize: 14,
-          letterSpacing: 4,
-          marginTop: 20,
-          textTransform: 'uppercase',
-        },
-      }),
-    [colors, theme, isElite, roles.length]
+  const styles = useMemo(
+    () => StyleSheet.create({
+      container: { flex: 1, backgroundColor: colors.background },
+      scroll: { flexGrow: 1, minHeight: height, paddingBottom: compact ? 62 : 88 },
+      content: { alignItems: 'center', alignSelf: 'center', maxWidth: 980, paddingHorizontal: compact ? 12 : 28, width: '100%' },
+      roleStage: { alignItems: 'center', width: '100%' },
+      roleRow: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: compact ? 14 : 26, justifyContent: 'center', paddingHorizontal: 10, width: '100%' },
+      roleCaption: { color: colors.textMuted, fontSize: 10, fontWeight: '700', letterSpacing: 2.8, marginBottom: 16, textTransform: 'uppercase' },
+      clientStage: { alignItems: 'center', marginTop: compact ? 26 : 36, width: '100%' },
+      clientCaption: { color: isElite ? 'rgba(212,175,55,0.68)' : colors.secondary, fontSize: 9, fontWeight: '800', letterSpacing: 2.4, marginBottom: 12, textTransform: 'uppercase' },
+      logout: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: 18, marginTop: compact ? 26 : 34, paddingHorizontal: 18, paddingVertical: 10 },
+      logoutText: { color: colors.textMuted, fontSize: 10, fontWeight: '700', letterSpacing: 2.1, textTransform: 'uppercase' },
+      loading: { alignItems: 'center', backgroundColor: colors.background, flex: 1, justifyContent: 'center' },
+      loadingText: { color: colors.secondary, fontSize: 12, fontWeight: '700', letterSpacing: 3.5, marginTop: 18, textTransform: 'uppercase' },
+    }),
+    [colors, compact, height, isElite]
   );
 
   if (loading) {
-    return (
-      <View style={dynamicStyles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={dynamicStyles.loadingText}>CARGANDO...</Text>
-      </View>
-    );
+    return <View style={styles.loading}><ActivityIndicator size="large" color={colors.primary} /><Text style={styles.loadingText}>Cargando roles…</Text></View>;
   }
 
   return (
-    <View style={dynamicStyles.container}>
-      {/* Fondo animado (solo en tema elite) */}
+    <View style={styles.container}>
       {isElite && <LiquidBackground />}
-
-      {/* Stickers (solo en tema elite) */}
-      {isElite && <StickerLayer />}
-
-      {/* Contenido scrollable */}
-      <ScrollView
-        contentContainerStyle={dynamicStyles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={dynamicStyles.contentWrapper}>
-          {/* Nombre del negocio */}
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
           <BrandSeal nombreNegocio={nombreNegocio} />
-
-          {/* Grid de roles */}
-          <View style={dynamicStyles.orbGrid}>
-            {roles.map((rol, index) => {
-              const esPrincipal = roles.length <= 2 && index === 0;
-              const esSecundario = roles.length === 3 && index === 0;
-
-              return (
+          <View style={styles.roleStage}>
+            <Text style={styles.roleCaption}>Elige tu estación</Text>
+            <View style={styles.roleRow}>
+              {roles.map((rol, index) => (
                 <OrbButton
                   key={rol.id}
                   icono={rol.icono}
                   etiqueta={rol.nombre}
                   onPress={() => handleRolPress(rol.ruta)}
-                  esPrincipal={esPrincipal}
-                  esSecundario={esSecundario}
+                  esPrincipal={roles.length === 1 || (roles.length === 3 && index === 1)}
+                  esSecundario={roles.length === 2}
                 />
-              );
-            })}
+              ))}
+            </View>
           </View>
-
-          {/* Botón Menú Cliente */}
-          <Pressable onPress={handleMenuCliente}>
-            {({ pressed }) => (
-              <View style={[dynamicStyles.clientAccessButton, pressed && { opacity: 0.7 }]}>
-                <Text style={dynamicStyles.clientAccessText}>Menú Cliente</Text>
-              </View>
-            )}
-          </Pressable>
-
-          {/* Botón Cambiar de Negocio */}
-          <Pressable onPress={handleLogout} style={dynamicStyles.logoutButton}>
-            {({ pressed }) => (
-              <>
-                <Ionicons
-                  name="arrow-back-circle-outline"
-                  size={Math.round(22 * theme.scale)}
-                  color={pressed ? colors.primary : colors.secondary}
-                />
-                <Text style={[dynamicStyles.logoutText, pressed && { color: colors.primaryLight }]}>
-                  Cambiar de Negocio
-                </Text>
-              </>
-            )}
+          <View style={styles.clientStage}>
+            <Text style={styles.clientCaption}>Explora sin operación</Text>
+            <OrbButton icono="restaurant-outline" etiqueta="Menú Cliente" onPress={handleMenuCliente} variant="client" />
+          </View>
+          <Pressable accessibilityRole="button" onPress={handleLogout} style={({ pressed }) => [styles.logout, pressed && { opacity: 0.72, transform: [{ scale: 0.98 }] }]}>
+            <Ionicons name="arrow-back-circle-outline" size={18} color={colors.textMuted} />
+            <Text style={styles.logoutText}>Cambiar de negocio</Text>
           </Pressable>
         </View>
       </ScrollView>
-
-      {/* Toggle de tema */}
       <ThemeToggle position="bottom-right" />
     </View>
   );

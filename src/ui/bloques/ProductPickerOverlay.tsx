@@ -52,10 +52,15 @@ function ProductPickerOverlayComponent({
         overlay: {
           ...StyleSheet.absoluteFill,
           backgroundColor: COLORS.alpha.black50,
+          zIndex: 1,
           justifyContent: 'center',
           alignItems: 'center',
           paddingHorizontal: SPACING.md,
           paddingVertical: SPACING.xl,
+        },
+        backdrop: {
+          ...StyleSheet.absoluteFill,
+          backgroundColor: 'transparent',
         },
         sheet: {
           backgroundColor: COLORS.bg.primary,
@@ -271,6 +276,12 @@ function ProductPickerOverlayComponent({
         },
       ]}
     >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Cerrar selector de productos"
+        onPress={handleClose}
+        style={styles.backdrop}
+      />
       <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
         <View style={styles.header}>
           <View style={styles.headerRow}>

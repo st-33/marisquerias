@@ -1,7 +1,6 @@
 /**
- * 🎨 THEME - LEGACY BRIDGE
- * Mantiene compatibilidad con imports existentes de src/config/theme.ts
- * Ahora delega al nuevo sistema de temas.
+ * Bridge legacy hacia la fuente única de tokens del sistema de temas.
  */
 
-export { theme, useTheme } from './temas';
+export { theme } from './temas/ThemeContext';
+export { useAppTheme as useTheme } from './temas/ThemeContext';

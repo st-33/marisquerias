@@ -6,7 +6,7 @@ module.exports = () => {
     slug: 'marisquerias',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/images/icon_custom.png',
+    icon: './assets/images/icon.png',
     scheme: 'miecosistemaadi',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
@@ -22,8 +22,8 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        backgroundColor: '#E6F4FE',
-        foregroundImage: './assets/images/icon_custom.png',
+        backgroundColor: '#0A0D14',
+        foregroundImage: './assets/images/android-icon-foreground.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       edgeToEdgeEnabled: true,
@@ -52,12 +52,13 @@ module.exports = () => {
       [
         'expo-splash-screen',
         {
-          image: './assets/images/icon_custom.png',
+          image: './assets/images/splash-icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#0A0D14',
           dark: {
-            backgroundColor: '#000000',
+            image: './assets/images/splash-icon-dark.png',
+            backgroundColor: '#05070B',
           },
         },
       ],

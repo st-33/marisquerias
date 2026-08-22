@@ -7,13 +7,13 @@ export {
   ThemeProvider,
   defaultColors,
   defaultTheme,
-  eliteColors, // legacy object
-  eliteTheme, // legacy alias
+  eliteColors,
+  eliteTheme,
   theme,
   useAppTheme,
   useTheme,
 } from './ThemeContext';
 
-export type { AppTheme, ThemeColors, ThemeType } from './ThemeContext';
+export type { AppTheme, ThemeColors, ThemeContextValue, ThemeType } from './ThemeContext';
 
 export { ThemeToggle } from './components/ThemeToggle';

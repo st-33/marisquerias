@@ -25,6 +25,7 @@ import {
 } from '../../roles/logica/mesero/rules';
 import { useAlternatingSounds } from '../../capacidades/ui/useAlternatingSounds';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
+import { BlockedHint } from '../primitivos/ElitePrimitives';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -491,11 +492,17 @@ function VariantsModalComponent({
               },
             ]}
           >
-            <View>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={[styles.totalLabel, { color: COLORS.text.muted }]}>Total</Text>
               <Text style={[styles.totalPrice, { color: COLORS.success }]}>
                 {formatMoney(totalPrice)}
               </Text>
+              {!canConfirm && (
+                <BlockedHint
+                  message={`Falta: ${missingRequired.map((gid) => groups[gid]?.titulo || 'opción requerida').join(', ')}`}
+                  style={{ marginTop: 6, alignSelf: 'flex-start' }}
+                />
+              )}
             </View>
             <ConfirmButton
               title={canConfirm ? 'Agregar' : `Selecciona ${missingRequired.length} opción(es)`}

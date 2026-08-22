@@ -1,54 +1,38 @@
 /**
- * 🎨 GLOBAL THEME SYSTEM
- * Sistema de temas dinámico por categoría con colores globales.
- * Compatible con todos los módulos existentes.
+ * Sistema de temas por categoría/tenant.
+ *
+ * El tema se mantiene como una sola fuente de verdad para la UI dinámica.
+ * Los consumidores legacy pueden importar tokens estáticos desde `theme.ts`,
+ * pero ya no dependen de una exportación paralela desde este contexto.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { descomponerRutaTenant } from '../../sistema/rtdb/rutas/RutaTenant';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// ═══════════════════════════════════════════════════════════════════
-// TIPOS
-// ═══════════════════════════════════════════════════════════════════
 export type ThemeType = 'elite' | 'default';
 
 export interface ThemeColors {
-  // Fondo
   background: string;
   backgroundSecondary: string;
   surface: string;
   surfaceDark: string;
   card: string;
-
-  // Acentos
   primary: string;
   primaryLight: string;
   secondary: string;
   accent: string;
-
-  // Cristal
   glass: string;
-
-  // Texto
   text: string;
   textSecondary: string;
   textMuted: string;
-
-  // Bordes
   border: string;
   borderLight: string;
-
-  // Estados
   success: string;
   error: string;
   danger: string;
   warning: string;
-
-  // Sombras
   shadow: string;
   shadowDark: string;
 }
@@ -66,106 +50,77 @@ export interface AppTheme {
   orbHasHalo: boolean;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// TEMA ELITE (Marisquerías)
-// ═══════════════════════════════════════════════════════════════════
-const SCALE_ELITE = SCREEN_WIDTH < 480 ? 0.85 : SCREEN_WIDTH < 1024 ? 1.0 : 1.4;
+const getScale = (width: number) => (width < 480 ? 0.85 : width < 1024 ? 1 : 1.4);
 
-const eliteColors: ThemeColors = {
-  background: '#050506',
-  backgroundSecondary: '#0a0a0c',
-  surface: '#111115',
-  surfaceDark: '#0a0a0d',
-  card: '#1a1a1f',
-
-  primary: '#c5a059',
-  primaryLight: '#f5ecd7',
-  secondary: '#8e7952',
-  accent: '#d4af37',
-
-  glass: 'rgba(15, 15, 18, 0.85)',
-
-  text: '#ffffff',
-  textSecondary: 'rgba(255, 255, 255, 0.75)',
-  textMuted: 'rgba(255, 255, 255, 0.5)',
-
-  border: '#2a2520',
-  borderLight: '#3d362d',
-
-  success: '#4ade80',
-  error: '#ff4d4d',
-  danger: '#ff4d4d',
-  warning: '#fbbf24',
-
-  shadow: 'rgba(197, 160, 89, 0.2)',
-  shadowDark: 'rgba(0, 0, 0, 0.5)',
+/** Paleta premium de marisquería: sobria, cálida y con contraste alto. */
+export const eliteColors: ThemeColors = {
+  background: '#0A0D14',
+  backgroundSecondary: '#0D111A',
+  surface: '#141923',
+  surfaceDark: '#0D111A',
+  card: '#1A2230',
+  primary: '#D4AF37',
+  primaryLight: '#E5C158',
+  secondary: '#CBD5E1',
+  accent: '#D4AF37',
+  glass: 'rgba(20, 25, 35, 0.94)',
+  text: '#F8FAFC',
+  textSecondary: '#CBD5E1',
+  textMuted: '#94A3B8',
+  border: '#252E3E',
+  borderLight: 'rgba(212, 175, 55, 0.18)',
+  success: '#10B981',
+  error: '#EF4444',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  shadow: 'rgba(0, 0, 0, 0.36)',
+  shadowDark: 'rgba(0, 0, 0, 0.62)',
 };
 
-const eliteTheme: AppTheme = {
-  id: 'elite',
-  name: 'Oro Elite',
-  colors: eliteColors,
-  scale: SCALE_ELITE,
-  screenWidth: SCREEN_WIDTH,
-  screenHeight: SCREEN_HEIGHT,
-  hasLiquidBackground: true,
-  hasStickers: true,
-  stickerOpacity: 0.12,
-  orbHasHalo: true,
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// TEMA DEFAULT (Otras categorías)
-// ═══════════════════════════════════════════════════════════════════
-const SCALE_DEFAULT = SCREEN_WIDTH < 480 ? 0.85 : SCREEN_WIDTH < 1024 ? 1.0 : 1.4;
-
-const defaultColors: ThemeColors = {
+export const defaultColors: ThemeColors = {
   background: '#0B101A',
   backgroundSecondary: '#0F172A',
   surface: '#111827',
   surfaceDark: '#0F172A',
   card: '#1F2937',
-
   primary: '#2563EB',
-  primaryLight: '#93c5fd',
-  secondary: '#64748b',
+  primaryLight: '#93C5FD',
+  secondary: '#CBD5E1',
   accent: '#F59E0B',
-
-  glass: 'rgba(30, 41, 59, 0.9)',
-
+  glass: 'rgba(30, 41, 59, 0.94)',
   text: '#F9FAFB',
-  textSecondary: '#CBD5F5',
-  textMuted: '#6B7280',
-
-  border: '#1F2937',
-  borderLight: '#27324A',
-
+  textSecondary: '#CBD5E1',
+  textMuted: '#94A3B8',
+  border: '#334155',
+  borderLight: '#475569',
   success: '#10B981',
   error: '#EF4444',
   danger: '#EF4444',
   warning: '#F59E0B',
-
-  shadow: 'rgba(15,23,42,0.45)',
-  shadowDark: 'rgba(15,23,42,0.65)',
+  shadow: 'rgba(15, 23, 42, 0.45)',
+  shadowDark: 'rgba(15, 23, 42, 0.65)',
 };
 
-const defaultTheme: AppTheme = {
-  id: 'default',
-  name: 'Clásico',
-  colors: defaultColors,
-  scale: SCALE_DEFAULT,
-  screenWidth: SCREEN_WIDTH,
-  screenHeight: SCREEN_HEIGHT,
-  hasLiquidBackground: false,
-  hasStickers: false,
-  stickerOpacity: 0,
-  orbHasHalo: false,
+const createTheme = (type: ThemeType, width: number, height: number): AppTheme => {
+  const elite = type === 'elite';
+  return {
+    id: type,
+    name: elite ? 'Oro Elite' : 'Clásico',
+    colors: elite ? eliteColors : defaultColors,
+    scale: getScale(width),
+    screenWidth: width,
+    screenHeight: height,
+    hasLiquidBackground: elite,
+    hasStickers: elite,
+    stickerOpacity: elite ? 0.08 : 0,
+    orbHasHalo: elite,
+  };
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// CONTEXT
-// ═══════════════════════════════════════════════════════════════════
-interface ThemeContextValue {
+export const eliteTheme = createTheme('elite', 390, 844);
+export const defaultTheme = createTheme('default', 390, 844);
+
+export interface ThemeContextValue {
   theme: AppTheme;
   themeType: ThemeType;
   colors: ThemeColors;
@@ -176,113 +131,122 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const STORAGE_KEY = '@adi_theme_preference';
+const STORAGE_KEY_PREFIX = '@adi_theme_preference:';
 
-/**
- * Mapa de categorías RTDB → tema visual.
- * Clave: segundo segmento del tenantPath (la categoría).
- * Esto evita hardcodear strings de categoría en código de plataforma.
- *
- * Evidencia RTDB: 2 alimentos_y_bebidas/marisquerias/{tenant}
- *   → segmento[1] = 'marisquerias' → tema 'elite'
- */
 const CATEGORIA_TEMA_MAP: Record<string, ThemeType> = {
   marisquerias: 'elite',
-  // Futuros: cafeterias: 'default', panaderias: 'warm', etc.
 };
 
 function detectCategoryTheme(tenantPath: string): ThemeType {
-  // tenantPath formato: "nicho/categoria/tenant"
   const identidad = descomponerRutaTenant(tenantPath);
   const categoria = identidad?.categoriaId;
-
   return (categoria ? CATEGORIA_TEMA_MAP[categoria] : undefined) ?? 'default';
 }
 
-function getThemeObject(type: ThemeType): AppTheme {
-  return type === 'elite' ? eliteTheme : defaultTheme;
+function getTenantStorageKey(tenantPath: string): string {
+  return `${STORAGE_KEY_PREFIX}${tenantPath || 'global'}`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PROVIDER
-// ═══════════════════════════════════════════════════════════════════
+function isThemeType(value: string | null): value is ThemeType {
+  return value === 'elite' || value === 'default';
+}
+
 interface ThemeProviderProps {
   children: React.ReactNode;
   tenantPath?: string;
 }
 
 export function ThemeProvider({ children, tenantPath = '' }: ThemeProviderProps) {
+  const { width, height } = useWindowDimensions();
   const categoryDefault = detectCategoryTheme(tenantPath);
+  const storageKey = getTenantStorageKey(tenantPath);
   const [themeType, setThemeType] = useState<ThemeType>(categoryDefault);
-  const [loaded, setLoaded] = useState(false);
+  const [loadedTenantPath, setLoadedTenantPath] = useState<string | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((saved) => {
-        if (saved === 'elite' || saved === 'default') {
-          setThemeType(saved);
-        } else {
-          setThemeType(categoryDefault);
+    let active = true;
+    const loadPreference = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(storageKey);
+        const resolved: ThemeType = isThemeType(saved) ? saved : categoryDefault;
+        if (active) {
+          setThemeType(resolved);
+          setLoadedTenantPath(tenantPath);
         }
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-  }, [categoryDefault]);
+      } catch {
+        if (active) {
+          setThemeType(categoryDefault);
+          setLoadedTenantPath(tenantPath);
+        }
+      }
+    };
 
-  const setTheme = useCallback((type: ThemeType) => {
-    setThemeType(type);
-    AsyncStorage.setItem(STORAGE_KEY, type).catch(console.warn);
-  }, []);
+    void loadPreference();
+    return () => {
+      active = false;
+    };
+  }, [categoryDefault, storageKey, tenantPath]);
+
+  const setTheme = useCallback(
+    (type: ThemeType) => {
+      setThemeType(type);
+      void AsyncStorage.setItem(storageKey, type).catch(() => undefined);
+    },
+    [storageKey]
+  );
 
   const toggleTheme = useCallback(() => {
-    const next = themeType === 'elite' ? 'default' : 'elite';
-    setTheme(next);
-  }, [themeType, setTheme]);
+    setTheme(themeType === 'elite' ? 'default' : 'elite');
+  }, [setTheme, themeType]);
+
+  const theme = useMemo(() => createTheme(themeType, width, height), [height, themeType, width]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      theme: getThemeObject(themeType),
+      theme,
       themeType,
-      colors: getThemeObject(themeType).colors,
+      colors: theme.colors,
       setTheme,
       toggleTheme,
       isElite: themeType === 'elite',
       categoryDefault,
     }),
-    [themeType, setTheme, toggleTheme, categoryDefault]
+    [categoryDefault, setTheme, theme, themeType, toggleTheme]
   );
 
-  if (!loaded) return null;
+  if (loadedTenantPath !== tenantPath) {
+    const loadingTheme = createTheme(categoryDefault, width, height);
+    return (
+      <View style={[styles.loadingShell, { backgroundColor: loadingTheme.colors.background }]}>
+        <View style={styles.loadingMark}>
+          <ActivityIndicator color={loadingTheme.colors.primary} size="small" />
+        </View>
+      </View>
+    );
+  }
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// HOOK
-// ═══════════════════════════════════════════════════════════════════
 export function useAppTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
-  if (!context) {
-    return {
-      theme: defaultTheme,
-      themeType: 'default',
-      colors: defaultColors,
-      setTheme: () => {},
-      toggleTheme: () => {},
-      isElite: false,
-      categoryDefault: 'default',
-    };
-  }
-  return context;
+  if (context) return context;
+
+  return {
+    theme: defaultTheme,
+    themeType: 'default',
+    colors: defaultColors,
+    setTheme: () => undefined,
+    toggleTheme: () => undefined,
+    isElite: false,
+    categoryDefault: 'default',
+  };
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// LEGACY EXPORTS (compatibilidad con theme.ts existente)
-// ═══════════════════════════════════════════════════════════════════
 export const theme = {
-  colors: defaultColors,
+  colors: eliteColors,
   typography: {
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: 'System',
     sizes: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20, xxl: 24, xxxl: 32 },
     weights: {
       regular: '400' as const,
@@ -294,32 +258,53 @@ export const theme = {
     lineHeights: { tight: 1.2, normal: 1.4, relaxed: 1.6 },
   },
   spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48, xxxl: 64 },
-  borderRadius: { sm: 6, md: 8, lg: 12, xl: 16, round: 9999 },
+  borderRadius: { sm: 6, md: 10, lg: 14, xl: 18, round: 9999 },
   shadows: {
     sm: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
+      shadowOpacity: 0.18,
+      shadowRadius: 3,
       elevation: 2,
     },
     md: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.24,
+      shadowRadius: 8,
       elevation: 4,
     },
     lg: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.32,
+      shadowRadius: 18,
       elevation: 8,
     },
   },
-  animations: { duration: { fast: 200, normal: 300, slow: 500 }, easing: 'ease-in-out' },
+  animations: {
+    duration: { instant: 80, fast: 140, normal: 220, slow: 320 },
+    easing: 'ease-in-out',
+  },
 };
 
 export const useTheme = useAppTheme;
-export { defaultColors, defaultTheme, eliteColors, eliteTheme };
+
+const styles = StyleSheet.create({
+  loadingShell: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingMark: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.18)',
+    borderRadius: 16,
+  },
+});
+
+export { Platform };

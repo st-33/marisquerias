@@ -27,3 +27,5 @@ export type { Table as TablesGridTable } from './bloques/TablesGrid';
 export * from './bloques/TarjetaComanda';
 export { default as VariantEditor } from './bloques/VariantEditor';
 export * from './bloques/VariantsModal';
+
+export * from './primitivos/ElitePrimitives';

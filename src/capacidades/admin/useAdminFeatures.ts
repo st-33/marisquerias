@@ -12,6 +12,8 @@ type UseAdminFeaturesProps = {
   tenantPath?: string;
 };
 
+const EMPTY_FEATURES: TenantFeatures = {};
+
 /**
  * Hook that subscribes to the tenant's admin feature flags.
  * Returns the loaded features and a loading flag.
@@ -70,10 +72,13 @@ export function useAdminFeatures(props?: UseAdminFeaturesProps) {
     return unsub;
   }, [db, tenantPath]);
 
+  const resolvedFeatures = tenantPath ? features : EMPTY_FEATURES;
+  const resolvedLoading = Boolean(tenantPath) && loading;
+
   const isEnabled = useCallback(
-    (feature: keyof TenantFeatures) => estaFeatureAdminHabilitada(features, feature),
-    [features]
+    (feature: keyof TenantFeatures) => estaFeatureAdminHabilitada(resolvedFeatures, feature),
+    [resolvedFeatures]
   );
 
-  return { features, loading, isEnabled };
+  return { features: resolvedFeatures, loading: resolvedLoading, isEnabled };
 }

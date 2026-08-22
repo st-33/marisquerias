@@ -7,6 +7,7 @@ import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
 import { formatMoney } from '../../compartido/utils/formatters';
 import { useAlternatingSounds } from '../../capacidades/ui/useAlternatingSounds';
+import { BlockedHint } from '../primitivos/ElitePrimitives';
 
 type Mode = 'table' | 'takeaway' | null;
 
@@ -20,6 +21,7 @@ type ActionAreaProps = {
   allItemsDelivered: boolean;
   hasPrinted: boolean;
   canMarkPaid: boolean;
+  canSend?: boolean;
   isCollapsed?: boolean;
   isPrinting?: boolean;
   isSending?: boolean;
@@ -41,6 +43,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
     allItemsDelivered,
     hasPrinted,
     canMarkPaid,
+    canSend = true,
     isCollapsed,
     isPrinting,
     isSending,
@@ -82,6 +85,25 @@ function ActionAreaComponent(props: ActionAreaProps) {
 
   // 🔴 LÓGICA MEMOIZADA: ¿Cuándo mostrar botón "Pagado"?
   const showPaidButton = useMemo(() => canMarkPaid, [canMarkPaid]);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
+
+  const handleSendWithFeedback = () => {
+    if (isSending) return;
+    if (!mode) {
+      setBlockedReason('Selecciona una mesa o modalidad antes de enviar.');
+      return;
+    }
+    if (!activeOrderId && mode === 'table') {
+      setBlockedReason('Agrega al menos un platillo al pedido antes de enviar.');
+      return;
+    }
+    if (!canSend) {
+      setBlockedReason('Completa los datos pendientes del pedido antes de enviarlo.');
+      return;
+    }
+    setBlockedReason(null);
+    onSend();
+  };
 
   // 🔊 Handler con sonido para AÑADIR
   const handleAddWithSound = () => {
@@ -210,10 +232,10 @@ function ActionAreaComponent(props: ActionAreaProps) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Enviar pedido a Cocina"
-            onPress={onSend}
-            disabled={!mode || isSending}
+            onPress={handleSendWithFeedback}
+            disabled={isSending}
             style={({ pressed }) => ({
-              backgroundColor: !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
+              backgroundColor: !canSend || !mode || isSending ? COLORS.bg.elevated : COLORS.primary,
               flex: 1.35,
               minHeight: 54,
               paddingHorizontal: SPACING.md,
@@ -400,6 +422,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
           </>
         ) : null}
       </View>
+      {blockedReason && <BlockedHint message={blockedReason} style={{ marginTop: SPACING.sm }} />}
     </View>
   );
 }

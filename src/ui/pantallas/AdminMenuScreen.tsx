@@ -29,6 +29,7 @@ import { getRtdb } from '../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../sistema/store';
 import type { FabItem } from '../../sistema/tipos/contratos';
 import { useAdminFeatures, useMenuManagement, usePuenteAccionesFlotantes } from '../../capacidades';
+import { EliteButton, EliteTabs } from '../primitivos/ElitePrimitives';
 
 // --- UTILS ---
 async function confirmAction(
@@ -381,23 +382,22 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                     {currentProducts.length === 1 ? 'producto' : 'productos'}
                   </Text>
                 </View>
-                <Pressable
-                  style={styles.btnPrimary}
+                <EliteButton
+                  label="Agregar Producto"
+                  size="sm"
+                  icon={<Ionicons name="add" size={20} color="#0A0D14" />}
                   onPress={() => {
                     setFormData({ ...createEmptyForm(), categoriaId: activeCategoryObj.id });
                     setEditingTab('basico');
                     setShowModal('addProd');
                   }}
-                >
-                  <Ionicons name="add" size={20} color="white" />
-                  <Text style={styles.btnPrimaryText}>Agregar Producto</Text>
-                </Pressable>
+                />
               </View>
 
               <ScrollView contentContainerStyle={styles.productsGrid}>
                 {currentProducts.length === 0 ? (
                   <View style={styles.emptyProducts}>
-                    <Ionicons name="cube-outline" size={48} color="#64748b" />
+                    <Ionicons name="cube-outline" size={48} color={theme.colors.textMuted} />
                     <Text style={styles.emptyTitle}>Sin productos en esta categoría</Text>
                     <Text style={styles.emptySubtitle}>
                       Presiona &quot;Agregar Producto&quot; para comenzar
@@ -434,7 +434,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
             </>
           ) : (
             <View style={styles.emptyProducts}>
-              <Ionicons name="folder-open-outline" size={48} color="#64748b" />
+              <Ionicons name="folder-open-outline" size={48} color={theme.colors.textMuted} />
               <Text style={styles.emptyTitle}>Selecciona o crea una categoría</Text>
             </View>
           )}
@@ -457,7 +457,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                     : 'Editar Producto'}
               </Text>
               <Pressable onPress={() => setShowModal(null)}>
-                <Ionicons name="close" size={24} color="#94a3b8" />
+                <Ionicons name="close" size={24} color={theme.colors.textMuted} />
               </Pressable>
             </View>
 
@@ -469,7 +469,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   value={catNombre}
                   onChangeText={setCatNombre}
                   placeholder="Ej: Entradas, Bebidas, Postres"
-                  placeholderTextColor="#64748b"
+                  placeholderTextColor={theme.colors.textMuted}
                   autoFocus
                 />
                 <View style={styles.modalFooter}>
@@ -483,51 +483,16 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
               </View>
             ) : (
               <View style={styles.modalBody}>
-                <View style={styles.tabsRow}>
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'basico' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('basico')}
-                  >
-                    <Ionicons
-                      name="information-circle-outline"
-                      size={18}
-                      color={editingTab === 'basico' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text style={[styles.tabText, editingTab === 'basico' && styles.tabTextActive]}>
-                      Básico
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'variantes' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('variantes')}
-                  >
-                    <Ionicons
-                      name="options-outline"
-                      size={18}
-                      color={editingTab === 'variantes' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text
-                      style={[styles.tabText, editingTab === 'variantes' && styles.tabTextActive]}
-                    >
-                      Variantes/Opciones
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'receta' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('receta')}
-                  >
-                    <Ionicons
-                      name="restaurant-outline"
-                      size={18}
-                      color={editingTab === 'receta' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text style={[styles.tabText, editingTab === 'receta' && styles.tabTextActive]}>
-                      {l.recipeTab}
-                    </Text>
-                  </Pressable>
-                </View>
+                <EliteTabs
+                  value={editingTab}
+                  onChange={(key) => setEditingTab(key as typeof editingTab)}
+                  items={[
+                    { key: 'basico', label: 'Básico' },
+                    { key: 'variantes', label: 'Variantes' },
+                    { key: 'receta', label: l.recipeTab },
+                  ]}
+                  style={styles.tabsRow}
+                />
 
                 <ScrollView
                   style={styles.modalFormScroll}
@@ -544,7 +509,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                         value={formData.nombre}
                         onChangeText={(v) => setFormData({ ...formData, nombre: v })}
                         placeholder="Ej: Producto Base"
-                        placeholderTextColor="#64748b"
+                        placeholderTextColor={theme.colors.textMuted}
                       />
 
                       <View style={styles.inputRow}>
@@ -555,7 +520,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                             value={formData.precio}
                             onChangeText={(v) => setFormData({ ...formData, precio: v })}
                             placeholder="0.00"
-                            placeholderTextColor="#64748b"
+                            placeholderTextColor={theme.colors.textMuted}
                             keyboardType="decimal-pad"
                           />
                         </View>
@@ -568,7 +533,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                               setFormData({ ...formData, prepMin: parseInt(v) || 0 })
                             }
                             placeholder="Ej: 15"
-                            placeholderTextColor="#64748b"
+                            placeholderTextColor={theme.colors.textMuted}
                             keyboardType="number-pad"
                           />
                         </View>
@@ -774,7 +739,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: '#94a3b8',
+    color: theme.colors.textSecondary,
     fontSize: 16,
   },
   header: {
@@ -787,7 +752,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   headerTitle: {
-    color: '#64748B',
+    color: theme.colors.text,
     fontSize: theme.typography.sizes.xxl,
     fontWeight: theme.typography.weights.bold,
   },
@@ -821,7 +786,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   categoryTitle: {
-    color: '#64748B',
+    color: theme.colors.text,
     fontSize: theme.typography.sizes.xl,
     fontWeight: theme.typography.weights.bold,
   },
@@ -846,7 +811,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptySubtitle: {
-    color: '#0F172A',
+    color: theme.colors.textSecondary,
     fontSize: theme.typography.sizes.sm,
     marginTop: theme.spacing.xs,
   },
@@ -860,7 +825,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   btnPrimaryText: {
-    color: '#FFFFFF',
+    color: '#0A0D14',
     fontWeight: theme.typography.weights.semibold,
     fontSize: theme.typography.sizes.sm,
   },
@@ -906,7 +871,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   modalTitle: {
-    color: '#64748B',
+    color: theme.colors.text,
     fontSize: theme.typography.sizes.lg,
     fontWeight: theme.typography.weights.bold,
   },
@@ -924,7 +889,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
-    color: '#64748B',
+    color: theme.colors.text,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     fontSize: theme.typography.sizes.sm,
@@ -984,7 +949,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
   },
   switchLabel: {
-    color: '#64748B',
+    color: theme.colors.text,
     fontSize: theme.typography.sizes.sm,
     fontWeight: theme.typography.weights.semibold,
   },

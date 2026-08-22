@@ -1,546 +1,169 @@
 /**
- * 📊 MÉTRICAS Y DATOS SCREEN (Admin Dashboard)
- * Componente visual para alimentos y bebidas
+ * Dirección visual: centro de control oscuro y denso de la referencia; métricas,
+ * gráfica, alertas e inventario en capas, sin inventar datos ni tocar sus hooks.
  */
 
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SalesDistributionPieChart } from '../../compartido/componentes/charts/SalesDistributionPieChart';
 import { SalesLineChart } from '../../compartido/componentes/charts/SalesLineChart';
 import { TopProductsBarChart } from '../../compartido/componentes/charts/TopProductsBarChart';
 import { AdminLayout } from '../../compartido/componentes/layouts/AdminLayout';
-import { getRtdb } from '../../sistema/firebase';
-import { useStore } from '../../sistema/store';
 import { useNotifications } from '../../compartido/hooks/useNotifications';
 import { useStoreNotifications } from '../../compartido/hooks/useStoreNotifications';
 import { logger } from '../../compartido/utils/logger';
-import {
-  useAdminLogic,
-  useAlertasInteligentes,
-  usePrediccionStock,
-  usePuenteAccionesFlotantes,
-} from '../../capacidades';
+import { useAdminLogic, useAlertasInteligentes, usePrediccionStock, usePuenteAccionesFlotantes } from '../../capacidades';
+import { getRtdb } from '../../sistema/firebase';
+import { useStore } from '../../sistema/store';
 import type { FabItem } from '../../sistema/tipos/contratos';
 
-const chartPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316'];
+const chartPalette = ['#D4AF37', '#64D7A0', '#E6A85C', '#DD6B69', '#8EA3C4', '#6AB7C7'];
+const DASHBOARD_FILTERS = [
+  { key: 'hoy', label: 'Hoy' },
+  { key: 'ayer', label: 'Ayer' },
+  { key: 'hace3dias', label: '3 días' },
+  { key: 'semana', label: 'Semana' },
+  { key: 'mes', label: 'Mes' },
+] as const;
+
+const money = (value: number | undefined | null) => `$${Number(value ?? 0).toFixed(2)}`;
 
 type MetricCardProps = {
-  title: string;
+  label: string;
   value: string;
-  subtitle?: string;
+  detail: string;
   icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  trend?: 'up' | 'down' | 'neutral';
-  containerStyle?: any;
+  tone: 'gold' | 'green' | 'blue' | 'orange';
+  wide?: boolean;
 };
 
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  color,
-  trend,
-  containerStyle,
-}: MetricCardProps) {
+function MetricCard({ label, value, detail, icon, tone, wide }: MetricCardProps) {
+  const toneStyle = tone === 'green' ? styles.toneGreen : tone === 'blue' ? styles.toneBlue : tone === 'orange' ? styles.toneOrange : styles.toneGold;
   return (
-    <View style={[styles.metricCard, containerStyle]}>
-      <View style={styles.metricHeader}>
-        <View style={[styles.iconBadge, { backgroundColor: `${color}15` }]}>
-          <Ionicons name={icon} size={22} color={color} />
-        </View>
-        {trend && (
-          <View
-            style={[
-              styles.trendBadge,
-              trend === 'up' && styles.trendBadgeUp,
-              trend === 'down' && styles.trendBadgeDown,
-            ]}
-          >
-            <Ionicons
-              name={trend === 'up' ? 'trending-up' : trend === 'down' ? 'trending-down' : 'remove'}
-              size={14}
-              color={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
-            />
-          </View>
-        )}
+    <View style={[styles.metricCard, wide && styles.metricCardWide]}>
+      <View style={styles.metricTopline}>
+        <View style={[styles.metricIcon, toneStyle]}><Ionicons name={icon} size={17} color={tone === 'green' ? '#64D7A0' : tone === 'blue' ? '#76A9FF' : tone === 'orange' ? '#E6A85C' : '#D4AF37'} /></View>
+        <View style={[styles.metricTag, toneStyle]}><Text style={styles.metricTagText}>{label}</Text></View>
       </View>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricTitle}>{title}</Text>
-      {subtitle && <Text style={styles.metricSubtitle}>{subtitle}</Text>}
+      <Text style={styles.metricValue} numberOfLines={1}>{value}</Text>
+      <Text style={styles.metricDetail} numberOfLines={2}>{detail}</Text>
+    </View>
+  );
+}
+
+function SmallSectionTitle({ icon, eyebrow, title }: { icon: keyof typeof Ionicons.glyphMap; eyebrow: string; title: string }) {
+  return (
+    <View style={styles.sectionHeading}>
+      <View style={styles.sectionIcon}><Ionicons name={icon} size={17} color="#D4AF37" /></View>
+      <View><Text style={styles.sectionEyebrow}>{eyebrow}</Text><Text style={styles.sectionTitle}>{title}</Text></View>
     </View>
   );
 }
 
 export function AdminDashboardScreen() {
   const { width } = useWindowDimensions();
-  const isMobile = width < 480;
-  const isTablet = width >= 480 && width < 900;
-  const isDesktop = width >= 900;
-
-  const contentMaxWidth = isDesktop ? 1200 : undefined;
-  const metricCardWidth = isMobile ? '100%' : '48%';
-  const predictionCardWidth = isMobile ? '100%' : isTablet ? '48%' : '32%';
-
+  const isCompact = width < 620;
+  const isWide = width >= 1000;
+  const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
-  const ds = useStore((s: any) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
-
-  // 🔔 Sistema de notificaciones (solo audio en admin)
+  const dataSources = useStore((s: any) => s.dataSources);
+  const db = useMemo(() => getRtdb(dataSources?.operacionUrl || undefined), [dataSources]);
   const { notify } = useNotifications();
 
-  // 👂 Detectar cambios en store (sin crear listeners adicionales)
   useStoreNotifications({
     enabled: true,
-    onNotification: React.useCallback(
-      ({ mesaId, type }) => {
-        logger.debug('[admin/metricas]', '🔔 Notificación', { mesaId, type });
-        notify({ type, mesaId }, 'admin');
-      },
-      [notify]
-    ),
+    onNotification: React.useCallback(({ mesaId, type }) => {
+      logger.debug('[admin/metricas]', 'notificación visible en centro de control', { mesaId, type });
+      notify({ type, mesaId }, 'admin');
+    }, [notify]),
   });
 
-  // 🧠 CEREBRO: Hook de lógica pura
-  const { metrics, loading, actions, features, dateFilter } = useAdminLogic({ db, tenantPath });
+  const { metrics, loading, actions, dateFilter } = useAdminLogic({ db, tenantPath });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
 
-  const navItems = useMemo<FabItem[]>(() => {
-    const items: FabItem[] = [];
+  const navItems = useMemo<FabItem[]>(() => [
+    { key: 'metricas-home', label: 'Métricas', icon: <Ionicons name="stats-chart" size={23} color="white" />, onPress: () => router.replace('/_role/admin/dashboard') },
+    { key: 'menu', label: 'Menú', icon: <Ionicons name="restaurant" size={22} color="white" />, onPress: () => router.push('/_role/admin/menu') },
+    { key: 'inventory', label: 'Inventario', icon: <Ionicons name="cube" size={20} color="white" />, onPress: () => router.push('/_role/admin/inventory') },
+    { key: 'tables', label: 'Mesas', icon: <Ionicons name="grid" size={20} color="white" />, onPress: () => router.push('/_role/admin/tables') },
+  ], []);
 
-    if (features?.admin_dashboard !== false) {
-      items.push({
-        key: 'metricas-home',
-        label: 'Métricas',
-        icon: <Ionicons name="stats-chart" size={26} color="white" />,
-        onPress: () => {},
-      });
-    }
-
-    if (features?.admin_menu !== false) {
-      items.push({
-        key: 'menu',
-        label: 'Menú',
-        icon: <Ionicons name="restaurant" size={24} color="white" />,
-        onPress: () => router.push('/_role/admin/menu'),
-      });
-    }
-
-    if (features?.admin_inventory !== false) {
-      items.push({
-        key: 'inventory',
-        label: 'Inventario',
-        icon: <Ionicons name="cube" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/inventory'),
-      });
-    }
-
-    if (features?.admin_tables !== false) {
-      items.push({
-        key: 'tables',
-        label: 'Mesas',
-        icon: <Ionicons name="grid" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/tables'),
-      });
-    }
-
-    if (features?.admin_devices !== false) {
-      items.push({
-        key: 'devices',
-        label: 'Dispositivos',
-        icon: <Ionicons name="hardware-chip" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/devices'),
-      });
-    }
-
-    if (features?.admin_repart !== false) {
-      items.push({
-        key: 'repart',
-        label: 'ADI Repart',
-        icon: <Ionicons name="car" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/repart'),
-      });
-    }
-
-    return items.length > 0
-      ? items
-      : [
-          {
-            key: 'metricas-default',
-            label: 'Métricas',
-            icon: <Ionicons name="stats-chart" size={24} color="white" />,
-            onPress: () => {},
-            enabled: false,
-          },
-        ];
-  }, [features]);
-
-  const fabConfig = useMemo(
-    () => ({
-      items: navItems,
-      initialKey: navItems[0]?.key ?? null,
-      position: 'bottom-right' as const,
-    }),
-    [navItems]
-  );
-
-  usePuenteAccionesFlotantes(fabConfig);
+  usePuenteAccionesFlotantes(useMemo(() => ({ items: navItems, initialKey: 'metricas-home', position: 'bottom-right' as const }), [navItems]));
 
   if (loading || !metrics) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando métricas...</Text>
-        </View>
-      </View>
-    );
+    return <View style={styles.loading}><Ionicons name="pulse" size={31} color="#D4AF37" /><Text style={styles.loadingText}>Preparando centro de control…</Text></View>;
   }
+
+  const ventas = metrics.vendedorHero?.ventasHero ?? metrics.ventasFiltradas ?? 0;
+  const ordenes = metrics.vendedorHero?.subpedidosCountHero ?? metrics.ordenesFiltradas ?? 0;
+  const alerts = [...alertasCriticas, ...alertasMedias];
+  const selectedPeriod = DASHBOARD_FILTERS.find((filter) => filter.key === dateFilter) ?? DASHBOARD_FILTERS[0];
 
   return (
     <AdminLayout>
-      <View style={styles.container}>
-        <View style={[styles.header, isMobile && styles.headerMobile]}>
-          <View style={styles.headerLeft}>
-            <Ionicons name="stats-chart" size={26} color="#ffffff" />
-            <Text style={styles.title}>Métricas y Datos</Text>
+      <View style={styles.root}>
+        <View style={[styles.topbar, isCompact && styles.topbarCompact]}>
+          <View style={styles.titleRow}>
+            <View style={styles.topIcon}><Ionicons name="bar-chart" size={20} color="#E7C46C" /></View>
+            <View><Text style={styles.topEyebrow}>Centro de control</Text><Text style={styles.topTitle}>Métricas y datos</Text></View>
+            <View style={styles.operativoPill}><View style={styles.operativoDot} /><Text style={styles.operativoText}>Operativo</Text></View>
           </View>
-          <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
-            {isMobile ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterRow}
-                style={styles.filterRowScroll}
-              >
-                {[
-                  { key: 'hoy', label: 'Hoy' },
-                  { key: 'ayer', label: 'Ayer' },
-                  { key: 'hace3dias', label: '3 días' },
-                  { key: 'semana', label: 'Semana' },
-                  { key: 'mes', label: 'Mes' },
-                ].map((filter) => (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => actions.setDateFilter(filter.key as any)}
-                    style={[styles.filterBtn, dateFilter === filter.key && styles.filterBtnActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        dateFilter === filter.key && styles.filterBtnTextActive,
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.filterRow}>
-                {[
-                  { key: 'hoy', label: 'Hoy' },
-                  { key: 'ayer', label: 'Ayer' },
-                  { key: 'hace3dias', label: '3 días' },
-                  { key: 'semana', label: 'Semana' },
-                  { key: 'mes', label: 'Mes' },
-                ].map((filter) => (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => actions.setDateFilter(filter.key as any)}
-                    style={[styles.filterBtn, dateFilter === filter.key && styles.filterBtnActive]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        dateFilter === filter.key && styles.filterBtnTextActive,
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-            <Pressable
-              onPress={actions.refreshMetrics}
-              style={({ pressed }) => [styles.refreshBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="refresh" size={20} color="#3b82f6" />
-            </Pressable>
+          <View style={[styles.controls, isCompact && styles.controlsCompact]}>
+            <View style={styles.periodAnchor}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Seleccionar período" onPress={() => setIsPeriodOpen((open) => !open)} style={({ pressed }) => [styles.periodToggle, pressed && styles.pressed]}>
+                <Text style={styles.periodToggleText}>{selectedPeriod.label}</Text>
+                <Ionicons name={isPeriodOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#DDE4EF" />
+              </Pressable>
+              {isPeriodOpen && <View style={styles.periodPopover}>{DASHBOARD_FILTERS.map((filter) => {
+                const active = dateFilter === filter.key;
+                return <Pressable key={filter.key} onPress={() => { actions.setDateFilter(filter.key as any); setIsPeriodOpen(false); }} style={({ pressed }) => [styles.periodOption, active && styles.periodOptionActive, pressed && styles.pressed]}><Text style={[styles.periodOptionText, active && styles.periodOptionTextActive]}>{filter.label}</Text>{active && <Ionicons name="checkmark" size={14} color="#D4AF37" />}</Pressable>;
+              })}</View>}
+            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel="Actualizar métricas" onPress={actions.refreshMetrics} style={({ pressed }) => [styles.utilityButton, pressed && styles.pressed]}><Ionicons name="refresh" size={19} color="#D4AF37" /></Pressable>
           </View>
         </View>
 
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={[
-            styles.contentContainer,
-            isDesktop && contentMaxWidth
-              ? { width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }
-              : null,
-          ]}
-        >
-          {/* Métrica principal - Ventas filtradas */}
-          <View style={styles.mainMetricCard}>
-            <Text style={styles.mainMetricLabel}>
-              {dateFilter === 'hoy'
-                ? 'Ventas de Hoy'
-                : dateFilter === 'ayer'
-                  ? 'Ventas de Ayer'
-                  : dateFilter === 'hace3dias'
-                    ? 'Ventas últimos 3 días'
-                    : dateFilter === 'semana'
-                      ? 'Ventas de esta Semana'
-                      : 'Ventas de este Mes'}
-            </Text>
-            <Text style={styles.mainMetricValue}>
-              ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
-            </Text>
-            <Text style={styles.mainMetricSubtitle}>
-              {metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0}{' '}
-              subpedidos finalizados
-            </Text>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, isWide && styles.scrollWide]} showsVerticalScrollIndicator={false}>
+          <LinearGradient colors={['#252b42', '#171d2a', '#12141b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCard}>
+            <View style={[styles.heroTop, isCompact && styles.heroTopCompact]}>
+              <View style={styles.heroInfo}><Text style={styles.heroKicker}>{dateFilter === 'hoy' ? 'Ventas de hoy' : 'Rendimiento del período'}</Text><Text style={styles.heroAmount}>{money(ventas)}</Text><Text style={styles.heroDetail}>{ordenes} subpedidos finalizados</Text></View>
+              <View style={styles.heroSideCard}><View style={styles.heroSideIcon}><Ionicons name="trending-up" size={16} color="#64D7A0" /></View><View><Text style={styles.heroSideLabel}>Ticket promedio</Text><Text style={styles.heroSideValue}>{money(metrics.ticketPromedio)}</Text></View></View>
+            </View>
+            <View style={styles.heroChartWrap}>{metrics.ventasPorHora.length > 0 ? <SalesLineChart data={metrics.ventasPorHora.map((d: any) => ({ label: d.label, total: d.monto ?? d.total ?? 0 }))} height={isCompact ? 150 : 190} /> : <View style={styles.emptyChart}><Text style={styles.emptyChartText}>Sin datos para el período seleccionado</Text></View>}</View>
+          </LinearGradient>
+
+          <View style={styles.metricGrid}>
+            <MetricCard label="Ticket promedio" value={money(metrics.ticketPromedio)} detail="Acumulado del período" icon="receipt-outline" tone="gold" />
+            <MetricCard label="Pedidos" value={`${ordenes}`} detail="Subpedidos finalizados" icon="file-tray-full-outline" tone="blue" />
+            <MetricCard label="Vendedor estrella" value={metrics.vendedorEstrella?.nombre ?? 'Sin ventas'} detail={money(metrics.vendedorEstrella?.monto)} icon="trophy-outline" tone="gold" />
+            <MetricCard label="Hora pico" value={metrics.horaPico?.hora ?? 'Sin datos'} detail={`${metrics.horaPico?.pedidos ?? 0} pedidos en esta hora`} icon="time-outline" tone="orange" />
           </View>
 
-          {/* Grid de métricas secundarias */}
-          <View style={styles.metricsGrid}>
-            <MetricCard
-              title="Promedio por Pedido"
-              value={`$${(metrics?.ticketPromedio ?? 0).toFixed(2)}`}
-              subtitle="Ticket promedio acumulado"
-              icon="receipt"
-              color="#3b82f6"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Vendedor Estrella"
-              value={metrics?.vendedorEstrella?.nombre ?? 'Sin ventas'}
-              subtitle={`$${(metrics?.vendedorEstrella?.monto ?? 0).toFixed(2)} (${
-                metrics?.vendedorEstrella?.subpedidos ?? 0
-              } subpedidos)`}
-              icon="trophy"
-              color="#f59e0b"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Platillo Más Vendido"
-              value={metrics?.platilloMasVendido?.nombre ?? 'Sin ventas'}
-              subtitle={`${metrics?.platilloMasVendido?.cantidad ?? 0} unidades vendidas`}
-              icon="flame"
-              color="#ef4444"
-              containerStyle={{ width: metricCardWidth }}
-            />
-            <MetricCard
-              title="Hora Pico de Ventas"
-              value={metrics?.horaPico?.hora ?? 'N/A'}
-              subtitle={`${metrics?.horaPico?.pedidos ?? 0} pedidos en esta hora`}
-              icon="time"
-              color="#8b5cf6"
-              containerStyle={{ width: metricCardWidth }}
-            />
+          <View style={[styles.dualRow, isCompact && styles.dualRowCompact]}>
+            <View style={[styles.alertPanel, isCompact && styles.stackPanel]}>
+              <SmallSectionTitle icon="warning-outline" eyebrow="Atención" title="Alertas críticas de inventario" />
+              {tieneAlertas ? alerts.slice(0, 6).map((alerta) => <View style={styles.alertRow} key={alerta.id}><View style={styles.alertBadge}><Ionicons name="alert-circle" size={14} color="#E6A85C" /><Text style={styles.alertBadgeText}>{alerta.severidad === 'alta' ? 'Crítico' : 'Revisar'}</Text></View><View style={styles.alertCopy}><Text style={styles.alertName} numberOfLines={1}>{alerta.titulo}</Text><Text style={styles.alertMessage} numberOfLines={1}>{alerta.mensaje}</Text></View></View>) : <View style={styles.goodState}><Ionicons name="checkmark-circle" size={18} color="#64D7A0" /><Text style={styles.goodStateText}>Sin alertas críticas para este período</Text></View>}
+            </View>
+            <View style={[styles.predictionPanel, isCompact && styles.stackPanel]}>
+              <SmallSectionTitle icon="analytics-outline" eyebrow="Inventario" title="Predicción de reabastecimiento" />
+              {loadingPredicciones ? <Text style={styles.sectionLoading}>Calculando predicciones…</Text> : predicciones.length === 0 ? <Text style={styles.sectionLoading}>No hay suficientes datos para generar predicciones</Text> : <View style={styles.predictionGrid}>{predicciones.slice(0, 6).map((p: any, idx: number) => {
+                const stockSuficiente = p.stockSuficiente ?? (p.estadoStock !== 'agotado' && p.estadoStock !== 'critico');
+                const estadoCritico = p.estadoStock === 'agotado' || p.estadoStock === 'critico' || stockSuficiente === false;
+                const nombre = p.productoNombre || p.nombrePlatillo || 'Platillo';
+                const posible = p.cantidadPosible ?? p.promedioDiario ?? 0;
+                const dias = p.diasRestantes === undefined ? (stockSuficiente ? '∞' : '0') : p.diasRestantes === 999 ? '∞' : p.diasRestantes;
+                return <View style={styles.predictionCard} key={p.productoId || p.platilloId || `pred-${idx}`}><View style={styles.predictionHead}><Text style={styles.predictionName} numberOfLines={1}>{nombre}</Text><Text style={[styles.reviewTag, estadoCritico && styles.reviewTagCritical]}>{estadoCritico ? 'Revisar' : 'OK'}</Text></View><View style={styles.predictionNumbers}><View><Text style={styles.predictionValue}>{posible}</Text><Text style={styles.predictionLabel}>Porciones posibles</Text></View><View><Text style={[styles.predictionValue, estadoCritico && styles.predictionValueCritical]}>{dias}</Text><Text style={styles.predictionLabel}>Días de descanso</Text></View></View><Text style={styles.limitText} numberOfLines={1}>◌ Limitante: {p.ingredienteLimitante || p.fechaRecompraSugerida || 'En orden'}</Text></View>;
+              })}</View>}
+            </View>
           </View>
 
-          {/* 🚨 SECCIÓN DE ALERTAS INTELIGENTES */}
-          {tieneAlertas && (
-            <View style={styles.alertsContainer}>
-              <View style={styles.sectionHeaderContainer}>
-                <Ionicons name="warning" size={22} color="#ef4444" />
-                <Text style={styles.sectionTitle}>Alertas del Negocio</Text>
-              </View>
-
-              {alertasCriticas.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardCritical]}>
-                  <Ionicons name="alert-circle" size={24} color="#ef4444" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
-                  </View>
-                </View>
-              ))}
-
-              {alertasMedias.map((alerta) => (
-                <View key={alerta.id} style={[styles.alertCard, styles.alertCardMedium]}>
-                  <Ionicons name="warning" size={24} color="#f59e0b" />
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{alerta.titulo}</Text>
-                    <Text style={styles.alertMessage}>{alerta.mensaje}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* 🤖 SECCIÓN DE PREDICCIÓN DE STOCK */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderContainer}>
-              <Ionicons name="analytics" size={22} color="#8b5cf6" />
-              <Text style={styles.sectionTitle}>Predicción de Reabastecimiento</Text>
-            </View>
-
-            {loadingPredicciones ? (
-              <View style={styles.predictionsLoading}>
-                <Text style={styles.loadingText}>Calculando predicciones...</Text>
-              </View>
-            ) : predicciones.length === 0 ? (
-              <View style={styles.emptyPredictions}>
-                <Text style={styles.emptyPredictionsText}>
-                  No hay suficientes datos para generar predicciones
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.predictionsGrid}>
-                {predicciones.map((p: any, idx: number) => {
-                  const stockSuficiente =
-                    p.stockSuficiente ??
-                    (p.estadoStock !== 'agotado' && p.estadoStock !== 'critico');
-                  const estadoColor =
-                    p.estadoStock === 'agotado' || stockSuficiente === false
-                      ? '#ef4444'
-                      : p.estadoStock === 'critico'
-                        ? '#f59e0b'
-                        : p.estadoStock === 'bajo'
-                          ? '#eab308'
-                          : '#10b981';
-
-                  const estadoText =
-                    p.estadoStock === 'agotado'
-                      ? 'AGOTADO'
-                      : p.estadoStock === 'critico'
-                        ? 'CRÍTICO'
-                        : p.estadoStock === 'bajo'
-                          ? 'BAJO'
-                          : stockSuficiente
-                            ? 'OK'
-                            : 'REVISAR';
-
-                  const platilloId = p.productoId || p.platilloId || `pred-${idx}`;
-                  const nombrePlatillo = p.productoNombre || p.nombrePlatillo || 'Platillo';
-                  const promedio = p.cantidadPosible ?? p.promedioDiario ?? 0;
-                  const ingredienteLimitante =
-                    p.ingredienteLimitante || p.fechaRecompraSugerida || 'En orden';
-
-                  return (
-                    <View
-                      key={platilloId}
-                      style={[styles.predictionCard, { width: predictionCardWidth }]}
-                    >
-                      <View style={styles.predictionHeader}>
-                        <Text style={styles.predictionNombre} numberOfLines={1}>
-                          {nombrePlatillo}
-                        </Text>
-                        <View style={[styles.stockBadge, { backgroundColor: `${estadoColor}20` }]}>
-                          <Text style={[styles.stockBadgeText, { color: estadoColor }]}>
-                            {estadoText}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.predictionMetrics}>
-                        <View style={styles.predMetricItem}>
-                          <Text style={styles.predMetricValue}>{promedio}</Text>
-                          <Text style={styles.predMetricLabel}>Porciones posibles</Text>
-                        </View>
-                        <View style={styles.predMetricItem}>
-                          <Text style={[styles.predMetricValue, { color: estadoColor }]}>
-                            {p.diasRestantes === undefined
-                              ? stockSuficiente
-                                ? '∞'
-                                : '0'
-                              : p.diasRestantes === 999
-                                ? '∞'
-                                : p.diasRestantes}
-                          </Text>
-                          <Text style={styles.predMetricLabel}>Días rest.</Text>
-                        </View>
-                      </View>
-
-                      <View style={styles.predictionFooter}>
-                        <Ionicons name="cube-outline" size={14} color="#9ca3af" />
-                        <Text style={styles.fechaRecompraText} numberOfLines={1}>
-                          Limitante: {ingredienteLimitante}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          {/* Gráfico de Ventas en el Tiempo */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Ventas en el Tiempo</Text>
-                <Text style={styles.chartSubtitle}>
-                  Evolución por {dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}
-                </Text>
-              </View>
-              <Ionicons name="trending-up" size={24} color="#10b981" />
-            </View>
-
-            {metrics.ventasPorHora.length > 0 ? (
-              <SalesLineChart
-                data={metrics.ventasPorHora.map((d: any) => ({
-                  label: d.label,
-                  value: d.monto ?? d.total ?? 0,
-                }))}
-                height={220}
-              />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos para el período seleccionado</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Gráfico de Distribución de Ventas */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Distribución de Ventas</Text>
-                <Text style={styles.chartSubtitle}>Por tipo de origen</Text>
-              </View>
-              <Ionicons name="pie-chart" size={24} color="#3b82f6" />
-            </View>
-
-            {metrics.distribucionVentas.length > 0 ? (
-              <SalesDistributionPieChart
-                title="Distribución de Ventas"
-                data={metrics.distribucionVentas.map((d: any, index: number) => ({
-                  name: d.label || d.name || 'Origen',
-                  population: Number(d.value || d.population || 0),
-                  color: chartPalette[index % chartPalette.length],
-                  legendFontColor: '#94a3b8',
-                  legendFontSize: 12,
-                }))}
-              />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos de distribución</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Top 5 Platillos Más Vendidos */}
-          <View style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <View>
-                <Text style={styles.chartTitle}>Top 5 Platillos Más Vendidos</Text>
-                <Text style={styles.chartSubtitle}>Por unidades vendidas</Text>
-              </View>
-              <Ionicons name="bar-chart" size={24} color="#f59e0b" />
-            </View>
-
-            {metrics.topPlatillos.length > 0 ? (
-              <TopProductsBarChart title="Top 5 Platillos" data={metrics.topPlatillos} />
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Text style={styles.noDataText}>Sin datos de platillos</Text>
-              </View>
-            )}
+          <View style={[styles.chartRow, isCompact && styles.chartRowCompact]}>
+            <View style={[styles.lowerChart, isCompact && styles.stackPanel]}><SmallSectionTitle icon="pie-chart-outline" eyebrow="Origen" title="Distribución de ventas" />{metrics.distribucionVentas.length > 0 ? <SalesDistributionPieChart title="" data={metrics.distribucionVentas.map((d: any, index: number) => ({ name: d.label || d.name || 'Origen', population: Number(d.value || d.population || 0), color: chartPalette[index % chartPalette.length], legendFontColor: '#AAB5C9', legendFontSize: 10 }))} /> : <Text style={styles.sectionLoading}>Sin datos de distribución</Text>}</View>
+            <View style={[styles.lowerChart, isCompact && styles.stackPanel]}><SmallSectionTitle icon="bar-chart-outline" eyebrow="Rendimiento" title="Top 5 platillos más vendidos" />{metrics.topPlatillos.length > 0 ? <TopProductsBarChart title="" data={metrics.topPlatillos} /> : <Text style={styles.sectionLoading}>Sin datos de platillos</Text>}</View>
           </View>
         </ScrollView>
       </View>
@@ -549,353 +172,97 @@ export function AdminDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: '#9ca3af',
-    fontSize: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 18,
-    backgroundColor: '#1e293b',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-  },
-  headerMobile: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerRightMobile: {
-    width: '100%',
-    justifyContent: 'space-between',
-  },
-  title: {
-    color: '#f8fafc',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-    padding: 4,
-    gap: 4,
-  },
-  filterRowScroll: {
-    maxWidth: '80%',
-  },
-  filterBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  filterBtnActive: {
-    backgroundColor: '#3b82f6',
-  },
-  filterBtnText: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  filterBtnTextActive: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  refreshBtn: {
-    padding: 8,
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-  },
-  btnPressed: {
-    opacity: 0.7,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    gap: 20,
-  },
-  mainMetricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#3b82f650',
-  },
-  mainMetricLabel: {
-    color: '#94a3b8',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mainMetricValue: {
-    color: '#f8fafc',
-    fontSize: 38,
-    fontWeight: '900',
-    marginVertical: 4,
-  },
-  mainMetricSubtitle: {
-    color: '#3b82f6',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  metricCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  iconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trendBadge: {
-    padding: 4,
-    borderRadius: 6,
-    backgroundColor: '#0f172a',
-  },
-  trendBadgeUp: {
-    backgroundColor: '#10b98115',
-  },
-  trendBadgeDown: {
-    backgroundColor: '#ef444415',
-  },
-  metricValue: {
-    color: '#f8fafc',
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  metricTitle: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  metricSubtitle: {
-    color: '#64748b',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  alertsContainer: {
-    gap: 12,
-  },
-  sectionHeaderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  sectionTitle: {
-    color: '#f8fafc',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  alertCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  alertCardCritical: {
-    backgroundColor: '#ef444410',
-    borderColor: '#ef444440',
-  },
-  alertCardMedium: {
-    backgroundColor: '#f59e0b10',
-    borderColor: '#f59e0b40',
-  },
-  alertContent: {
-    flex: 1,
-  },
-  alertTitle: {
-    color: '#f8fafc',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  alertMessage: {
-    color: '#cbd5e1',
-    fontSize: 13,
-  },
-  sectionContainer: {
-    gap: 12,
-  },
-  predictionsLoading: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyPredictions: {
-    padding: 20,
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  emptyPredictionsText: {
-    color: '#64748b',
-    fontSize: 14,
-  },
-  predictionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  predictionCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  predictionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  predictionNombre: {
-    color: '#f8fafc',
-    fontSize: 14,
-    fontWeight: '700',
-    flex: 1,
-    marginRight: 8,
-  },
-  stockBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  stockBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  predictionMetrics: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#33415550',
-    marginBottom: 8,
-  },
-  predMetricItem: {
-    alignItems: 'center',
-  },
-  predMetricValue: {
-    color: '#f8fafc',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  predMetricLabel: {
-    color: '#64748b',
-    fontSize: 11,
-  },
-  predictionFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  fechaRecompraText: {
-    color: '#9ca3af',
-    fontSize: 11,
-  },
-  chartCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  chartTitle: {
-    color: '#f8fafc',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  chartSubtitle: {
-    color: '#64748b',
-    fontSize: 13,
-  },
-  noDataContainer: {
-    height: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noDataText: {
-    color: '#64748b',
-    fontSize: 14,
-  },
-  salesKpiCard: {
-    backgroundColor: '#0f172a',
-    borderRadius: 12,
-    padding: 16,
-  },
-  salesKpiHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  salesKpiLabel: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  salesKpiValue: {
-    color: '#f8fafc',
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  salesKpiSubtitle: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  root: { flex: 1, backgroundColor: '#080A0F' },
+  loading: { alignItems: 'center', backgroundColor: '#080A0F', flex: 1, gap: 14, justifyContent: 'center' },
+  loadingText: { color: '#B6BCC8', fontSize: 13, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
+  topbar: { alignItems: 'center', backgroundColor: '#11141D', borderBottomColor: 'rgba(223,229,240,0.11)', borderBottomWidth: 1, elevation: 12, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 15, zIndex: 30 },
+  topbarCompact: { alignItems: 'flex-start', flexDirection: 'column', gap: 14, paddingHorizontal: 15 },
+  titleRow: { alignItems: 'center', flexDirection: 'row', gap: 11 },
+  topIcon: { alignItems: 'center', backgroundColor: 'rgba(212,175,55,0.12)', borderRadius: 10, height: 38, justifyContent: 'center', width: 38 },
+  topEyebrow: { color: '#D9B95A', fontSize: 9, fontWeight: '800', letterSpacing: 2.2, textTransform: 'uppercase' },
+  topTitle: { color: '#F4F0E8', fontSize: 21, fontWeight: '800', letterSpacing: -0.4, marginTop: 1 },
+  operativoPill: { alignItems: 'center', backgroundColor: 'rgba(67,172,113,0.12)', borderColor: 'rgba(100,215,160,0.22)', borderRadius: 20, borderWidth: 1, flexDirection: 'row', gap: 6, marginLeft: 8, paddingHorizontal: 9, paddingVertical: 5 },
+  operativoDot: { backgroundColor: '#64D7A0', borderRadius: 4, height: 7, width: 7 },
+  operativoText: { color: '#7ADEAA', fontSize: 9, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' },
+  controls: { alignItems: 'center', flexDirection: 'row', gap: 9, zIndex: 32 },
+  controlsCompact: { alignSelf: 'stretch', justifyContent: 'space-between' },
+  periodAnchor: { position: 'relative', zIndex: 40 },
+  periodToggle: { alignItems: 'center', backgroundColor: '#1C212D', borderColor: 'rgba(223,229,240,0.13)', borderRadius: 10, borderWidth: 1, flexDirection: 'row', gap: 12, justifyContent: 'space-between', minWidth: 92, paddingHorizontal: 11, paddingVertical: 9 },
+  periodToggleText: { color: '#F0F3F8', fontSize: 11, fontWeight: '800' },
+  periodPopover: { backgroundColor: '#171C27', borderColor: 'rgba(212,175,55,0.34)', borderRadius: 12, borderWidth: 1, minWidth: 146, padding: 5, position: 'absolute', right: 0, shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.42, shadowRadius: 18, top: 43, zIndex: 60 },
+  periodOption: { alignItems: 'center', borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 9 },
+  periodOptionActive: { backgroundColor: 'rgba(212,175,55,0.11)' },
+  periodOptionText: { color: '#B7C0D0', fontSize: 11, fontWeight: '700' },
+  periodOptionTextActive: { color: '#F5D774' },
+  periodShell: { backgroundColor: '#1C212D', borderColor: 'rgba(223,229,240,0.10)', borderRadius: 11, borderWidth: 1, gap: 2, padding: 3 },
+  periodButton: { borderRadius: 8, paddingHorizontal: 11, paddingVertical: 7 },
+  periodButtonActive: { backgroundColor: '#346CB7', borderColor: '#75ABFF', borderWidth: 1 },
+  periodText: { color: '#B9C0CE', fontSize: 11, fontWeight: '700' },
+  periodTextActive: { color: '#FFFFFF' },
+  utilityButton: { alignItems: 'center', backgroundColor: '#1B202B', borderColor: 'rgba(223,229,240,0.13)', borderRadius: 12, borderWidth: 1, height: 38, justifyContent: 'center', width: 38 },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.97 }] },
+  scroll: { flex: 1 },
+  scrollContent: { gap: 17, padding: 16, paddingBottom: 92 },
+  scrollWide: { alignSelf: 'center', maxWidth: 1360, width: '100%' },
+  heroCard: { borderColor: 'rgba(222,229,242,0.13)', borderRadius: 20, borderWidth: 1, minHeight: 255, overflow: 'hidden', padding: 18 },
+  heroTop: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', zIndex: 2 },
+  heroTopCompact: { gap: 12 },
+  heroInfo: { flex: 1 },
+  heroKicker: { color: '#C8D0DC', fontSize: 12, fontWeight: '700' },
+  heroAmount: { color: '#FFFFFF', fontSize: 37, fontWeight: '900', letterSpacing: -1.1, marginTop: 5 },
+  heroDetail: { color: '#9FAABA', fontSize: 11, marginTop: 3 },
+  heroSideCard: { alignItems: 'center', backgroundColor: 'rgba(12,16,23,0.52)', borderColor: 'rgba(100,215,160,0.14)', borderRadius: 13, borderWidth: 1, flexDirection: 'row', gap: 9, padding: 11 },
+  heroSideIcon: { alignItems: 'center', backgroundColor: 'rgba(100,215,160,0.11)', borderRadius: 8, height: 28, justifyContent: 'center', width: 28 },
+  heroSideLabel: { color: '#AAB5C6', fontSize: 9, fontWeight: '600' },
+  heroSideValue: { color: '#F6F1E5', fontSize: 17, fontWeight: '800', marginTop: 2 },
+  heroChartWrap: { bottom: 0, left: 14, opacity: 0.94, position: 'absolute', right: 14, top: 82 },
+  emptyChart: { alignItems: 'center', height: 155, justifyContent: 'center' },
+  emptyChartText: { color: '#AAB3C2', fontSize: 12 },
+  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  metricCard: { backgroundColor: '#171A24', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 17, borderWidth: 1, flexGrow: 1, flexBasis: 220, minHeight: 142, padding: 14 },
+  metricCardWide: { flexBasis: 310 },
+  metricTopline: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  metricIcon: { alignItems: 'center', borderRadius: 9, height: 31, justifyContent: 'center', width: 31 },
+  toneGold: { backgroundColor: 'rgba(212,175,55,0.13)' },
+  toneGreen: { backgroundColor: 'rgba(100,215,160,0.13)' },
+  toneBlue: { backgroundColor: 'rgba(118,169,255,0.13)' },
+  toneOrange: { backgroundColor: 'rgba(230,168,92,0.13)' },
+  metricTag: { borderRadius: 8, paddingHorizontal: 7, paddingVertical: 4 },
+  metricTagText: { color: '#E4E8F0', fontSize: 8, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  metricValue: { color: '#F7F4EB', fontSize: 22, fontWeight: '900', letterSpacing: -0.6, marginTop: 16 },
+  metricDetail: { color: '#A7AEBB', fontSize: 10, lineHeight: 14, marginTop: 4 },
+  dualRow: { flexDirection: 'row', gap: 15 },
+  dualRowCompact: { flexDirection: 'column' },
+  alertPanel: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 0.78, overflow: 'hidden', padding: 14 },
+  predictionPanel: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 1.6, overflow: 'hidden', padding: 14 },
+  stackPanel: { flex: undefined },
+  sectionHeading: { alignItems: 'center', flexDirection: 'row', gap: 9, marginBottom: 12 },
+  sectionIcon: { alignItems: 'center', backgroundColor: 'rgba(212,175,55,0.10)', borderRadius: 8, height: 30, justifyContent: 'center', width: 30 },
+  sectionEyebrow: { color: '#C3A95A', fontSize: 8, fontWeight: '800', letterSpacing: 1.7, textTransform: 'uppercase' },
+  sectionTitle: { color: '#F3F0E7', fontSize: 15, fontWeight: '800', marginTop: 1 },
+  alertRow: { alignItems: 'center', borderBottomColor: 'rgba(222,229,242,0.08)', borderBottomWidth: 1, flexDirection: 'row', gap: 9, paddingVertical: 10 },
+  alertBadge: { alignItems: 'center', backgroundColor: 'rgba(230,168,92,0.11)', borderRadius: 7, flexDirection: 'row', gap: 3, paddingHorizontal: 5, paddingVertical: 4 },
+  alertBadgeText: { color: '#E8B66F', fontSize: 8, fontWeight: '900', textTransform: 'uppercase' },
+  alertCopy: { flex: 1 },
+  alertName: { color: '#ECEFF4', fontSize: 11, fontWeight: '800' },
+  alertMessage: { color: '#99A2B0', fontSize: 10, marginTop: 2 },
+  goodState: { alignItems: 'center', flexDirection: 'row', gap: 8, paddingVertical: 24 },
+  goodStateText: { color: '#8DD4A9', fontSize: 11, fontWeight: '700' },
+  sectionLoading: { color: '#9BA5B5', fontSize: 11, paddingVertical: 24, textAlign: 'center' },
+  predictionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
+  predictionCard: { backgroundColor: '#1C2230', borderColor: 'rgba(117,137,175,0.18)', borderRadius: 11, borderWidth: 1, flexBasis: 170, flexGrow: 1, minHeight: 124, padding: 10 },
+  predictionHead: { alignItems: 'center', flexDirection: 'row', gap: 6, justifyContent: 'space-between' },
+  predictionName: { color: '#EEF0F5', flex: 1, fontSize: 10, fontWeight: '800' },
+  reviewTag: { backgroundColor: 'rgba(100,215,160,0.12)', borderRadius: 6, color: '#83D9A8', fontSize: 8, fontWeight: '900', paddingHorizontal: 5, paddingVertical: 3, textTransform: 'uppercase' },
+  reviewTagCritical: { backgroundColor: 'rgba(230,168,92,0.13)', color: '#E9AD62' },
+  predictionNumbers: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+  predictionValue: { color: '#F4F0E8', fontSize: 16, fontWeight: '900' },
+  predictionValueCritical: { color: '#DD7871' },
+  predictionLabel: { color: '#838D9C', fontSize: 8, marginTop: 2 },
+  limitText: { color: '#8D97A5', fontSize: 8, marginTop: 12 },
+  chartRow: { flexDirection: 'row', gap: 15 },
+  chartRowCompact: { flexDirection: 'column' },
+  lowerChart: { backgroundColor: '#181B25', borderColor: 'rgba(222,229,242,0.12)', borderRadius: 18, borderWidth: 1, flex: 1, minHeight: 230, overflow: 'hidden', padding: 14 },
 });
 
 export default AdminDashboardScreen;

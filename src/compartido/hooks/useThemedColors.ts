@@ -18,7 +18,7 @@ export function useThemedColors() {
     () => ({
       // Identidad de marca - DINÁMICO
       primary: colors.primary,
-      primaryDark: colors.secondary,
+      primaryDark: isElite ? '#B8942F' : colors.secondary,
       primaryLight: colors.primaryLight,
 
       // Estados - MANTENER CONSISTENTES
@@ -33,9 +33,9 @@ export function useThemedColors() {
       // Backgrounds - DINÁMICO
       bg: {
         primary: colors.background,
-        secondary: colors.surface,
-        tertiary: colors.card,
-        elevated: colors.borderLight,
+        secondary: colors.backgroundSecondary,
+        tertiary: colors.surface,
+        elevated: colors.card,
         surface: colors.surfaceDark,
       },
 
@@ -57,8 +57,8 @@ export function useThemedColors() {
 
       // Transparencias - CALCULADAS según tema
       alpha: {
-        primary10: isElite ? 'rgba(197, 160, 89, 0.1)' : 'rgba(37, 99, 235, 0.1)',
-        primary20: isElite ? 'rgba(197, 160, 89, 0.2)' : 'rgba(37, 99, 235, 0.2)',
+        primary10: isElite ? 'rgba(212, 175, 55, 0.10)' : 'rgba(37, 99, 235, 0.1)',
+        primary20: isElite ? 'rgba(212, 175, 55, 0.18)' : 'rgba(37, 99, 235, 0.2)',
         success10: 'rgba(16, 185, 129, 0.1)',
         success20: 'rgba(16, 185, 129, 0.2)',
         warning10: 'rgba(245, 158, 11, 0.1)',
