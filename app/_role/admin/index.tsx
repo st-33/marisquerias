@@ -1,17 +1,15 @@
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
-import { useStore } from '../../../src/sistema/store';
+import { useAdminFeatures } from '../../../src/capacidades/admin';
 import type { FabItem } from '../../../src/sistema/tipos/contratos';
 
 export default function Admin() {
-  const features = useStore((s) => s.negocio.features);
-
-  // ✅ FAB se limpia automáticamente con el sistema context-aware
+  const { features, loading } = useAdminFeatures();
 
   const navEntries = useMemo(() => {
     const entries: { key: string; label: string; icon: React.ReactNode; route: string }[] = [];
-    const has = (k: string) => Boolean((features as any)?.[k]?.enabled);
+    const has = (k: string) => (features as any)?.[k] === true;
 
     if (has('admin_dashboard')) {
       entries.push({
@@ -62,15 +60,6 @@ export default function Admin() {
       });
     }
 
-    if (entries.length === 0) {
-      entries.push({
-        key: 'metricas',
-        label: 'Métricas y Datos',
-        icon: <Text style={{ color: 'white', fontSize: 22 }}>📊</Text>,
-        route: '/_role/admin/dashboard',
-      });
-    }
-
     return entries;
   }, [features]);
 
@@ -88,12 +77,47 @@ export default function Admin() {
   const initialRoute = navEntries[0]?.route ?? null;
 
   useEffect(() => {
-    if (!initialRoute) return;
-    router.replace(initialRoute);
-  }, [initialRoute]);
+    if (loading) return;
+    if (!features.admin) {
+      router.replace('/_role/roles');
+      return;
+    }
+    if (initialRoute) {
+      router.replace(initialRoute);
+    }
+  }, [features.admin, initialRoute, loading]);
 
-  if (navItems.length === 0) {
-    return <View style={{ flex: 1, backgroundColor: '#0f172a' }} />;
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#0f172a',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={{ color: '#94a3b8', fontSize: 16 }}>Cargando permisos administrativos...</Text>
+      </View>
+    );
+  }
+
+  if (!features.admin || navItems.length === 0) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#0f172a',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}
+      >
+        <Text style={{ color: '#94a3b8', fontSize: 16, textAlign: 'center' }}>
+          No hay módulos administrativos habilitados.
+        </Text>
+      </View>
+    );
   }
 
   return (

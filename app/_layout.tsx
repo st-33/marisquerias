@@ -15,19 +15,26 @@ import { ProveedorFierros } from '../src/sistema/impresion/fierros';
 import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
 import { ProveedorConfiguracionTenant } from '../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
+import { useAdminFeatures } from '../src/capacidades/admin';
 
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
 const PUBLIC_ROUTES = ['/'];
 
-const ROUTE_FEATURES: Record<string, string> = {
-  '/_role/venta-crudo': 'venta_crudo',
-  '/_role/admin/venta-crudo': 'venta_crudo',
-  '/_role/admin/tables': 'restaurante.mesas',
-  '/_role/mesero': 'restaurante.mesas',
-  '/_role/cocina': 'restaurante.kds',
-  '/_role/admin/repart': 'reparto',
+const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
+  '/_role/venta-crudo': { generic: 'venta_crudo' },
+  '/_role/admin/venta-crudo': {
+    admin: ['admin_mostrador', 'module_venta_crudo'],
+  },
+  '/_role/admin/dashboard': { admin: ['admin_dashboard'] },
+  '/_role/admin/menu': { admin: ['admin_menu'] },
+  '/_role/admin/inventory': { admin: ['admin_inventory'] },
+  '/_role/admin/tables': { admin: ['admin_tables'] },
+  '/_role/admin/devices': { admin: ['admin_devices'] },
+  '/_role/admin/repart': { admin: ['admin_repart'] },
+  '/_role/mesero': { generic: 'restaurante.mesas' },
+  '/_role/cocina': { generic: 'restaurante.kds' },
 };
 
 export default function RootLayout() {
@@ -39,27 +46,36 @@ export default function RootLayout() {
   useAuthGuard(isReady && !isPublicRoute);
   useAppListeners(isReady);
 
+  const tenantPath = useStore((state) => state.sesion.tenantPath);
+  const estadoInstalacion = useStore((state) => state.estadoInstalacion);
+  const { features: adminFeatures, loading: adminFeaturesLoading } = useAdminFeatures({
+    tenantPath: tenantPath || undefined,
+  });
+
   // 🛡️ Guardia de Navegación de la Fábrica en Runtime (Fase 3)
   useEffect(() => {
     if (!isReady) return;
 
     const matchedRoute = Object.keys(ROUTE_FEATURES).find((route) => pathname.startsWith(route));
     if (matchedRoute) {
-      const requiredFeature = ROUTE_FEATURES[matchedRoute];
-      const isEnabled = estaCaracteristicaHabilitada(requiredFeature, true);
+      const requirement = ROUTE_FEATURES[matchedRoute];
+      if (requirement.admin && adminFeaturesLoading) return;
+
+      const isEnabled = requirement.admin
+        ? requirement.admin.every(
+            (feature) => (adminFeatures as Record<string, boolean>)[feature] === true
+          )
+        : estaCaracteristicaHabilitada(requirement.generic || '', true);
 
       if (!isEnabled) {
         logger.warn(
           'ROUTE_GUARD',
-          `[Fábrica] Acceso denegado a "${pathname}" (requiere feature flag "${requiredFeature}" activa). Redirigiendo al selector de roles.`
+          `[Fábrica] Acceso denegado a "${pathname}". Redirigiendo al selector de roles.`
         );
         router.replace('/_role/roles');
       }
     }
-  }, [pathname, isReady, router]);
-
-  const tenantPath = useStore((state) => state.sesion.tenantPath);
-  const estadoInstalacion = useStore((state) => state.estadoInstalacion);
+  }, [adminFeatures, adminFeaturesLoading, pathname, isReady, router]);
 
   // Orquestador de servicios (DOGMA: Cero lógica de negocio en layout)
   useInicializacionServiciosTenant({ estadoInstalacion, tenantPath });

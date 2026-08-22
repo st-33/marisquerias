@@ -1,10 +1,10 @@
 // src/verticales/admin/logica/useAdminFeatures.ts
 import type { Database } from 'firebase/database';
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
-import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
-import type { TenantFeatures } from '../metricas/useAdminLogic'; // reuse type
+import { TenantRepository, type Caracteristicas } from '../../sistema/persistencia/tenant.repo';
+import type { TenantFeatures } from '../metricas/useAdminLogic';
 import { estaFeatureAdminHabilitada } from './menuSafety';
 
 type UseAdminFeaturesProps = {
@@ -13,8 +13,43 @@ type UseAdminFeaturesProps = {
 };
 
 /**
- * Hook that subscribes to the tenant's admin feature flags.
- * Returns the loaded features and a loading flag.
+ * Normaliza la configuración administrativa de `caracteristicas`.
+ * El flag padre `roles.admin` tiene precedencia sobre todos sus módulos hijos.
+ */
+export function normalizarFeaturesAdmin(data: Caracteristicas): TenantFeatures {
+  const admin = data?.roles?.admin;
+  const adminRoleEnabled = admin !== false;
+  const adminConfig = typeof admin === 'object' && admin !== null ? admin : undefined;
+
+  const moduleVentaCrudo = (data?.module_venta_crudo ?? adminConfig?.module_venta_crudo) === true;
+
+  const normalized: TenantFeatures = {
+    admin: adminRoleEnabled,
+    admin_dashboard: adminRoleEnabled && adminConfig?.dashboard !== false,
+    admin_menu: adminRoleEnabled && adminConfig?.menu !== false,
+    admin_inventory: adminRoleEnabled && adminConfig?.inventario !== false,
+    admin_tables: adminRoleEnabled && adminConfig?.mesas !== false,
+    admin_devices: adminRoleEnabled && adminConfig?.dispositivos !== false,
+    admin_repart: adminRoleEnabled && adminConfig?.repart !== false,
+    admin_mostrador: adminRoleEnabled && adminConfig?.mostrador !== false,
+    admin_menu_add_category: adminRoleEnabled && adminConfig?.menu_add_category !== false,
+    module_venta_crudo: adminRoleEnabled && moduleVentaCrudo,
+  };
+
+  const masterVentaCrudo = normalized.module_venta_crudo;
+  normalized.fastbutton_venta_crudo =
+    masterVentaCrudo &&
+    (data?.fastbutton_venta_crudo ?? adminConfig?.fastbutton_venta_crudo) !== false;
+  normalized.menu_editor_venta_crudo =
+    masterVentaCrudo &&
+    (data?.menu_editor_venta_crudo ?? adminConfig?.menu_editor_venta_crudo) !== false;
+
+  return normalized;
+}
+
+/**
+ * Hook que suscribe los flags administrativos del tenant.
+ * La fuente de autoridad es `tenantPath/caracteristicas/roles/admin`.
  */
 export function useAdminFeatures(props?: UseAdminFeaturesProps) {
   const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
@@ -34,39 +69,10 @@ export function useAdminFeatures(props?: UseAdminFeaturesProps) {
     if (!tenantPath) return;
     const tenantRepo = new TenantRepository(db, tenantPath);
     const unsub = tenantRepo.suscribirCaracteristicas((data) => {
-      const admin = data.roles?.admin;
-      const normalized: TenantFeatures = {
-        admin: (typeof admin === 'boolean' ? admin : true) !== false,
-        admin_dashboard: (typeof admin === 'object' ? admin?.dashboard : undefined) !== false,
-        admin_menu: (typeof admin === 'object' ? admin?.menu : undefined) !== false,
-        admin_inventory: (typeof admin === 'object' ? admin?.inventario : undefined) !== false,
-        admin_tables: (typeof admin === 'object' ? admin?.mesas : undefined) !== false,
-        admin_devices: (typeof admin === 'object' ? admin?.dispositivos : undefined) !== false,
-        admin_repart: (typeof admin === 'object' ? admin?.repart : undefined) !== false,
-        admin_mostrador: (typeof admin === 'object' ? admin?.mostrador : undefined) !== false,
-        admin_menu_add_category:
-          (typeof admin === 'object' ? admin?.menu_add_category : undefined) !== false,
-
-        // Master Flag (Priorize root level, fallback to admin level for backward compatibility)
-        module_venta_crudo:
-          (data?.module_venta_crudo ??
-            (typeof admin === 'object' ? admin?.module_venta_crudo : undefined)) === true,
-      };
-
-      // Sub-flags Normalization with Master Gating
-      const masterVentaCrudo = normalized.module_venta_crudo;
-      normalized.fastbutton_venta_crudo =
-        masterVentaCrudo &&
-        (data?.fastbutton_venta_crudo ??
-          (typeof admin === 'object' ? admin?.fastbutton_venta_crudo : undefined)) !== false;
-      normalized.menu_editor_venta_crudo =
-        masterVentaCrudo &&
-        (data?.menu_editor_venta_crudo ??
-          (typeof admin === 'object' ? admin?.menu_editor_venta_crudo : undefined)) !== false;
-
-      setFeatures(normalized);
+      setFeatures(normalizarFeaturesAdmin(data));
       setLoading(false);
     });
+
     return unsub;
   }, [db, tenantPath]);
 
