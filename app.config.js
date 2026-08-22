@@ -26,7 +26,6 @@ module.exports = () => {
         foregroundImage: './assets/images/icon_custom.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
-      edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: 'com.anonymous.miecosistemaadi',
       permissions: [
