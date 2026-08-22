@@ -1,3 +1,5 @@
+import { normalizarFeaturesAdmin } from '../useAdminFeatures';
+
 jest.mock('../../../sistema/monitoreo', () => ({
   logger: {
     info: jest.fn(),
@@ -15,8 +17,6 @@ jest.mock('../../../sistema/firebase', () => ({
 jest.mock('../../../sistema/persistencia/tenant.repo', () => ({
   TenantRepository: jest.fn(),
 }));
-
-import { normalizarFeaturesAdmin } from '../useAdminFeatures';
 
 describe('normalizarFeaturesAdmin', () => {
   test('el flag padre admin=false bloquea todos los módulos administrativos', () => {
