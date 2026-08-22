@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AppState, type AppStateStatus, LogBox, View } from 'react-native';
+import { AppState, type AppStateStatus, LogBox, Text, View } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
 import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
@@ -95,13 +95,53 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider tenantPath={tenantPath || ''}>
-      <RootLayoutContent tenantPath={tenantPath || null} />
+      <RootLayoutContent isReady={isReady} pathname={pathname} tenantPath={tenantPath || null} />
     </ThemeProvider>
   );
 }
 
-function RootLayoutContent({ tenantPath }: { tenantPath: string | null }) {
+function RootLayoutContent({
+  isReady,
+  pathname,
+  tenantPath,
+}: {
+  isReady: boolean;
+  pathname: string;
+  tenantPath: string | null;
+}) {
   const { theme } = useAppTheme();
+  const router = useRouter();
+  const needsTenant = pathname.startsWith('/_role') && !tenantPath;
+
+  useEffect(() => {
+    if (!isReady || !needsTenant) return;
+    router.replace('/access');
+  }, [isReady, needsTenant, router]);
+
+  if (needsTenant) {
+    return (
+      <View
+        style={{
+          alignItems: 'center',
+          backgroundColor: theme.colors.background,
+          flex: 1,
+          justifyContent: 'center',
+        }}
+      >
+        <Text
+          style={{
+            color: theme.colors.secondary,
+            fontSize: 12,
+            fontWeight: '700',
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+          }}
+        >
+          Cargando sesión...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ProveedorFierros>
