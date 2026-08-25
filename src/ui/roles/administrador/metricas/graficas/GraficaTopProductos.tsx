@@ -7,16 +7,16 @@ import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
-import { useAppTheme } from '../../temas/ThemeContext';
+import { useAppTheme } from '../../../../../compartido/temas/ThemeContext';
 
-type ProductData = {
+type DatosProducto = {
   id: string;
   nombre: string;
   ventas: number;
 };
 
-type Props = {
-  data: ProductData[];
+type GraficaTopProductosProps = {
+  data: DatosProducto[];
   title: string;
 };
 
@@ -28,7 +28,7 @@ const RANK_PALETTES = [
   ['#4FC6AA', '#237E70'],
 ] as const;
 
-export function TopProductsBarChart({ data, title }: Props) {
+export function GraficaTopProductos({ data, title }: GraficaTopProductosProps) {
   const { isElite } = useAppTheme();
 
   if (!data || data.length === 0) {

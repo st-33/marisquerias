@@ -16,10 +16,12 @@ import {
 import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
 
 /**
- * Hook para calcular métricas del dashboard admin.
+ * Hook para calcular métricas de ventas del módulo Métricas y Datos.
  * ⚡ OPTIMIZADO: Lee directamente del store centralizado siguiendo el DOGMA V2.
+ *
+ * Historial: antes `useAdminMetrics.ts` (herencia de `src/verticales/admin/logica/`).
  */
-export function useAdminMetrics({
+export function useMetricasVentas({
   dateFilter,
   includeVentaCrudo,
 }: {

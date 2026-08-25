@@ -4,8 +4,30 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
 import { TenantRepository, type Caracteristicas } from '../../sistema/persistencia/tenant.repo';
-import type { TenantFeatures } from '../metricas/useAdminLogic';
 import { estaFeatureAdminHabilitada } from './menuSafety';
+
+/**
+ * Contrato de feature flags administrativos del tenant.
+ * Hogar de este tipo: aquí (capacidad admin compartida). Antes vivía en
+ * `capacidades/metricas/useAdminLogic.ts`, lo que generaba un ciclo de tipos
+ * entre `capacidades/admin` y `capacidades/metricas`.
+ */
+export type TenantFeatures = {
+  admin?: boolean;
+  admin_dashboard?: boolean;
+  admin_menu?: boolean;
+  admin_inventory?: boolean;
+  admin_tables?: boolean;
+  admin_devices?: boolean;
+  admin_repart?: boolean;
+  admin_mostrador?: boolean;
+  admin_menu_add_category?: boolean;
+  // 🔥 NUEVOS FLAGS CRÍTICOS
+  module_venta_crudo?: boolean; // Si false, oculta todo lo relacionado a Venta y Crudo
+  fastbutton_venta_crudo?: boolean; // Acceso desde el menú radial
+  menu_editor_venta_crudo?: boolean; // Opciones en el editor de menú
+  inventory_v2?: boolean; // Si false, usa el sistema legacy ("retacado") o modo compatibilidad
+};
 
 type UseAdminFeaturesProps = {
   db?: Database;

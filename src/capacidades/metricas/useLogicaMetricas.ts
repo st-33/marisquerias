@@ -1,31 +1,26 @@
-// src/verticales/admin/logica/useAdminLogic.ts
+/**
+ * 🧠 HOOK: useLogicaMetricas
+ * Lógica de composición del módulo Métricas y Datos (rol Administrador).
+ * Delegaciones:
+ *  - Carga de feature flags → useAdminFeatures (capacidad admin compartida)
+ *  - Cálculo de métricas de ventas → useMetricasVentas
+ *  - Estado local → filtro de período de fechas
+ *
+ * Historial: antes `useAdminLogic.ts` en `src/capacidades/metricas`
+ * (comentario anterior apuntaba a `src/verticales/admin/logica/useAdminLogic.ts`).
+ * El tipo `TenantFeatures` se trasladó a `useAdminFeatures.ts` para romper el
+ * ciclo de tipos entre capacidades/admin y capacidades/metricas.
+ */
+
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
 import { TenantRepository } from '../../sistema/persistencia';
-import { useAdminFeatures } from '../admin/useAdminFeatures';
-import { useAdminMetrics } from './useAdminMetrics';
-
-// ==================== TIPOS ====================
-export type TenantFeatures = {
-  admin?: boolean;
-  admin_dashboard?: boolean;
-  admin_menu?: boolean;
-  admin_inventory?: boolean;
-  admin_tables?: boolean;
-  admin_devices?: boolean;
-  admin_repart?: boolean;
-  admin_mostrador?: boolean;
-  admin_menu_add_category?: boolean;
-  // 🔥 NUEVOS FLAGS CRÍTICOS
-  module_venta_crudo?: boolean; // Si false, oculta todo lo relacionado a Venta y Crudo
-  fastbutton_venta_crudo?: boolean; // Acceso desde el menú radial
-  menu_editor_venta_crudo?: boolean; // Opciones en el editor de menú
-  inventory_v2?: boolean; // Si false, usa el sistema legacy ("retacado") o modo compatibilidad
-};
+import { useAdminFeatures, type TenantFeatures } from '../admin/useAdminFeatures';
+import { useMetricasVentas } from './useMetricasVentas';
 
 export type DateFilter = 'hoy' | 'ayer' | 'hace3dias' | 'semana' | 'mes' | 'todo';
 
-export type DashboardMetrics = {
+export type MetricasPanel = {
   ventasHoy: number;
   ventasHoyRestaurante?: number;
   ventasHoyVentaCrudo?: number;
@@ -47,32 +42,31 @@ export type DashboardMetrics = {
 };
 
 /**
- * Central hook that composes admin feature flags and dashboard metrics.
- * It delegates feature loading to `useAdminFeatures` and metric calculation to `useAdminMetrics`.
+ * Hook central del módulo: compone los feature flags administrativos,
+ * el cálculo de métricas y el filtro de período en una sola interfaz.
  */
-export function useAdminLogic({ db, tenantPath }: { db: Database; tenantPath: string }) {
-  // Load feature flags
+export function useLogicaMetricas({ db, tenantPath }: { db: Database; tenantPath: string }) {
+  // Carga de feature flags (responsabilidad compartida de la capacidad admin)
   const { features, loading: featuresLoading } = useAdminFeatures({ db, tenantPath });
 
-  // Date filter state (local to this hook)
+  // Filtro de período (estado local del módulo)
   const [dateFilter, setDateFilter] = useState<DateFilter>('hoy');
 
-  // Load metrics based on the selected date filter
+  // Cálculo de métricas según el período seleccionado
   const includeVentaCrudo = features?.module_venta_crudo === true;
-  const { metrics, loading: metricsLoading } = useAdminMetrics({ dateFilter, includeVentaCrudo });
+  const { metrics, loading: metricsLoading } = useMetricasVentas({ dateFilter, includeVentaCrudo });
 
   const loading = featuresLoading || metricsLoading;
 
-  // Action to toggle a feature flag
+  // Acción para activar o desactivar un flag del tenant
   const toggleFeature = async (feature: keyof TenantFeatures, enabled: boolean) => {
     const tenantRepo = new TenantRepository(db, tenantPath);
     const featureKey = feature.replace('admin_', '');
     await tenantRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
   };
 
-  // Refresh metrics (no‑op because metrics hook updates automatically)
+  // Refrescar métricas (no-op real: el hook reacciona solo al store)
   const refreshMetrics = async () => {
-    // Trigger a state update to force re‑render if needed
     setDateFilter((prev) => prev);
   };
 

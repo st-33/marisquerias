@@ -1,7 +1,7 @@
 import { RolesScreen } from '../ui/pantallas/RolesScreen';
 import { CocinaScreen } from '../ui/pantallas/CocinaScreen';
 import { MeseroScreen } from '../ui/pantallas/MeseroScreen';
-import { AdminDashboardScreen } from '../ui/roles/administrador/metricas/AdminDashboardScreen';
+import { PantallaMetricasDatos } from '../ui/roles/administrador/metricas/PantallaMetricasDatos';
 import { AdminMenuScreen } from '../ui/roles/administrador/menu/AdminMenuScreen';
 import { AdminTablesScreen } from '../ui/roles/administrador/mesas/AdminTablesScreen';
 import { AdminInventoryScreen } from '../ui/roles/administrador/inventario/AdminInventoryScreen';
@@ -26,7 +26,7 @@ export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<an
     Screen: MostradorPro,
   },
   admin_dashboard: {
-    Screen: AdminDashboardScreen,
+    Screen: PantallaMetricasDatos,
   },
   admin_menu: {
     Screen: AdminMenuScreen,

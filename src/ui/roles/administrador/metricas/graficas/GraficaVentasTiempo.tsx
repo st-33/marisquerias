@@ -6,14 +6,14 @@
 import { LineChart } from 'react-native-gifted-charts';
 import { useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useAppTheme } from '../../temas/ThemeContext';
+import { useAppTheme } from '../../../../../compartido/temas/ThemeContext';
 
-interface SalesLineChartProps {
+interface GraficaVentasTiempoProps {
   data: { label: string; total: number }[];
   height?: number;
 }
 
-export const SalesLineChart = ({ data, height = 190 }: SalesLineChartProps) => {
+export const GraficaVentasTiempo = ({ data, height = 190 }: GraficaVentasTiempoProps) => {
   const { isElite } = useAppTheme();
   const { width } = useWindowDimensions();
   const accent = isElite ? '#5ED0B0' : '#3B82F6';

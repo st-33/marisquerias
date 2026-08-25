@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { usePrediccionStock, type PrediccionPlatillo } from './analitica/usePrediccionStock';
+import { usePrediccionStock, type PrediccionPlatillo } from './usePrediccionStock';
 
 export type AlertaInteligente = {
   id: string;

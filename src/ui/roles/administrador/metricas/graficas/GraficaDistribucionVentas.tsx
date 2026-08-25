@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { PieChart } from 'react-native-gifted-charts';
 import { StyleSheet, Text, View } from 'react-native';
 
-type PieChartData = {
+type DatosTorta = {
   name: string;
   population: number;
   color: string;
@@ -15,12 +15,12 @@ type PieChartData = {
   legendFontSize: number;
 };
 
-type Props = {
-  data: PieChartData[];
+type GraficaDistribucionVentasProps = {
+  data: DatosTorta[];
   title: string;
 };
 
-export function SalesDistributionPieChart({ data, title }: Props) {
+export function GraficaDistribucionVentas({ data, title }: GraficaDistribucionVentasProps) {
   const chartData = useMemo(
     () =>
       data.map((item) => ({
