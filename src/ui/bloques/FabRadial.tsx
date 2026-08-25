@@ -1,6 +1,6 @@
 'use no memo';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   SharedValue,
@@ -152,7 +152,7 @@ const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-
 
   return (
     <View
-      collapsable={false}
+      collapsable={Platform.OS === 'web' ? undefined : false}
       style={[
         staticStyles.container,
         staticStyles[position as 'top-right' | 'bottom-right' | 'bottom-left'],
