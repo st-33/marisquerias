@@ -55,12 +55,13 @@
 | 8 | `ui/roles/administrador/menu/AdminMenuScreen.tsx` | Renombrado a `PantallaMenuAdmin`; tipos a español (`PropsPantallaMenuAdmin`, `EtiquetasMenu`, `ETIQUETAS_MENU_POR_DEFECTO`) | `ui/roles/administrador/menu/PantallaMenuAdmin.tsx` |
 | 9 | `capacidades/menu/useMenuManagement.ts` | Renombrado a `useGestionMenu` | `capacidades/menu/useGestionMenu.ts` |
 | 10 | `composicion/registroPantallas.ts` | Actualizado a `PantallaMenuAdmin` (clave `admin_menu` intacta) | — |
+| 11 | `ui/bloques/menu/MenuLayout.tsx` | **Eliminado** (sin consumidores) | — |
+| 12 | `ui/bloques/productos/MallaProductos.tsx` + test | **Eliminado** (sustituido; sin consumidores) | — |
+| 13 | `ui/primitivos/productos/*` (TarjetaBase, ControlCantidad, EtiquetaPrecio, InsigniaEstado) + test | **Eliminado** (sin consumidores) | — |
+| 14 | `capacidades/admin/useAdminTools.ts` | **Eliminado** (sin consumidores; reparación obsoleta) | — |
 
 **Piezas compartidas observadas (no reorganizadas):** `VariantsModal`, `ProductPickerOverlay`
 (con Mesero), `menu.repo.ts` (persistencia), `menuSafety` (capacidades/menu).
-
-**Candidatos a eliminar (en verificación, tarea M4):** `MenuLayout.tsx`, `MallaProductos.tsx`,
-`primitivos/productos/*`, `useAdminTools.ts`.
 
 ---
 

@@ -15,13 +15,21 @@ Durante la desfragmentación del módulo Menú (rol Administrador), se reunieron
 | `ui/bloques/RecipeEditor.tsx` | Movido y renombrado a `EditorReceta` | `ui/roles/administrador/menu/editores/EditorReceta.tsx` |
 | `ui/bloques/VariantEditor.tsx` | Movido y renombrado a `EditorVariantes` | `ui/roles/administrador/menu/editores/EditorVariantes.tsx` |
 
-**Permanecen aquí (compartidas o pendientes):**
+**Permanecen aquí (compartidas):**
 
-- `ui/bloques/menu/MenuLayout.tsx` — sin consumidores detectados; candidato a
-  eliminación pendiente de confirmación (tarea M4).
 - `ui/bloques/VariantsModal.tsx` y `ui/bloques/ProductPickerOverlay.tsx` — **compartidas
   con el rol Mesero**; no se reorganizan en este proceso.
 - El resto de `ui/bloques/` no pertenece al territorio Menú.
 
+**Eliminados (huérfanos confirmados, 2026-08-26):**
+
+- `ui/bloques/menu/MenuLayout.tsx` — sin consumidores.
+- `ui/bloques/productos/MallaProductos.tsx` (+ su test) — sin consumidores; sistema
+  de tarjetas de producto sustituido por el módulo Menú actual.
+
 **Impacto en barriles:** `ui/index.ts` dejó de reexportar `RecipeEditor` y `VariantEditor`
 (ahora son internos del módulo Menú).
+
+> Nota: `ui/primitivos/productos/*` (TarjetaBase, ControlCantidad, EtiquetaPrecio,
+> InsigniaEstado + test) también fue eliminado por el mismo motivo (sin consumidores);
+> su huella vive en `docs/desfragmentaciones/2026-08-26_desfragmentacion_menu_admin.md`.

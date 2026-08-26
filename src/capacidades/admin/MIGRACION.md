@@ -17,5 +17,11 @@ Cambios dentro de esta carpeta durante la desfragmentación del módulo Métrica
   (antes vivía en `capacidades/metricas/useAdminLogic.ts`, generando un ciclo de tipos).
 
 Lo que permanece aquí es la capacidad admin **compartida** entre los módulos del rol
-Administrador: `useAdminFeatures`, `usePuenteAccionesFlotantes`, `menuSafety`
-y `useAdminTools`.
+Administrador: `useAdminFeatures`, `usePuenteAccionesFlotantes` y `menuSafety`.
+
+## Anexo — desfragmentación del módulo Menú (2026-08-26)
+
+- `useAdminTools.ts` fue **eliminado** (sin consumidores; herramienta de reparación
+  obsoleta con mapeos de IDs heredados). Su trazabilidad queda en
+  `docs/desfragmentaciones/2026-08-26_desfragmentacion_menu_admin.md`. Se retiró su
+  export del barril `index.ts`.
