@@ -1,7 +1,7 @@
 {
   "sesion": "2026-08-26_admin_inventario_mesas_reparto",
   "rama": "rama-2",
-  "actualizado": "2026-08-26T06:55:31.025Z",
+  "actualizado": "2026-08-26T07:08:22.841Z",
   "eventos": [
     {
       "id": "ev-0001",
@@ -101,6 +101,15 @@
       "sello": "a034eb26e4bf3d9bc1539627e5578b4bedd13b9602ceba5f08f77f0f5e8a58b7",
       "commit": "d4a90d9",
       "fecha": "2026-08-26T06:55:31.025Z"
+    },
+    {
+      "id": "ev-0012",
+      "tipo": "DECISION",
+      "agente": "DEEPSEEK",
+      "tarea": "CENTRAL",
+      "sello": "ceba5d6f4b39044d8f0eee93dfb55a3501a90d43d23a01bdaa984b89cfc7f61a",
+      "commit": "7f44e43",
+      "fecha": "2026-08-26T07:08:22.841Z"
     }
   ]
 }
