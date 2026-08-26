@@ -18,10 +18,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { CategorySidebar } from '../../../bloques/menu/CategorySidebar';
-import { ProductCard } from '../../../bloques/menu/ProductCard';
-import RecipeEditor from '../../../bloques/RecipeEditor';
-import VariantEditor from '../../../bloques/VariantEditor';
+import { CategorySidebar } from './bloques/CategorySidebar';
+import { ProductCard } from './bloques/ProductCard';
+import RecipeEditor from './editores/RecipeEditor';
+import VariantEditor from './editores/VariantEditor';
 import { useToast } from '../../../../compartido/componentes/ui/Toast';
 import { theme } from '../../../../compartido/theme';
 import type { Producto } from '../../../../sistema/persistencia';

@@ -19,11 +19,9 @@ export type {
   MesaState as PuestoMandoMesaState,
   PuestoMandoProps,
 } from './bloques/PuestoMando';
-export { default as RecipeEditor, type ItemInventario } from './bloques/RecipeEditor';
 export * from './bloques/RoleSelectorElite';
 export * from './bloques/StickerLayer';
 export { TablesGrid } from './bloques/TablesGrid';
 export type { Table as TablesGridTable } from './bloques/TablesGrid';
 export * from './bloques/TarjetaComanda';
-export { default as VariantEditor } from './bloques/VariantEditor';
 export * from './bloques/VariantsModal';
