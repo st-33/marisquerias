@@ -1,1 +1,1 @@
-export * from './useInventarioAvanzado';
+export * from './useInventario';

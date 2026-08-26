@@ -16,12 +16,12 @@ import type {
   InsumoInventario,
 } from '../../sistema/persistencia/contratos-inventario';
 
-type UseInventarioAvanzadoProps = {
+type PropsUseInventario = {
   db: Database;
   tenantPath: string;
 };
 
-export function useInventarioAvanzado({ db, tenantPath }: UseInventarioAvanzadoProps) {
+export function useInventario({ db, tenantPath }: PropsUseInventario) {
   const catalog = useInventoryCatalog();
   const sections = useInventorySections();
   const areas = useInventoryAreas();

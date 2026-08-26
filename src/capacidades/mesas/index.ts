@@ -1,1 +1,1 @@
-export * from './useMesasManagement';
+export * from './useGestionMesas';

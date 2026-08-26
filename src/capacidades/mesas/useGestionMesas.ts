@@ -13,7 +13,7 @@ import {
   type MesaLayoutInput,
 } from '../../sistema/persistencia';
 
-type UseMesasManagementProps = {
+type PropsGestionMesas = {
   db: Database;
   tenantPath: string;
 };
@@ -44,7 +44,7 @@ const mapMesaToLayout = (mesa: Mesa, index: number): MesaConLayout => {
   };
 };
 
-export function useMesasManagement({ db, tenantPath }: UseMesasManagementProps) {
+export function useGestionMesas({ db, tenantPath }: PropsGestionMesas) {
   const [mesas, setMesas] = useState<Record<string, Mesa>>({});
   const [cantidad, setCantidad] = useState<number>(8);
   const [loading, setLoading] = useState(true);

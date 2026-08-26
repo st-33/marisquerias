@@ -3,8 +3,8 @@ import { CocinaScreen } from '../ui/pantallas/CocinaScreen';
 import { MeseroScreen } from '../ui/pantallas/MeseroScreen';
 import { PantallaMetricasDatos } from '../ui/roles/administrador/metricas/PantallaMetricasDatos';
 import { PantallaMenuAdmin } from '../ui/roles/administrador/menu/PantallaMenuAdmin';
-import { AdminTablesScreen } from '../ui/roles/administrador/mesas/AdminTablesScreen';
-import { AdminInventoryScreen } from '../ui/roles/administrador/inventario/AdminInventoryScreen';
+import { PantallaMesas } from '../ui/roles/administrador/mesas/PantallaMesas';
+import { PantallaInventario } from '../ui/roles/administrador/inventario/PantallaInventario';
 import { MostradorPro } from '../ui/bloques/MostradorPro';
 import { MostradorAdminScreen } from '../ui/roles/administrador/mostrador/MostradorAdminScreen';
 
@@ -32,10 +32,10 @@ export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<an
     Screen: PantallaMenuAdmin,
   },
   admin_tables: {
-    Screen: AdminTablesScreen,
+    Screen: PantallaMesas,
   },
   admin_inventory: {
-    Screen: AdminInventoryScreen,
+    Screen: PantallaInventario,
   },
   admin_mostrador: {
     Screen: MostradorAdminScreen,

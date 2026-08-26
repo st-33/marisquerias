@@ -1,0 +1,186 @@
+/**
+ * Estilos de PantallaMesas (separados del componente).
+ */
+
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    padding: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: '#94a3b8',
+    fontSize: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    color: '#f8fafc',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  subtitle: {
+    color: '#94a3b8',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f59e0b20',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f59e0b40',
+  },
+  editBadgeText: {
+    color: '#f59e0b',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  quantityControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  quantityLabel: {
+    color: '#94a3b8',
+    fontSize: 13,
+  },
+  quantityValue: {
+    color: '#f8fafc',
+    fontSize: 15,
+    fontWeight: '700',
+    minWidth: 20,
+    textAlign: 'center',
+  },
+  btnQty: {
+    backgroundColor: '#334155',
+    padding: 4,
+    borderRadius: 6,
+  },
+  btnApply: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  btnApplyText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  summaryBar: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  summaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryValue: {
+    color: '#f8fafc',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  summaryTitle: {
+    color: '#94a3b8',
+    fontSize: 12,
+  },
+  canvasContainer: {
+    flexGrow: 1,
+  },
+  canvas: {
+    flex: 1,
+    minHeight: 500,
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  canvasEditMode: {
+    borderColor: '#f59e0b',
+    backgroundColor: '#0f172a',
+  },
+  gridOverlay: {
+    ...(StyleSheet.absoluteFill as any),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gridWatermark: {
+    color: '#f59e0b10',
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: 4,
+  },
+  mesaItem: {
+    position: 'absolute',
+    width: 64,
+    height: 64,
+    marginLeft: -32,
+    marginTop: -32,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  mesaNum: {
+    color: '#f8fafc',
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  mesaTotal: {
+    color: '#10b981',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+});
+

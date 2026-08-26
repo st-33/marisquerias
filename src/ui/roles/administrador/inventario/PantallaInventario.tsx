@@ -5,7 +5,7 @@ import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import { PanelInventario } from './PanelInventario';
 
-export function AdminInventoryScreen() {
+export function PantallaInventario() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminInventoryScreen;
+export default PantallaInventario;
