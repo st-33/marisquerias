@@ -7,7 +7,7 @@
 | Sesión | `2026-08-26_admin_inventario_mesas_reparto` |
 | Fecha/hora UTC | `2026-08-26 06:51` |
 | Estado | REPORTADA |
-| Commits | `d303374` (`refactor(admin): reunir piezas de reparto`) + commit documental de este informe |
+| Commits | `d303374` (`refactor(admin): reunir piezas de reparto`); `0cef395` (`docs(multimodelo/M3): mapeo reparto`) |
 | Archivos creados/modificados | `app/_role/admin/repart.tsx`, `app/_role/admin/MIGRACION.md`, `src/ui/roles/administrador/reparto/repart.tsx`, `M3/informe.md`, `M3/estado.md`, `M3/procesado.json` |
 
 ## 1. Resumen ejecutivo
