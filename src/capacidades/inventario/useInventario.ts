@@ -26,8 +26,8 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
   const sections = useInventorySections();
   const areas = useInventoryAreas();
 
-  const listenersActivos = useInventoryV2Store((s) => s.listenersActivos);
-  const loading = !tenantPath || !listenersActivos;
+  const inventoryListenersActivos = useInventoryV2Store((s) => s.inventoryListenersActivos);
+  const loading = !tenantPath || !inventoryListenersActivos;
 
   // --- Helpers de Computación ---
 

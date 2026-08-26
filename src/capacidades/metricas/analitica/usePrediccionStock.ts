@@ -21,7 +21,7 @@ export function usePrediccionStock(): PrediccionStock {
   const loadingOperacion = useOperacionStore((s) => !s.listenersActivos);
 
   const getPredicciones = useInventoryV2Store((s) => s.getPredicciones);
-  const loadingInventory = useInventoryV2Store((s) => !s.listenersActivos);
+  const loadingInventory = useInventoryV2Store((s) => !s.inventoryListenersActivos);
 
   const predicciones = useMemo(() => {
     if (loadingOperacion || loadingInventory) return [];
