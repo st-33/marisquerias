@@ -1,7 +1,7 @@
 {
   "sesion": "2026-08-26_admin_inventario_mesas_reparto",
   "rama": "rama-2",
-  "actualizado": "2026-08-26T06:43:03.979Z",
+  "actualizado": "2026-08-26T06:44:58.779Z",
   "eventos": [
     {
       "id": "ev-0001",
@@ -56,6 +56,15 @@
       "sello": "74ab30fdcb158b61783ee4f6447762d7fc95d1a1c75c162996fda6917253a266",
       "commit": "a4bf281",
       "fecha": "2026-08-26T06:43:03.979Z"
+    },
+    {
+      "id": "ev-0007",
+      "tipo": "INFORME_ENTREGADO",
+      "agente": "M5",
+      "tarea": "T-M5-01",
+      "sello": "8f90e66c40867b219d0868fd1a31cd29c37f9cd2c29551fb2fef37b28fe00fc2",
+      "commit": "306ccaa",
+      "fecha": "2026-08-26T06:44:58.779Z"
     }
   ]
 }
