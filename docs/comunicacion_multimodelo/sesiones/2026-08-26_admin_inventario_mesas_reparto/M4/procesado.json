@@ -1,4 +1,10 @@
 {
   "agente": "M4",
-  "procesados": []
+  "procesados": [
+    {
+      "tarea": "T-M4-01",
+      "sello": "348c768224c9c8198f2d35f98d63db777854a97773afdcbe44e0b926fe622022",
+      "fecha": "2026-08-26T06:50:30Z"
+    }
+  ]
 }
