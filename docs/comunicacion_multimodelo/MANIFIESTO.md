@@ -23,7 +23,7 @@
 |---|---|
 | Sesión activa | `2026-08-25_admin_menu` |
 | Carpeta | `docs/comunicacion_multimodelo/sesiones/2026-08-25_admin_menu/` |
-| Estado | PENDIENTE DE AUTORIZACIÓN (ninguna tarea activa) |
+| Estado | ACTIVA — fase de descubrimiento (5 instrucciones publicadas) |
 
 Solo existe **una** sesión activa; se declara aquí y en `CENTRAL/estado.md`.
 

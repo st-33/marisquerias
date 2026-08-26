@@ -1,6 +1,52 @@
 {
   "sesion": "2026-08-25_admin_menu",
   "rama": "rama-2",
-  "actualizado": "2026-08-26T02:09:01Z",
-  "eventos": []
+  "actualizado": "2026-08-26T05:14:50.872Z",
+  "eventos": [
+    {
+      "id": "ev-0001",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M1",
+      "tarea": "T-M1-01",
+      "sello": "2997d48618b49f08df771bc041dc5aacd299e927193ab1070b24b56b59bd66aa",
+      "commit": "3b94134",
+      "fecha": "2026-08-26T05:14:50.872Z"
+    },
+    {
+      "id": "ev-0002",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M2",
+      "tarea": "T-M2-01",
+      "sello": "9723c59629c8fa9f359a8f44715b4a2820bb297405e23381c6907cb125ca3fa5",
+      "commit": "3b94134",
+      "fecha": "2026-08-26T05:14:50.872Z"
+    },
+    {
+      "id": "ev-0003",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M3",
+      "tarea": "T-M3-01",
+      "sello": "198230cf32f148610bec4cb8b075ae5da73a14d68f71afae1a01bd0da8c3b6db",
+      "commit": "3b94134",
+      "fecha": "2026-08-26T05:14:50.872Z"
+    },
+    {
+      "id": "ev-0004",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M4",
+      "tarea": "T-M4-01",
+      "sello": "99c58af8d7026846312430f01fd9e4b8020b248391243d2a09dacaa298e7865e",
+      "commit": "3b94134",
+      "fecha": "2026-08-26T05:14:50.872Z"
+    },
+    {
+      "id": "ev-0005",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M5",
+      "tarea": "T-M5-01",
+      "sello": "a954620e1d200728c89c95440c6e5ec87cd56b7cafccc51f5a00b35fd3838a24",
+      "commit": "3b94134",
+      "fecha": "2026-08-26T05:14:50.872Z"
+    }
+  ]
 }

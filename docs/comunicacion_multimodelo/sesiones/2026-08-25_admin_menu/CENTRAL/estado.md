@@ -2,29 +2,31 @@
 
 > Solo lo edita el orquestador. Refleja el estado verificado (no declarado) del sistema.
 
-**Fecha/hora:** 2026-08-26 02:09 UTC
-**Estado de la sesión:** PENDIENTE DE AUTORIZACIÓN
+**Fecha/hora:** 2026-08-26 05:00 UTC
+**Estado de la sesión:** ACTIVA — fase de descubrimiento
 **Sistema:** v2 — detección por libro de eventos (`EVENTOS.json`); rama única `rama-2`.
 
-## Tareas
+## Tareas publicadas (2026-08-26)
 
-| ID | Agente | Estado | Publicada | Informe | Decisión |
+| ID | Agente | Proceso | Estado | Publicada | Decisión |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
-
-(No existen tareas hasta la autorización de la iteración.)
+| T-M1-01 | M1 | Inventario de consumidores y referencias | NUEVA | 2026-08-26 | — |
+| T-M2-01 | M2 | Comparación histórica + esquema RTDB menú | NUEVA | 2026-08-26 | — |
+| T-M3-01 | M3 | Mapa de duplicación y contratos internos | NUEVA | 2026-08-26 | — |
+| T-M4-01 | M4 | Detección de huérfanos y candidatos a eliminar | NUEVA | 2026-08-26 | — |
+| T-M5-01 | M5 | Línea base de validación e inventario de cobertura | NUEVA | 2026-08-26 | — |
 
 ## Agentes
 
 | Agente | Estado | Último commit observado | Notas |
 |---|---|---|---|
-| M1 | SIN_ASIGNAR | — | — |
-| M2 | SIN_ASIGNAR | — | — |
-| M3 | SIN_ASIGNAR | — | — |
-| M4 | SIN_ASIGNAR | — | — |
-| M5 | SIN_ASIGNAR | — | — |
+| M1 | NUEVA | — | instrucción publicada |
+| M2 | NUEVA | — | instrucción publicada |
+| M3 | NUEVA | — | instrucción publicada |
+| M4 | NUEVA | — | instrucción publicada |
+| M5 | NUEVA | — | instrucción publicada |
 
-## Puntos de observación
+## Reserva del orquestador (no delegado)
 
-- Ningún agente debe ejecutar trabajo con la sesión en PENDIENTE DE AUTORIZACIÓN.
-- Al activarse: publicar instrucciones `NUEVA`, una por agente, con `protocolos/plantillas/tarea.md`.
+Arquitectura resultante, jerarquía roles→administrador→menú, renombrados, contratos,
+movimientos reales, integración y decisión sobre piezas compartidas con Mesero.
