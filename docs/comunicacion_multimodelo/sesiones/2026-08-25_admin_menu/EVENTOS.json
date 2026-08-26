@@ -1,7 +1,7 @@
 {
   "sesion": "2026-08-25_admin_menu",
   "rama": "rama-2",
-  "actualizado": "2026-08-26T05:30:24.409Z",
+  "actualizado": "2026-08-26T05:31:50.903Z",
   "eventos": [
     {
       "id": "ev-0001",
@@ -56,6 +56,15 @@
       "sello": "7c6787f514d9e3edda3cd509376a2d5574a0b9b4098b8eb0c1198ebd814383f3",
       "commit": "1440749",
       "fecha": "2026-08-26T05:30:24.409Z"
+    },
+    {
+      "id": "ev-0007",
+      "tipo": "INFORME_ENTREGADO",
+      "agente": "M1",
+      "tarea": "T-M1-01",
+      "sello": "dc997ed7bd398dbf93984852b8c433c0c096876fb44362748b55b775f9d236d9",
+      "commit": "f9c1391",
+      "fecha": "2026-08-26T05:31:50.903Z"
     }
   ]
 }
