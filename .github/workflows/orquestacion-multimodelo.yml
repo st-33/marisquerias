@@ -1,0 +1,44 @@
+name: orquestacion-multimodelo
+
+# Mecanismo de escucha por eventos: cada push sobre la rama operativa que toque la
+# zona de sesiones dispara la actualización del libro de eventos (EVENTOS.json).
+# El commit realizado con GITHUB_TOKEN NO vuelve a disparar este workflow: sin ciclos.
+
+on:
+  push:
+    branches:
+      - rama-2
+    paths:
+      - 'docs/comunicacion_multimodelo/sesiones/**'
+
+permissions:
+  contents: write
+
+jobs:
+  libro-de-eventos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generar libro de eventos
+        run: node herramientas/orquestacion/generar_eventos.mjs
+
+      - name: Publicar libro si cambió
+        run: |
+          git config user.name "orquestacion[bot]"
+          git config user.email "orquestacion[bot]@users.noreply.github.com"
+          git add docs/comunicacion_multimodelo/sesiones/*/EVENTOS.json
+          if git diff --cached --quiet; then
+            echo "sin cambios en el libro de eventos"
+          else
+            git commit -m "docs(multimodelo): actualizar libro de eventos"
+            git push origin rama-2
+          fi
