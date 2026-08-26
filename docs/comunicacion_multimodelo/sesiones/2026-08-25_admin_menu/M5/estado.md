@@ -4,4 +4,4 @@
 
 | Fecha/hora UTC | Tarea | Estado | Último commit | Notas / bloqueo |
 |---|---|---|---|---|
-| 2026-08-25 23:59 | — | SIN_ASIGNAR | — | Carpeta preparada; sin instrucción publicada |
+| 2026-08-26 04:43 | — | DISPONIBLE | — | Sin eventos `INSTRUCCION_NUEVA` dirigidos a M5; sesión PENDIENTE DE AUTORIZACIÓN |
