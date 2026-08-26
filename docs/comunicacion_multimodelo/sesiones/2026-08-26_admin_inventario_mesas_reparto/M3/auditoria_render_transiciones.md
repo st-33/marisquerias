@@ -100,3 +100,9 @@ La historia compartida contiene, después de la construcción de fase 4, los com
 La comprobación repetida sobre ese mismo estado confirmó que TypeScript termina correctamente, las 19 suites y 102 pruebas pasan, y el export web genera 17 rutas. El lint focal de los archivos modificados pasa. El lint completo conserva un único error de formato fuera de este diff, en `src/ui/roles/administrador/inventario/PanelInventario/index.tsx:784`, además de advertencias no bloqueantes en otros archivos. No se modificó ese archivo porque no pertenece al frente visual de esta entrega.
 
 La comprobación web real mostró que `/access` renderiza correctamente la tarjeta de acceso y que `/_role/mesero` es redirigida a `/access` por el guardia cuando no existe sesión. La inspección runtime autenticada de Mesero, Cocina y Administrador queda pendiente de un código de acceso válido; no se usaron credenciales ni datos personales.
+
+## 8. Corrección descubierta durante la autocrítica
+
+La revisión posterior detectó un detalle que la primera entrega había dejado a medias: el estado vacío de Mesas mostraba el mensaje de orientación y, debajo, conservaba un segundo canvas sin contenido. Se corrigió para que exista una sola superficie vacía explicativa cuando no hay mesas; el canvas real solo se monta cuando hay mesas que dibujar.
+
+También se ajustó el breakpoint más pequeño del grid compartido: por debajo de 340 px se usan dos columnas en vez de tres, evitando que las mesas caigan por debajo de un tamaño táctil razonable. Después de estas correcciones, TypeScript, lint focal, las 19 suites / 102 pruebas y el export web volvieron a pasar.

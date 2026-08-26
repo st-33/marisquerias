@@ -74,12 +74,11 @@ function TablesGridComponent(props: TablesGridProps) {
     });
   }, [tables]);
 
-  const tileColor = (state: TableState) =>
-    state === 'libre'
-      ? COLORS.table.free
-      : state === 'ocupada'
-        ? COLORS.table.occupied
-        : COLORS.table.billing;
+  const tileColor = (state: TableState) => {
+    if (state === 'libre') return COLORS.table.free;
+    if (state === 'ocupada') return COLORS.table.occupied;
+    return COLORS.table.billing;
+  };
 
   const renderTile = (
     id: string,

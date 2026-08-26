@@ -256,64 +256,65 @@ export function PantallaMesas() {
               Usa “Modificar distribución” para preparar el plano del salón.
             </Text>
           </View>
-        ) : null}
-        <View
-          ref={canvasRef}
-          style={[styles.canvas, editMode && styles.canvasEditMode]}
-          onLayout={(e) => {
-            const { width: w, height: h } = e.nativeEvent.layout;
-            setCanvasSize({ width: w, height: h });
-          }}
-        >
-          {/* GRID PATTERN IN EDIT MODE */}
-          {editMode && (
-            <View style={styles.gridOverlay} pointerEvents="none">
-              <Text style={styles.gridWatermark}>MODO EDICIÓN VISUAL</Text>
-            </View>
-          )}
-
-          {mesas.map((mesa) => {
-            const layout = draftLayout[mesa.id] || { posX: mesa.posX, posY: mesa.posY };
-            const isSelected = activeMesaId === mesa.id;
-
-            let statusColor = '#10b981'; // Libre
-            if (mesa.estado === 'ocupada') statusColor = '#ef4444';
-            if (mesa.estado === 'solicitar_cuenta') statusColor = '#f59e0b';
-            if ((mesa.estado as any) === 'pagado') statusColor = '#3b82f6';
-
-            const panResponder = createMesaPanResponder(mesa.id);
-
-            return (
-              <View
-                key={mesa.id}
-                {...(editMode ? panResponder.panHandlers : {})}
-                style={[
-                  styles.mesaItem,
-                  {
-                    left: `${layout.posX * 100}%`,
-                    top: `${layout.posY * 100}%`,
-                    borderColor: editMode ? '#f59e0b' : statusColor,
-                    backgroundColor: isSelected
-                      ? '#3b82f640'
-                      : editMode
-                        ? '#1e293b'
-                        : `${statusColor}15`,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={mesa.shape === 'round' ? 'disc-outline' : 'square-outline'}
-                  size={24}
-                  color={editMode ? '#f59e0b' : statusColor}
-                />
-                <Text style={styles.mesaNum}>{mesa.numero}</Text>
-                {(mesa as any).total > 0 && !editMode && (
-                  <Text style={styles.mesaTotal}>${(mesa as any).total}</Text>
-                )}
+        ) : (
+          <View
+            ref={canvasRef}
+            style={[styles.canvas, editMode && styles.canvasEditMode]}
+            onLayout={(e) => {
+              const { width: w, height: h } = e.nativeEvent.layout;
+              setCanvasSize({ width: w, height: h });
+            }}
+          >
+            {/* GRID PATTERN IN EDIT MODE */}
+            {editMode && (
+              <View style={styles.gridOverlay} pointerEvents="none">
+                <Text style={styles.gridWatermark}>MODO EDICIÓN VISUAL</Text>
               </View>
-            );
-          })}
-        </View>
+            )}
+
+            {mesas.map((mesa) => {
+              const layout = draftLayout[mesa.id] || { posX: mesa.posX, posY: mesa.posY };
+              const isSelected = activeMesaId === mesa.id;
+
+              let statusColor = '#10b981'; // Libre
+              if (mesa.estado === 'ocupada') statusColor = '#ef4444';
+              if (mesa.estado === 'solicitar_cuenta') statusColor = '#f59e0b';
+              if ((mesa.estado as any) === 'pagado') statusColor = '#3b82f6';
+
+              const panResponder = createMesaPanResponder(mesa.id);
+
+              return (
+                <View
+                  key={mesa.id}
+                  {...(editMode ? panResponder.panHandlers : {})}
+                  style={[
+                    styles.mesaItem,
+                    {
+                      left: `${layout.posX * 100}%`,
+                      top: `${layout.posY * 100}%`,
+                      borderColor: editMode ? '#f59e0b' : statusColor,
+                      backgroundColor: isSelected
+                        ? '#3b82f640'
+                        : editMode
+                          ? '#1e293b'
+                          : `${statusColor}15`,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={mesa.shape === 'round' ? 'disc-outline' : 'square-outline'}
+                    size={24}
+                    color={editMode ? '#f59e0b' : statusColor}
+                  />
+                  <Text style={styles.mesaNum}>{mesa.numero}</Text>
+                  {(mesa as any).total > 0 && !editMode && (
+                    <Text style={styles.mesaTotal}>${(mesa as any).total}</Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
