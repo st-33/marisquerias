@@ -33,7 +33,9 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 - Escribe **solo** en tu carpeta `M<n>/` de la sesión activa y en los archivos de código
   explícitamente autorizados en tu `instruccion.md`.
 - `CENTRAL/`, otras carpetas `M*`, `protocolos/`, `plantillas/`, `MANIFIESTO.md`,
-  `LEEME.md`, `EVENTOS.json` y este archivo son de solo lectura.
+  `LEEME.md`, `EVENTOS.json`, `ACTIVACIONES.json` y este archivo son de solo lectura.
+- `ACTIVACIONES.json` registra activaciones enviadas por el workflow; no sustituye
+  `M<n>/procesado.json`, que cada agente actualiza al terminar su propia tarea.
 - Si la sesión no está ACTIVA: no ejecutar trabajo; registrar `DISPONIBLE`.
 
 ## Commits

@@ -1,5 +1,9 @@
 name: orquestacion-multimodelo
 
+concurrency:
+  group: orquestacion-multimodelo-${{ github.ref }}
+  cancel-in-progress: false
+
 # Mecanismo de escucha por eventos: cada push sobre la rama operativa que toque la
 # zona de sesiones dispara la actualización del libro de eventos (EVENTOS.json).
 # El commit realizado con GITHUB_TOKEN NO vuelve a disparar este workflow: sin ciclos.
@@ -21,7 +25,7 @@ jobs:
       - name: Obtener código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Configurar Node
         uses: actions/setup-node@v4
@@ -40,5 +44,28 @@ jobs:
             echo "sin cambios en el libro de eventos"
           else
             git commit -m "docs(multimodelo): actualizar libro de eventos"
+            git push origin rama-2
+          fi
+
+      - name: Activar subagentes Manus
+        env:
+          MANUS_M1_API_KEY: ${{ secrets.MANUS_M1_API_KEY }}
+          MANUS_M2_API_KEY: ${{ secrets.MANUS_M2_API_KEY }}
+          MANUS_M3_API_KEY: ${{ secrets.MANUS_M3_API_KEY }}
+          MANUS_M4_API_KEY: ${{ secrets.MANUS_M4_API_KEY }}
+          MANUS_M5_API_KEY: ${{ secrets.MANUS_M5_API_KEY }}
+        run: node herramientas/orquestacion/activar_subagentes.mjs
+
+      - name: Publicar registro de activaciones
+        run: |
+          set -euo pipefail
+          git config user.name "orquestacion[bot]"
+          git config user.email "orquestacion[bot]@users.noreply.github.com"
+          git pull --rebase origin rama-2
+          git add docs/comunicacion_multimodelo/sesiones/*/ACTIVACIONES.json
+          if git diff --cached --quiet; then
+            echo "sin activaciones nuevas"
+          else
+            git commit -m "docs(multimodelo): registrar activaciones Manus"
             git push origin rama-2
           fi

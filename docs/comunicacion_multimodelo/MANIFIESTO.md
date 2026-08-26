@@ -50,6 +50,9 @@ una instrucción.**
   `M<n>/informe.md` (REPORTADA) y `CENTRAL/decisiones.md`. Los commits de reporte,
   documentación o código **no generan instrucciones** ⇒ no hay ciclos.
 - El commit del workflow (token de GitHub) no re-dispara workflows ⇒ sin bucles de CI.
+- `ACTIVACIONES.json` es el ledger del workflow para llamadas enviadas a Manus; registra
+  `agente + tarea + sello + task_id` y es distinto de `M<n>/procesado.json`, que el
+  subagente actualiza al cerrar su tarea.
 - Una tarea anterior activa no se reinicia: si el último `estado.md` del agente muestra
   el mismo sello en `RECIBIDA/TRABAJANDO/BLOQUEADA`, se continúa; en caso contrario,
   se inicia ejecución nueva.
@@ -61,6 +64,8 @@ una instrucción.**
 - Estados de tarea: `SIN_ASIGNAR → NUEVA → RECIBIDA → TRABAJANDO → REPORTADA →
   ABSORBIDA | RECHAZADA | CORREGIDA` (+ `BLOQUEADA`, `CANCELADA`).
 - Estados de agente sin tarea: `DISPONIBLE`.
+- El workflow activa tareas nuevas mediante `task.create`; cada activación queda registrada
+  en `ACTIVACIONES.json` antes de considerar el sello ya enviado.
 - Protocolos: `protocolos/01_orquestador.md`, `02_subagente.md`, `03_git_y_commits.md`.
 
 ## 6. Activación de un agente (configuración del usuario)
