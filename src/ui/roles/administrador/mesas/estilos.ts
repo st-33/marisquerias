@@ -25,6 +25,11 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    gap: 16,
+  },
+  headerCompact: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
   },
   title: {
     color: '#f8fafc',
@@ -39,6 +44,10 @@ export const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 1,
+  },
+  headerActionsCompact: {
+    justifyContent: 'flex-start',
   },
   editBadge: {
     flexDirection: 'row',
@@ -100,8 +109,16 @@ export const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 20,
   },
+  summaryBarCompact: {
+    flexWrap: 'wrap',
+  },
+  summaryBarNarrow: {
+    flexDirection: 'column',
+    gap: 10,
+  },
   summaryCard: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: '#1e293b',
     borderRadius: 12,
     padding: 14,
@@ -127,8 +144,36 @@ export const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 12,
   },
+  emptyCanvas: {
+    minHeight: 420,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: 28,
+    paddingVertical: 48,
+    marginBottom: 20,
+  },
+  emptyCanvasTitle: {
+    color: '#f8fafc',
+    fontSize: 18,
+    fontWeight: '800',
+    marginTop: 14,
+    textAlign: 'center',
+  },
+  emptyCanvasText: {
+    color: '#94a3b8',
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+    maxWidth: 420,
+    textAlign: 'center',
+  },
   canvasContainer: {
     flexGrow: 1,
+    paddingBottom: 96,
   },
   canvas: {
     flex: 1,
@@ -183,4 +228,3 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

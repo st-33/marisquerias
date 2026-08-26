@@ -49,12 +49,13 @@ function TablesGridComponent(props: TablesGridProps) {
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
 
-  // 🎯 GRID RESPONSIVE: 2 columnas en móvil, 3 en tablet compacta, 4 en web/tablet ancha
-  // Si hay más de 8 mesas (2 filas x 4 cols), se hace scroll vertical
+  // 🎯 GRID RESPONSIVE: las mesas conservan un tamaño táctil cómodo en móvil,
+  // mientras que tablet y escritorio aprovechan el ancho disponible.
   const tileWidth = useMemo(() => {
     if (containerWidth === 0) return minTileWidth;
 
-    const numColumns = containerWidth >= 900 ? 6 : containerWidth >= 600 ? 5 : 4;
+    const numColumns =
+      containerWidth >= 1100 ? 6 : containerWidth >= 760 ? 5 : containerWidth >= 480 ? 4 : 3;
 
     // Calcular ancho exacto para llenar el contenedor
     const totalGapSpace = (numColumns - 1) * gap;

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../sistema/store';
 import { PantallaAlternativa } from './PantallaAlternativa';
+import { TransicionPantalla } from '../ui/bloques/TransicionPantalla';
 import { REGISTRO_PANTALLAS } from './registroPantallas';
 import type { ScreenResuelto } from './tipos';
 
@@ -36,9 +37,14 @@ export function useResolvedorPantalla(roleKey: string): ScreenResuelto {
     }
 
     const { Screen, staticProps } = roleEntry as any;
+    const ScreenConTransicion = (props: any) => (
+      <TransicionPantalla>
+        <Screen {...props} />
+      </TransicionPantalla>
+    );
 
     return {
-      Screen,
+      Screen: ScreenConTransicion,
       props: {
         ...(staticProps || {}),
       },

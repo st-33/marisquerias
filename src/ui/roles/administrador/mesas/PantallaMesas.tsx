@@ -25,13 +25,14 @@ import type { FabItem } from '../../../../sistema/tipos/contratos';
 
 // --- COMPONENTS ---
 
-
 export function PantallaMesas() {
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const isCompactLayout = width < 760;
+  const isNarrowLayout = width < 420;
 
   // 🧠 CEREBRO
   const { mesas, cantidad, resumen, loading, actions } = useGestionMesas({ db, tenantPath });
@@ -155,7 +156,7 @@ export function PantallaMesas() {
         onPress: () => setEditMode(true),
       },
     ];
-  }, [editMode, handleSaveLayout, mesas]);
+  }, [editMode, handleSaveLayout]);
 
   usePuenteAccionesFlotantes({
     items: fabItems,
@@ -176,13 +177,13 @@ export function PantallaMesas() {
       {ToastComponent}
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, isCompactLayout && styles.headerCompact]}>
         <View>
           <Text style={styles.title}>Plano de Salón</Text>
           <Text style={styles.subtitle}>Distribución e información de mesas en tiempo real</Text>
         </View>
 
-        <View style={styles.headerActions}>
+        <View style={[styles.headerActions, isCompactLayout && styles.headerActionsCompact]}>
           {editMode ? (
             <View style={styles.editBadge}>
               <Ionicons name="pencil-outline" size={16} color="#f59e0b" />
@@ -212,7 +213,13 @@ export function PantallaMesas() {
       </View>
 
       {/* SUMMARY BAR */}
-      <View style={styles.summaryBar}>
+      <View
+        style={[
+          styles.summaryBar,
+          isCompactLayout && styles.summaryBarCompact,
+          isNarrowLayout && styles.summaryBarNarrow,
+        ]}
+      >
         <TarjetaResumen
           titulo="Libres"
           valor={resumen.libres}
@@ -241,6 +248,15 @@ export function PantallaMesas() {
 
       {/* CANVAS EDITOR */}
       <ScrollView contentContainerStyle={styles.canvasContainer}>
+        {mesas.length === 0 ? (
+          <View style={styles.emptyCanvas}>
+            <Ionicons name="grid-outline" size={46} color="#64748b" />
+            <Text style={styles.emptyCanvasTitle}>Aún no hay mesas configuradas</Text>
+            <Text style={styles.emptyCanvasText}>
+              Usa “Modificar distribución” para preparar el plano del salón.
+            </Text>
+          </View>
+        ) : null}
         <View
           ref={canvasRef}
           style={[styles.canvas, editMode && styles.canvasEditMode]}
@@ -302,6 +318,5 @@ export function PantallaMesas() {
     </View>
   );
 }
-
 
 export default PantallaMesas;

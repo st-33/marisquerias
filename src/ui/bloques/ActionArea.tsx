@@ -84,6 +84,25 @@ function ActionAreaComponent(props: ActionAreaProps) {
 
   // 🔴 LÓGICA MEMOIZADA: ¿Cuándo mostrar botón "Pagado"?
   const showPaidButton = useMemo(() => canMarkPaid, [canMarkPaid]);
+  const actionLayoutKey = [
+    mode,
+    pendingCount > 0 ? 'send' : 'idle',
+    showPrintBillButton ? 'print' : '',
+    showPaidButton ? 'paid' : '',
+    !permissionToPrint ? 'request' : '',
+  ].join(':');
+  const [actionTransition] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    actionTransition.setValue(0.94);
+    const animation = Animated.timing(actionTransition, {
+      toValue: 1,
+      duration: 220,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [actionLayoutKey, actionTransition]);
 
   // 🔊 Handler con sonido para AÑADIR
   const handleAddWithSound = () => {
@@ -169,8 +188,22 @@ function ActionAreaComponent(props: ActionAreaProps) {
         </View>
       </Animated.View>
 
-      <View
-        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm, marginTop: SPACING.sm }}
+      <Animated.View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: SPACING.sm,
+          marginTop: SPACING.sm,
+          opacity: actionTransition,
+          transform: [
+            {
+              translateY: actionTransition.interpolate({
+                inputRange: [0.94, 1],
+                outputRange: [6, 0],
+              }),
+            },
+          ],
+        }}
       >
         {/* 🔊 Botón AÑADIR con sonido */}
         <Pressable
@@ -401,7 +434,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
             )}
           </>
         ) : null}
-      </View>
+      </Animated.View>
     </View>
   );
 }

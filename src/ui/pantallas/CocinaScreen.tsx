@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   statBadge: {

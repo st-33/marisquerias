@@ -1,5 +1,15 @@
-import { useEffect } from 'react';
-import { AppState, type AppStateStatus, LogBox, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  AppState,
+  type AppStateStatus,
+  Animated,
+  Easing,
+  LogBox,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
 import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
@@ -156,6 +166,8 @@ function RootLayoutContent({
               <Stack
                 screenOptions={{
                   headerShown: false,
+                  animation: Platform.OS === 'web' ? 'none' : 'fade',
+                  animationDuration: 240,
                   contentStyle: { backgroundColor: theme.colors.background },
                 }}
               >
@@ -165,13 +177,51 @@ function RootLayoutContent({
                 <Stack.Screen name="_role/admin/index" />
                 <Stack.Screen name="_role/venta-crudo" />
               </Stack>
-
               <GlobalFabSlot />
+              <RouteTransitionOverlay
+                pathname={pathname}
+                backgroundColor={theme.colors.background}
+              />
             </View>
           </ProveedorAudioNotificaciones>
         </GestureHandlerRootView>
       </ProveedorConfiguracionTenant>
     </ProveedorFierros>
+  );
+}
+
+function RouteTransitionOverlay({
+  pathname,
+  backgroundColor,
+}: {
+  pathname: string;
+  backgroundColor: string;
+}) {
+  const [opacity] = useState(() => new Animated.Value(0));
+  const [initialPathname] = useState(pathname);
+
+  useEffect(() => {
+    if (pathname === initialPathname) return;
+
+    const animation = Animated.timing(opacity, {
+      toValue: 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    });
+
+    opacity.setValue(0.18);
+    animation.start();
+    return () => animation.stop();
+  }, [initialPathname, opacity, pathname]);
+
+  if (Platform.OS !== 'web') return null;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[StyleSheet.absoluteFill, { backgroundColor, opacity, zIndex: 1000 }]}
+    />
   );
 }
 

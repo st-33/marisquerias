@@ -3,8 +3,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   LayoutAnimation,
+  useWindowDimensions,
   Modal,
   Platform,
   Pressable,
@@ -29,8 +29,6 @@ import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThe
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -94,13 +92,16 @@ function VariantsModalComponent({
 }: VariantsModalProps) {
   // 1. Estados de Navegación
   const [currentStep, setCurrentStep] = useState(0);
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const [fadeAnim] = useState(() => new Animated.Value(0));
-  const [slideAnim] = useState(() => new Animated.Value(SCREEN_HEIGHT));
+  const [slideAnim] = useState(() => new Animated.Value(screenHeight));
   const [pulseAnim] = useState(() => new Animated.Value(1)); // ✨ Animación de pulso para selección
+  const [stepTransition] = useState(() => new Animated.Value(1));
   const isMounted = useRef(true);
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
   const insets = useSafeAreaInsets();
+  const optionWidth = screenWidth < 480 ? '100%' : '48%';
 
   // 🔊 Sonidos alternantes para botón de agregar
   const {
@@ -128,7 +129,7 @@ function VariantsModalComponent({
   const handleClose = () => {
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: SCREEN_HEIGHT, duration: 250, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: screenHeight, duration: 250, useNativeDriver: true }),
     ]).start(onClose);
   };
 
@@ -154,6 +155,17 @@ function VariantsModalComponent({
   // 🔥 VALIDACIÓN: Verificar si el paso actual ya está completo
   const selectionsInStep = variantSelections[currentGroupId] || [];
   const isStepComplete = !currentGroup?.obligatorio || selectionsInStep.length > 0;
+
+  useEffect(() => {
+    stepTransition.setValue(0.96);
+    const animation = Animated.timing(stepTransition, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [activeStep, currentGroupId, stepTransition]);
 
   // 3. Manejadores de Flujo
   // 3. Manejadores de Flujo
@@ -322,7 +334,22 @@ function VariantsModalComponent({
                 </Text>
               </View>
             ) : (
-              <View style={styles.stepContainer}>
+              <Animated.View
+                style={[
+                  styles.stepContainer,
+                  {
+                    opacity: stepTransition,
+                    transform: [
+                      {
+                        translateY: stepTransition.interpolate({
+                          inputRange: [0.96, 1],
+                          outputRange: [6, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
                 {/* Navegación Back */}
                 <View style={styles.stepHeader}>
                   {activeStep > 0 && (
@@ -374,6 +401,7 @@ function VariantsModalComponent({
                                 }
                                 style={({ pressed }) => [
                                   styles.optionButton,
+                                  { width: optionWidth },
                                   isSelected && styles.optionSelected,
                                   isDisabled && styles.optionDisabled, // UI Deshabilitada
                                   {
@@ -476,7 +504,7 @@ function VariantsModalComponent({
                       />
                     </Pressable>
                   )}
-              </View>
+              </Animated.View>
             )}
           </View>
 

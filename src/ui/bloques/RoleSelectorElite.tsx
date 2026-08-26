@@ -7,8 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
   Pressable,
+  useWindowDimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,10 +21,9 @@ import { LiquidBackground } from './LiquidBackground';
 import { OrbButton } from './OrbButton';
 import { StickerLayer } from './StickerLayer';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
 export function RoleSelectorElite() {
   const { colors, theme, isElite } = useAppTheme();
+  const { height: screenHeight } = useWindowDimensions();
 
   const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
     useRoleSelectorLogic();
@@ -39,8 +38,8 @@ export function RoleSelectorElite() {
         },
         scrollContainer: {
           flexGrow: 1,
-          paddingTop: SCREEN_HEIGHT * 0.02,
-          paddingBottom: SCREEN_HEIGHT * 0.08,
+          paddingTop: screenHeight * 0.02,
+          paddingBottom: screenHeight * 0.08,
         },
         contentWrapper: {
           alignItems: 'center',
@@ -59,7 +58,7 @@ export function RoleSelectorElite() {
           paddingHorizontal: 15,
         },
         clientAccessButton: {
-          marginTop: SCREEN_HEIGHT * 0.06,
+          marginTop: screenHeight * 0.06,
           paddingVertical: Math.round(14 * theme.scale),
           paddingHorizontal: Math.round(35 * theme.scale),
           borderRadius: 50,
@@ -109,7 +108,7 @@ export function RoleSelectorElite() {
           textTransform: 'uppercase',
         },
       }),
-    [colors, theme, isElite, roles.length]
+    [colors, theme, isElite, roles.length, screenHeight]
   );
 
   if (loading) {
