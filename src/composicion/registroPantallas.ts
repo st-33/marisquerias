@@ -5,6 +5,7 @@ import { PantallaMetricasDatos } from '../ui/roles/administrador/metricas/Pantal
 import { PantallaMenuAdmin } from '../ui/roles/administrador/menu/PantallaMenuAdmin';
 import { PantallaMesas } from '../ui/roles/administrador/mesas/PantallaMesas';
 import { PantallaInventario } from '../ui/roles/administrador/inventario/PantallaInventario';
+import { PantallaReparto } from '../ui/roles/administrador/reparto/PantallaReparto';
 import { MostradorPro } from '../ui/bloques/MostradorPro';
 import { MostradorAdminScreen } from '../ui/roles/administrador/mostrador/MostradorAdminScreen';
 
@@ -36,6 +37,9 @@ export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<an
   },
   admin_inventory: {
     Screen: PantallaInventario,
+  },
+  admin_repart: {
+    Screen: PantallaReparto,
   },
   admin_mostrador: {
     Screen: MostradorAdminScreen,

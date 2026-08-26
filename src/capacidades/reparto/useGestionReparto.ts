@@ -11,12 +11,12 @@ import {
   type AjustesReparto,
 } from '../../sistema/persistencia/reparto-ajustes.repo';
 
-type UseAdminRepartProps = {
+type PropsGestionReparto = {
   db?: Database;
   tenantPath?: string;
 };
 
-export function useAdminRepart(props?: UseAdminRepartProps) {
+export function useGestionReparto(props?: PropsGestionReparto) {
   const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
   const tenantPath = props?.tenantPath !== undefined ? props.tenantPath : storeTenantPath;

@@ -1,7 +1,19 @@
 /**
  * 🚚 ADMIN REPART CONTAINER
- * Adaptador fino de Expo Router; la UI vive en la caja del módulo Reparto.
+ * Adaptador fino de Expo Router; delega a la fábrica de pantallas.
+ * La UI vive en `src/ui/roles/administrador/reparto/PantallaReparto.tsx`.
  */
-import AdminRepart from '../../../src/ui/roles/administrador/reparto/repart';
 
-export default AdminRepart;
+import React from 'react';
+import { useResolvedorPantalla } from '../../../src/composicion';
+
+export default function PantallaRepartoContainer() {
+  const resolved = useResolvedorPantalla('admin_repart');
+
+  if (resolved.loading || !resolved.Screen) {
+    return null;
+  }
+
+  const Component = resolved.Screen;
+  return <Component {...resolved.props} />;
+}

@@ -1,1 +1,1 @@
-export * from './useAdminRepart';
+export * from './useGestionReparto';
