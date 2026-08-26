@@ -3,7 +3,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 
 import type { Categoria } from '../../../../../sistema/persistencia';
 import { theme } from '@compartido/theme';
 
-export type CategorySidebarProps = {
+export type BarraCategoriasProps = {
   categorias: Categoria[];
   activeId: string | null;
   totals?: Record<string, number>;
@@ -15,7 +15,7 @@ export type CategorySidebarProps = {
   showVentaCrudo?: boolean;
 };
 
-export function CategorySidebar({
+export function BarraCategorias({
   categorias,
   activeId,
   totals,
@@ -25,7 +25,7 @@ export function CategorySidebar({
   onToggleSaltarPreparando,
   onUpdateHerencia,
   showVentaCrudo = true,
-}: CategorySidebarProps) {
+}: BarraCategoriasProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Categorías</Text>

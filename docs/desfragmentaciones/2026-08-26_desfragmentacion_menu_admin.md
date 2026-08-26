@@ -45,13 +45,16 @@
 
 | # | Origen | Transformación | Destino |
 |---|---|---|---|
-| 1 | `ui/bloques/menu/CategorySidebar.tsx` | Movido | `ui/roles/administrador/menu/bloques/CategorySidebar.tsx` |
-| 2 | `ui/bloques/menu/ProductCard.tsx` | Movido | `ui/roles/administrador/menu/bloques/ProductCard.tsx` |
-| 3 | `ui/bloques/menu/VariantChip.tsx` | Movido | `ui/roles/administrador/menu/bloques/VariantChip.tsx` |
-| 4 | `ui/bloques/menu/CollapsibleSection.tsx` | Movido | `ui/roles/administrador/menu/bloques/CollapsibleSection.tsx` |
-| 5 | `ui/bloques/RecipeEditor.tsx` | Movido | `ui/roles/administrador/menu/editores/RecipeEditor.tsx` |
-| 6 | `ui/bloques/VariantEditor.tsx` | Movido | `ui/roles/administrador/menu/editores/VariantEditor.tsx` |
+| 1 | `ui/bloques/menu/CategorySidebar.tsx` | Movido y renombrado a `BarraCategorias` | `ui/roles/administrador/menu/bloques/BarraCategorias.tsx` |
+| 2 | `ui/bloques/menu/ProductCard.tsx` | Movido y renombrado a `TarjetaProducto` | `ui/roles/administrador/menu/bloques/TarjetaProducto.tsx` |
+| 3 | `ui/bloques/menu/VariantChip.tsx` | Movido y renombrado a `FichaVariante` | `ui/roles/administrador/menu/bloques/FichaVariante.tsx` |
+| 4 | `ui/bloques/menu/CollapsibleSection.tsx` | Movido y renombrado a `SeccionDesplegable` | `ui/roles/administrador/menu/bloques/SeccionDesplegable.tsx` |
+| 5 | `ui/bloques/RecipeEditor.tsx` | Movido y renombrado a `EditorReceta` | `ui/roles/administrador/menu/editores/EditorReceta.tsx` |
+| 6 | `ui/bloques/VariantEditor.tsx` | Movido y renombrado a `EditorVariantes` | `ui/roles/administrador/menu/editores/EditorVariantes.tsx` |
 | 7 | `ui/index.ts` | Ajustado: retirados `RecipeEditor` y `VariantEditor` del barril | — |
+| 8 | `ui/roles/administrador/menu/AdminMenuScreen.tsx` | Renombrado a `PantallaMenuAdmin`; tipos a español (`PropsPantallaMenuAdmin`, `EtiquetasMenu`, `ETIQUETAS_MENU_POR_DEFECTO`) | `ui/roles/administrador/menu/PantallaMenuAdmin.tsx` |
+| 9 | `capacidades/menu/useMenuManagement.ts` | Renombrado a `useGestionMenu` | `capacidades/menu/useGestionMenu.ts` |
+| 10 | `composicion/registroPantallas.ts` | Actualizado a `PantallaMenuAdmin` (clave `admin_menu` intacta) | — |
 
 **Piezas compartidas observadas (no reorganizadas):** `VariantsModal`, `ProductPickerOverlay`
 (con Mesero), `menu.repo.ts` (persistencia), `menuSafety` (capacidades/menu).

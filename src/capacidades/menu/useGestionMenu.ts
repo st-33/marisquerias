@@ -10,12 +10,12 @@ import { RepositorioInventario } from '../../sistema/persistencia/contratos-inve
 import { useStore } from '../../sistema/store';
 import { validarProductoParaEliminar } from '../admin/menuSafety';
 
-type UseMenuManagementProps = {
+type PropsGestionMenu = {
   db: Database;
   tenantPath: string;
 };
 
-export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
+export function useGestionMenu({ db, tenantPath }: PropsGestionMenu) {
   const storeCategorias = useStore((s) => s.categorias);
   const storeProductos = useStore((s) => s.productos);
   const listenersActivos = useStore((s) => s.listenersActivos);
@@ -30,7 +30,7 @@ export function useMenuManagement({ db, tenantPath }: UseMenuManagementProps) {
     if (!tenantPath) return;
     menuRepo
       .repararIntegridad()
-      .catch((err) => console.error('[useMenuManagement] Self-healing failed:', err));
+      .catch((err) => console.error('[useGestionMenu] Self-healing failed:', err));
   }, [menuRepo, tenantPath]);
 
   // Acciones de categorías

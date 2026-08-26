@@ -1,1 +1,1 @@
-export * from './useMenuManagement';
+export * from './useGestionMenu';

@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '@compartido/theme';
 
-type VariantChipProps = {
+type FichaVarianteProps = {
   titulo: string;
   delta: number;
   onDelete: () => void;
@@ -15,13 +15,13 @@ type VariantChipProps = {
   color?: string;
 };
 
-export function VariantChip({
+export function FichaVariante({
   titulo,
   delta,
   onDelete,
   disabled = false,
   color,
-}: VariantChipProps) {
+}: FichaVarianteProps) {
   const chipColor = color || theme.colors.primary;
 
   return (

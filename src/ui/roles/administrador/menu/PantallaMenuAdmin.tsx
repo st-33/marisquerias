@@ -18,10 +18,10 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { CategorySidebar } from './bloques/CategorySidebar';
-import { ProductCard } from './bloques/ProductCard';
-import RecipeEditor from './editores/RecipeEditor';
-import VariantEditor from './editores/VariantEditor';
+import { BarraCategorias } from './bloques/BarraCategorias';
+import { TarjetaProducto } from './bloques/TarjetaProducto';
+import EditorReceta from './editores/EditorReceta';
+import EditorVariantes from './editores/EditorVariantes';
 import { useToast } from '../../../../compartido/componentes/ui/Toast';
 import { theme } from '../../../../compartido/theme';
 import type { Producto } from '../../../../sistema/persistencia';
@@ -30,7 +30,7 @@ import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../si
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 import {
   useAdminFeatures,
-  useMenuManagement,
+  useGestionMenu,
   usePuenteAccionesFlotantes,
 } from '../../../../capacidades';
 
@@ -122,7 +122,7 @@ const formStateToPayload = (form: FormState): ProductFormPayload => ({
   unidad: form.unidad,
 });
 
-export interface MenuLabels {
+export interface EtiquetasMenu {
   catalogTitle: string;
   catalogSubtitle: string;
   itemLabel: string;
@@ -136,7 +136,7 @@ export interface MenuLabels {
   showVentaCrudo?: boolean;
 }
 
-export const DEFAULT_MENU_LABELS: MenuLabels = {
+export const ETIQUETAS_MENU_POR_DEFECTO: EtiquetasMenu = {
   catalogTitle: 'Gestión de Catálogo / Menú',
   catalogSubtitle: 'Administra tus categorías, productos e insumos en tiempo real',
   itemLabel: 'Producto',
@@ -150,12 +150,12 @@ export const DEFAULT_MENU_LABELS: MenuLabels = {
   showVentaCrudo: true,
 };
 
-export interface AdminMenuScreenProps {
-  labels?: Partial<MenuLabels>;
+export interface PropsPantallaMenuAdmin {
+  labels?: Partial<EtiquetasMenu>;
 }
 
-export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
-  const l = useMemo(() => ({ ...DEFAULT_MENU_LABELS, ...labels }), [labels]);
+export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
+  const l = useMemo(() => ({ ...ETIQUETAS_MENU_POR_DEFECTO, ...labels }), [labels]);
   const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
@@ -169,7 +169,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
     getProductosPorCategoria,
     validacionActive,
     validandoActive,
-  } = useMenuManagement({
+  } = useGestionMenu({
     db,
     tenantPath,
   });
@@ -367,7 +367,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
       </View>
 
       <View style={[styles.mainGrid, IS_MOBILE && styles.mainGridMobile]}>
-        <CategorySidebar
+        <BarraCategorias
           categorias={categorias}
           activeId={activeCat}
           totals={totals}
@@ -419,7 +419,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   </View>
                 ) : (
                   currentProducts.map((prod) => (
-                    <ProductCard
+                    <TarjetaProducto
                       key={prod.id}
                       producto={prod}
                       onEdit={() => {
@@ -728,7 +728,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   )}
 
                   {editingTab === 'variantes' && (
-                    <VariantEditor
+                    <EditorVariantes
                       variantes={formData.variantes}
                       onChange={(newVariantes) =>
                         setFormData((current) => ({ ...current, variantes: newVariantes }))
@@ -746,7 +746,7 @@ export function AdminMenuScreen({ labels }: AdminMenuScreenProps = {}) {
                   )}
 
                   {editingTab === 'receta' && (
-                    <RecipeEditor
+                    <EditorReceta
                       receta={formData.receta}
                       onRecetaChange={(newReceta) => {
                         setFormData((current) => ({ ...current, receta: newReceta }));
@@ -1060,4 +1060,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminMenuScreen;
+export default PantallaMenuAdmin;

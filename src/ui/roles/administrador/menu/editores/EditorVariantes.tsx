@@ -17,10 +17,10 @@ import {
 } from 'react-native';
 import type { Producto, VariantGroup, VariantOption } from '../../../../../sistema/persistencia';
 import { theme } from '@compartido/theme';
-import { CollapsibleSection } from '../bloques/CollapsibleSection';
-import { VariantChip } from '../bloques/VariantChip';
+import { SeccionDesplegable } from '../bloques/SeccionDesplegable';
+import { FichaVariante } from '../bloques/FichaVariante';
 
-type VariantEditorProps = {
+type EditorVariantesProps = {
   variantes: Producto['variantes'];
   onChange: (variantes: Producto['variantes']) => void;
   visible?: Producto['visible'];
@@ -32,7 +32,7 @@ type VariantEditorProps = {
   showVentaCrudo?: boolean;
 };
 
-export default function VariantEditor({
+export default function EditorVariantes({
   variantes = {},
   onChange,
   visible = { digital: true, mesero: true },
@@ -42,7 +42,7 @@ export default function VariantEditor({
   receta = {},
   onRecetaChange,
   showVentaCrudo = true,
-}: VariantEditorProps) {
+}: EditorVariantesProps) {
   const [groupForm, setGroupForm] = useState<Partial<VariantGroup>>({});
   const [optionForm, setOptionForm] = useState<Partial<VariantOption>>({});
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
@@ -222,7 +222,7 @@ export default function VariantEditor({
       nestedScrollEnabled
     >
       {/* VISIBILIDAD */}
-      <CollapsibleSection
+      <SeccionDesplegable
         title="Visibilidad"
         icon={<Ionicons name="eye-outline" size={18} color={theme.colors.accent} />}
         defaultExpanded={true}
@@ -270,10 +270,10 @@ export default function VariantEditor({
             </Pressable>
           )}
         </View>
-      </CollapsibleSection>
+      </SeccionDesplegable>
 
       {/* PREP TIME */}
-      <CollapsibleSection
+      <SeccionDesplegable
         title="Tiempo de preparación"
         icon={<Ionicons name="time-outline" size={18} color={theme.colors.accent} />}
         badge={prepMin > 0 ? `${prepMin} min` : undefined}
@@ -286,7 +286,7 @@ export default function VariantEditor({
           placeholder="Minutos"
           placeholderTextColor="#6b7280"
         />
-      </CollapsibleSection>
+      </SeccionDesplegable>
 
       {/* GRUPOS DE VARIANTES */}
       <View style={styles.section}>
@@ -299,7 +299,7 @@ export default function VariantEditor({
         </View>
 
         {groupEntries.map(([key, group], index) => (
-          <CollapsibleSection
+          <SeccionDesplegable
             key={key}
             title={group.titulo}
             badge={Object.keys(group.opciones || {}).length}
@@ -457,7 +457,7 @@ export default function VariantEditor({
             <View style={styles.optionsContainer}>
               {Object.entries(group.opciones || {}).map(([oKey, opt]) => (
                 <View key={oKey} style={styles.optionRow}>
-                  <VariantChip
+                  <FichaVariante
                     titulo={opt.titulo}
                     delta={opt.delta ?? 0}
                     onDelete={() => deleteOption(key, oKey)}
@@ -496,7 +496,7 @@ export default function VariantEditor({
                 <Ionicons name="add" size={20} color="#fff" />
               </Pressable>
             </View>
-          </CollapsibleSection>
+          </SeccionDesplegable>
         ))}
 
         <View style={styles.addGroupForm}>

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '@compartido/theme';
 
-type CollapsibleSectionProps = {
+type SeccionDesplegableProps = {
   title: string;
   children: React.ReactNode;
   defaultExpanded?: boolean;
@@ -17,14 +17,14 @@ type CollapsibleSectionProps = {
   headerColor?: string;
 };
 
-export function CollapsibleSection({
+export function SeccionDesplegable({
   title,
   children,
   defaultExpanded = false,
   badge,
   icon,
   headerColor,
-}: CollapsibleSectionProps) {
+}: SeccionDesplegableProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [animation] = useState(new Animated.Value(defaultExpanded ? 1 : 0));
 

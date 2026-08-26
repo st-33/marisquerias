@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Producto } from '../../../../../sistema/persistencia';
 import { theme } from '@compartido/theme';
 
-type ProductCardProps = {
+type TarjetaProductoProps = {
   producto: Producto;
   onEdit: (producto: Producto) => void;
   onToggle: (producto: Producto) => void;
@@ -12,7 +12,7 @@ type ProductCardProps = {
   onDelete: (producto: Producto) => void;
 };
 
-export function ProductCard({ producto, onEdit, onToggle, onRecipe, onDelete }: ProductCardProps) {
+export function TarjetaProducto({ producto, onEdit, onToggle, onRecipe, onDelete }: TarjetaProductoProps) {
   const activo = producto.activo ?? true;
   const hasRecipe =
     producto.receta?.ingredientes && Object.keys(producto.receta.ingredientes).length > 0;

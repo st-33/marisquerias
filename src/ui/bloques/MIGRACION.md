@@ -8,12 +8,12 @@ Durante la desfragmentación del módulo Menú (rol Administrador), se reunieron
 
 | Origen | Transformación | Destino |
 |---|---|---|
-| `ui/bloques/menu/CategorySidebar.tsx` | Movido (sin renombrar aún) | `ui/roles/administrador/menu/bloques/CategorySidebar.tsx` |
-| `ui/bloques/menu/ProductCard.tsx` | Movido | `ui/roles/administrador/menu/bloques/ProductCard.tsx` |
-| `ui/bloques/menu/VariantChip.tsx` | Movido | `ui/roles/administrador/menu/bloques/VariantChip.tsx` |
-| `ui/bloques/menu/CollapsibleSection.tsx` | Movido | `ui/roles/administrador/menu/bloques/CollapsibleSection.tsx` |
-| `ui/bloques/RecipeEditor.tsx` | Movido | `ui/roles/administrador/menu/editores/RecipeEditor.tsx` |
-| `ui/bloques/VariantEditor.tsx` | Movido | `ui/roles/administrador/menu/editores/VariantEditor.tsx` |
+| `ui/bloques/menu/CategorySidebar.tsx` | Movido y renombrado a `BarraCategorias` | `ui/roles/administrador/menu/bloques/BarraCategorias.tsx` |
+| `ui/bloques/menu/ProductCard.tsx` | Movido y renombrado a `TarjetaProducto` | `ui/roles/administrador/menu/bloques/TarjetaProducto.tsx` |
+| `ui/bloques/menu/VariantChip.tsx` | Movido y renombrado a `FichaVariante` | `ui/roles/administrador/menu/bloques/FichaVariante.tsx` |
+| `ui/bloques/menu/CollapsibleSection.tsx` | Movido y renombrado a `SeccionDesplegable` | `ui/roles/administrador/menu/bloques/SeccionDesplegable.tsx` |
+| `ui/bloques/RecipeEditor.tsx` | Movido y renombrado a `EditorReceta` | `ui/roles/administrador/menu/editores/EditorReceta.tsx` |
+| `ui/bloques/VariantEditor.tsx` | Movido y renombrado a `EditorVariantes` | `ui/roles/administrador/menu/editores/EditorVariantes.tsx` |
 
 **Permanecen aquí (compartidas o pendientes):**
 

@@ -24,7 +24,7 @@ export type ItemInventario = {
   unidad: string;
 };
 
-type RecipeEditorProps = {
+type EditorRecetaProps = {
   receta: Producto['receta'];
   onRecetaChange: (receta: Producto['receta']) => void;
   itemsInventario: ItemInventario[]; // Items disponibles para seleccionar
@@ -39,14 +39,14 @@ type RecipeEditorProps = {
   productoNombre?: string; // Para mostrar en preview
 };
 
-export default function RecipeEditor({
+export default function EditorReceta({
   receta = {},
   onRecetaChange,
   itemsInventario,
   validacion,
   validando,
   productoNombre = 'Este producto',
-}: RecipeEditorProps) {
+}: EditorRecetaProps) {
   const [itemForm, setItemForm] = useState<{ itemId: string; cantidad: string }>({
     itemId: '',
     cantidad: '',
