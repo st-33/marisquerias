@@ -1,7 +1,9 @@
-# Instrucción de tarea — plantilla
+# Instrucción de tarea — plantilla (v2)
 
 > La escribe únicamente el orquestador en `M<n>/instruccion.md`. El agente no modifica
-> este archivo; sus respuestas van en `estado.md` e `informe.md`.
+> este archivo; sus respuestas van en `estado.md`, `informe.md` y `procesado.json`.
+> El orquestador publica: instrucción → commit → push; el libro `EVENTOS.json` se
+> actualiza solo (workflow) o con `node herramientas/orquestacion/generar_eventos.mjs`.
 
 ```markdown
 # Tarea <ID> — <título corto>
@@ -9,10 +11,12 @@
 | Campo | Valor |
 |---|---|
 | ID | `T-M<n>-<NN>` (ej. T-M2-01) |
+| VERSION | `1` (se incrementa si el orquestador revisa la instrucción) |
 | Sesión | `<fecha>_<slug>` |
 | Agente | M<n> |
 | Publicada | `YYYY-MM-DD HH:MM UTC` |
 | ESTADO | NUEVA |
+| SELLO | (lo calcula el orquestador con el generador; el agente no lo edita) |
 
 ## 1. Objetivo
 <Qué resultado concreto se espera, en una frase verificable.>

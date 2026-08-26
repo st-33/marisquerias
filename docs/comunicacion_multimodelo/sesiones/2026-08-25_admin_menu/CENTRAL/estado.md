@@ -2,8 +2,9 @@
 
 > Solo lo edita el orquestador. Refleja el estado verificado (no declarado) del sistema.
 
-**Fecha/hora:** 2026-08-25 23:59 UTC
+**Fecha/hora:** 2026-08-26 02:09 UTC
 **Estado de la sesión:** PENDIENTE DE AUTORIZACIÓN
+**Sistema:** v2 — detección por libro de eventos (`EVENTOS.json`); rama única `rama-2`.
 
 ## Tareas
 

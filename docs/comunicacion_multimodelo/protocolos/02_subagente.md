@@ -1,58 +1,76 @@
-# Protocolo 02 — Subagente (M1–M5)
+# Protocolo 02 — Subagente (M1–M5) · v2
 
-Norma común para todos los agentes externos. Cada agente la aplica dentro de su carpeta.
+Norma común para todos los agentes externos. Detección **por libro de eventos**, no por
+historial de git.
 
-## 1. Ciclo del agente
+## 1. Arranque y detección (mecánica exacta)
 
 ```text
-git pull (rama-2)
-→ LEE LEEME.md (sesión activa) y CENTRAL/estado.md
-→ LEE M<n>/instruccion.md
-→ ESCRIBE estado.md: RECIBIDA (fecha/hora UTC)
-→ EJECUTA su proceso (secciones 2–5)
-→ DOCUMENTA en M<n>/informe.md (plantilla) y actualiza estado.md: REPORTADA
-→ COMMIT + PUSH atómico de la unidad terminada (protocolo 03)
+1. git fetch && git checkout rama-2 && git pull
+2. LEER AGENTS.md y docs/comunicacion_multimodelo/MANIFIESTO.md (fuente única)
+3. LEER sesiones/<sesion_activa>/EVENTOS.json
+4. BUSCAR el primer evento INSTRUCCION_NUEVA con agente = M<n> cuyo sello
+   NO esté en M<n>/procesado.json
+5. ¿Existe? → leer M<n>/instruccion.md y continuar en 2.
+   ¿No existe? → estado.md: DISPONIBLE, sin trabajo nuevo. Fin de ejecución.
 ```
 
-Un agente sin `instruccion.md` o con la sesión no ACTIVA **no ejecuta trabajo**
-y lo registra en su `estado.md` (estado: SIN_ASIGNAR o SESION_NO_ACTIVA).
+- **Un commit no es una instrucción.** Solo un evento `INSTRUCCION_NUEVA` lo es.
+- **Destinatario:** el campo `agente` del evento (la carpeta propia). Sin ambigüedad.
+- **Nueva vs. ya procesada:** sello del evento vs. `procesado.json`.
+- **Nueva ejecución vs. continuar:** si `estado.md` muestra el mismo sello en
+  `RECIBIDA/TRABAJANDO/BLOQUEADA` → continuar esa tarea; en cualquier otro caso →
+  iniciar ejecución nueva.
+- **Ciclos:** el agente nunca escribe `instruccion.md` ni eventos; sus commits de
+  informe/estado no generan instrucciones nuevas.
 
-## 2. Límites de escritura
+## 2. Ejecución y entrega
+
+```text
+estado.md: RECIBIDA (hora UTC)
+→ EJECUTA solo esa tarea (secciones 3–5)
+→ escribe M<n>/informe.md (plantilla) y estado.md: REPORTADA
+→ agrega el sello a M<n>/procesado.json
+→ COMMIT atómico + PUSH (protocolo 03)
+→ queda DISPONIBLE; si hay otro evento pendiente para él, puede encadenarlo
+```
+
+El sistema global no se detiene por este ciclo: otros agentes continúan con lo suyo.
+
+## 3. Límites de escritura
 
 - **Zona propia:** `docs/comunicacion_multimodelo/sesiones/<sesion_activa>/M<n>/`.
-- **Código funcional:** solo los archivos autorizados explícitamente en
-  `instruccion.md` (campo `puede_modificar`). Todo lo demás es lectura.
+- **Código funcional:** solo los archivos listados en `puede_modificar` de su
+  instrucción. Todo lo demás es lectura.
 - **Prohibido siempre:** `CENTRAL/`, carpetas de otros agentes, `protocolos/`,
-  `plantillas/`, `LEEME.md`, y cualquier archivo fuera del alcance de la tarea.
-- Fuera del límite principal de la sesión: **lectura y observación**. Si la tarea
-  exige intervenir una pieza externa, el agente no lo hace: reporta la necesidad en
-  su informe con la evidencia y espera instrucción explícita.
+  `plantillas/`, `MANIFIESTO.md`, `LEEME.md`, `AGENTS.md`, `EVENTOS.json`.
+- Fuera del límite principal: **lectura y observación**; la intervención en pieza
+  externa se solicita en el informe y espera instrucción explícita.
 
-## 3. Reglas de evidencia
+## 4. Reglas de evidencia
 
-- Separar siempre **hecho** (con ruta y línea) de **hipótesis** (marcada como tal).
-- Un hallazgo sin evidencia localizable no se reporta como hecho.
-- Si la evidencia contradice la hipótesis de la tarea, se reporta la contradicción:
-  no se "ajusta" la evidencia para confirmar la instrucción.
+- Separar **hecho** (ruta:línea o commit) de **hipótesis** (marcada).
+- Si la evidencia contradice la instrucción, se reporta la contradicción: la evidencia
+  no se ajusta a la instrucción.
 
-## 4. Pieza ya movida o transformada
+## 5. Pieza ya movida o transformada
 
-1. Verificar el rastro: `git log --follow`, archivos `MIGRACION.md` locales y
+1. Verificar el rastro: `git log --follow`, `MIGRACION.md` locales,
    `docs/desfragmentaciones/`.
 2. Localizar el destino nuevo y confirmar qué parte de la tarea ya fue ejecutada.
 3. Ejecutar **solo la parte pendiente**; no repetir trabajo hecho.
 4. Registrar en el informe: origen anterior, destino encontrado, qué se omitió y por qué.
 
-## 5. Estados de tarea (vocabulario fijo)
+## 6. Estados (vocabulario fijo)
 
-`SIN_ASIGNAR` → `NUEVA` (orquestador) → `RECIBIDA` → `TRABAJANDO` → `REPORTADA` →
-`ABSORBIDA` | `RECHAZADA` | `CORREGIDA` (orquestador).
-Intermedios permitidos: `BLOQUEADA` (con motivo en `estado.md`) y `CANCELADA` (orquestador).
+- Tarea: `SIN_ASIGNAR → NUEVA → RECIBIDA → TRABAJANDO → REPORTADA →
+  ABSORBIDA | RECHAZADA | CORREGIDA` (+ `BLOQUEADA` con motivo, `CANCELADA`).
+- Agente sin tarea: `DISPONIBLE`.
+- `procesado.json` conserva la lista de sellos terminados (historial anti-duplicado).
 
-## 6. Informe y trazabilidad
+## 7. Informe y trazabilidad
 
-- El informe usa la plantilla `protocolos/plantillas/informe.md`.
-- Todo movimiento funcional autorizado deja huella: tabla de movimientos en el informe
-  y/o `MIGRACION.md` en la zona afectada, con origen, destino, por qué y cuándo (UTC).
-- No se generan documentos gigantes: densidad informativa, tablas, evidencia mínima
-  suficiente para que el orquestador verifique sin rehacer la tarea.
+- Informe con `protocolos/plantillas/informe.md`: hechos, hipótesis, movimientos
+  (con hora UTC), validaciones, bloqueos y propuestas.
+- Todo movimiento funcional autorizado deja huella (`MIGRACION.md` o registro
+  consolidado). Sin documentos gigantes ni comentarios ornamentales.

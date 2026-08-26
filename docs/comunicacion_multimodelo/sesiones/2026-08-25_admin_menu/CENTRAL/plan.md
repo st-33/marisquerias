@@ -48,4 +48,10 @@ contratos, movimientos reales, integración y decisión sobre piezas compartidas
 ## 4. Condición para activar
 
 Autorización explícita del usuario. Entonces: `CENTRAL/estado.md` pasa a ACTIVA y se
-publican instrucciones `NUEVA` por agente con la plantilla de tarea.
+publican instrucciones `NUEVA` por agente con la plantilla v2 (VERSION, SELLO).
+Cada publicación genera su evento en `EVENTOS.json` (workflow o generador local:
+`node herramientas/orquestacion/generar_eventos.mjs`). Los agentes detectan por el
+libro de eventos, nunca por historial de git.
+
+**Mecánica v2 vigente:** `MANIFIESTO.md` (fuente única), protocolos 01–03 v2,
+plantillas v2, sellos anti-duplicado en `procesado.json`.

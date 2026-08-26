@@ -1,56 +1,64 @@
-# Protocolo 03 — Git, commits y sincronización
+# Protocolo 03 — Git, commits y sincronización · v2
 
 ## 1. Rama única
 
-Toda la operación ocurre sobre `origin/rama-2`. No se crean ramas de agente sin
-autorización explícita del orquestador.
+Toda la operación ocurre sobre `origin/rama-2`. `main` es un espejo alineado: **nunca**
+es rama de trabajo ni de lectura para los agentes. Si un clon cae en `main`, el primer
+paso obligatorio es `git checkout rama-2` (AGENTS.md).
 
 ## 2. Unidad de commit
 
 **Commit frecuente, atómico y recuperable.** Un commit = una unidad operativa:
 
-- una instrucción publicada (orquestador);
-- una tarea documental terminada (agente);
-- un movimiento trazable con su huella;
-- una unidad mínima coherente de código autorizado;
-- una absorción/rechazo registrado en CENTRAL.
+- instrucción publicada (orquestador);
+- actualización del libro de eventos (workflow u orquestador);
+- tarea documental terminada (agente: informe + estado + procesado.json);
+- movimiento trazable con su huella;
+- unidad mínima coherente de código autorizado;
+- absorción/rechazo registrado en CENTRAL.
 
-No se hace commit por cada edición menor; no se acumulan tareas distintas en un solo
-commit. Antes de commitear, verificar con `git status` que solo se incluyen archivos
-de la unidad (nada de otros agentes ni cambios ajenos).
+Antes de commitear, `git status` debe mostrar **solo** archivos de la unidad.
 
 ## 3. Mensajes de commit
 
 - Orquestador — código: `feat|fix|refactor|test|chore(<area>): resumen`.
 - Orquestador — sistema/documentos: `docs(multimodelo): resumen`.
 - Agente — solo documentos propios: `docs(multimodelo/M<n>): resumen`.
-- Agente — código autorizado: `feat|fix|refactor(<area>): resumen` y el informe lo referencia.
+- Agente — código autorizado: `feat|fix|refactor(<area>): resumen` (referenciado en su informe).
+- Workflow: `docs(multimodelo): actualizar libro de eventos` (no re-dispara CI).
 
-## 4. Ciclo de sincronización
+## 4. Ciclo de sincronización y escucha
 
 ```text
-ORQUESTADOR: edita → commit atómico → git push origin rama-2 → sigue trabajando
-AGENTE:      git pull → ejecuta → commit atómico → git pull --rebase → git push
-ORQUESTADOR: git pull → inspecciona → absorbe/rechaza → commit → push
+ORQUESTADOR: edita → commit → push ──► workflow GitHub Actions (evento push rama-2)
+             └─ actualiza EVENTOS.json automáticamente (o en local con el generador)
+AGENTE:      pull → lee EVENTOS.json → decide NUEVA/CONTINUAR/NADA (protocolo 02)
+             → ejecuta → commit → pull --rebase → push
+ORQUESTADOR: pull → lee EVENTOS.json (INFORME_ENTREGADO) → verifica → absorbe/rechaza
+             → commit → push
 ```
 
-- El agente hace `git pull --rebase` **antes** de publicar. Si el rebase toca archivos
-  de otros agentes o de CENTRAL, no resuelve por su cuenta: restaura su estado, marca
-  `BLOQUEADA` en `estado.md` y reporta el conflicto en su informe.
-- El orquestador resuelve los conflictos entre agentes en el orden que decida y lo
-  registra en `CENTRAL/decisiones.md`.
+- **Detección orientada a eventos:** el disparador es el push a `rama-2` (GitHub
+  Actions), no un escaneo periódico del historial. El agente, al arrancar (manual o
+  programado en su plataforma), consulta un único archivo determinista: `EVENTOS.json`.
+- El agente hace `git pull --rebase` antes de publicar. Si el conflicto toca archivos
+  de otros agentes o de CENTRAL: no resuelve por su cuenta; marca `BLOQUEADA` y reporta.
 
-## 5. Concurrencia y colisiones
+## 5. Anti-ciclos y anti-duplicados
+
+- Los commits de informe/estado/código **no** generan `INSTRUCCION_NUEVA`: el libro
+  solo se alimenta de instrucciones NUEVA, informes y decisiones.
+- El commit del workflow usa GITHUB_TOKEN: GitHub **no** vuelve a disparar el workflow
+  con ese commit → sin bucles de CI. En local, el generador es idempotente: sin eventos
+  nuevos no escribe nada.
+- Un mismo sello se procesa una sola vez (procesado.json). Revisar una instrucción =
+  `VERSION+1` → sello nuevo → evento nuevo, sin ambigüedad con la versión anterior.
+
+## 6. Concurrencia
 
 - La separación de carpetas `M<n>/` elimina colisiones documentales por diseño.
 - En código, dos agentes no reciben tareas sobre el mismo conjunto de archivos.
-- Si aun así dos procesos llegan a la misma pieza: prevalece el rastro. El segundo
-  proceso verifica, localiza el destino nuevo y ejecuta solo lo pendiente
-  (protocolo 02, sección 4). La reconstrucción de una conexión antigua no se repite
-  "porque ya funcionaba antes".
-
-## 6. Estado remoto como verdad de comunicación
-
-La verdad operativa para los agentes es `origin/rama-2`. La verdad de verificación
-para el orquestador es su clon local tras `git pull`. Ningún agente declara un trabajo
-como terminado si su commit no está publicado en `origin/rama-2`.
+- Si dos procesos llegan a la misma pieza: prevalece el rastro (protocolo 02 §5).
+  El segundo verifica, localiza el destino y ejecuta solo lo pendiente.
+- La verdad operativa para los agentes es `origin/rama-2`; la de verificación del
+  orquestador es su clon local tras `git pull`.

@@ -1,7 +1,9 @@
 # Sistema de orquestación multimodelo — LEEME
 
 **Zona de comunicación:** `docs/comunicacion_multimodelo/`
-**Rama de trabajo única:** `rama-2` (repositorio `st-33/marisquerias`)
+**Fuente operativa única:** [`MANIFIESTO.md`](./MANIFIESTO.md) — rama, sesión activa,
+mecánica de detección y estados. Cualquier modelo lee el MANIFIESTO primero; este
+LEEME es solo el índice.
 
 ## Identidades
 
@@ -17,42 +19,45 @@ orquestador. Los resultados de M1–M5 son evidencia: se absorben, corrigen o re
 
 ```text
 docs/comunicacion_multimodelo/
-├── LEEME.md                ← este índice (solo lo edita el orquestador)
-├── protocolos/             ← normas estables del sistema (solo orquestador)
-│   ├── 01_orquestador.md   ← ciclo del orquestador y criterios de delegación
-│   ├── 02_subagente.md     ← ciclo, límites y reglas de conflicto de M1–M5
-│   ├── 03_git_y_commits.md ← unidades de commit y ciclo de sincronización
-│   └── plantillas/         ← formatos obligatorios de tarea, estado e informe
+├── LEEME.md                ← este índice (solo orquestador)
+├── MANIFIESTO.md           ← fuente operativa única (v2)
+├── protocolos/             ← normas estables (solo orquestador)
+│   ├── 01_orquestador.md   ← ciclo continuo y criterios de delegación
+│   ├── 02_subagente.md     ← detección por eventos, límites y conflictos
+│   ├── 03_git_y_commits.md ← commits, sincronización y anti-ciclos
+│   └── plantillas/         ← tarea v2 (SELLO), estado v2, informe v2
 └── sesiones/
-    └── <fecha>_<slug>/     ← una carpeta por intervención autorizada
+    └── <fecha>_<slug>/     ← una carpeta por intervención
+        ├── EVENTOS.json    ← libro de eventos (detección determinista)
         ├── CENTRAL/        ← plan, estado y decisiones (SOLO orquestador)
-        ├── M1/             ← carpeta exclusiva del agente M1
-        ├── M2/ … M5/       ← ídem
-        └── (sesiones históricas se conservan intactas)
+        ├── M1/ … M5/       ← carpeta exclusiva de cada agente
+        │   ├── instruccion.md   (orquestador)
+        │   ├── estado.md        (agente)
+        │   ├── informe.md       (agente)
+        │   └── procesado.json   (agente: sellos terminados)
+        └── (sesiones históricas: marcadas HISTORICO.md, no operativas)
 ```
 
-## Sesión activa
+## Detección de trabajo (resumen)
 
-La sesión vigente se declara aquí. Solo hay **una** sesión activa a la vez.
+1. El orquestador publica una instrucción → push a `rama-2`.
+2. El workflow de GitHub Actions (evento push) actualiza `EVENTOS.json`; en local
+   existe el mismo generador: `node herramientas/orquestacion/generar_eventos.mjs`.
+3. El agente, al arrancar, lee `EVENTOS.json` y determina de forma inequívoca:
+   nueva instrucción, tarea a continuar o sin trabajo (`DISPONIBLE`).
 
-**Sesión activa:** `2026-08-25_admin_menu` — **ESTADO: PENDIENTE DE AUTORIZACIÓN.**
-Ningún agente debe ejecutar tareas de esa sesión mientras el orquestador no la marque
-como ACTIVA en `CENTRAL/estado.md` y publique instrucciones `NUEVA`.
+Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` con el sello
+no procesado lo es. Sin polling de historial; sin ciclos (protocolo 03 §5).
 
-## Reglas mínimas (resumen)
+## Reglas mínimas
 
-1. Cada agente escribe **solo dentro de su carpeta** `M<n>/` de la sesión activa y en
-   los archivos funcionales que su tarea autorice explícitamente.
-2. `CENTRAL/`, `protocolos/`, `plantillas/` y carpetas de otros agentes son de solo lectura.
-3. Toda tarea tiene `instruccion.md` (orquestador), `estado.md` (agente) e `informe.md`
-   (agente) con las plantillas de `protocolos/plantillas/`.
-4. Antes de trabajar: `git pull`. Después: commit atómico de la unidad terminada y push.
-5. Todo movimiento funcional deja huella (archivo `MIGRACION.md` local o registro
-   consolidado en `docs/desfragmentaciones/`), nunca un comentario ornamental.
-6. Si una pieza ya fue movida por otro proceso: verificar el rastro, localizar el nuevo
-   destino y ejecutar solo la parte pendiente (protocolo 02).
-7. Un hallazgo externo no es verdad automática: el orquestador decide absorción,
+1. Cada agente escribe **solo** en su carpeta `M<n>/` y en el código que su tarea
+   autorice explícitamente.
+2. `CENTRAL/`, `protocolos/`, `plantillas/`, `MANIFIESTO.md`, `LEEME.md`, `EVENTOS.json`
+   y carpetas de otros agentes son de solo lectura.
+3. Todo movimiento funcional deja huella (`MIGRACION.md` local o registro consolidado
+   en `docs/desfragmentaciones/`), nunca un comentario ornamental.
+4. Si una pieza ya fue movida por otro proceso: rastro → destino → solo lo pendiente
+   (protocolo 02 §5).
+5. Un hallazgo externo no es verdad automática: el orquestador decide absorción,
    corrección o rechazo en `CENTRAL/decisiones.md`.
-
-Los protocolos completos: `protocolos/01_orquestador.md`, `protocolos/02_subagente.md`,
-`protocolos/03_git_y_commits.md`.

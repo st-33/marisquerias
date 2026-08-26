@@ -1,30 +1,47 @@
 # AGENTS.md — Reglas para agentes externos (M1–M5)
 
 **Repositorio:** `st-33/marisquerias` — ecosistema modular de negocio local (Expo/React Native + Firebase RTDB).
-**Rama de trabajo:** `rama-2`. No crear ramas sin autorización del orquestador.
+**Rama de trabajo:** `rama-2` únicamente. `main` es un espejo: **nunca** trabajes en `main`.
 
-## Antes de actuar (obligatorio)
+## Arranque (obligatorio, en este orden)
 
-1. `git pull` sobre `rama-2`.
-2. Leer `docs/comunicacion_multimodelo/LEEME.md` (sesión activa).
-3. Leer `docs/comunicacion_multimodelo/sesiones/<sesion_activa>/CENTRAL/estado.md`.
-4. Buscar tu instrucción en `docs/comunicacion_multimodelo/sesiones/<sesion_activa>/M<n>/instruccion.md`.
+```bash
+git fetch && git checkout rama-2 && git pull
+```
+
+1. Leer este archivo.
+2. Leer `docs/comunicacion_multimodelo/MANIFIESTO.md` — fuente operativa única
+   (rama, sesión activa, mecánica de detección, estados).
+3. Leer `docs/comunicacion_multimodelo/sesiones/<sesion_activa>/EVENTOS.json`
+   (el libro de eventos).
+4. Leer `docs/comunicacion_multimodelo/sesiones/<sesion_activa>/CENTRAL/estado.md`.
+5. Leer tu carpeta `M<n>/` (`instruccion.md`, `estado.md`, `procesado.json`).
+6. Aplicar `docs/comunicacion_multimodelo/protocolos/02_subagente.md`.
+
+> La documentación de sesiones históricas puede contener ramas y rutas antiguas:
+> **no es fuente operativa** (carpetas marcadas con `HISTORICO.md`).
+
+## Detección de trabajo (nunca por historial de git)
+
+Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
+`EVENTOS.json` dirigido a tu `agente` y con `sello` no presente en tu
+`procesado.json` significa trabajo nuevo. Sin evento pendiente → escribe
+`DISPONIBLE` en tu `estado.md` y termina.
 
 ## Reglas de escritura
 
 - Escribe **solo** en tu carpeta `M<n>/` de la sesión activa y en los archivos de código
   explícitamente autorizados en tu `instruccion.md`.
-- `CENTRAL/`, otras carpetas `M*`, `protocolos/`, `plantillas/`, `LEEME.md` y este archivo
-  son de solo lectura.
-- Si la sesión no está ACTIVA o no tienes instrucción `NUEVA`: no ejecutar trabajo.
-- Protocolos completos: `docs/comunicacion_multimodelo/protocolos/`.
+- `CENTRAL/`, otras carpetas `M*`, `protocolos/`, `plantillas/`, `MANIFIESTO.md`,
+  `LEEME.md`, `EVENTOS.json` y este archivo son de solo lectura.
+- Si la sesión no está ACTIVA: no ejecutar trabajo; registrar `DISPONIBLE`.
 
 ## Commits
 
 - Un commit por unidad terminada; mensaje `docs(multimodelo/M<n>): resumen` (documentos)
   o `feat|fix|refactor(<area>): resumen` (código autorizado).
-- `git pull --rebase` antes de publicar. Si el conflicto toca archivos de otros:
-  no resolver por tu cuenta; marca BLOQUEADA en tu `estado.md` y reporta.
+- `git pull --rebase` antes de publicar. Conflicto sobre archivos de otros → no
+  resolver por tu cuenta: `BLOQUEADA` en `estado.md` y reportar.
 
 ## Estándares del proyecto
 
@@ -32,5 +49,5 @@
   y convenciones técnicas obligatorias.
 - Todo movimiento funcional deja huella (`MIGRACION.md` local o registro en
   `docs/desfragmentaciones/`).
-- Verificación mínima antes de reportar: `npx tsc --noEmit`, pruebas (`npm test`) y lint
-  focal cuando la tarea toque código.
+- Verificación mínima antes de reportar: `npx tsc --noEmit`, `npm test` y lint focal
+  cuando la tarea toque código.
