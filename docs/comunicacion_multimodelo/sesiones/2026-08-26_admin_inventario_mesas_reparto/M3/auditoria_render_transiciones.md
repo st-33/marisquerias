@@ -90,3 +90,13 @@ No se debe declarar el frente visual como perfecto todavía. Antes del cierre de
 [12]: ../../../../../src/ui/bloques/FabRadial.tsx "FAB global"
 [13]: ../../../../../src/ui/roles/administrador/metricas/PantallaMetricasDatos.tsx "Navegación contextual del Administrador"
 [14]: ../../../../../app/_role/admin/devices.tsx "Pantalla inline de Dispositivos"
+
+## 7. Reauditoría sobre el estado remoto actual
+
+Se actualizó la información remota antes de revisar el resultado. En el momento de esta reauditoría, `origin/main` y `origin/rama-2` apuntan exactamente al mismo commit: `76a8341`. La comparación `git rev-list --left-right --count origin/main...origin/rama-2` devuelve `0 0`; por lo tanto, no hay divergencia ni versiones distintas entre las dos ramas remotas.
+
+La historia compartida contiene, después de la construcción de fase 4, los commits `f57b427`, `786965c`, `260ee9b` y `76a8341`. El primero actualiza el libro de eventos, el segundo corrige banderas de carga de Inventario, el tercero documenta la revisión de M4 y el cuarto contiene las correcciones visuales y la documentación de M3. No apareció un commit posterior oculto en `rama-2` durante la verificación.
+
+La comprobación repetida sobre ese mismo estado confirmó que TypeScript termina correctamente, las 19 suites y 102 pruebas pasan, y el export web genera 17 rutas. El lint focal de los archivos modificados pasa. El lint completo conserva un único error de formato fuera de este diff, en `src/ui/roles/administrador/inventario/PanelInventario/index.tsx:784`, además de advertencias no bloqueantes en otros archivos. No se modificó ese archivo porque no pertenece al frente visual de esta entrega.
+
+La comprobación web real mostró que `/access` renderiza correctamente la tarjeta de acceso y que `/_role/mesero` es redirigida a `/access` por el guardia cuando no existe sesión. La inspección runtime autenticada de Mesero, Cocina y Administrador queda pendiente de un código de acceso válido; no se usaron credenciales ni datos personales.
