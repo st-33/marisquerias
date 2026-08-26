@@ -1,6 +1,72 @@
 {
   "version": 1,
   "sesion": "2026-08-25_admin_menu",
-  "actualizado": null,
-  "activaciones": []
+  "actualizado": "2026-08-26T05:15:12.427Z",
+  "activaciones": [
+    {
+      "clave": "M1|T-M1-01|2997d48618b49f08df771bc041dc5aacd299e927193ab1070b24b56b59bd66aa",
+      "agente": "M1",
+      "tarea": "T-M1-01",
+      "sello": "2997d48618b49f08df771bc041dc5aacd299e927193ab1070b24b56b59bd66aa",
+      "evento_id": "ev-0001",
+      "commit_origen": "3b94134",
+      "task_id": "6EYmBTbzywx47EveFWPifu",
+      "task_url": null,
+      "request_id": null,
+      "estado": "ENVIADA",
+      "enviado_at": "2026-08-26T05:15:11.975Z"
+    },
+    {
+      "clave": "M2|T-M2-01|9723c59629c8fa9f359a8f44715b4a2820bb297405e23381c6907cb125ca3fa5",
+      "agente": "M2",
+      "tarea": "T-M2-01",
+      "sello": "9723c59629c8fa9f359a8f44715b4a2820bb297405e23381c6907cb125ca3fa5",
+      "evento_id": "ev-0002",
+      "commit_origen": "3b94134",
+      "task_id": "fMqthMhp82t3PRwxqFSskM",
+      "task_url": null,
+      "request_id": null,
+      "estado": "ENVIADA",
+      "enviado_at": "2026-08-26T05:15:12.105Z"
+    },
+    {
+      "clave": "M3|T-M3-01|198230cf32f148610bec4cb8b075ae5da73a14d68f71afae1a01bd0da8c3b6db",
+      "agente": "M3",
+      "tarea": "T-M3-01",
+      "sello": "198230cf32f148610bec4cb8b075ae5da73a14d68f71afae1a01bd0da8c3b6db",
+      "evento_id": "ev-0003",
+      "commit_origen": "3b94134",
+      "task_id": "WXS2eYCtKhZC8rdC6yu4Ky",
+      "task_url": null,
+      "request_id": null,
+      "estado": "ENVIADA",
+      "enviado_at": "2026-08-26T05:15:12.218Z"
+    },
+    {
+      "clave": "M4|T-M4-01|99c58af8d7026846312430f01fd9e4b8020b248391243d2a09dacaa298e7865e",
+      "agente": "M4",
+      "tarea": "T-M4-01",
+      "sello": "99c58af8d7026846312430f01fd9e4b8020b248391243d2a09dacaa298e7865e",
+      "evento_id": "ev-0004",
+      "commit_origen": "3b94134",
+      "task_id": "J8ZKVN9g9zHGetHKXzUnZu",
+      "task_url": null,
+      "request_id": null,
+      "estado": "ENVIADA",
+      "enviado_at": "2026-08-26T05:15:12.325Z"
+    },
+    {
+      "clave": "M5|T-M5-01|a954620e1d200728c89c95440c6e5ec87cd56b7cafccc51f5a00b35fd3838a24",
+      "agente": "M5",
+      "tarea": "T-M5-01",
+      "sello": "a954620e1d200728c89c95440c6e5ec87cd56b7cafccc51f5a00b35fd3838a24",
+      "evento_id": "ev-0005",
+      "commit_origen": "3b94134",
+      "task_id": "5gnGX5Fhw22HoKu3k8wrHS",
+      "task_url": null,
+      "request_id": null,
+      "estado": "ENVIADA",
+      "enviado_at": "2026-08-26T05:15:12.426Z"
+    }
+  ]
 }
