@@ -21,9 +21,9 @@
 
 | Variable | Valor |
 |---|---|
-| Sesión activa | `2026-08-25_admin_menu` |
-| Carpeta | `docs/comunicacion_multimodelo/sesiones/2026-08-25_admin_menu/` |
-| Estado | ACTIVA — fase de descubrimiento (5 instrucciones publicadas) |
+| Sesión activa | `2026-08-26_admin_inventario_mesas_reparto` |
+| Carpeta | `docs/comunicacion_multimodelo/sesiones/2026-08-26_admin_inventario_mesas_reparto/` |
+| Estado | ACTIVA — fases 1–3 delegadas (5 instrucciones publicadas); fase 4 reservada |
 
 Solo existe **una** sesión activa; se declara aquí y en `CENTRAL/estado.md`.
 

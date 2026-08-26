@@ -1,0 +1,52 @@
+{
+  "sesion": "2026-08-26_admin_inventario_mesas_reparto",
+  "rama": "rama-2",
+  "actualizado": "2026-08-26T06:33:29.741Z",
+  "eventos": [
+    {
+      "id": "ev-0001",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M1",
+      "tarea": "T-M1-01",
+      "sello": "e7762ebfae22938c068b8dd6baf0211d561287c1610d841569e20e95a91ed4af",
+      "commit": "fbeede6",
+      "fecha": "2026-08-26T06:33:29.741Z"
+    },
+    {
+      "id": "ev-0002",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M2",
+      "tarea": "T-M2-01",
+      "sello": "b1cd6c48b14d8597c7af7ee6e7fd80e4715c9016db72f4aeccd4e3918ee04573",
+      "commit": "fbeede6",
+      "fecha": "2026-08-26T06:33:29.741Z"
+    },
+    {
+      "id": "ev-0003",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M3",
+      "tarea": "T-M3-01",
+      "sello": "43d7c3471afb75afce82c48e324f66201ccbee3b94928c35fa6b9638e63e739e",
+      "commit": "fbeede6",
+      "fecha": "2026-08-26T06:33:29.741Z"
+    },
+    {
+      "id": "ev-0004",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M4",
+      "tarea": "T-M4-01",
+      "sello": "348c768224c9c8198f2d35f98d63db777854a97773afdcbe44e0b926fe622022",
+      "commit": "fbeede6",
+      "fecha": "2026-08-26T06:33:29.741Z"
+    },
+    {
+      "id": "ev-0005",
+      "tipo": "INSTRUCCION_NUEVA",
+      "agente": "M5",
+      "tarea": "T-M5-01",
+      "sello": "28db862d4683e4f27c76ed7ba644283592299f0f534b7dca78430c93aa248013",
+      "commit": "fbeede6",
+      "fecha": "2026-08-26T06:33:29.741Z"
+    }
+  ]
+}
