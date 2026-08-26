@@ -4,4 +4,4 @@
 
 | Fecha/hora UTC | Tarea | Estado | Último commit | Notas / bloqueo |
 |---|---|---|---|---|
-| 2026-08-26 05:29:48 UTC | T-M1-01 | REPORTADA | commit atómico de entrega pendiente | Inventario completado; informe escrito; solo lectura; pendiente publicar y registrar sello |
+| 2026-08-26 05:31:34 UTC | T-M1-01 | REPORTADA → DISPONIBLE | `f9c1391` | Inventario publicado; sello registrado; sin otra instrucción pendiente |
