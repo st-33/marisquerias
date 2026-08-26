@@ -59,45 +59,61 @@
 | 12 | `ui/bloques/productos/MallaProductos.tsx` + test | **Eliminado** (sustituido; sin consumidores) | — |
 | 13 | `ui/primitivos/productos/*` (TarjetaBase, ControlCantidad, EtiquetaPrecio, InsigniaEstado) + test | **Eliminado** (sin consumidores) | — |
 | 14 | `capacidades/admin/useAdminTools.ts` | **Eliminado** (sin consumidores; reparación obsoleta) | — |
+| 15 | `PantallaMenuAdmin` — lista de productos inline | Extraída a `ListaProductos` | `componentes/ListaProductos.tsx` |
+| 16 | `PantallaMenuAdmin` — modal de categoría inline | Extraído a `ModalNuevaCategoria` | `componentes/ModalNuevaCategoria.tsx` |
+| 17 | `PantallaMenuAdmin` — modal de producto inline (3 pestañas) | Extraído a `ModalProducto` | `componentes/ModalProducto.tsx` |
+| 18 | `PantallaMenuAdmin` — tipos/helpers de formulario | Extraídos a lógica pura | `logica/formularioProducto.ts` |
+| 19 | `PantallaMenuAdmin` — etiquetas configurables | Extraídas | `logica/etiquetas.ts` |
 
 **Piezas compartidas observadas (no reorganizadas):** `VariantsModal`, `ProductPickerOverlay`
 (con Mesero), `menu.repo.ts` (persistencia), `menuSafety` (capacidades/menu).
 
 ---
 
-## 3. Estructura resultante (en construcción)
+## 3. Estructura resultante
 
 ```text
 src/ui/roles/administrador/menu/
-    AdminMenuScreen.tsx        ← será renombrada/desfragmentada
-    bloques/                    ← reunidas desde ui/bloques/menu
-        CategorySidebar.tsx
-        CollapsibleSection.tsx
-        ProductCard.tsx
-        VariantChip.tsx
-    editores/                   ← reunidas desde ui/bloques
-        RecipeEditor.tsx
-        VariantEditor.tsx
+    PantallaMenuAdmin.tsx            ← composición (antes AdminMenuScreen, 1063→~340 líneas)
+    bloques/                         ← reunidas desde ui/bloques/menu
+        BarraCategorias.tsx          (← CategorySidebar)
+        TarjetaProducto.tsx          (← ProductCard)
+        FichaVariante.tsx            (← VariantChip)
+        SeccionDesplegable.tsx       (← CollapsibleSection)
+    componentes/                     ← extraídas de la pantalla
+        ListaProductos.tsx
+        ModalNuevaCategoria.tsx
+        ModalProducto.tsx            (pestañas Básico/Variantes/Receta)
+    editores/                        ← reunidas desde ui/bloques
+        EditorReceta.tsx             (← RecipeEditor)
+        EditorVariantes.tsx          (← VariantEditor)
+    logica/                          ← lógica pura extraída de la pantalla
+        formularioProducto.ts        (FormState, mappers)
+        etiquetas.ts                 (EtiquetasMenu)
 
 src/capacidades/menu/
-    useMenuManagement.ts        ← será renombrada a español
+    useGestionMenu.ts                (← useMenuManagement)
     index.ts
 ```
 
 ## 4. Relaciones reconstruidas
 
-- `AdminMenuScreen` importa desde `./bloques/*` y `./editores/*` (interno del módulo).
-- `VariantEditor` importa `../bloques/CollapsibleSection` y `../bloques/VariantChip`.
+- `PantallaMenuAdmin` compone: `bloques/*` + `componentes/*` + `editores/*` + `logica/*`.
+- `EditorVariantes` usa `../bloques/SeccionDesplegable` y `../bloques/FichaVariante`.
+- `ModalProducto` delega en `EditorVariantes` y `EditorReceta`.
+- `ListaProductos` delega en `TarjetaProducto`.
 - `ui/index.ts` ya no exporta editores exclusivos del módulo.
+- Piezas compartidas con Mesero (`VariantsModal`, `ProductPickerOverlay`, `menu.repo.ts`,
+  `menuSafety`) permanecen fuera del módulo; relación documentada, no apropiada.
 
 ## 5. Pendientes
 
 - Absorber informes de M1–M5 (consumidores, comparación histórica, duplicación/contratos,
-  huérfanos, línea base).
-- Decidir eliminación de huérfanos confirmados.
-- Renombrar a español y desfragmentar `AdminMenuScreen`.
-- Documentar relación con piezas compartidas (Mesero).
+  línea base). Los huérfanos ya se eliminaron con evidencia propia (ítems 11–14).
+- Documentar relación con piezas compartidas (Mesero) cuando llegue M1.
 
 ## 6. Evidencia de verificación
 
-- `npx tsc --noEmit` → 0 errores tras los movimientos.
+- `npx tsc --noEmit` → 0 errores.
+- `npm test` → 19 suites, 102 pruebas verdes.
+- `eslint` sobre el módulo → 0 errores (1 warning preexistente de exhaustive-deps).
