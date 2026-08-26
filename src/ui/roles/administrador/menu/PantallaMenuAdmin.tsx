@@ -1,6 +1,15 @@
 /**
- * 📋 ADMIN MENU SCREEN (Gestión de Menú Premium)
- * Componente visual para alimentos y bebidas
+ * 📋 MENÚ (rol Administrador) — pantalla de gestión de catálogo.
+ *
+ * Composición:
+ *  - Datos/acciones: useGestionMenu + useAdminFeatures + store.
+ *  - Piezas visuales: bloques/ (BarraCategorias), componentes/ (ListaProductos,
+ *    ModalNuevaCategoria, ModalProducto), editores/ (EditorReceta, EditorVariantes).
+ *  - Lógica pura: logica/ (formularioProducto, etiquetas).
+ *
+ * Historial: antes `AdminMenuScreen.tsx` (1063 líneas con formularios y modales
+ * inline); se extrajeron ListaProductos, ModalNuevaCategoria, ModalProducto y la
+ * lógica del formulario.
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -9,21 +18,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
-  Switch,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { BarraCategorias } from './bloques/BarraCategorias';
-import { TarjetaProducto } from './bloques/TarjetaProducto';
-import EditorReceta from './editores/EditorReceta';
-import EditorVariantes from './editores/EditorVariantes';
 import { useToast } from '../../../../compartido/componentes/ui/Toast';
-import { theme } from '../../../../compartido/theme';
+import { theme } from '@compartido/theme';
 import type { Producto } from '../../../../sistema/persistencia';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
@@ -33,6 +35,20 @@ import {
   useGestionMenu,
   usePuenteAccionesFlotantes,
 } from '../../../../capacidades';
+import { ListaProductos } from './componentes/ListaProductos';
+import { ModalNuevaCategoria } from './componentes/ModalNuevaCategoria';
+import { ModalProducto, type PestanaProducto } from './componentes/ModalProducto';
+import {
+  crearFormularioVacio,
+  formularioACarga,
+  productoAFormulario,
+  type FormState,
+  type ModalType,
+} from './logica/formularioProducto';
+import { ETIQUETAS_MENU_POR_DEFECTO, type EtiquetasMenu } from './logica/etiquetas';
+
+export type { EtiquetasMenu };
+export { ETIQUETAS_MENU_POR_DEFECTO };
 
 // --- UTILS ---
 async function confirmAction(
@@ -51,104 +67,6 @@ async function confirmAction(
     ]);
   }
 }
-
-type ModalType = 'addCat' | 'addProd' | 'editProd' | null;
-
-type FormState = {
-  id: string;
-  activo: boolean;
-  nombre: string;
-  precio: string;
-  categoriaId: string;
-  variantes: Producto['variantes'];
-  visible: Producto['visible'];
-  prepMin: number;
-  receta: Producto['receta'];
-  usarConfigPersonalizada: boolean;
-  enviarACocina: boolean;
-  saltarPreparando: boolean;
-  unidad: 'pza' | 'kg';
-};
-
-const createEmptyForm = (): FormState => ({
-  id: '',
-  activo: true,
-  nombre: '',
-  precio: '',
-  categoriaId: '',
-  variantes: {} as Producto['variantes'],
-  visible: { digital: true, mesero: true, ventaCrudo: true } as Producto['visible'],
-  prepMin: 0,
-  receta: {} as Producto['receta'],
-  usarConfigPersonalizada: false,
-  enviarACocina: true,
-  saltarPreparando: false,
-  unidad: 'pza',
-});
-
-type ProductFormPayload = Omit<FormState, 'id' | 'activo' | 'categoriaId'>;
-
-const productoToFormState = (producto: Producto): FormState => ({
-  id: producto.id,
-  activo: producto.activo ?? true,
-  nombre: producto.nombre,
-  precio: producto.precio != null ? String(producto.precio) : '',
-  categoriaId: producto.categoriaId,
-  variantes: producto.variantes || {},
-  visible: {
-    digital: true,
-    mesero: true,
-    ventaCrudo: true,
-    ...(producto.visible || {}),
-  } as Producto['visible'],
-  prepMin: producto.prepMin || 0,
-  receta: producto.receta || {},
-  usarConfigPersonalizada: producto.usarConfigPersonalizada || false,
-  enviarACocina: producto.enviarACocina ?? true,
-  saltarPreparando: producto.saltarPreparando ?? false,
-  unidad: (producto.unidad as FormState['unidad']) || 'pza',
-});
-
-const formStateToPayload = (form: FormState): ProductFormPayload => ({
-  nombre: form.nombre,
-  precio: form.precio,
-  variantes: form.variantes,
-  visible: { ...form.visible },
-  prepMin: form.prepMin,
-  receta: form.receta,
-  usarConfigPersonalizada: form.usarConfigPersonalizada,
-  enviarACocina: form.enviarACocina,
-  saltarPreparando: form.saltarPreparando,
-  unidad: form.unidad,
-});
-
-export interface EtiquetasMenu {
-  catalogTitle: string;
-  catalogSubtitle: string;
-  itemLabel: string;
-  itemsPluralLabel: string;
-  categoryLabel: string;
-  recipeTab: string;
-  preparationFlow: string;
-  sendToPreparation: string;
-  sellerVisibility: string;
-  sellerSubtext: string;
-  showVentaCrudo?: boolean;
-}
-
-export const ETIQUETAS_MENU_POR_DEFECTO: EtiquetasMenu = {
-  catalogTitle: 'Gestión de Catálogo / Menú',
-  catalogSubtitle: 'Administra tus categorías, productos e insumos en tiempo real',
-  itemLabel: 'Producto',
-  itemsPluralLabel: 'productos',
-  categoryLabel: 'Categoría',
-  recipeTab: 'Receta / Insumos',
-  preparationFlow: 'Flujo de Despacho / Preparación',
-  sendToPreparation: 'Enviar a Despacho / Cocina',
-  sellerVisibility: 'Visible para Operadores',
-  sellerSubtext: 'Aparece en la app de atención y ventas',
-  showVentaCrudo: true,
-};
 
 export interface PropsPantallaMenuAdmin {
   labels?: Partial<EtiquetasMenu>;
@@ -169,10 +87,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     getProductosPorCategoria,
     validacionActive,
     validandoActive,
-  } = useGestionMenu({
-    db,
-    tenantPath,
-  });
+  } = useGestionMenu({ db, tenantPath });
   const catalog = useInventoryCatalog();
   const areas = useInventoryAreas();
 
@@ -200,8 +115,9 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<ModalType>(null);
   const [catNombre, setCatNombre] = useState('');
-  const [formData, setFormData] = useState<FormState>(createEmptyForm());
-  const [editingTab, setEditingTab] = useState<'basico' | 'variantes' | 'receta'>('basico');
+  const [formData, setFormData] = useState<FormState>(crearFormularioVacio());
+  const [editingTab, setEditingTab] = useState<PestanaProducto>('basico');
+  const [isSaving, setIsSaving] = useState(false);
   const { isEnabled: featureEnabled } = useAdminFeatures();
 
   const activeCat = useMemo(() => {
@@ -222,7 +138,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
             showToast('Selecciona una categoría primero', 'error');
             return;
           }
-          setFormData({ ...createEmptyForm(), categoriaId: activeCat });
+          setFormData({ ...crearFormularioVacio(), categoriaId: activeCat });
           actions.setRecetaEnEdicion(null);
           setEditingTab('basico');
           setShowModal('addProd');
@@ -266,24 +182,19 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     }
   };
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleSaveProduct = async () => {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const payload = formStateToPayload(formData);
+      const payload = formularioACarga(formData);
       if (showModal === 'addProd') {
-        await actions.crearProductoConValidacion({
-          ...payload,
-          categoriaId: formData.categoriaId,
-        });
+        await actions.crearProductoConValidacion({ ...payload, categoriaId: formData.categoriaId });
         showToast('Producto creado', 'success');
       } else {
         await actions.actualizarProductoConValidacion(formData.id, payload);
         showToast('Producto actualizado', 'success');
       }
-      setFormData(createEmptyForm());
+      setFormData(crearFormularioVacio());
       actions.setRecetaEnEdicion(null);
       setShowModal(null);
     } catch (err: any) {
@@ -356,6 +267,14 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     );
   }
 
+  const abrirEdicion = (prod: Producto, pestana: PestanaProducto) => {
+    const nextForm = productoAFormulario(prod);
+    setFormData(nextForm);
+    actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
+    setEditingTab(pestana);
+    setShowModal('editProd');
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
@@ -384,78 +303,28 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
         />
 
         <View style={styles.productsSection}>
-          {activeCategoryObj ? (
-            <>
-              <View style={styles.categoryHeader}>
-                <View>
-                  <Text style={styles.categoryTitle}>{activeCategoryObj.nombre}</Text>
-                  <Text style={styles.productCount}>
-                    {currentProducts.length}{' '}
-                    {currentProducts.length === 1 ? 'producto' : 'productos'}
-                  </Text>
-                </View>
-                <Pressable
-                  style={styles.btnPrimary}
-                  onPress={() => {
-                    setFormData({ ...createEmptyForm(), categoriaId: activeCategoryObj.id });
-                    actions.setRecetaEnEdicion(null);
-                    setEditingTab('basico');
-                    setShowModal('addProd');
-                  }}
-                >
-                  <Ionicons name="add" size={20} color="white" />
-                  <Text style={styles.btnPrimaryText}>Agregar Producto</Text>
-                </Pressable>
-              </View>
-
-              <ScrollView contentContainerStyle={styles.productsGrid}>
-                {currentProducts.length === 0 ? (
-                  <View style={styles.emptyProducts}>
-                    <Ionicons name="cube-outline" size={48} color="#64748b" />
-                    <Text style={styles.emptyTitle}>Sin productos en esta categoría</Text>
-                    <Text style={styles.emptySubtitle}>
-                      Presiona &quot;Agregar Producto&quot; para comenzar
-                    </Text>
-                  </View>
-                ) : (
-                  currentProducts.map((prod) => (
-                    <TarjetaProducto
-                      key={prod.id}
-                      producto={prod}
-                      onEdit={() => {
-                        const nextForm = productoToFormState(prod);
-                        setFormData(nextForm);
-                        actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
-                        setEditingTab('basico');
-                        setShowModal('editProd');
-                      }}
-                      onToggle={async (p) => {
-                        try {
-                          await actions.actualizarProducto(p.id, { activo: !(p.activo ?? true) });
-                          showToast('Estado del producto actualizado', 'success');
-                        } catch (err: any) {
-                          showToast(err?.message || 'Error al actualizar', 'error');
-                        }
-                      }}
-                      onRecipe={() => {
-                        const nextForm = productoToFormState(prod);
-                        setFormData(nextForm);
-                        actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
-                        setEditingTab('receta');
-                        setShowModal('editProd');
-                      }}
-                      onDelete={() => handleDeleteProduct(prod.id, prod.nombre)}
-                    />
-                  ))
-                )}
-              </ScrollView>
-            </>
-          ) : (
-            <View style={styles.emptyProducts}>
-              <Ionicons name="folder-open-outline" size={48} color="#64748b" />
-              <Text style={styles.emptyTitle}>Selecciona o crea una categoría</Text>
-            </View>
-          )}
+          <ListaProductos
+            categoriaNombre={activeCategoryObj?.nombre}
+            productos={currentProducts}
+            onAgregarProducto={() => {
+              if (!activeCat) return;
+              setFormData({ ...crearFormularioVacio(), categoriaId: activeCat });
+              actions.setRecetaEnEdicion(null);
+              setEditingTab('basico');
+              setShowModal('addProd');
+            }}
+            onEditar={(prod) => abrirEdicion(prod, 'basico')}
+            onToggle={async (prod) => {
+              try {
+                await actions.actualizarProducto(prod.id, { activo: !(prod.activo ?? true) });
+                showToast('Estado del producto actualizado', 'success');
+              } catch (err: any) {
+                showToast(err?.message || 'Error al actualizar', 'error');
+              }
+            }}
+            onReceta={(prod) => abrirEdicion(prod, 'receta')}
+            onEliminar={(prod) => handleDeleteProduct(prod.id, prod.nombre)}
+          />
         </View>
       </View>
 
@@ -465,321 +334,30 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
         >
-          <View style={[styles.modalCard, showModal !== 'addCat' && styles.modalCardLarge]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {showModal === 'addCat'
-                  ? 'Nueva Categoría'
-                  : showModal === 'addProd'
-                    ? 'Nuevo Producto'
-                    : 'Editar Producto'}
-              </Text>
-              <Pressable onPress={() => setShowModal(null)}>
-                <Ionicons name="close" size={24} color="#94a3b8" />
-              </Pressable>
-            </View>
-
-            {showModal === 'addCat' ? (
-              <View style={styles.modalBody}>
-                <Text style={styles.inputLabel}>Nombre de la Categoría</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={catNombre}
-                  onChangeText={setCatNombre}
-                  placeholder="Ej: Entradas, Bebidas, Postres"
-                  placeholderTextColor="#64748b"
-                  autoFocus
-                />
-                <View style={styles.modalFooter}>
-                  <Pressable style={styles.btnSecondary} onPress={() => setShowModal(null)}>
-                    <Text style={styles.btnSecondaryText}>Cancelar</Text>
-                  </Pressable>
-                  <Pressable style={styles.btnPrimary} onPress={handleAddCategory}>
-                    <Text style={styles.btnPrimaryText}>Crear Categoría</Text>
-                  </Pressable>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.modalBody}>
-                <View style={styles.tabsRow}>
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'basico' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('basico')}
-                  >
-                    <Ionicons
-                      name="information-circle-outline"
-                      size={18}
-                      color={editingTab === 'basico' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text style={[styles.tabText, editingTab === 'basico' && styles.tabTextActive]}>
-                      Básico
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'variantes' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('variantes')}
-                  >
-                    <Ionicons
-                      name="options-outline"
-                      size={18}
-                      color={editingTab === 'variantes' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text
-                      style={[styles.tabText, editingTab === 'variantes' && styles.tabTextActive]}
-                    >
-                      Variantes/Opciones
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.tabBtn, editingTab === 'receta' && styles.tabBtnActive]}
-                    onPress={() => setEditingTab('receta')}
-                  >
-                    <Ionicons
-                      name="restaurant-outline"
-                      size={18}
-                      color={editingTab === 'receta' ? theme.colors.primary : '#94a3b8'}
-                    />
-                    <Text style={[styles.tabText, editingTab === 'receta' && styles.tabTextActive]}>
-                      {l.recipeTab}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                <ScrollView
-                  style={styles.modalFormScroll}
-                  contentContainerStyle={styles.modalFormContent}
-                  keyboardShouldPersistTaps="handled"
-                  nestedScrollEnabled
-                  showsVerticalScrollIndicator
-                >
-                  {editingTab === 'basico' && (
-                    <View style={styles.formSection}>
-                      <Text style={styles.inputLabel}>Nombre del Producto *</Text>
-                      <TextInput
-                        style={styles.textInput}
-                        value={formData.nombre}
-                        onChangeText={(v) => setFormData({ ...formData, nombre: v })}
-                        placeholder="Ej: Producto Base"
-                        placeholderTextColor="#64748b"
-                      />
-
-                      <View style={styles.inputRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Precio Base ($) *</Text>
-                          <TextInput
-                            style={styles.textInput}
-                            value={formData.precio}
-                            onChangeText={(v) => setFormData({ ...formData, precio: v })}
-                            placeholder="0.00"
-                            placeholderTextColor="#64748b"
-                            keyboardType="decimal-pad"
-                          />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Tiempo Prep. (min)</Text>
-                          <TextInput
-                            style={styles.textInput}
-                            value={String(formData.prepMin || '')}
-                            onChangeText={(v) =>
-                              setFormData({ ...formData, prepMin: parseInt(v) || 0 })
-                            }
-                            placeholder="Ej: 15"
-                            placeholderTextColor="#64748b"
-                            keyboardType="number-pad"
-                          />
-                        </View>
-                      </View>
-
-                      <View style={styles.inputRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Unidad de Venta *</Text>
-                          <View style={styles.unitContainer}>
-                            <Pressable
-                              style={[
-                                styles.unitBtn,
-                                formData.unidad === 'pza' && styles.unitBtnActive,
-                              ]}
-                              onPress={() => setFormData({ ...formData, unidad: 'pza' })}
-                            >
-                              <Ionicons
-                                name="shapes-outline"
-                                size={18}
-                                color={formData.unidad === 'pza' ? 'white' : '#64748b'}
-                              />
-                              <Text
-                                style={[
-                                  styles.unitText,
-                                  formData.unidad === 'pza' && styles.unitTextActive,
-                                ]}
-                              >
-                                Por Pieza (Pza)
-                              </Text>
-                            </Pressable>
-                            <Pressable
-                              style={[
-                                styles.unitBtn,
-                                formData.unidad === 'kg' && styles.unitBtnActive,
-                              ]}
-                              onPress={() => setFormData({ ...formData, unidad: 'kg' })}
-                            >
-                              <Ionicons
-                                name="scale-outline"
-                                size={18}
-                                color={formData.unidad === 'kg' ? 'white' : '#64748b'}
-                              />
-                              <Text
-                                style={[
-                                  styles.unitText,
-                                  formData.unidad === 'kg' && styles.unitTextActive,
-                                ]}
-                              >
-                                Por Peso (Kg)
-                              </Text>
-                            </Pressable>
-                          </View>
-                        </View>
-                      </View>
-
-                      <View style={styles.switchRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.switchLabel}>{l.sellerVisibility}</Text>
-                          <Text style={styles.switchSublabel}>{l.sellerSubtext}</Text>
-                        </View>
-                        <Switch
-                          value={formData.visible?.mesero}
-                          onValueChange={(v) =>
-                            setFormData({
-                              ...formData,
-                              visible: { ...formData.visible, mesero: v },
-                            })
-                          }
-                        />
-                      </View>
-
-                      <View style={styles.sectionContainer}>
-                        <View style={styles.switchRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.switchLabel}>{l.preparationFlow}</Text>
-                            <Text style={styles.switchSublabel}>
-                              Sobrescribe la configuración global de la categoría
-                            </Text>
-                          </View>
-                          <Switch
-                            value={formData.usarConfigPersonalizada}
-                            onValueChange={(v) =>
-                              setFormData({
-                                ...formData,
-                                usarConfigPersonalizada: v,
-                              })
-                            }
-                          />
-                        </View>
-
-                        {formData.usarConfigPersonalizada && (
-                          <>
-                            <Text style={styles.sectionHelp}>
-                              Configuración exclusiva para este producto:
-                            </Text>
-                            <View style={[styles.switchRow, styles.switchRowNested]}>
-                              <View style={{ flex: 1 }}>
-                                <Text style={styles.switchLabel}>{l.sendToPreparation}</Text>
-                                <Text style={styles.switchSublabel}>
-                                  Si se desactiva, no generará comanda
-                                </Text>
-                              </View>
-                              <Switch
-                                value={formData.enviarACocina}
-                                onValueChange={(v) =>
-                                  setFormData({
-                                    ...formData,
-                                    enviarACocina: v,
-                                  })
-                                }
-                              />
-                            </View>
-
-                            {formData.enviarACocina && (
-                              <View style={[styles.switchRow, styles.switchRowNested]}>
-                                <View style={{ flex: 1 }}>
-                                  <Text style={styles.switchLabel}>
-                                    Auto-Completar (Saltar Preparando)
-                                  </Text>
-                                  <Text style={styles.switchSublabel}>
-                                    Pasa directo a listo al enviar
-                                  </Text>
-                                </View>
-                                <Switch
-                                  value={formData.saltarPreparando}
-                                  onValueChange={(v) =>
-                                    setFormData({
-                                      ...formData,
-                                      saltarPreparando: v,
-                                    })
-                                  }
-                                />
-                              </View>
-                            )}
-                          </>
-                        )}
-                      </View>
-                    </View>
-                  )}
-
-                  {editingTab === 'variantes' && (
-                    <EditorVariantes
-                      variantes={formData.variantes}
-                      onChange={(newVariantes) =>
-                        setFormData((current) => ({ ...current, variantes: newVariantes }))
-                      }
-                      visible={formData.visible}
-                      onVisibleChange={(visible) =>
-                        setFormData((current) => ({ ...current, visible }))
-                      }
-                      prepMin={formData.prepMin}
-                      onPrepMinChange={(prepMin) =>
-                        setFormData((current) => ({ ...current, prepMin }))
-                      }
-                      showVentaCrudo={l.showVentaCrudo}
-                    />
-                  )}
-
-                  {editingTab === 'receta' && (
-                    <EditorReceta
-                      receta={formData.receta}
-                      onRecetaChange={(newReceta) => {
-                        setFormData((current) => ({ ...current, receta: newReceta }));
-                        actions.setRecetaEnEdicion(newReceta?.ingredientes || null);
-                      }}
-                      itemsInventario={itemsInventario as any}
-                      validacion={validacionActive}
-                      validando={validandoActive}
-                    />
-                  )}
-                </ScrollView>
-
-                <View style={styles.modalFooter}>
-                  <Pressable
-                    style={styles.btnSecondary}
-                    onPress={() => setShowModal(null)}
-                    disabled={isSaving}
-                  >
-                    <Text style={styles.btnSecondaryText}>Cancelar</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.btnPrimary, isSaving && { opacity: 0.5 }]}
-                    onPress={handleSaveProduct}
-                    disabled={isSaving}
-                  >
-                    <Text style={styles.btnPrimaryText}>
-                      {isSaving ? 'Guardando...' : 'Guardar Producto'}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
-          </View>
+          {showModal === 'addCat' ? (
+            <ModalNuevaCategoria
+              nombre={catNombre}
+              onCambiarNombre={setCatNombre}
+              onCancelar={() => setShowModal(null)}
+              onCrear={handleAddCategory}
+            />
+          ) : (
+            <ModalProducto
+              modo={showModal}
+              formData={formData}
+              onFormDataChange={setFormData}
+              pestana={editingTab}
+              onPestanaChange={setEditingTab}
+              itemsInventario={itemsInventario}
+              validacion={validacionActive}
+              validando={validandoActive}
+              onRecetaEnEdicion={(ing) => actions.setRecetaEnEdicion(ing)}
+              etiquetas={l}
+              isSaving={isSaving}
+              onGuardar={handleSaveProduct}
+              onCancelar={() => setShowModal(null)}
+            />
+          )}
         </KeyboardAvoidingView>
       )}
     </View>
@@ -830,72 +408,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  categoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  categoryTitle: {
-    color: '#64748B',
-    fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
-  },
-  productCount: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.xs,
-    marginTop: 2,
-  },
-  productsGrid: {
-    gap: theme.spacing.md,
-  },
-  emptyProducts: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.xxl,
-  },
-  emptyTitle: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtitle: {
-    color: '#0F172A',
-    fontSize: theme.typography.sizes.sm,
-    marginTop: theme.spacing.xs,
-  },
-  btnPrimary: {
-    backgroundColor: theme.colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-  },
-  btnPrimaryText: {
-    color: '#FFFFFF',
-    fontWeight: theme.typography.weights.semibold,
-    fontSize: theme.typography.sizes.sm,
-  },
-  btnSecondary: {
-    backgroundColor: theme.colors.surfaceDark,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  btnSecondaryText: {
-    color: theme.colors.textMuted,
-    fontWeight: theme.typography.weights.semibold,
-    fontSize: theme.typography.sizes.sm,
-  },
   modalOverlay: {
     ...(StyleSheet.absoluteFill as any),
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -903,160 +415,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 100,
     padding: theme.spacing.md,
-  },
-  modalCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    width: '100%',
-    maxWidth: 450,
-    maxHeight: '90%',
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  modalCardLarge: {
-    maxWidth: 650,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  modalTitle: {
-    color: '#64748B',
-    fontSize: theme.typography.sizes.lg,
-    fontWeight: theme.typography.weights.bold,
-  },
-  modalBody: {
-    padding: theme.spacing.lg,
-  },
-  inputLabel: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    marginBottom: theme.spacing.xs,
-  },
-  textInput: {
-    backgroundColor: theme.colors.surfaceDark,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    color: '#64748B',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.sizes.sm,
-    marginBottom: theme.spacing.md,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.lg,
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    paddingBottom: theme.spacing.xs,
-  },
-  tabBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-  },
-  tabBtnActive: {
-    backgroundColor: theme.colors.surfaceDark,
-  },
-  tabText: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.medium,
-  },
-  tabTextActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.weights.bold,
-  },
-  modalFormScroll: {
-    maxHeight: 400,
-  },
-  modalFormContent: {
-    paddingBottom: theme.spacing.sm,
-  },
-  formSection: {
-    gap: theme.spacing.xs,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
-  },
-  switchLabel: {
-    color: '#64748B',
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-  },
-  switchSublabel: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.xs,
-  },
-  sectionContainer: {
-    backgroundColor: theme.colors.surfaceDark,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  sectionHelp: {
-    color: '#f59e0b',
-    fontSize: theme.typography.sizes.sm,
-    fontStyle: 'italic',
-    marginBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.xs,
-  },
-  switchRowNested: {
-    marginLeft: theme.spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f59e0b',
-  },
-  unitContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-  },
-  unitBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.colors.surfaceDark,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  unitBtnActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  unitText: {
-    color: '#64748b',
-    fontWeight: theme.typography.weights.semibold,
-  },
-  unitTextActive: {
-    color: 'white',
   },
 });
 

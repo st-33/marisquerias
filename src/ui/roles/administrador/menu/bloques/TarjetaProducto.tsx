@@ -12,7 +12,13 @@ type TarjetaProductoProps = {
   onDelete: (producto: Producto) => void;
 };
 
-export function TarjetaProducto({ producto, onEdit, onToggle, onRecipe, onDelete }: TarjetaProductoProps) {
+export function TarjetaProducto({
+  producto,
+  onEdit,
+  onToggle,
+  onRecipe,
+  onDelete,
+}: TarjetaProductoProps) {
   const activo = producto.activo ?? true;
   const hasRecipe =
     producto.receta?.ingredientes && Object.keys(producto.receta.ingredientes).length > 0;
