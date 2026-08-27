@@ -113,14 +113,15 @@ También se detectó que `MisionDelivery` exige `cliente.ubicacion.lat` y `lng`.
 
 ## 10. Pruebas ejecutadas
 
-| Validación                              | Resultado                                                                                                   |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `npm run check-types`                   | **Correcto** (`tsc --noEmit`).                                                                              |
-| `npm test -- --runInBand`               | **Correcto:** 20 suites, 107 pruebas.                                                                       |
-| Pruebas de logística                    | **Correcto:** 5 pruebas.                                                                                    |
+| Validación                | Resultado                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `npm run check-types`     | **Correcto** (`tsc --noEmit`).                                                                              |
+| `npm test -- --runInBand` | **Correcto:** 21 suites, 118 pruebas en el commit publicado, incluyendo la regresión concurrente de rama-2. |
+
+| Pruebas de logística | **Correcto:** 5 pruebas. |
 | ESLint focal sobre archivos modificados | **Correcto:** 0 errores; permanecen 2 warnings preexistentes/no bloqueantes en `ComandoPOS` y `isPrinting`. |
-|  |
-| `git diff --check`                      | **Correcto**, sin errores de whitespace.                                                                    |
+| |
+| `git diff --check` | **Correcto**, sin errores de whitespace. |
 
 La prueba principal representa este flujo: pedido `delivery` existente con cliente, dirección y coordenadas → creación de una misión mínima → respuesta `MIS-20260827-001` → actualización del pedido con `logistica.estado = 'solicitada'` y `referenciaMision`, sin propiedad `inventario` en el payload.
 
