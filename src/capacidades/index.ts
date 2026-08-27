@@ -10,3 +10,4 @@ export * from './inventario';
 export * from './dispositivos';
 export * from './reparto';
 export * from './mostrador';
+export * from './logistica';

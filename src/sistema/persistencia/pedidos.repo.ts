@@ -12,6 +12,13 @@ import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidTenantPath } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 import { RegistroVentasRepository } from './registroVentas.repo';
+import type {
+  ClientePedido,
+  LogisticaPedido,
+  ModalidadPedido,
+  OrigenPedido,
+  UbicacionPedido,
+} from '../../logica/dominio/logistica';
 
 export type PedidoItem = {
   id: string;
@@ -38,7 +45,15 @@ export type PedidoItem = {
 export type Pedido = {
   id: string;
   tipo: 'mesa' | 'para_llevar' | 'delivery';
+  /** Modalidad de negocio; delivery se conserva por compatibilidad. */
+  modalidad?: ModalidadPedido;
+  /** Canal/origen que creó el pedido, sin duplicar el pedido por canal. */
+  origen?: OrigenPedido;
   mesaId?: string;
+  cliente?: ClientePedido;
+  destino?: UbicacionPedido;
+  /** Única proyección logística que el negocio necesita conocer. */
+  logistica?: LogisticaPedido | null;
   estatus: string;
   items: Record<string, PedidoItem>;
   totales?: {

@@ -22,6 +22,13 @@ import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
 import { validarRutaTenant } from '../../rtdb/rutas/RutaTenant';
 import { assertValidTenantPath, sanitizeRtdbPayload } from '../../rtdb/guards';
+import type {
+  ClientePedido,
+  LogisticaPedido,
+  ModalidadPedido,
+  OrigenPedido,
+  UbicacionPedido,
+} from '../../../logica/dominio/logistica';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS BASE (Genéricos para multi-negocio)
@@ -63,7 +70,12 @@ export interface ItemBase {
 export interface PedidoBase {
   id: string;
   tipo: string; // 'mesa' | 'para_llevar' | 'delivery' | etc.
+  modalidad?: ModalidadPedido;
+  origen?: OrigenPedido;
   mesaId?: string;
+  cliente?: ClientePedido;
+  destino?: UbicacionPedido;
+  logistica?: LogisticaPedido | null;
   estatus: string;
   items: Record<string, ItemBase>;
   totales?: {

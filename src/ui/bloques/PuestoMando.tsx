@@ -1,10 +1,22 @@
 import { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 import { ActionArea } from './ActionArea';
 import { OrderList } from './OrderList';
 import { TablesGrid } from './TablesGrid';
+import {
+  etiquetaEstadoLogistico,
+  pedidoRequiereLogistica,
+  type LogisticaPedido,
+} from '../../logica/dominio/logistica';
 
 export type MesaState = 'libre' | 'ocupada' | 'cuenta';
 
@@ -51,6 +63,14 @@ export type PuestoMandoProps = {
   pendingCount: number;
   liveItemsCount: number;
   activeOrderId: string | null;
+  pedidoActivo?: {
+    tipo?: string;
+    modalidad?: string;
+    logistica?: Partial<LogisticaPedido> | null;
+  } | null;
+  logisticaHabilitada?: boolean;
+  solicitandoEntrega?: boolean;
+  onRequestDelivery?: () => void;
   isTotalVisible?: boolean;
   onSelectMesa: (mesaId: string | null) => void;
   onAddItem: () => void;
@@ -122,6 +142,10 @@ export function PuestoMando(props: PuestoMandoProps) {
     pendingCount,
     liveItemsCount,
     activeOrderId,
+    pedidoActivo,
+    logisticaHabilitada = false,
+    solicitandoEntrega = false,
+    onRequestDelivery,
     isTotalVisible = true,
   } = props;
 
@@ -203,6 +227,61 @@ export function PuestoMando(props: PuestoMandoProps) {
 
         <View style={themedStyles.orderWrapper}>
           <View style={staticStyles.orderContent}>
+            {pedidoActivo && pedidoRequiereLogistica(pedidoActivo) && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: SPACING.sm,
+                  marginBottom: SPACING.xs,
+                  paddingHorizontal: SPACING.xs,
+                  paddingVertical: 7,
+                  borderRadius: 10,
+                  backgroundColor: COLORS.alpha.primary10,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: COLORS.primary,
+                      fontSize: 11,
+                      fontWeight: '900',
+                      letterSpacing: 0.7,
+                    }}
+                  >
+                    A DOMICILIO
+                  </Text>
+                  <Text style={{ color: COLORS.text.secondary, fontSize: 11, marginTop: 2 }}>
+                    {etiquetaEstadoLogistico(pedidoActivo.logistica?.estado)}
+                    {pedidoActivo.logistica?.referenciaMision
+                      ? ` · ${pedidoActivo.logistica.referenciaMision}`
+                      : ''}
+                  </Text>
+                </View>
+                {logisticaHabilitada &&
+                  onRequestDelivery &&
+                  !pedidoActivo.logistica?.referenciaMision && (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Solicitar entrega del pedido"
+                      onPress={onRequestDelivery}
+                      disabled={solicitandoEntrega}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        borderRadius: 8,
+                        backgroundColor: solicitandoEntrega ? COLORS.bg.elevated : COLORS.primary,
+                      }}
+                    >
+                      <Text style={{ color: COLORS.text.primary, fontSize: 11, fontWeight: '900' }}>
+                        {solicitandoEntrega ? 'ENVIANDO…' : 'SOLICITAR'}
+                      </Text>
+                    </Pressable>
+                  )}
+              </View>
+            )}
+
             {mesaSeleccionada ? (
               <OrderList
                 pending={itemsPendientes}

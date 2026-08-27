@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
+import { etiquetaEstadoLogistico } from '../../logica/dominio/logistica';
 import type { OrdenCocina } from '../../sistema/motores/KitchenQueueEngine';
 import { AnimatedPressable } from './AnimatedPressable';
 import { Badge } from './Badge';
@@ -243,6 +244,24 @@ export function TarjetaComanda({
         <View style={staticStyles.headerLeft}>
           <Ionicons name={getOriginIcon()} size={20} color={COLORS.text.primary} />
           <Text style={themedStyles.originLabel}>{getOriginLabel()}</Text>
+          {order.logistica?.requiereEntrega && (
+            <View style={{ marginLeft: 4, maxWidth: 180 }}>
+              <Text
+                numberOfLines={1}
+                style={{ color: COLORS.primary, fontSize: 10, fontWeight: '900' }}
+              >
+                A DOMICILIO · {etiquetaEstadoLogistico(order.logistica.estado)}
+              </Text>
+              {order.logistica.referenciaMision && (
+                <Text
+                  numberOfLines={1}
+                  style={{ color: COLORS.text.muted, fontSize: 9, marginTop: 2 }}
+                >
+                  {order.logistica.referenciaMision}
+                </Text>
+              )}
+            </View>
+          )}
         </View>
         <OrderTimer
           baseTimestamp={order.sentToKitchenAt || order.createdAt}

@@ -10,6 +10,7 @@
  */
 
 import { ComandoPOS } from '../../sistema/tipos/pos';
+import type { LogisticaPedido } from '../../logica/dominio/logistica';
 
 export type ItemCocina = {
   id: string;
@@ -41,6 +42,7 @@ export type OrdenCocina = {
   esUrgente: boolean;
   createdAt: number;
   sentToKitchenAt?: number;
+  logistica?: Partial<LogisticaPedido> | null;
 };
 
 export type EstadisticasCocina = {

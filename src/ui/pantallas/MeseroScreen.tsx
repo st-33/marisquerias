@@ -98,6 +98,10 @@ function MeseroScreenContent() {
     printBillWithConnectionCheck,
     markAsPaid,
     markAsDelivered,
+    pedidoActivo,
+    logisticaHabilitada,
+    solicitandoEntrega,
+    solicitarEntrega,
   } = useMeseroLogic({
     db,
     tenantPath,
@@ -159,6 +163,14 @@ function MeseroScreenContent() {
       }
     }
   }, [printBillWithConnectionCheck, hasPrinted]);
+
+  const handleRequestDelivery = useCallback(async () => {
+    const result = await solicitarEntrega();
+    if (result && result.success === false && result.error) {
+      Alert.alert('No se pudo solicitar la entrega', result.error);
+    }
+    return result;
+  }, [solicitarEntrega]);
 
   const handleMarkDelivered = useCallback(
     async (itemId: string) => {
@@ -246,6 +258,10 @@ function MeseroScreenContent() {
         pendingCount={activePendingItems.length}
         liveItemsCount={liveItems.length}
         activeOrderId={selectedTable}
+        pedidoActivo={pedidoActivo}
+        logisticaHabilitada={logisticaHabilitada}
+        solicitandoEntrega={solicitandoEntrega}
+        onRequestDelivery={logisticaHabilitada ? handleRequestDelivery : undefined}
         isTotalVisible={isTotalVisible}
         onSelectMesa={selectTable}
         onAddItem={handleAddItem}

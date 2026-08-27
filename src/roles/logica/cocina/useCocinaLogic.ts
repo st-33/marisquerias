@@ -21,6 +21,7 @@ import { createModuleLogger } from '../../../sistema/monitoreo';
 import { useCategorias, usePedidos, useProductos, useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
 import { useCocinaAudio } from './useCocinaAudio';
+import type { LogisticaPedido } from '../../../logica/dominio/logistica';
 
 // Logger del módulo
 const logger = createModuleLogger('COCINA');
@@ -165,6 +166,7 @@ function transformPedidosData(
         esUrgente,
         createdAt: pedido.createdAt || now,
         sentToKitchenAt: pedido.sentToKitchenAt,
+        logistica: pedido.logistica || null,
       };
     });
 
@@ -205,6 +207,7 @@ export type OrdenCocina = {
   esUrgente: boolean;
   createdAt: number;
   sentToKitchenAt?: number;
+  logistica?: Partial<LogisticaPedido> | null;
 };
 
 export type EstadisticasCocina = {

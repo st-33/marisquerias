@@ -46,6 +46,16 @@ export function normalizarCaracteristicas(input: any): CaracteristicasPlanas {
 
   if (src.menu_digital !== undefined) out.menu_digital = truthy(src.menu_digital);
   if (src.delivery !== undefined) out.delivery = truthy(src.delivery);
+  if (src.delivery_interno_adi_repart !== undefined) {
+    out.delivery_interno_adi_repart = truthy(src.delivery_interno_adi_repart);
+  }
+  if (src.delivery_externo !== undefined) out.delivery_externo = truthy(src.delivery_externo);
+  if (src.tracking_repartidor !== undefined) {
+    out.tracking_repartidor = truthy(src.tracking_repartidor);
+  }
+  if (src.solicitudes_logisticas !== undefined) {
+    out.solicitudes_logisticas = truthy(src.solicitudes_logisticas);
+  }
   if (src.inventory_auto_discount !== undefined) {
     out.inventory_auto_discount = truthy(src.inventory_auto_discount);
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   type AppStateStatus,
@@ -26,6 +26,8 @@ import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/Proveed
 import { ProveedorConfiguracionTenant } from '../src/sistema/proveedores/ProveedorConfiguracionTenant';
 import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
 import { useAdminFeatures } from '../src/capacidades/admin';
+import { useSincronizarPedidosLogistica } from '../src/capacidades/logistica';
+import { getRtdb } from '../src/sistema/firebase';
 
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
@@ -57,7 +59,18 @@ export default function RootLayout() {
   useAppListeners(isReady);
 
   const tenantPath = useStore((state) => state.sesion.tenantPath);
+  const tenantId = useStore((state) => state.sesion.tenantId);
+  const dataSources = useStore((state) => state.dataSources);
   const estadoInstalacion = useStore((state) => state.estadoInstalacion);
+  const operacionDb = useMemo(
+    () => (isReady ? getRtdb(dataSources.operacionUrl || undefined) : null),
+    [dataSources.operacionUrl, isReady]
+  );
+  useSincronizarPedidosLogistica({
+    db: operacionDb,
+    tenantId,
+    tenantPath,
+  });
   const { features: adminFeatures, loading: adminFeaturesLoading } = useAdminFeatures({
     tenantPath: tenantPath || undefined,
   });

@@ -12,11 +12,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
 import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
-import { useItemsPedido, usePedido, usePedidos, useProductos } from '../../../sistema/store';
+import {
+  useItemsPedido,
+  usePedido,
+  usePedidos,
+  useProductos,
+  useStore,
+} from '../../../sistema/store';
 import { createLogger } from '../../../sistema/utilidades/logger';
 
 import { useGestionarMesas } from './gestionarMesas';
 import { useDescontarInventario } from './descontarInventario';
+import { IntegracionLogisticaPedido } from '../../../capacidades/logistica';
+import { logisticaHabilitada as evaluarLogisticaHabilitada } from '../../../logica/dominio/logistica';
 import { useGestionarImpresion } from './gestionarImpresion';
 import { useProcesarPedido } from './procesarPedido';
 import { useSharedDrafts } from './useSharedDrafts';
@@ -75,6 +83,10 @@ export function useMeseroLogic({
   const inventarioV2Repo = useMemo(
     () => new InventoryV2Repository(db, tenantPath),
     [db, tenantPath]
+  );
+  const repartoUrl = useStore((state) => state.dataSources.repartoUrl);
+  const logisticaHabilitada = useStore((state) =>
+    evaluarLogisticaHabilitada(state.negocio.features)
   );
 
   // 🔄 SINCRONIZACIÓN CON APP STATE
@@ -245,6 +257,41 @@ export function useMeseroLogic({
 
   const itemsDelPedido = useItemsPedido(pedidoActivoId);
   const pedidoActivo = usePedido(pedidoActivoId);
+  const integracionLogistica = useMemo(
+    () => (logisticaHabilitada && repartoUrl ? new IntegracionLogisticaPedido(pedidosRepo) : null),
+    [logisticaHabilitada, pedidosRepo, repartoUrl]
+  );
+  const [solicitandoEntrega, setSolicitandoEntrega] = useState(false);
+
+  const solicitarEntrega = useCallback(async () => {
+    if (!pedidoActivo) {
+      return { success: false, estado: 'fallida' as const, error: 'No hay pedido activo' };
+    }
+    if (!logisticaHabilitada) {
+      return {
+        success: false,
+        estado: 'fallida' as const,
+        error: 'La capacidad logística está desactivada para este negocio.',
+      };
+    }
+    if (!integracionLogistica) {
+      return {
+        success: false,
+        estado: 'fallida' as const,
+        error: 'No existe una fuente de reparto configurada.',
+      };
+    }
+
+    setSolicitandoEntrega(true);
+    try {
+      return await integracionLogistica.solicitarEntrega(pedidoActivo as any, {
+        tenantId,
+        tenantPath,
+      });
+    } finally {
+      setSolicitandoEntrega(false);
+    }
+  }, [integracionLogistica, logisticaHabilitada, pedidoActivo, tenantId, tenantPath]);
 
   const liveItems = useMemo((): OrderItem[] => {
     if (!pedidoActivoId) return [];
@@ -402,6 +449,10 @@ export function useMeseroLogic({
     tables: decoratedTables,
     selectedTable,
     selectedTableData: decoratedTables.find((t) => t.id === selectedTable) || null,
+    pedidoActivo,
+    logisticaHabilitada,
+    solicitandoEntrega,
+    solicitarEntrega,
     pendingItems,
     activePendingItems,
     liveItems,
