@@ -7,12 +7,16 @@ import {
   pedidoConfirmadoParaLogistica,
   pedidoRequiereLogistica,
 } from '../../logica/dominio/logistica';
-import { IntegracionLogisticaPedido } from './IntegracionLogisticaPedido';
+import {
+  IntegracionLogisticaPedido,
+  type PuertoEntradaLogistica,
+} from './IntegracionLogisticaPedido';
 
 export interface SincronizarPedidosLogisticaProps {
   db: Database | null;
   tenantId: string | null;
   tenantPath: string | null;
+  entradaMotor?: PuertoEntradaLogistica;
 }
 
 /**
@@ -23,6 +27,7 @@ export function useSincronizarPedidosLogistica({
   db,
   tenantId,
   tenantPath,
+  entradaMotor,
 }: SincronizarPedidosLogisticaProps): void {
   const pedidos = usePedidos();
   const repartoUrl = useStore((state) => state.dataSources.repartoUrl);
@@ -50,9 +55,14 @@ export function useSincronizarPedidosLogistica({
   );
 
   const integracion = useMemo(() => {
-    if (!db || !tenantId || !tenantPath || !repartoUrl || !logisticaHabilitada) return null;
-    return new IntegracionLogisticaPedido(new PedidosRepository(db, tenantPath));
-  }, [db, logisticaHabilitada, repartoUrl, tenantId, tenantPath]);
+    if (!db || !tenantId || !tenantPath || (!repartoUrl && !entradaMotor) || !logisticaHabilitada)
+      return null;
+    return new IntegracionLogisticaPedido(
+      new PedidosRepository(db, tenantPath),
+      undefined,
+      entradaMotor
+    );
+  }, [db, entradaMotor, logisticaHabilitada, repartoUrl, tenantId, tenantPath]);
 
   useEffect(() => {
     if (!integracion || !tenantId || !tenantPath) return;

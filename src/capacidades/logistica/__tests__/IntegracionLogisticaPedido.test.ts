@@ -1,5 +1,6 @@
 import type { Pedido } from '../../../sistema/persistencia/pedidos.repo';
 import { IntegracionLogisticaPedido, type MotorLogistico } from '../IntegracionLogisticaPedido';
+import type { ResultadoProcesamiento, SenalEntrada } from '../../../motor';
 
 function pedidoBase(overrides: Partial<Pedido> = {}): Pedido {
   return {
@@ -32,6 +33,78 @@ function pedidoBase(overrides: Partial<Pedido> = {}): Pedido {
 }
 
 describe('IntegracionLogisticaPedido', () => {
+  it('emite SenalEntrada al motor nuevo y proyecta la misión resultante', async () => {
+    const updates: { pedidoId: string; datos: Partial<Pedido> }[] = [];
+    const procesar = jest.fn(async (senal: SenalEntrada): Promise<ResultadoProcesamiento> => {
+      return {
+        estado: 'procesada',
+        codigo: 'ACEPTADA',
+        eventId: senal.id,
+        operationId: senal.operationId,
+        tenantPath: senal.tenant.tenantPath,
+        eventos: [],
+        senales: [],
+        mision: { id: 'MIS-MOTOR-001', estado: 'propuesta' },
+      } as unknown as ResultadoProcesamiento;
+    });
+    const adapter = new IntegracionLogisticaPedido(
+      {
+        actualizar: async (pedidoId, datos) => {
+          updates.push({ pedidoId, datos });
+        },
+      },
+      { crearMisionDelivery: jest.fn() },
+      { procesar }
+    );
+
+    const result = await adapter.solicitarEntrega(pedidoBase(), {
+      tenantId: 'marisqueria-puerto-libres',
+      tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+    });
+
+    expect(result).toEqual({
+      success: true,
+      referenciaMision: 'MIS-MOTOR-001',
+      estado: 'solicitada',
+    });
+    expect(procesar).toHaveBeenCalledTimes(1);
+    expect(procesar.mock.calls[0][0]).toMatchObject({
+      schemaVersion: 1,
+      tipo: 'pedido.requiere_entrega',
+      tenant: {
+        tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+        tenantId: 'puerto-libres',
+        categoriaId: 'marisquerias',
+      },
+      actor: { tipo: 'negocio', id: 'marisqueria-puerto-libres' },
+      referencias: [
+        {
+          tipo: 'pedido',
+          id: 'PED-20260827-001',
+          tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+        },
+      ],
+      payload: {
+        pedidoId: 'PED-20260827-001',
+        estadoPedido: 'confirmado',
+        modalidad: 'domicilio',
+        puntoEntrega: {
+          direccion: 'Calle de prueba 10, Libres, Puebla',
+          coordenadas: { lat: 19.465, lng: -97.313 },
+        },
+      },
+    });
+    expect(updates.at(-1)).toEqual({
+      pedidoId: 'PED-20260827-001',
+      datos: {
+        logistica: expect.objectContaining({
+          referenciaMision: 'MIS-MOTOR-001',
+          estado: 'solicitada',
+        }),
+      },
+    });
+  });
+
   it('crea una misión mínima y enlaza su referencia al pedido original', async () => {
     const updates: { pedidoId: string; datos: Partial<Pedido> }[] = [];
     const missionRequests: any[] = [];

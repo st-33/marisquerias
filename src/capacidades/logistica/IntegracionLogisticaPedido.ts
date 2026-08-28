@@ -3,7 +3,17 @@ import {
   pedidoRequiereLogistica,
   type EstadoLogistico,
   type LogisticaPedido,
+  type OrigenPedido,
 } from '../../logica/dominio/logistica';
+import {
+  crearIdDeterminista,
+  identidadTenantDesdePath,
+  type CanalEntrada,
+  type EstadoMisionLogistica,
+  type ResultadoProcesamiento,
+  type SenalEntrada,
+  type SenalRequiereEntrega,
+} from '../../motor';
 import type {
   EstadoMision,
   ItemMision,
@@ -31,7 +41,11 @@ export interface ResultadoSolicitudLogistica {
   error?: string;
 }
 
-export interface MotorLogistico {
+export interface PuertoEntradaLogistica {
+  procesar(senal: SenalEntrada): Promise<ResultadoProcesamiento>;
+}
+
+export interface MotorLogisticoLegacy {
   crearMisionDelivery(
     mision: Omit<MisionDelivery, 'id' | 'createdAt' | 'createdAtISO' | 'estado'>
   ): Promise<string>;
@@ -40,6 +54,8 @@ export interface MotorLogistico {
     callback: (misiones: Record<string, Mision>) => void
   ) => () => void;
 }
+
+export type MotorLogistico = MotorLogisticoLegacy;
 
 export interface PedidosLogisticaWriter {
   actualizar(pedidoId: string, datos: Partial<Pedido>): Promise<void>;
@@ -55,6 +71,19 @@ const ESTADOS_MISION_A_LOGISTICA: Record<EstadoMision, EstadoLogistico> = {
   fallida: 'fallida',
 };
 
+function estadoMotorAEstadoLogistico(estado: EstadoMisionLogistica): EstadoLogistico {
+  switch (estado) {
+    case 'entregada':
+      return 'completada';
+    case 'cancelada':
+      return 'cancelada';
+    case 'incidencia':
+      return 'fallida';
+    default:
+      return 'solicitada';
+  }
+}
+
 function toItemMision(itemId: string, item: PedidoItem): ItemMision {
   const unidad = (item as PedidoItem & { unidad?: ItemMision['unidad'] }).unidad;
   return {
@@ -64,6 +93,73 @@ function toItemMision(itemId: string, item: PedidoItem): ItemMision {
     unidad: unidad || 'pza',
     precio: Number(item.precio || 0),
     notas: item.notas,
+  };
+}
+
+function canalDesdeOrigen(origen?: OrigenPedido): CanalEntrada {
+  switch (origen) {
+    case 'llamada':
+      return 'llamada';
+    case 'whatsapp':
+      return 'whatsapp';
+    case 'red_social':
+      return 'red_social';
+    case 'sistema':
+      return 'sistema';
+    default:
+      return 'negocio';
+  }
+}
+
+function crearSenalRequiereEntrega(
+  pedido: Pedido,
+  contexto: Pick<SolicitudLogisticaPedido, 'tenantId' | 'tenantPath'> & {
+    prioridad?: PrioridadMision;
+  }
+): SenalRequiereEntrega {
+  const tenant = identidadTenantDesdePath(contexto.tenantPath);
+  const occurredAt = new Date().toISOString();
+  const id = crearIdDeterminista('senal-pedido-requiere-entrega', contexto.tenantPath, pedido.id);
+  const idempotencyKey = `pedido-requiere-entrega:${contexto.tenantPath}:${pedido.id}`;
+  const canal = canalDesdeOrigen(pedido.origen);
+  const modalidad =
+    pedido.modalidad === 'recoleccion' || pedido.modalidad === 'entrega'
+      ? pedido.modalidad
+      : 'domicilio';
+
+  if (
+    !pedido.destino?.direccion ||
+    typeof pedido.destino.lat !== 'number' ||
+    typeof pedido.destino.lng !== 'number'
+  ) {
+    throw new Error('El pedido requiere dirección y coordenadas para emitir la señal logística.');
+  }
+
+  return {
+    id,
+    schemaVersion: 1,
+    operationId: crearIdDeterminista('operacion-logistica', contexto.tenantPath, pedido.id),
+    tenant,
+    origen: 'negocio',
+    canal,
+    actor: { tipo: 'negocio', id: contexto.tenantId },
+    destino: 'motor_logistico',
+    occurredAt,
+    idempotencyKey,
+    referencias: [{ tipo: 'pedido', id: pedido.id, tenantPath: contexto.tenantPath }],
+    tipo: 'pedido.requiere_entrega',
+    payload: {
+      pedidoId: pedido.id,
+      estadoPedido: 'confirmado',
+      modalidad,
+      puntoRecoleccion: { referencia: 'negocio' },
+      puntoEntrega: {
+        direccion: pedido.destino.direccion,
+        referencia: pedido.destino.referencia,
+        coordenadas: { lat: pedido.destino.lat, lng: pedido.destino.lng },
+      },
+      prioridad: contexto.prioridad === 'urgente' ? 'urgente' : contexto.prioridad || 'media',
+    },
   };
 }
 
@@ -90,7 +186,8 @@ function buildLogisticaBase(pedido: Pedido): LogisticaPedido {
 export class IntegracionLogisticaPedido {
   constructor(
     private readonly pedidos: PedidosLogisticaWriter,
-    private readonly motor: MotorLogistico = new RepartoRepository()
+    private readonly motor: MotorLogisticoLegacy = new RepartoRepository(),
+    private readonly entradaMotor?: PuertoEntradaLogistica
   ) {}
 
   async solicitarEntrega(
@@ -142,6 +239,29 @@ export class IntegracionLogisticaPedido {
         },
       });
       return { success: false, estado: 'fallida', error };
+    }
+
+    if (this.entradaMotor) {
+      const resultado = await this.entradaMotor.procesar(
+        crearSenalRequiereEntrega(pedido, contexto)
+      );
+      const referenciaMision = resultado.mision?.id;
+      const estado = resultado.mision
+        ? estadoMotorAEstadoLogistico(resultado.mision.estado)
+        : 'fallida';
+      if (!referenciaMision) {
+        throw new Error('El motor logístico no devolvió una referencia de misión.');
+      }
+
+      await this.pedidos.actualizar(pedido.id, {
+        logistica: {
+          ...buildLogisticaBase(pedido),
+          referenciaMision,
+          estado,
+          actualizadoEn: Date.now(),
+        },
+      });
+      return { success: true, referenciaMision, estado };
     }
 
     const items = Object.fromEntries(
@@ -214,7 +334,9 @@ export class IntegracionLogisticaPedido {
       referenciaMision: string;
     }) => void
   ): () => void {
-    if (!this.motor.suscribirPorTenant || pedidosIds.length === 0) return () => {};
+    if (this.entradaMotor || !this.motor.suscribirPorTenant || pedidosIds.length === 0) {
+      return () => {};
+    }
     const pedidosIdsSet = new Set(pedidosIds);
 
     return this.motor.suscribirPorTenant(tenantId, (misiones) => {
