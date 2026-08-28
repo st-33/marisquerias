@@ -30,6 +30,7 @@ import type {
   ResultadoOperacion,
   ResultadoPeso,
 } from '../contratos/tipos';
+import { interpretarRespuestaPeso, resultadoPesoError } from './interpretarPeso';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MUTEX PARA OPERACIONES ATÓMICAS
@@ -503,7 +504,7 @@ class ServicioFierros implements IControladorFierros {
 
   async leerPeso(opciones?: OpcionesLecturaPeso): Promise<ResultadoPeso> {
     if (!this.basculaActiva) {
-      return { exito: false, unidad: 'kg', mensaje: 'Báscula no conectada' };
+      return resultadoPesoError('Báscula no conectada', 'BASCULA_NO_CONECTADA');
     }
 
     try {
@@ -514,16 +515,11 @@ class ServicioFierros implements IControladorFierros {
       await new Promise((r) => setTimeout(r, 200));
 
       const respuesta = await this.adaptadorBT.leer(opciones?.timeout || 5000);
-
-      // Parsear respuesta (ej: "ST,GS,+  1.234kg")
-      const match = respuesta.match(/[-+]?\d*\.?\d+/);
-      if (match) {
-        return { exito: true, peso: parseFloat(match[0]), unidad: 'kg' };
-      }
-
-      return { exito: false, unidad: 'kg', mensaje: 'Formato de peso inválido' };
+      return interpretarRespuestaPeso(respuesta);
     } catch (e: any) {
-      return { exito: false, unidad: 'kg', mensaje: e?.message };
+      const mensaje = e?.message || 'No fue posible leer la báscula';
+      const esTimeout = /timeout|timed out|tiempo de espera/i.test(mensaje);
+      return resultadoPesoError(mensaje, esTimeout ? 'TIMEOUT' : 'ERROR_COMUNICACION');
     }
   }
 

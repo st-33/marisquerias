@@ -42,7 +42,10 @@ export interface ResultadoImpresion {
 }
 
 /**
- * Resultado de lectura de peso
+ * Resultado de lectura de peso.
+ *
+ * `estable` es opcional porque no todos los protocolos de báscula publican
+ * una señal de estabilidad. La ausencia de señal no equivale a estabilidad.
  */
 export interface ResultadoPeso {
   exito: boolean;
@@ -50,6 +53,19 @@ export interface ResultadoPeso {
   peso?: number;
   /** Unidad de medida */
   unidad: 'kg' | 'lb';
+  /** Estabilidad observada por el protocolo, si fue informada */
+  estable?: boolean;
+  /** Indica que la operación fue cancelada antes de completar la lectura */
+  cancelado?: boolean;
+  /** Indica que el transporte agotó el tiempo de espera */
+  timeout?: boolean;
+  /** Código estable para que la UI o la telemetría clasifiquen el fallo */
+  codigoError?:
+    | 'BASCULA_NO_CONECTADA'
+    | 'TIMEOUT'
+    | 'FORMATO_INVALIDO'
+    | 'LECTURA_INVALIDA'
+    | 'ERROR_COMUNICACION';
   mensaje?: string;
 }
 
