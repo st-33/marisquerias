@@ -1,14 +1,14 @@
 # [M3] Informe de validación de ajustes de Reparto
 
-| Campo | Valor |
-|---|---|
-| Agente | M3 |
-| Repositorio | `st-33/marisquerias` |
-| Rama operativa | `rama-2` |
-| Fecha/hora UTC | `2026-08-28 02:42:33 UTC` |
-| Zona | `src/capacidades/reparto/` y `src/ui/roles/administrador/reparto/` |
-| Estado | IMPLEMENTADO Y VALIDADO |
-| Alcance | Validación de ajustes administrativos de Reparto; no se tocó la RTDB de misiones ni la integración logística de M2 |
+| Campo          | Valor                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Agente         | M3                                                                                                                 |
+| Repositorio    | `st-33/marisquerias`                                                                                               |
+| Rama operativa | `rama-2`                                                                                                           |
+| Fecha/hora UTC | `2026-08-28 02:42:33 UTC`                                                                                          |
+| Zona           | `src/capacidades/reparto/` y `src/ui/roles/administrador/reparto/`                                                 |
+| Estado         | REPORTADO Y PUBLICADO                                                                                              |
+| Alcance        | Validación de ajustes administrativos de Reparto; no se tocó la RTDB de misiones ni la integración logística de M2 |
 
 ## Resumen
 
@@ -18,13 +18,13 @@ La zona libre de solapamiento con mayor valor técnico fue la frontera de **ajus
 
 ## Cambios realizados
 
-| Archivo | Cambio | Clasificación |
-|---|---|---|
-| `src/capacidades/reparto/validarAjustes.ts` | Nuevo validador puro para umbrales, costos y ventanas. Rechaza valores no finitos, negativos, umbrales fraccionarios, horas inválidas y ventanas invertidas. | EXCLUSIVA_REPARTO |
-| `src/capacidades/reparto/index.ts` | Exporta el validador sin alterar el export existente de `useGestionReparto`. | EXCLUSIVA_REPARTO |
-| `src/capacidades/reparto/useGestionReparto.ts` | Valida cada parche antes de llamar a `RepartoAjustesRepository`; se conserva la API de acciones existente. | EXCLUSIVA_REPARTO |
-| `src/ui/roles/administrador/reparto/PantallaReparto.tsx` | Captura errores de guardado y los muestra mediante `Alert`; no cambia la navegación ni el contrato visual de tarjetas. | EXCLUSIVA_REPARTO |
-| `src/capacidades/reparto/__tests__/validarAjustes.test.ts` | Ocho pruebas unitarias puras para valores válidos, negativos, fraccionarios, no finitos, importes decimales y ventanas horarias. | EXCLUSIVA_REPARTO |
+| Archivo                                                    | Cambio                                                                                                                                                       | Clasificación     |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
+| `src/capacidades/reparto/validarAjustes.ts`                | Nuevo validador puro para umbrales, costos y ventanas. Rechaza valores no finitos, negativos, umbrales fraccionarios, horas inválidas y ventanas invertidas. | EXCLUSIVA_REPARTO |
+| `src/capacidades/reparto/index.ts`                         | Exporta el validador sin alterar el export existente de `useGestionReparto`.                                                                                 | EXCLUSIVA_REPARTO |
+| `src/capacidades/reparto/useGestionReparto.ts`             | Valida cada parche antes de llamar a `RepartoAjustesRepository`; se conserva la API de acciones existente.                                                   | EXCLUSIVA_REPARTO |
+| `src/ui/roles/administrador/reparto/PantallaReparto.tsx`   | Captura errores de guardado y los muestra mediante `Alert`; no cambia la navegación ni el contrato visual de tarjetas.                                       | EXCLUSIVA_REPARTO |
+| `src/capacidades/reparto/__tests__/validarAjustes.test.ts` | Ocho pruebas unitarias puras para valores válidos, negativos, fraccionarios, no finitos, importes decimales y ventanas horarias.                             | EXCLUSIVA_REPARTO |
 
 No se modificaron `src/sistema/persistencia/reparto-ajustes.repo.ts`, `src/sistema/persistencia/reparto.repo.ts`, Firebase, RTDB, `REGISTRO_PANTALLAS`, capacidades compartidas, carpetas de otros modelos, `CENTRAL/`, `EVENTOS.json` ni `ACTIVACIONES.json`.
 
@@ -44,20 +44,22 @@ La única zona modificada es la autorizada para piezas exclusivas de Reparto: ca
 
 ## Validaciones ejecutadas
 
-| Comando | Resultado |
-|---|---|
-| `npm run check-types` | Verde, sin errores TypeScript. |
-| `npx jest src/capacidades/reparto/__tests__/validarAjustes.test.ts --runInBand` | Verde: 1 suite, 8 pruebas. |
-| `npm test -- --runInBand` | Verde: 22 suites, 126 pruebas. |
-| `npx eslint src/capacidades/reparto/validarAjustes.ts src/capacidades/reparto/useGestionReparto.ts src/ui/roles/administrador/reparto/PantallaReparto.tsx` | Verde, sin salida de errores. |
-| `git diff --check` | Verde. |
+| Comando                                                                                                                                                    | Resultado                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `npm run check-types`                                                                                                                                      | Verde, sin errores TypeScript. |
+| `npx jest src/capacidades/reparto/__tests__/validarAjustes.test.ts --runInBand`                                                                            | Verde: 1 suite, 8 pruebas.     |
+| `npm test -- --runInBand`                                                                                                                                  | Verde: 22 suites, 126 pruebas. |
+| `npx eslint src/capacidades/reparto/validarAjustes.ts src/capacidades/reparto/useGestionReparto.ts src/ui/roles/administrador/reparto/PantallaReparto.tsx` | Verde, sin salida de errores.  |
+| `git diff --check`                                                                                                                                         | Verde.                         |
 
 ## Dependencias y bloqueos
 
 No existe bloqueo para esta unidad. Queda una dependencia externa no resuelta: los límites máximos de umbral, SLA y costos no están definidos por el contrato actual; por eso solo se aplicaron invariantes de seguridad y forma. La relación entre los ajustes administrativos en la RTDB operativa y las misiones en la RTDB alias `reparto` continúa siendo una decisión del Orquestador/integración, y no fue alterada.
 
-La instrucción del usuario solicita commit en la rama principal. El manifiesto operativo vigente establece que `rama-2` es la rama principal de trabajo y que `main` es espejo; por coherencia con la autoridad común, el commit se realizará en `rama-2` y se dejará su referencia para que el Orquestador sincronice el espejo si corresponde.
+La instrucción del usuario solicita commit en la rama principal. El manifiesto operativo vigente establece que `rama-2` es la rama principal de trabajo y que `main` es espejo; por coherencia con la autoridad común, el commit se realizó en `rama-2` y quedó publicado para que el Orquestador sincronice el espejo si corresponde.
 
-## Siguiente estado
+## Commit final y siguiente estado
 
-**IMPLEMENTADO Y VALIDADO.** El cambio está listo para commit en `rama-2`. La siguiente decisión corresponde al Orquestador: absorber el endurecimiento de validación, definir límites de dominio superiores si los necesita y mantener separadas las superficies de ajustes y misiones.
+El commit final publicado en la rama operativa es `4608490` (`fix(reparto): validar ajustes administrativos antes de persistir`). Fue rebasado encima de `bcdaecf` (`feat(logistica): emitir señales al motor de capacidades`) para integrar el trabajo reciente de M2 sin sobrescribirlo. La rama local quedó alineada con `origin/rama-2` después del push.
+
+**REPORTADO Y PUBLICADO.** La siguiente decisión corresponde al Orquestador: absorber el endurecimiento de validación, definir límites de dominio superiores si los necesita y mantener separadas las superficies de ajustes y misiones.
