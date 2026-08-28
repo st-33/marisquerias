@@ -10,6 +10,11 @@ import {
   RepartoAjustesRepository,
   type AjustesReparto,
 } from '../../sistema/persistencia/reparto-ajustes.repo';
+import {
+  validarCostosReparto,
+  validarHorariosReparto,
+  validarUmbralesReparto,
+} from './validarAjustes';
 
 type PropsGestionReparto = {
   db?: Database;
@@ -58,13 +63,13 @@ export function useGestionReparto(props?: PropsGestionReparto) {
   }, [ajustesRepo, tenantPath]);
 
   const guardarUmbrales = async (u: Partial<AjustesReparto['umbrales']>) => {
-    await ajustesRepo.actualizarUmbrales(u);
+    await ajustesRepo.actualizarUmbrales(validarUmbralesReparto(u));
   };
   const guardarHorarios = async (h: Partial<AjustesReparto['horarios']>) => {
-    await ajustesRepo.actualizarHorarios(h);
+    await ajustesRepo.actualizarHorarios(validarHorariosReparto(h));
   };
   const guardarCostos = async (c: Partial<AjustesReparto['costos']>) => {
-    await ajustesRepo.actualizarCostos(c);
+    await ajustesRepo.actualizarCostos(validarCostosReparto(c));
   };
   const toggleHorarios = async () => {
     await ajustesRepo.toggleHorarios(!horarios.habilitado);

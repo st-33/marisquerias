@@ -4,12 +4,21 @@
  * en `app/_role/admin/repart.tsx`, reunida aquí en la fase 3 por M3).
  */
 
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useGestionReparto } from '../../../../capacidades/reparto';
 import { TarjetaConfig } from './componentes/TarjetaConfig';
 
 export function PantallaReparto() {
   const { loading, umbrales, horarios, costos, actions } = useGestionReparto();
+
+  const ejecutarGuardado = async (guardado: () => Promise<void>) => {
+    try {
+      await guardado();
+    } catch (error) {
+      const mensaje = error instanceof Error ? error.message : 'No fue posible guardar el ajuste.';
+      Alert.alert('Ajuste no guardado', mensaje);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -25,25 +34,27 @@ export function PantallaReparto() {
             <TarjetaConfig
               titulo="Reabastecimiento"
               subtitulo={`Umbral stock bajo: ${umbrales.stockBajo} · Máx. pedidos: ${umbrales.maxPedidosActivos} · SLA: ${umbrales.tiempoMaxEntregaMin} min`}
-              onPress={async () => {
-                await actions.guardarUmbrales({ stockBajo: umbrales.stockBajo + 1 });
-              }}
+              onPress={() =>
+                ejecutarGuardado(() =>
+                  actions.guardarUmbrales({ stockBajo: umbrales.stockBajo + 1 })
+                )
+              }
             />
             <TarjetaConfig
               titulo="Horarios y ventanas"
               subtitulo={`Servicio ${
                 horarios.habilitado ? 'habilitado' : 'deshabilitado'
               } · Ventanas: ${horarios.ventanas.length}`}
-              onPress={async () => {
-                await actions.toggleHorarios();
-              }}
+              onPress={() => ejecutarGuardado(actions.toggleHorarios)}
             />
             <TarjetaConfig
               titulo="Costos y reglas"
               subtitulo={`Base: $${costos.base} · Por km: $${costos.porKm} · Mínimo: $${costos.minimo}`}
-              onPress={async () => {
-                await actions.guardarCostos({ base: Math.max(0, (costos.base || 0) + 1) });
-              }}
+              onPress={() =>
+                ejecutarGuardado(() =>
+                  actions.guardarCostos({ base: Math.max(0, (costos.base || 0) + 1) })
+                )
+              }
             />
           </>
         )}
