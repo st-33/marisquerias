@@ -9,9 +9,17 @@ jest.mock('firebase/database', () => ({
   off: jest.fn(),
 }));
 
+// El store se mockea para que useStore() no intente invocar hooks de React
+// fuera de un componente (useCallback interno de Zustand).
+jest.mock('../../../sistema/store', () => ({
+  useStore: jest.fn((selector: (s: any) => any) =>
+    selector({ central: { configuracion: null, estado: null } })
+  ),
+}));
+
 describe('useEmpaquetadorRoles — Autoridad Remota', () => {
   const dbMock = {} as Database;
-  const tenantPath = 'marisquerias/el-arrecife';
+  const rutaNegocio = 'marisquerias/el-arrecife';
 
   let effectCallback: any;
   let stateSetter: any;
@@ -59,7 +67,7 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
       return jest.fn();
     });
 
-    const getRoles = useEmpaquetadorRoles({ db: dbMock, tenantPath }).getRolesHabilitados;
+    const getRoles = useEmpaquetadorRoles({ db: dbMock, rutaNegocio }).getRolesHabilitados;
 
     // Simulate mount
     if (effectCallback) effectCallback();
@@ -91,7 +99,7 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
     // In our simplistic mock, useEmpaquetadorRoles reads `mockState` through the first useState.
 
     // Mock the state as it would be after setConfig(configData)
-    const { getRolesHabilitados } = useEmpaquetadorRoles({ db: dbMock, tenantPath });
+    const { getRolesHabilitados } = useEmpaquetadorRoles({ db: dbMock, rutaNegocio });
 
     const rolesHabilitados = getRolesHabilitados();
 
