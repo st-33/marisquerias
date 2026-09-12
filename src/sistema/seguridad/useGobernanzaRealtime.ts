@@ -17,7 +17,7 @@ import { resolverDeviceIdADI } from '../instalacion/vinculacion/generar-device-i
  */
 export function useGobernanzaRealtime(isReady: boolean) {
   const router = useRouter();
-  const tenantPath = useStore((s) => s.sesion.tenantPath);
+  const tenantPath = useStore((s) => s.sesion.rutaNegocio);
   const clearSession = useStore((s) => s.clearSession);
   const setModulosBloqueados = useStore((s) => s.setModulosBloqueados);
   const setEstadoInstalacion = useStore((s) => s.setEstadoInstalacion);

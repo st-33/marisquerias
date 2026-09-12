@@ -181,6 +181,13 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     (AsyncStorage.getItem as jest.Mock).mockImplementation(async (key: string) => {
       if (key === 'sesion') return JSON.stringify(sesionData);
       if (key === 'features') return JSON.stringify(featuresData);
+      if (key === 'adi_dispositivo_vinculado') {
+        return JSON.stringify({
+          deviceIdADI: 'ADI-DEV-1',
+          rutaNegocio: sesionData.rutaNegocio,
+          estado: 'activo',
+        });
+      }
       return null;
     });
 
