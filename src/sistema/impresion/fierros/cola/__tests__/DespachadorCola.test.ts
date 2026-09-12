@@ -43,7 +43,7 @@ function makeSnapshot(value: unknown, key: string | null = null): MockSnapshot {
 
 describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   const dbMock = {} as unknown as Database;
-  const tenantPath = 'marisquerias/tenant-spooler-test';
+  const rutaNegocio = 'marisquerias/negocio-spooler-test';
   const deviceId = 'device-spooler-test';
   const now = 1_800_000_000_000;
 
@@ -87,7 +87,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   });
 
   afterEach(() => {
-    DespachadorCola.destruirInstancia(tenantPath, 'dispositivo');
+    DespachadorCola.destruirInstancia(rutaNegocio, 'dispositivo');
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
@@ -102,7 +102,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   it('no lee ni procesa la cola histórica dentro de iniciar()', async () => {
     const despachador = DespachadorCola.obtenerInstancia(
       dbMock,
-      tenantPath,
+      rutaNegocio,
       deviceId,
       { procesamientoAuto: true },
       'dispositivo'
@@ -125,7 +125,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   it('elimina jobs expirados de jobs y de la cola, pero conserva jobs recientes', async () => {
     const despachador = DespachadorCola.obtenerInstancia(
       dbMock,
-      tenantPath,
+      rutaNegocio,
       deviceId,
       { procesamientoAuto: true },
       'dispositivo'
@@ -140,13 +140,13 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
 
     expect(deletedPaths).toEqual(
       expect.arrayContaining([
-        `${tenantPath}/spool/jobs/${oldJob.jobId}`,
-        `${tenantPath}/spool/devices/${deviceId}/queue/${oldJob.jobId}`,
+        `${rutaNegocio}/spool/jobs/${oldJob.jobId}`,
+        `${rutaNegocio}/spool/devices/${deviceId}/queue/${oldJob.jobId}`,
       ])
     );
-    expect(deletedPaths).not.toContain(`${tenantPath}/spool/jobs/${recentJob.jobId}`);
+    expect(deletedPaths).not.toContain(`${rutaNegocio}/spool/jobs/${recentJob.jobId}`);
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ path: `${tenantPath}/spool/jobs` }),
+      expect.objectContaining({ path: `${rutaNegocio}/spool/jobs` }),
       { [oldJob.jobId]: null }
     );
   });
@@ -154,7 +154,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   it('detener cancela el procesamiento y el GC diferidos pendientes', async () => {
     const despachador = DespachadorCola.obtenerInstancia(
       dbMock,
-      tenantPath,
+      rutaNegocio,
       deviceId,
       { procesamientoAuto: true },
       'dispositivo'
@@ -168,7 +168,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
   });
 
   it('encola un trabajo remoto en jobs y en la cola Hub del canal', async () => {
-    const job = await DespachadorCola.encolarRemoto(dbMock, tenantPath, {
+    const job = await DespachadorCola.encolarRemoto(dbMock, rutaNegocio, {
       idTrabajo: 'job_cuenta_v1_pedido-1',
       idPedido: 'pedido-1',
       proposito: 'cuenta',
@@ -187,13 +187,13 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
     });
     expect(mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: `${tenantPath}/spool/jobs/job_cuenta_v1_pedido-1`,
+        path: `${rutaNegocio}/spool/jobs/job_cuenta_v1_pedido-1`,
       }),
       expect.objectContaining({ jobId: 'job_cuenta_v1_pedido-1' })
     );
     expect(mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: `${tenantPath}/spool/hub/queue/job_cuenta_v1_pedido-1`,
+        path: `${rutaNegocio}/spool/hub/queue/job_cuenta_v1_pedido-1`,
       }),
       true
     );
@@ -212,7 +212,7 @@ describe('DespachadorCola — TTL y arranque no bloqueante', () => {
     };
     mockGet.mockResolvedValue(makeSnapshot(existente, existente.jobId));
 
-    const job = await DespachadorCola.encolarRemotoIdempotente(dbMock, tenantPath, {
+    const job = await DespachadorCola.encolarRemotoIdempotente(dbMock, rutaNegocio, {
       idTrabajo: existente.jobId,
       idPedido: existente.orderId,
       proposito: 'cuenta',

@@ -12,7 +12,7 @@ import type { Database } from 'firebase/database';
 import { ref, update } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PedidosRepository, type PedidoItem } from '../../../sistema/persistencia';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
 import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
 import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { normalizePedido } from '../../../logica/dominio/normalizers';
@@ -219,14 +219,14 @@ export type EstadisticasCocina = {
 
 type UseCocinaLogicProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   urgentThresholdMinutes?: number; // Umbral para marcar como urgente
   autoDescuentoInventario?: boolean; // Si TRUE, descuenta inventario automáticamente
 };
 
 export function useCocinaLogic({
   db,
-  tenantPath,
+  rutaNegocio,
   urgentThresholdMinutes = 15,
   autoDescuentoInventario = false,
 }: UseCocinaLogicProps) {
@@ -240,11 +240,11 @@ export function useCocinaLogic({
   });
 
   // Crear repositorios
-  const pedidosRepo = useMemo(() => new PedidosRepository(db, tenantPath), [db, tenantPath]);
+  const pedidosRepo = useMemo(() => new PedidosRepository(db, rutaNegocio), [db, rutaNegocio]);
 
   const inventarioV2Repo = useMemo(
-    () => new InventoryV2Repository(db, tenantPath),
-    [db, tenantPath]
+    () => new InventoryV2Repository(db, rutaNegocio),
+    [db, rutaNegocio]
   );
 
   const inventarioV2AreaRestauranteRef = useRef<string | null>(null);
@@ -510,7 +510,7 @@ export function useCocinaLogic({
 
             const updates: Record<string, any> = {};
             idsToStart.forEach((id) => {
-              updates[`${tenantPath}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
+              updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
             });
             await update(ref(db), updates);
           } catch (e) {
@@ -518,7 +518,7 @@ export function useCocinaLogic({
               await SincronizadorCocina.descontarPorReceta(productoId, cantidadBase);
               const updates: Record<string, any> = {};
               idsToStart.forEach((id) => {
-                updates[`${tenantPath}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
+                updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
               });
               await update(ref(db), updates);
             } catch (e2) {
@@ -589,16 +589,6 @@ export function useCocinaLogic({
         .filter((item) => item.estado !== 'listo')
         .flatMap((item) => {
           const ids = (item as any).idsAgrupados || [item.id];
-
-          // 🆕 Descuento por "Start" bypass
-          if (autoDescuentoInventario && !(item as any).inventoryDeducted && item.productoId) {
-            // Es async, pero estamos en un flatMap síncrono.
-            // Necesitamos hacerlo antes o dispararlo "fire and forget" o cambiar loop.
-            // Mejor cambiador loop a for-of.
-            // Para simplificar, NO descontamos aquí (demasiado complejo async en flatMap),
-            // PERO lanzamos la promesa en background o refactorizamos a bucle async.
-          }
-
           return ids.map((id: string) => ({ itemId: id, estado: 'listo' as const }));
         });
 
@@ -651,7 +641,7 @@ export function useCocinaLogic({
                   const ids = (item as any).idsAgrupados || [item.id];
                   const updates: Record<string, any> = {};
                   ids.forEach((id: string) => {
-                    updates[`${tenantPath}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
+                    updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
                       true;
                   });
                   await update(ref(db), updates);
@@ -665,7 +655,7 @@ export function useCocinaLogic({
                   const ids = (item as any).idsAgrupados || [item.id];
                   const updates: Record<string, any> = {};
                   ids.forEach((id: string) => {
-                    updates[`${tenantPath}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
+                    updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
                       true;
                   });
                   await update(ref(db), updates);

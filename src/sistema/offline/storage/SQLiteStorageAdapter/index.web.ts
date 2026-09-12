@@ -30,7 +30,7 @@ export interface OfflinePrintJob {
 
 export interface OfflineInventoryMovement {
   id: string;
-  tenantPath: string;
+  rutaNegocio: string;
   containerId: string;
   itemId: string;
   delta: number;
@@ -64,6 +64,18 @@ export interface OfflinePedido {
   id: string;
   data: string;
   updatedAt: number;
+}
+
+export interface HistorialVenta {
+  id: string;
+  negocio_id: string;
+  tipo: 'pedido_cerrado' | 'registro_ventas' | 'venta_suelto';
+  fecha: string; // ISO o YYYY/MM/DD
+  timestamp: number;
+  total: number;
+  metodo_pago: string | null;
+  datos_json: string;
+  sincronizado?: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -127,7 +139,7 @@ class SQLiteStorageAdapterWebClass {
   // Inventory Queue (web no-op)
   async enqueueInventoryMovement(_params: {
     id: string;
-    tenantPath: string;
+    rutaNegocio: string;
     containerId: string;
     itemId: string;
     delta: number;
@@ -148,8 +160,62 @@ class SQLiteStorageAdapterWebClass {
     return null;
   }
 
+  // Historial Ventas (In-Memory for Web/Tests)
+  private historialVentas = new Map<string, HistorialVenta>();
+
+  async guardarHistorialVenta(registro: HistorialVenta): Promise<void> {
+    this.historialVentas.set(registro.id, {
+      ...registro,
+      sincronizado: registro.sincronizado ?? 1,
+    });
+  }
+
+  async guardarHistorialVentasBulk(registros: HistorialVenta[]): Promise<void> {
+    for (const r of registros) {
+      this.historialVentas.set(r.id, {
+        ...r,
+        sincronizado: r.sincronizado ?? 1,
+      });
+    }
+  }
+
+  async obtenerHistorialVentas(
+    negocioId?: string,
+    filtro?: { fecha?: string; tipo?: string; desde?: number; hasta?: number }
+  ): Promise<HistorialVenta[]> {
+    let list = Array.from(this.historialVentas.values());
+    if (negocioId) {
+      list = list.filter((r) => r.negocio_id === negocioId);
+    }
+    if (filtro?.fecha) {
+      list = list.filter((r) => r.fecha === filtro.fecha);
+    }
+    if (filtro?.tipo) {
+      list = list.filter((r) => r.tipo === filtro.tipo);
+    }
+    if (filtro?.desde !== undefined) {
+      list = list.filter((r) => r.timestamp >= filtro.desde!);
+    }
+    if (filtro?.hasta !== undefined) {
+      list = list.filter((r) => r.timestamp <= filtro.hasta!);
+    }
+    return list.sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  async contarHistorialVentas(negocioId?: string): Promise<number> {
+    const list = await this.obtenerHistorialVentas(negocioId);
+    return list.length;
+  }
+
+  async sumarTotalHistorialVentas(negocioId?: string): Promise<number> {
+    const list = await this.obtenerHistorialVentas(negocioId);
+    return list.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  }
+
   // Utils
-  async clearAll(): Promise<void> {}
+  async clearAll(): Promise<void> {
+    this.historialVentas.clear();
+  }
   isAvailable(): boolean {
     return false;
   }

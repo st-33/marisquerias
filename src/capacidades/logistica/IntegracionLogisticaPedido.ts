@@ -7,7 +7,7 @@ import {
 } from '../../logica/dominio/logistica';
 import {
   crearIdDeterminista,
-  identidadTenantDesdePath,
+  identidadNegocioDesdeRuta,
   type CanalEntrada,
   type EstadoMisionLogistica,
   type ResultadoProcesamiento,
@@ -25,8 +25,8 @@ import { RepartoRepository } from '../../sistema/persistencia/reparto.repo';
 
 export interface SolicitudLogisticaPedido {
   pedidoId: string;
-  tenantId: string;
-  tenantPath: string;
+  negocioId: string;
+  rutaNegocio: string;
   prioridad?: PrioridadMision;
   pedido: Pick<
     Pedido,
@@ -49,8 +49,8 @@ export interface MotorLogisticoLegacy {
   crearMisionDelivery(
     mision: Omit<MisionDelivery, 'id' | 'createdAt' | 'createdAtISO' | 'estado'>
   ): Promise<string>;
-  suscribirPorTenant?: (
-    tenantId: string,
+  suscribirPorNegocio?: (
+    negocioId: string,
     callback: (misiones: Record<string, Mision>) => void
   ) => () => void;
 }
@@ -113,14 +113,14 @@ function canalDesdeOrigen(origen?: OrigenPedido): CanalEntrada {
 
 function crearSenalRequiereEntrega(
   pedido: Pedido,
-  contexto: Pick<SolicitudLogisticaPedido, 'tenantId' | 'tenantPath'> & {
+  contexto: Pick<SolicitudLogisticaPedido, 'negocioId' | 'rutaNegocio'> & {
     prioridad?: PrioridadMision;
   }
 ): SenalRequiereEntrega {
-  const tenant = identidadTenantDesdePath(contexto.tenantPath);
+  const negocio = identidadNegocioDesdeRuta(contexto.rutaNegocio);
   const occurredAt = new Date().toISOString();
-  const id = crearIdDeterminista('senal-pedido-requiere-entrega', contexto.tenantPath, pedido.id);
-  const idempotencyKey = `pedido-requiere-entrega:${contexto.tenantPath}:${pedido.id}`;
+  const id = crearIdDeterminista('senal-pedido-requiere-entrega', contexto.rutaNegocio, pedido.id);
+  const idempotencyKey = `pedido-requiere-entrega:${contexto.rutaNegocio}:${pedido.id}`;
   const canal = canalDesdeOrigen(pedido.origen);
   const modalidad =
     pedido.modalidad === 'recoleccion' || pedido.modalidad === 'entrega'
@@ -138,15 +138,15 @@ function crearSenalRequiereEntrega(
   return {
     id,
     schemaVersion: 1,
-    operationId: crearIdDeterminista('operacion-logistica', contexto.tenantPath, pedido.id),
-    tenant,
+    operationId: crearIdDeterminista('operacion-logistica', contexto.rutaNegocio, pedido.id),
+    negocio,
     origen: 'negocio',
     canal,
-    actor: { tipo: 'negocio', id: contexto.tenantId },
+    actor: { tipo: 'negocio', id: contexto.negocioId },
     destino: 'motor_logistico',
     occurredAt,
     idempotencyKey,
-    referencias: [{ tipo: 'pedido', id: pedido.id, tenantPath: contexto.tenantPath }],
+    referencias: [{ tipo: 'pedido', id: pedido.id, rutaNegocio: contexto.rutaNegocio }],
     tipo: 'pedido.requiere_entrega',
     payload: {
       pedidoId: pedido.id,
@@ -192,7 +192,7 @@ export class IntegracionLogisticaPedido {
 
   async solicitarEntrega(
     pedido: Pedido,
-    contexto: Pick<SolicitudLogisticaPedido, 'tenantId' | 'tenantPath'> & {
+    contexto: Pick<SolicitudLogisticaPedido, 'negocioId' | 'rutaNegocio'> & {
       prioridad?: PrioridadMision;
     }
   ): Promise<ResultadoSolicitudLogistica> {
@@ -276,8 +276,8 @@ export class IntegracionLogisticaPedido {
         tipo: 'delivery',
         prioridad: contexto.prioridad || 'media',
         pedidoId: pedido.id,
-        tenantId: contexto.tenantId,
-        tenantPath: contexto.tenantPath,
+        negocioId: contexto.negocioId,
+        rutaNegocio: contexto.rutaNegocio,
         cliente: {
           nombre: cliente.nombre,
           telefono: cliente.telefono,
@@ -326,7 +326,7 @@ export class IntegracionLogisticaPedido {
   }
 
   suscribirActualizaciones(
-    tenantId: string,
+    negocioId: string,
     pedidosIds: readonly string[],
     onUpdate: (actualizacion: {
       pedidoId: string;
@@ -334,12 +334,12 @@ export class IntegracionLogisticaPedido {
       referenciaMision: string;
     }) => void
   ): () => void {
-    if (this.entradaMotor || !this.motor.suscribirPorTenant || pedidosIds.length === 0) {
+    if (this.entradaMotor || !this.motor.suscribirPorNegocio || pedidosIds.length === 0) {
       return () => {};
     }
     const pedidosIdsSet = new Set(pedidosIds);
 
-    return this.motor.suscribirPorTenant(tenantId, (misiones) => {
+    return this.motor.suscribirPorNegocio(negocioId, (misiones) => {
       Object.values(misiones).forEach((mision) => {
         if (
           mision.tipo === 'delivery' &&

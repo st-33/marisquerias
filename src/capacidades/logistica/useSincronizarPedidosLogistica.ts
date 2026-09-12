@@ -14,8 +14,8 @@ import {
 
 export interface SincronizarPedidosLogisticaProps {
   db: Database | null;
-  tenantId: string | null;
-  tenantPath: string | null;
+  negocioId: string | null;
+  rutaNegocio: string | null;
   entradaMotor?: PuertoEntradaLogistica;
 }
 
@@ -25,8 +25,8 @@ export interface SincronizarPedidosLogisticaProps {
  */
 export function useSincronizarPedidosLogistica({
   db,
-  tenantId,
-  tenantPath,
+  negocioId,
+  rutaNegocio,
   entradaMotor,
 }: SincronizarPedidosLogisticaProps): void {
   const pedidos = usePedidos();
@@ -55,17 +55,17 @@ export function useSincronizarPedidosLogistica({
   );
 
   const integracion = useMemo(() => {
-    if (!db || !tenantId || !tenantPath || (!repartoUrl && !entradaMotor) || !logisticaHabilitada)
+    if (!db || !negocioId || !rutaNegocio || (!repartoUrl && !entradaMotor) || !logisticaHabilitada)
       return null;
     return new IntegracionLogisticaPedido(
-      new PedidosRepository(db, tenantPath),
+      new PedidosRepository(db, rutaNegocio),
       undefined,
       entradaMotor
     );
-  }, [db, entradaMotor, logisticaHabilitada, repartoUrl, tenantId, tenantPath]);
+  }, [db, entradaMotor, logisticaHabilitada, repartoUrl, negocioId, rutaNegocio]);
 
   useEffect(() => {
-    if (!integracion || !tenantId || !tenantPath) return;
+    if (!integracion || !negocioId || !rutaNegocio) return;
 
     Object.values(pedidos).forEach((pedido) => {
       if (
@@ -80,16 +80,16 @@ export function useSincronizarPedidosLogistica({
 
       pedidosEnviandoseRef.current.add(pedido.id);
       void integracion
-        .solicitarEntrega(pedido as any, { tenantId, tenantPath })
+        .solicitarEntrega(pedido as any, { negocioId, rutaNegocio })
         .finally(() => pedidosEnviandoseRef.current.delete(pedido.id));
     });
-  }, [integracion, pedidos, tenantId, tenantPath]);
+  }, [integracion, pedidos, negocioId, rutaNegocio]);
 
   useEffect(() => {
-    if (!integracion || !tenantId || idsParaSuscripcion.length === 0) return;
+    if (!integracion || !negocioId || idsParaSuscripcion.length === 0) return;
 
     return integracion.suscribirActualizaciones(
-      tenantId,
+      negocioId,
       idsParaSuscripcion,
       ({ pedidoId, estado, referenciaMision }) => {
         const pedido = pedidosRef.current[pedidoId];
@@ -97,5 +97,5 @@ export function useSincronizarPedidosLogistica({
         void integracion.aplicarActualizacion(pedido as any, estado, referenciaMision);
       }
     );
-  }, [integracion, idsParaSuscripcion, pedidosLogisticosKey, tenantId]);
+  }, [integracion, idsParaSuscripcion, pedidosLogisticosKey, negocioId]);
 }

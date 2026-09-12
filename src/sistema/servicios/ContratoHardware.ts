@@ -14,11 +14,11 @@ export interface ContratoHardware {
   hasPrinter(): boolean;
   imprimirComanda(
     pedido: any,
-    opciones?: { rol?: string; tenantName?: string }
+    opciones?: { rol?: string; nombreNegocio?: string }
   ): Promise<PrintResult>;
   imprimirCuenta(
     pedido: any,
-    opciones?: { rol?: string; tenantName?: string }
+    opciones?: { rol?: string; nombreNegocio?: string }
   ): Promise<PrintResult>;
   imprimirTicketVenta(venta: any): Promise<PrintResult>;
   imprimirPrueba(mensaje?: string): Promise<PrintResult>;

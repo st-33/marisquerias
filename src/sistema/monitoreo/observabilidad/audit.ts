@@ -9,8 +9,8 @@ export type AuditEntry = {
   ts: number;
 };
 
-export function writeAudit(db: Database, tenantPath: string, entry: AuditEntry) {
-  return push(ref(db, `${tenantPath}/audits`), entry);
+export function writeAudit(db: Database, rutaNegocio: string, entry: AuditEntry) {
+  return push(ref(db, `${rutaNegocio}/audits`), entry);
 }
 
 export type Notification = {
@@ -21,6 +21,6 @@ export type Notification = {
   ts: number;
 };
 
-export function sendNotification(db: Database, tenantPath: string, notif: Notification) {
-  return push(ref(db, `${tenantPath}/notificaciones`), notif);
+export function sendNotification(db: Database, rutaNegocio: string, notif: Notification) {
+  return push(ref(db, `${rutaNegocio}/notificaciones`), notif);
 }

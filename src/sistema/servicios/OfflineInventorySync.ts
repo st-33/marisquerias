@@ -4,34 +4,34 @@ import { useStore } from '../store';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
 import {
-  isCurrentTenantLifecycle,
-  switchTenantLifecycle,
-} from '../ciclo_de_vida/TenantLifecycleController';
-import { validarRutaTenant } from '../rtdb/rutas/RutaTenant';
+  isCurrentNegocioLifecycle,
+  switchNegocioLifecycle,
+} from '../ciclo_de_vida/NegocioLifecycleController';
+import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
 class OfflineInventorySyncClass {
   private isRunning = false;
   private unsubscribeNetInfo: (() => void) | null = null;
   private db: Database | null = null;
-  private tenantPath: string | null = null;
+  private rutaNegocio: string | null = null;
   private lifecycleGeneration = 0;
 
-  initialize(db: Database, tenantPath: string): void {
-    if (!validarRutaTenant(tenantPath)) {
+  initialize(db: Database, rutaNegocio: string): void {
+    if (!validar_ruta_negocio(rutaNegocio)) {
       logger.error(
         'OFFLINE_INV_SYNC',
-        'Intento de inicializar inventario con tenantPath inválido o legacy',
-        new Error(tenantPath)
+        'Intento de inicializar inventario con rutaNegocio inválido o legacy',
+        new Error(rutaNegocio)
       );
       return;
     }
 
-    if (this.db && this.tenantPath === tenantPath) return;
-    if (this.db && this.tenantPath !== tenantPath) this.destroy();
+    if (this.db && this.rutaNegocio === rutaNegocio) return;
+    if (this.db && this.rutaNegocio !== rutaNegocio) this.destroy();
 
     this.db = db;
-    this.tenantPath = tenantPath;
-    this.lifecycleGeneration = switchTenantLifecycle(tenantPath);
+    this.rutaNegocio = rutaNegocio;
+    this.lifecycleGeneration = switchNegocioLifecycle(rutaNegocio);
 
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
       if (state.isConnected && !this.isRunning && this.isCurrent()) {
@@ -44,23 +44,23 @@ class OfflineInventorySyncClass {
     });
 
     logger.info('OFFLINE_INV_SYNC', '✅ Servicio de sincronización de inventario inicializado', {
-      tenantPath,
+      rutaNegocio,
     });
   }
 
   private isCurrent(): boolean {
     return Boolean(
       this.db &&
-      this.tenantPath &&
-      isCurrentTenantLifecycle(this.tenantPath, this.lifecycleGeneration)
+      this.rutaNegocio &&
+      isCurrentNegocioLifecycle(this.rutaNegocio, this.lifecycleGeneration)
     );
   }
 
   async syncPendingMovements(): Promise<{ synced: number; failed: number }> {
     const db = this.db;
-    const tenantPath = this.tenantPath;
+    const rutaNegocio = this.rutaNegocio;
     const generation = this.lifecycleGeneration;
-    if (this.isRunning || !db || !tenantPath || !this.isCurrent()) {
+    if (this.isRunning || !db || !rutaNegocio || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
 
@@ -80,14 +80,14 @@ class OfflineInventorySyncClass {
       logger.info(
         'OFFLINE_INV_SYNC',
         `Sincronizando ${pendingMovements.length} movimientos de inventario...`,
-        { tenantPath, generation }
+        { rutaNegocio, generation }
       );
 
       const store = useStore.getState();
       for (const mov of pendingMovements) {
         if (!this.isCurrent()) break;
         try {
-          if (mov.tenantPath !== tenantPath) continue;
+          if (mov.rutaNegocio !== rutaNegocio) continue;
 
           if (mov.containerId.startsWith('section:')) {
             const sectionId = mov.containerId.replace('section:', '') as
@@ -96,7 +96,7 @@ class OfflineInventorySyncClass {
               | 'otros';
             await store.ajustarStockDeltaSeccion({
               db,
-              tenantPath,
+              rutaNegocio,
               sectionId,
               itemId: mov.itemId,
               delta: mov.delta,
@@ -107,7 +107,7 @@ class OfflineInventorySyncClass {
           } else {
             await store.ajustarStockDelta({
               db,
-              tenantPath,
+              rutaNegocio,
               containerId: mov.containerId,
               itemId: mov.itemId,
               delta: mov.delta,
@@ -156,7 +156,7 @@ class OfflineInventorySyncClass {
     this.unsubscribeNetInfo?.();
     this.unsubscribeNetInfo = null;
     this.db = null;
-    this.tenantPath = null;
+    this.rutaNegocio = null;
   }
 }
 

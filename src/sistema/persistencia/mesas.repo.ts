@@ -8,7 +8,7 @@ import { get, off, onValue, ref, runTransaction, update } from 'firebase/databas
 import { z } from 'zod';
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
 import { logger } from '../monitoreo/logger';
-import { assertValidTenantPath } from '../rtdb/guards';
+import { assertValidRutaNegocio } from '../rtdb/guards';
 
 export type EstadoMesa = 'libre' | 'ocupada' | 'reservada' | 'solicitar_cuenta';
 
@@ -33,13 +33,13 @@ export type MesaLayoutInput = {
 export class MesasRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private getBasePath() {
-    return `${this.tenantPath}/mesas`;
+    return `${this.rutaNegocio}/mesas`;
   }
 
   /**
@@ -48,7 +48,19 @@ export class MesasRepository {
   suscribirTodas(callback: (mesas: Record<string, Mesa>) => void): () => void {
     const r = ref(this.db, this.getBasePath());
     const cb = onValue(r, (snap) => {
-      callback((snap.val() as Record<string, Mesa>) || {});
+      const val = snap.val();
+      if (Array.isArray(val)) {
+        const mesasObj: Record<string, Mesa> = {};
+        val.forEach((m, idx) => {
+          if (m && typeof m === 'object') {
+            const id = String(idx);
+            mesasObj[id] = { ...m, id: m.id || id };
+          }
+        });
+        callback(mesasObj);
+        return;
+      }
+      callback((val as Record<string, Mesa>) || {});
     });
     return () => off(r, 'value', cb as any);
   }
@@ -77,7 +89,18 @@ export class MesasRepository {
    */
   async obtenerTodas(): Promise<Record<string, Mesa>> {
     const snap = await get(ref(this.db, this.getBasePath()));
-    return (snap.val() as Record<string, Mesa>) || {};
+    const val = snap.val();
+    if (Array.isArray(val)) {
+      const mesasObj: Record<string, Mesa> = {};
+      val.forEach((m, idx) => {
+        if (m && typeof m === 'object') {
+          const id = String(idx);
+          mesasObj[id] = { ...m, id: m.id || id };
+        }
+      });
+      return mesasObj;
+    }
+    return (val as Record<string, Mesa>) || {};
   }
 
   /**
@@ -154,7 +177,7 @@ export class MesasRepository {
    * Obtener los items del borrador (mesa pendiente) de una mesa específica
    */
   async obtenerItemsBorrador(mesaId: string): Promise<any[]> {
-    const snap = await get(ref(this.db, `${this.tenantPath}/mesas_pendientes/${mesaId}/items`));
+    const snap = await get(ref(this.db, `${this.rutaNegocio}/mesas_pendientes/${mesaId}/items`));
     return (snap.val() as any[]) || [];
   }
 

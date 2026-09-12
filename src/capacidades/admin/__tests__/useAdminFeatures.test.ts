@@ -14,8 +14,8 @@ jest.mock('../../../sistema/store', () => ({
 jest.mock('../../../sistema/firebase', () => ({
   getRtdb: jest.fn(),
 }));
-jest.mock('../../../sistema/persistencia/tenant.repo', () => ({
-  TenantRepository: jest.fn(),
+jest.mock('../../../sistema/persistencia/negocio.repo', () => ({
+  NegocioRepository: jest.fn(),
 }));
 
 describe('normalizarFeaturesAdmin', () => {

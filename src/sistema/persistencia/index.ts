@@ -57,8 +57,19 @@ export type {
 export { DevicesRepository } from './devices.repo';
 export type { TicketConfig, HubConfig } from './devices.repo';
 
-export { TenantRepository } from './tenant.repo';
-export type { Caracteristicas, Features } from './tenant.repo';
+export { NegocioRepository } from './negocio.repo';
+export type { Caracteristicas, Features } from './negocio.repo';
 
 export { RepartoAjustesRepository } from './reparto-ajustes.repo';
 export type { AjustesReparto } from './reparto-ajustes.repo';
+
+export {
+  InventoryV2Repository as RepositorioInventario,
+  InventoryV2Repository,
+} from './inventario.repo';
+export type {
+  InventoryAreaV2,
+  InventoryItemV2,
+  InventorySectionV2,
+  InventorySectionId,
+} from './inventario.repo';

@@ -6,7 +6,7 @@
 
 import { ref, onValue, off, set, update, Unsubscribe } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 export type AjustesReparto = {
   umbrales: {
@@ -28,13 +28,13 @@ export type AjustesReparto = {
 export class RepartoAjustesRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private getBasePath() {
-    return `${this.tenantPath}/ajustes/reparto`;
+    return `${this.rutaNegocio}/ajustes/reparto`;
   }
 
   /**
@@ -96,29 +96,5 @@ export class RepartoAjustesRepository {
   async toggleHorarios(habilitado: boolean): Promise<void> {
     const r = ref(this.db, `${this.getBasePath()}/horarios`);
     await update(r, { habilitado });
-  }
-
-  /**
-   * Suscribirse a costos
-   */
-  suscribirCostos(callback: (costos: AjustesReparto['costos']) => void): () => void {
-    const r = ref(this.db, `${this.getBasePath()}/costos`);
-    const cb = onValue(r, (snap) => {
-      const v = (snap.val() as any) || {};
-      callback({
-        base: Number(v.base ?? 20),
-        porKm: Number(v.porKm ?? 5),
-        minimo: Number(v.minimo ?? 20),
-      });
-    });
-    return () => off(r, 'value', cb as any);
-  }
-
-  /**
-   * Actualizar costos (actualización parcial)
-   */
-  async actualizarCostos(costos: Partial<AjustesReparto['costos']>): Promise<void> {
-    const r = ref(this.db, `${this.getBasePath()}/costos`);
-    await update(r, sanitizeRtdbPayload(costos));
   }
 }

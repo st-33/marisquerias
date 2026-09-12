@@ -16,7 +16,7 @@ export interface Order {
   total: number;
 }
 
-export interface TenantTicketConfig {
+export interface NegocioTicketConfig {
   nombreNegocio: string;
   encabezado?: string;
   logoBase64?: string;
@@ -37,12 +37,12 @@ export interface TenantTicketConfig {
  *
  * @param printer - Instancia activa y conectada de la librería de impresora.
  * @param order - El objeto del pedido a imprimir.
- * @param config - La configuración del tenant para el diseño del ticket.
+ * @param config - La configuración del negocio para el diseño del ticket.
  */
 export async function generarTicketCaja(
   printer: any,
   order: Order,
-  config: TenantTicketConfig
+  config: NegocioTicketConfig
 ): Promise<void> {
   const TICKET_WIDTH = 31; // Reduced to prevent wrapping issues
 

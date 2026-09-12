@@ -31,6 +31,13 @@ jest.mock('firebase/database', () => {
   };
 });
 
+const mockRegistrarMostrador = jest.fn().mockResolvedValue({ id: 'MOCK-VENTA' });
+jest.mock('../../persistencia/registroVentas.repo', () => ({
+  RegistroVentasRepository: jest.fn().mockImplementation(() => ({
+    registrarMostrador: mockRegistrarMostrador,
+  })),
+}));
+
 // Mock SQLiteStorageAdapter
 jest.mock('../../offline/storage/SQLiteStorageAdapter', () => ({
   SQLiteStorageAdapter: {
@@ -58,15 +65,15 @@ jest.mock('../../store', () => ({
 
 describe('offline-sync', () => {
   const dbMock = {} as unknown as Database;
-  const tenantPath = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
+  const rutaNegocio = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('SimpleSalesRepo', () => {
-    it('debe registrar venta con push si no tiene ID previo', async () => {
-      const repo = new SimpleSalesRepo(dbMock, tenantPath);
+    it('debe registrar venta delegando a RegistroVentasRepository sin escribir a /ventas legacy', async () => {
+      const repo = new SimpleSalesRepo(dbMock, rutaNegocio);
       const venta = {
         total: 150,
         metodoPago: 'efectivo',
@@ -77,16 +84,15 @@ describe('offline-sync', () => {
 
       const generatedId = await repo.registrarVenta(venta);
 
-      expect(push).toHaveBeenCalled();
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ key: 'MOCK-KEY-123' }),
+      expect(mockRegistrarMostrador).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'MOCK-KEY-123', total: 150 })
       );
+      expect(set).not.toHaveBeenCalled();
       expect(generatedId).toBe('MOCK-KEY-123');
     });
 
-    it('debe registrar venta con set e ID específico (idempotencia) si ya viene con ID', async () => {
-      const repo = new SimpleSalesRepo(dbMock, tenantPath);
+    it('debe registrar venta con ID específico (idempotencia) sin escribir a /ventas legacy', async () => {
+      const repo = new SimpleSalesRepo(dbMock, rutaNegocio);
       const venta = {
         id: 'vc_ADI-HW_123_XYZ',
         total: 250,
@@ -99,18 +105,17 @@ describe('offline-sync', () => {
       const returnedId = await repo.registrarVenta(venta);
 
       expect(push).not.toHaveBeenCalled();
-      expect(ref).toHaveBeenCalledWith(dbMock, `${tenantPath}/ventas/vc_ADI-HW_123_XYZ`);
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ path: `${tenantPath}/ventas/vc_ADI-HW_123_XYZ` }),
+      expect(mockRegistrarMostrador).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'vc_ADI-HW_123_XYZ', total: 250 })
       );
+      expect(set).not.toHaveBeenCalled();
       expect(returnedId).toBe('vc_ADI-HW_123_XYZ');
     });
   });
 
   describe('OfflineSalesSync', () => {
     it('debe inicializarse y disparar sincronización al recuperar internet', async () => {
-      OfflineSalesSync.initialize(dbMock, tenantPath);
+      OfflineSalesSync.initialize(dbMock, rutaNegocio);
 
       const pendingMock = [
         {
@@ -132,22 +137,22 @@ describe('offline-sync', () => {
       await OfflineSalesSync.syncPendingSales();
 
       expect(SQLiteStorageAdapter.getVentasPendientes).toHaveBeenCalled();
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ path: `${tenantPath}/ventas/test-sale-1` }),
+      expect(mockRegistrarMostrador).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'test-sale-1', total: 300 })
       );
+      expect(set).not.toHaveBeenCalled();
       expect(SQLiteStorageAdapter.markVentaSynced).toHaveBeenCalledWith('test-sale-1');
     });
   });
 
   describe('OfflineInventorySync', () => {
     it('debe inicializarse y procesar movimientos pendientes de inventario', async () => {
-      OfflineInventorySync.initialize(dbMock, tenantPath);
+      OfflineInventorySync.initialize(dbMock, rutaNegocio);
 
       const pendingMovements = [
         {
           id: 'mov-1',
-          tenantPath,
+          rutaNegocio,
           containerId: 'area_cocina__default',
           itemId: 'item-camaron',
           delta: -2,
@@ -158,7 +163,7 @@ describe('offline-sync', () => {
         },
         {
           id: 'mov-2',
-          tenantPath,
+          rutaNegocio,
           containerId: 'section:alimentos',
           itemId: 'item-refresco',
           delta: 5,
@@ -181,7 +186,7 @@ describe('offline-sync', () => {
       // Verificar llamada de ajustarStockDelta (para containerId normal)
       expect(mockAjustarStockDelta).toHaveBeenCalledWith({
         db: dbMock,
-        tenantPath,
+        rutaNegocio,
         containerId: 'area_cocina__default',
         itemId: 'item-camaron',
         delta: -2,
@@ -193,7 +198,7 @@ describe('offline-sync', () => {
       // Verificar llamada de ajustarStockDeltaSeccion (para section:)
       expect(mockAjustarStockDeltaSeccion).toHaveBeenCalledWith({
         db: dbMock,
-        tenantPath,
+        rutaNegocio,
         sectionId: 'alimentos',
         itemId: 'item-refresco',
         delta: 5,

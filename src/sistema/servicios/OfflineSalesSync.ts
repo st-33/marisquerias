@@ -4,34 +4,34 @@ import { SimpleSalesRepo } from '../persistencia/SimpleSalesRepo';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
 import {
-  isCurrentTenantLifecycle,
-  switchTenantLifecycle,
-} from '../ciclo_de_vida/TenantLifecycleController';
-import { validarRutaTenant } from '../rtdb/rutas/RutaTenant';
+  isCurrentNegocioLifecycle,
+  switchNegocioLifecycle,
+} from '../ciclo_de_vida/NegocioLifecycleController';
+import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
 class OfflineSalesSyncClass {
   private isRunning = false;
   private unsubscribeNetInfo: (() => void) | null = null;
   private salesRepo: SimpleSalesRepo | null = null;
-  private tenantPath: string | null = null;
+  private rutaNegocio: string | null = null;
   private lifecycleGeneration = 0;
 
-  initialize(db: Database, tenantPath: string): void {
-    if (!validarRutaTenant(tenantPath)) {
+  initialize(db: Database, rutaNegocio: string): void {
+    if (!validar_ruta_negocio(rutaNegocio)) {
       logger.error(
         'OFFLINE_SYNC',
-        'Intento de inicializar ventas con tenantPath inválido o legacy',
-        new Error(tenantPath)
+        'Intento de inicializar ventas con rutaNegocio inválido o legacy',
+        new Error(rutaNegocio)
       );
       return;
     }
 
-    if (this.salesRepo && this.tenantPath === tenantPath) return;
-    if (this.salesRepo && this.tenantPath !== tenantPath) this.destroy();
+    if (this.salesRepo && this.rutaNegocio === rutaNegocio) return;
+    if (this.salesRepo && this.rutaNegocio !== rutaNegocio) this.destroy();
 
-    this.tenantPath = tenantPath;
-    this.lifecycleGeneration = switchTenantLifecycle(tenantPath);
-    this.salesRepo = new SimpleSalesRepo(db, tenantPath);
+    this.rutaNegocio = rutaNegocio;
+    this.lifecycleGeneration = switchNegocioLifecycle(rutaNegocio);
+    this.salesRepo = new SimpleSalesRepo(db, rutaNegocio);
 
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
       if (state.isConnected && !this.isRunning && this.isCurrent()) {
@@ -40,22 +40,22 @@ class OfflineSalesSyncClass {
       }
     });
 
-    logger.info('OFFLINE_SYNC', '✅ Servicio de sincronización inicializado', { tenantPath });
+    logger.info('OFFLINE_SYNC', '✅ Servicio de sincronización inicializado', { rutaNegocio });
   }
 
   private isCurrent(): boolean {
     return Boolean(
-      this.tenantPath &&
+      this.rutaNegocio &&
       this.salesRepo &&
-      isCurrentTenantLifecycle(this.tenantPath, this.lifecycleGeneration)
+      isCurrentNegocioLifecycle(this.rutaNegocio, this.lifecycleGeneration)
     );
   }
 
   async syncPendingSales(): Promise<{ synced: number; failed: number }> {
     const repo = this.salesRepo;
-    const tenantPath = this.tenantPath;
+    const rutaNegocio = this.rutaNegocio;
     const generation = this.lifecycleGeneration;
-    if (this.isRunning || !repo || !tenantPath || !this.isCurrent()) {
+    if (this.isRunning || !repo || !rutaNegocio || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
 
@@ -73,7 +73,7 @@ class OfflineSalesSyncClass {
       }
 
       logger.info('OFFLINE_SYNC', `Sincronizando ${pendingVentas.length} ventas...`, {
-        tenantPath,
+        rutaNegocio,
         generation,
       });
 
@@ -117,7 +117,7 @@ class OfflineSalesSyncClass {
     this.unsubscribeNetInfo?.();
     this.unsubscribeNetInfo = null;
     this.salesRepo = null;
-    this.tenantPath = null;
+    this.rutaNegocio = null;
   }
 }
 

@@ -103,9 +103,9 @@ export interface MisionDelivery {
   /** Referencia al pedido original en la BD operacional */
   pedidoId: string;
 
-  /** Tenant que generó la misión */
-  tenantId: string;
-  tenantPath: string;
+  /** Negocio que generó la misión */
+  negocioId: string;
+  rutaNegocio: string;
 
   /** Cliente */
   cliente: {
@@ -150,9 +150,9 @@ export interface MisionReabastecimiento {
   estado: EstadoMision;
   prioridad: PrioridadMision;
 
-  /** Tenant que solicita el reabastecimiento */
-  tenantId: string;
-  tenantPath: string;
+  /** Negocio que solicita el reabastecimiento */
+  negocioId: string;
+  rutaNegocio: string;
 
   /** Proveedor de donde se comprará */
   proveedor: {
@@ -325,13 +325,17 @@ export class RepartoRepository {
   }
 
   /**
-   * Suscribirse a misiones de un tenant específico
+   * Suscribirse a misiones de un negocio específico
    */
-  suscribirPorTenant(
-    tenantId: string,
+  suscribirPorNegocio(
+    negocioId: string,
     callback: (misiones: Record<string, Mision>) => void
   ): () => void {
-    const q = query(ref(this.db, this.getBasePath()), orderByChild('tenantId'), equalTo(tenantId));
+    const q = query(
+      ref(this.db, this.getBasePath()),
+      orderByChild('negocioId'),
+      equalTo(negocioId)
+    );
     const cb = onValue(q, (snap) => {
       callback((snap.val() as any) || {});
     });

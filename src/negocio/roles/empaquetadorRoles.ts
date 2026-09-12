@@ -1,6 +1,6 @@
 /**
  * 📦 ENSAMBLADOR DE ROLES (Role Packer)
- * Sistema dinámico que activa/desactiva módulos según las features del tenant
+ * Sistema dinámico que activa/desactiva módulos según las features del negocio
  *
  * MODULARIDAD EXTREMA:
  * - Lee features desde Firebase
@@ -12,6 +12,8 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref } from 'firebase/database';
 import { useEffect, useState } from 'react';
 import { RUTAS } from '../../compartido/rutas';
+import { useStore } from '../../sistema/store';
+import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
 
 export type RolConfig = {
   habilitado: boolean;
@@ -41,23 +43,25 @@ export type ConfiguracionNegocio = {
 
 type PropsEmpaquetadorRoles = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
 };
 
-export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles) {
+export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles) {
+  const centralConfig = useStore((s) => s.central?.configuracion);
+  const centralEstado = useStore((s) => s.central?.estado);
   const [config, setConfig] = useState<ConfiguracionNegocio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tenantPath) {
-      console.log('[RolePacker] ❌ Sin tenantPath, no se cargarán roles');
+    if (!rutaNegocio) {
+      console.log('[RolePacker] ❌ Sin rutaNegocio, no se cargarán roles');
       return;
     }
 
-    console.log('[RolePacker] 🔍 Iniciando carga de roles desde:', tenantPath);
+    console.log('[RolePacker] 🔍 Iniciando carga de roles desde:', rutaNegocio);
 
-    const configRef = ref(db, `${tenantPath}/caracteristicas`);
+    const configRef = ref(db, `${rutaNegocio}/caracteristicas`);
 
     const callback = onValue(
       configRef,
@@ -70,7 +74,7 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
           if (!data || typeof data !== 'object') {
             console.warn('[RolePacker] ⚠️ Datos inválidos en caracteristicas:', data);
             // Intentar cargar desde ruta alternativa
-            const featuresRef = ref(db, `${tenantPath}/features`);
+            const featuresRef = ref(db, `${rutaNegocio}/features`);
             onValue(
               featuresRef,
               (featSnap) => {
@@ -174,6 +178,17 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
         isVCrudoFeature(data.module_venta_crudo) ||
         isVCrudoFeature(data.features?.module_venta_crudo);
 
+      const centralPermiteMostrador = estaCapacidadHabilitadaPorCentral(
+        centralConfig,
+        centralEstado,
+        'mostrador'
+      );
+      const centralPermiteReparto = estaCapacidadHabilitadaPorCentral(
+        centralConfig,
+        centralEstado,
+        'reparto'
+      );
+
       roles.mostrador = extraherRol(
         'mostrador',
         'venta_crudo',
@@ -182,6 +197,9 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
         RUTAS.ROLES.VENTA_CRUDO,
         forceVentaCrudo
       );
+      if (roles.mostrador && !centralPermiteMostrador) {
+        roles.mostrador.habilitado = false;
+      }
 
       // 4. ADMIN
       roles.admin = extraherRol('admin', null, 'Admin', 'settings', RUTAS.ROLES.ADMIN);
@@ -192,7 +210,8 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
           inventario: rolesData.admin.inventario !== false,
           mesas: rolesData.admin.mesas !== false,
           dispositivos: rolesData.admin.dispositivos !== false,
-          repart: rolesData.admin.repart !== false,
+          repart: rolesData.admin.repart !== false && centralPermiteReparto,
+          mostrador: rolesData.admin.mostrador !== false && centralPermiteMostrador,
         };
       }
 
@@ -213,6 +232,9 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
         'bicycle',
         RUTAS.ROLES.REPARTIDOR
       );
+      if (roles.repart && !centralPermiteReparto) {
+        roles.repart.habilitado = false;
+      }
 
       // Normalizar features globales
       const features: Record<string, boolean> = {};
@@ -246,7 +268,7 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
       console.log('[RolePacker] 🔌 Desuscribiendo de configuración');
       off(configRef, 'value', callback as any);
     };
-  }, [db, tenantPath]);
+  }, [db, rutaNegocio, centralConfig, centralEstado]);
 
   /**
    * Obtener roles habilitados

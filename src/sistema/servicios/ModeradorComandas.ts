@@ -38,7 +38,7 @@ type ResultadoDistribucion = {
 export class ModeradorComandas {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {}
 
   /**
@@ -59,8 +59,8 @@ export class ModeradorComandas {
     try {
       // 1. Obtener configuración de categorías y productos
       const [categoriasSnap, productosSnap] = await Promise.all([
-        get(ref(this.db, `${this.tenantPath}/menu/categorias`)),
-        get(ref(this.db, `${this.tenantPath}/menu/productos`)),
+        get(ref(this.db, `${this.rutaNegocio}/menu/categorias`)),
+        get(ref(this.db, `${this.rutaNegocio}/menu/productos`)),
       ]);
       const categorias = categoriasSnap.val() || {};
       const productos = productosSnap.val() || {};
@@ -103,7 +103,7 @@ export class ModeradorComandas {
 
       // 3. Actualizar estado de items según destino
       const updates: Record<string, any> = {};
-      const pedidoRef = ref(this.db, `${this.tenantPath}/${resolver('pedidos')}/${pedidoId}`);
+      const pedidoRef = ref(this.db, `${this.rutaNegocio}/${resolver('pedidos')}/${pedidoId}`);
       const pedidoSnap = await get(pedidoRef);
       const pedido = pedidoSnap.val();
 
@@ -185,7 +185,7 @@ export class ModeradorComandas {
    */
   async validarAccesoMesa(mesaId: string, userId: string): Promise<boolean> {
     try {
-      const mesaRef = ref(this.db, `${this.tenantPath}/${resolver('mesas_estado')}/${mesaId}`);
+      const mesaRef = ref(this.db, `${this.rutaNegocio}/${resolver('mesas_estado')}/${mesaId}`);
 
       const result = await runTransaction(mesaRef, (mesa) => {
         if (!mesa) {
@@ -250,7 +250,7 @@ export class ModeradorComandas {
    */
   async desuscribirUsuario(mesaId: string, userId: string): Promise<void> {
     try {
-      const mesaRef = ref(this.db, `${this.tenantPath}/${resolver('mesas_estado')}/${mesaId}`);
+      const mesaRef = ref(this.db, `${this.rutaNegocio}/${resolver('mesas_estado')}/${mesaId}`);
 
       await runTransaction(mesaRef, (mesa) => {
         if (!mesa || !mesa.usuariosActivos) return mesa;

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2022",
+    "checkJs": false,
+    "moduleResolution": "node"
+  },
+  "include": ["scripts/**/*", "eslint.config.js"]
+}

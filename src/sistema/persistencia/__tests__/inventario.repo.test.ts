@@ -1,5 +1,5 @@
 import { get, push, ref, update } from 'firebase/database';
-import { InventoryV2Repository } from '../inventory.v2.repo';
+import { InventoryV2Repository } from '../inventario.repo';
 
 jest.mock('firebase/database', () => ({
   get: jest.fn(),
@@ -15,7 +15,7 @@ type Snapshot = {
 
 describe('InventoryV2Repository', () => {
   const dbMock = {} as object;
-  const tenantPath = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
+  const rutaNegocio = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
   const mockGet = get as jest.Mock;
   const mockPush = push as jest.Mock;
   const mockUpdate = update as jest.Mock;
@@ -38,7 +38,7 @@ describe('InventoryV2Repository', () => {
   });
 
   it('descuenta stock y registra movimiento sin escribir una venta financiera duplicada', async () => {
-    const repository = new InventoryV2Repository(dbMock as never, tenantPath);
+    const repository = new InventoryV2Repository(dbMock as never, rutaNegocio);
 
     const operationId = await repository.registrarVentaMultiple({
       items: [
@@ -62,10 +62,10 @@ describe('InventoryV2Repository', () => {
 
     const updates = mockUpdate.mock.calls[0][1] as Record<string, unknown>;
     const paths = Object.keys(updates);
-    expect(paths).toContain(`${tenantPath}/inventory_v2/areas/area-mostrador/stock/producto-1`);
+    expect(paths).toContain(`${rutaNegocio}/inventario/areas/area-mostrador/stock/producto-1`);
     expect(paths.some((path) => path.includes('/ventas_v2/'))).toBe(false);
 
-    const movementPath = paths.find((path) => path.includes('/inventory_v2/movements/'));
+    const movementPath = paths.find((path) => path.includes('/inventario/movements/'));
     expect(movementPath).toBeDefined();
     expect(updates[movementPath as string]).toMatchObject({
       tipo: 'salida',

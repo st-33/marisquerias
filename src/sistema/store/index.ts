@@ -10,15 +10,15 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { getRtdb } from '../firebase';
 import { logger } from '../monitoreo';
 import {
-  registerTenantCleanup,
-  registerTenantScopedStateReset,
-  registerTenantStateReset,
-  resetTenantLifecycle,
-  switchTenantLifecycle,
-} from '../ciclo_de_vida/TenantLifecycleController';
+  registerNegocioCleanup,
+  registerNegocioScopedStateReset,
+  registerNegocioStateReset,
+  resetNegocioLifecycle,
+  switchNegocioLifecycle,
+} from '../ciclo_de_vida/NegocioLifecycleController';
 import { createDataSourcesSlice, type DataSourcesSlice } from './slices/dataSources';
 import { createHardwareSlice, type HardwareSlice } from './slices/hardware';
-import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventoryV2';
+import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventario';
 import { createNegocioSlice, type NegocioSlice } from './slices/negocio';
 import { createOperacionSlice, type OperacionSlice } from './slices/operacion';
 import {
@@ -27,14 +27,17 @@ import {
   storage,
   SESION_STORAGE_KEY,
   ESTADO_SESION_INICIAL,
-  getTenantStorageKey,
+  getNegocioStorageKey,
 } from './slices/sesion';
 import { createUISlice, ESTADO_INICIAL_UI, type UISlice } from './slices/ui';
 import { ESTADO_INICIAL_NEGOCIO } from './slices/negocio';
 import { ESTADO_INICIAL_DATA_SOURCES } from './slices/dataSources';
 import { ESTADO_INICIAL_HARDWARE } from './slices/hardware';
 import { ESTADO_INICIAL_OPERACION } from './slices/operacion';
-import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventoryV2';
+import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventario';
+
+import { createCentralSlice, type CentralSlice, ESTADO_INICIAL_CENTRAL } from './slices/central';
+import { suscribirCentralAlStore } from '../central/CentralListener';
 
 // Import local para uso interno en selectores
 import type { ItemBase, PedidoBase } from './slices/operacion';
@@ -43,6 +46,7 @@ import type { TipoDispositivo } from '../../sistema/tipos/contratos';
 
 // Tipos centralizados
 export * from '../../sistema/tipos/contratos';
+export * from '../central/useCentralConfig';
 export type {
   CategoriaBase,
   DraftItem,
@@ -52,15 +56,14 @@ export type {
   ProductoBase,
 } from './slices/operacion';
 
-// ...
-
 export type AppStore = SesionSlice &
   NegocioSlice &
   UISlice &
   DataSourcesSlice &
   HardwareSlice &
   OperacionSlice &
-  InventoryV2Slice;
+  InventoryV2Slice &
+  CentralSlice;
 
 export const useStore = create<AppStore>()(
   subscribeWithSelector((...args) => ({
@@ -71,23 +74,25 @@ export const useStore = create<AppStore>()(
     ...createHardwareSlice(...args),
     ...createOperacionSlice(...args),
     ...createInventoryV2Slice(...args),
+    ...createCentralSlice(...args),
   }))
 );
 
-const resetTenantScopedSlices = () => {
+const resetNegocioScopedSlices = () => {
   useStore.setState({
     negocio: ESTADO_INICIAL_NEGOCIO,
     ui: ESTADO_INICIAL_UI,
     dataSources: ESTADO_INICIAL_DATA_SOURCES,
     hardware: ESTADO_INICIAL_HARDWARE,
+    central: ESTADO_INICIAL_CENTRAL,
     ...ESTADO_INICIAL_OPERACION,
     ...ESTADO_INICIAL_INVENTORY_V2,
   });
 };
 
-registerTenantScopedStateReset(resetTenantScopedSlices);
-registerTenantStateReset(() => {
-  resetTenantScopedSlices();
+registerNegocioScopedStateReset(resetNegocioScopedSlices);
+registerNegocioStateReset(() => {
+  resetNegocioScopedSlices();
   useStore.setState({
     sesion: ESTADO_SESION_INICIAL,
     estadoInstalacion: 'SIN_VINCULO',
@@ -100,8 +105,11 @@ registerTenantStateReset(() => {
 
 // Sesión
 export const useSesion = () => useStore((s) => s.sesion);
+export const useNegocioId = () => useStore((s) => s.sesion.negocio_id || s.sesion.negocioId);
+export const useRutaNegocio = () => useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio);
+export const useCategoriaId = () => useStore((s) => s.sesion.categoria_id || s.sesion.category);
 export const useEstaAutenticado = () =>
-  useStore((s) => !!s.sesion.access_code && !!s.sesion.tenantId);
+  useStore((s) => !!s.sesion.access_code && !!(s.sesion.negocio_id || s.sesion.negocioId));
 
 // Negocio
 export const useFeatures = () => useStore((s) => s.negocio.features);
@@ -154,10 +162,6 @@ export const useInventorySections = () => useStore((s) => s.sections);
  *
  * @param pedidoId - ID único del pedido (ej: "PED-20260112-001")
  * @returns El objeto PedidoBase completo, o null si no existe
- *
- * @example
- * const pedido = usePedido("PED-20260112-001");
- * console.log(pedido?.estatus); // "enviado_cocina"
  */
 export const usePedido = (pedidoId?: string | null): PedidoBase | null =>
   useStore((s) => {
@@ -173,12 +177,6 @@ export const usePedido = (pedidoId?: string | null): PedidoBase | null =>
  *
  * @param pedidoId - ID único del pedido
  * @returns Record<string, ItemBase> con los items, o {} si el pedido no existe
- *
- * @example
- * const items = useItemsPedido("PED-20260112-001");
- * Object.entries(items).forEach(([id, item]) => {
- *   console.log(item.nombre, item.precio);
- * });
  */
 const EMPTY_ITEMS: Record<string, ItemBase> = {};
 
@@ -214,8 +212,8 @@ export async function cargarEstadoPersistido() {
 
       // Validar vinculación del dispositivo en el arranque
       try {
-        const { getRtdb } = await import('../firebase');
-        const { EnsambladorInstalacion } = await import('../instalacion');
+        const { EnsambladorInstalacion } =
+          await import('../instalacion/ensambladores/EnsambladorInstalacion');
         const db = getRtdb();
         const ensamblador = new EnsambladorInstalacion(db);
         const dispositivo = await ensamblador.obtenerVinculacionLocal();
@@ -231,7 +229,7 @@ export async function cargarEstadoPersistido() {
         logger.error('STORE', '❌ Error al validar dispositivo en arranque', deviceError as Error);
       }
     }
-    const featuresKey = getTenantStorageKey(store.sesion.tenantPath, 'negocio', 'features');
+    const featuresKey = getNegocioStorageKey(store.sesion.rutaNegocio, 'negocio', 'features');
     const rawFeatures =
       (featuresKey ? await storage.getItem(featuresKey) : null) ||
       (await storage.getItem('features'));
@@ -247,7 +245,7 @@ export async function cargarEstadoPersistido() {
 }
 
 export async function limpiarEstadoPersistido() {
-  resetTenantLifecycle('persisted_state_cleanup');
+  resetNegocioLifecycle('persisted_state_cleanup');
   await storage.multiRemove([
     SESION_STORAGE_KEY,
     'sesion',
@@ -263,21 +261,23 @@ export async function limpiarEstadoPersistido() {
  * Centraliza TODAS las suscripciones a Firebase siguiendo el Dogma V2.
  */
 export function useAppListeners(isAppReady: boolean) {
-  const tenantPath = useStore((s) => s.sesion.tenantPath);
+  const rutaNegocio = useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio);
+  const negocioId = useStore((s) => s.sesion.negocio_id || s.sesion.negocioId);
   const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!isAppReady || !tenantPath) {
+    if (!isAppReady || !rutaNegocio) {
       cleanupRef.current?.();
       cleanupRef.current = null;
       return;
     }
 
-    const generation = switchTenantLifecycle(tenantPath);
+    const generation = switchNegocioLifecycle(rutaNegocio);
     const db = getRtdb();
     const store = useStore.getState();
-    const operacionCleanup = store.inicializarOperacionListeners(db, tenantPath);
-    const inventoryCleanup = store.inicializarInventoryV2Listeners(db, tenantPath);
+    const operacionCleanup = store.inicializarOperacionListeners(db, rutaNegocio);
+    const inventoryCleanup = store.inicializarInventoryV2Listeners(db, rutaNegocio);
+    const centralCleanup = negocioId ? suscribirCentralAlStore(db, negocioId, store) : () => {};
     let cleaned = false;
 
     const cleanup = () => {
@@ -285,20 +285,21 @@ export function useAppListeners(isAppReady: boolean) {
       cleaned = true;
       operacionCleanup();
       inventoryCleanup();
+      centralCleanup();
       logger.info('LISTENERS', '🔌 Suscripciones centralizadas desconectadas', {
-        tenantPath,
+        rutaNegocio,
         generation,
       });
     };
 
-    const unregister = registerTenantCleanup(tenantPath, cleanup);
+    const unregister = registerNegocioCleanup(rutaNegocio, cleanup);
     cleanupRef.current = () => {
       unregister();
       cleanup();
     };
 
     logger.info('LISTENERS', '🔌 Suscripciones centralizadas activas', {
-      tenantPath,
+      rutaNegocio,
       generation,
     });
 
@@ -307,7 +308,7 @@ export function useAppListeners(isAppReady: boolean) {
       cleanup();
       if (cleanupRef.current) cleanupRef.current = null;
     };
-  }, [isAppReady, tenantPath]);
+  }, [isAppReady, rutaNegocio, negocioId]);
 }
 
 // La inicialización se maneja vía hooks como useAppListeners

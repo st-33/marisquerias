@@ -3,12 +3,16 @@ import { Platform } from 'react-native';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
 import type { ContratoSesion } from '../../../sistema/tipos/contratos';
-import { validarRutaTenant, descomponerRutaTenant } from '../../rtdb/rutas/RutaTenant';
 import {
-  resetTenantLifecycle,
-  switchTenantLifecycle,
-  tenantStorageKey,
-} from '../../ciclo_de_vida/TenantLifecycleController';
+  validar_ruta_negocio,
+  descomponer_ruta_negocio,
+  extraer_negocio_id_canonico,
+} from '../../rtdb/rutas/ruta_negocio';
+import {
+  resetNegocioLifecycle,
+  switchNegocioLifecycle,
+  negocioStorageKey,
+} from '../../ciclo_de_vida/NegocioLifecycleController';
 
 export type EstadoInstalacion =
   | 'HIDRATANDO'
@@ -23,11 +27,14 @@ export const SESION_STORAGE_KEY = '@system:session:active';
 
 export const ESTADO_SESION_INICIAL: ContratoSesion = {
   access_code: null,
-  tenantPath: null,
-  tenantId: null,
+  rutaNegocio: null,
+  negocioId: null,
   niche: null,
   category: null,
   rol: null,
+  negocio_id: null,
+  ruta_negocio: null,
+  categoria_id: null,
 };
 
 const getStorage = () => {
@@ -44,12 +51,12 @@ const getStorage = () => {
 
 export const storage = getStorage();
 
-export function getTenantStorageKey(
-  tenantPath: string | null | undefined,
+export function getNegocioStorageKey(
+  rutaNegocio: string | null | undefined,
   modulo: string,
   clave: string
 ): string | null {
-  return tenantStorageKey(tenantPath, modulo, clave);
+  return negocioStorageKey(rutaNegocio, modulo, clave);
 }
 
 export interface AccionesSesion {
@@ -70,20 +77,40 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
   estadoInstalacion: 'HIDRATANDO',
 
   async setSession(sesion) {
-    const previousTenantPath = get().sesion.tenantPath;
-    if (previousTenantPath !== sesion.tenantPath) {
-      switchTenantLifecycle(sesion.tenantPath);
+    const resolvedRutaNegocio = sesion.ruta_negocio || sesion.rutaNegocio || null;
+    const previousRutaNegocio = get().sesion.ruta_negocio || get().sesion.rutaNegocio;
+    if (previousRutaNegocio !== resolvedRutaNegocio) {
+      switchNegocioLifecycle(resolvedRutaNegocio);
     }
 
-    let resolvedCategory = sesion.category ?? null;
-    if (!resolvedCategory && sesion.tenantPath) {
-      const iden = descomponerRutaTenant(sesion.tenantPath);
-      if (iden) resolvedCategory = iden.categoriaId;
+    let resolvedCategory = sesion.categoria_id || sesion.category || null;
+    let resolvedNegocioId = sesion.negocio_id || null;
+
+    if (resolvedRutaNegocio) {
+      const iden = descomponer_ruta_negocio(resolvedRutaNegocio);
+      if (iden) {
+        if (!resolvedCategory) resolvedCategory = iden.categoria_id || iden.categoriaId;
+        if (!resolvedNegocioId) resolvedNegocioId = iden.negocio_id_canonico;
+      }
     }
+
+    if (!resolvedNegocioId && (sesion.negocio_id || sesion.negocioId)) {
+      resolvedNegocioId = extraer_negocio_id_canonico(
+        (sesion.negocio_id || sesion.negocioId)!,
+        resolvedCategory || undefined
+      );
+    }
+
+    const legacyNegocioId = sesion.negocioId || resolvedNegocioId;
 
     const newSesion: ContratoSesion = {
       ...sesion,
+      rutaNegocio: resolvedRutaNegocio,
+      ruta_negocio: resolvedRutaNegocio,
+      negocioId: legacyNegocioId,
+      negocio_id: resolvedNegocioId || legacyNegocioId,
       category: resolvedCategory,
+      categoria_id: resolvedCategory,
       usuario: get().sesion.usuario,
     };
     set({ sesion: newSesion });
@@ -92,16 +119,19 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
       await storage.setItem(
         SESION_STORAGE_KEY,
         JSON.stringify({
-          access_code: sesion.access_code,
-          tenantPath: sesion.tenantPath,
-          tenantId: sesion.tenantId,
-          niche: sesion.niche,
-          category: resolvedCategory,
-          rol: sesion.rol,
+          access_code: newSesion.access_code,
+          rutaNegocio: newSesion.rutaNegocio,
+          ruta_negocio: newSesion.ruta_negocio,
+          negocioId: newSesion.negocioId,
+          negocio_id: newSesion.negocio_id,
+          niche: newSesion.niche,
+          category: newSesion.category,
+          categoria_id: newSesion.categoria_id,
+          rol: newSesion.rol,
         })
       );
 
-      if (sesion.tenantPath && validarRutaTenant(sesion.tenantPath)) {
+      if (newSesion.ruta_negocio && validar_ruta_negocio(newSesion.ruta_negocio)) {
         set({ estadoInstalacion: 'VINCULADA' });
       } else {
         set({ estadoInstalacion: 'ERROR' });
@@ -128,8 +158,8 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
   },
 
   async clearSession() {
-    const previousTenantPath = get().sesion.tenantPath;
-    resetTenantLifecycle('clear_session');
+    const previousRutaNegocio = get().sesion.rutaNegocio;
+    resetNegocioLifecycle('clear_session');
 
     set({
       sesion: ESTADO_SESION_INICIAL,
@@ -137,11 +167,11 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
     });
 
     try {
-      const tenantKeys = [
-        getTenantStorageKey(previousTenantPath, 'negocio', 'features'),
-        getTenantStorageKey(previousTenantPath, 'hardware', 'dispositivos'),
-        getTenantStorageKey(previousTenantPath, 'hardware', 'preferidos'),
-        getTenantStorageKey(previousTenantPath, 'data-sources', 'config'),
+      const negocioKeys = [
+        getNegocioStorageKey(previousRutaNegocio, 'negocio', 'features'),
+        getNegocioStorageKey(previousRutaNegocio, 'hardware', 'dispositivos'),
+        getNegocioStorageKey(previousRutaNegocio, 'hardware', 'preferidos'),
+        getNegocioStorageKey(previousRutaNegocio, 'data-sources', 'config'),
       ].filter((key): key is string => Boolean(key));
 
       await storage.removeItem(SESION_STORAGE_KEY);
@@ -150,13 +180,13 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
       await storage.removeItem('hardware_dispositivos');
       await storage.removeItem('hardware_preferidos');
       await storage.removeItem('dataSources');
-      await storage.multiRemove(tenantKeys);
+      await storage.multiRemove(negocioKeys);
 
       const { deviceBinding } = await import('../../seguridad');
       await deviceBinding.unregisterDevice();
 
       await storage.removeItem('adi_dispositivo_vinculado');
-      logger.info('STORE_SESION', 'Dispositivo desvinculado y estado tenant purgado en logout');
+      logger.info('STORE_SESION', 'Dispositivo desvinculado y estado negocio purgado en logout');
     } catch (error) {
       logger.error('STORE_SESION', 'Error al limpiar sesión', error as Error);
     }

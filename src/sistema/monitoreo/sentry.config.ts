@@ -93,10 +93,10 @@ export function captureMessage(message: string, level: 'info' | 'warning' | 'err
 /**
  * Agregar contexto de usuario
  */
-export function setUser(user: { id: string; tenantId?: string; rol?: string }) {
+export function setUser(user: { id: string; negocioId?: string; rol?: string }) {
   Sentry.setUser({
     id: user.id,
-    username: user.tenantId,
+    username: user.negocioId,
     role: user.rol,
   });
 }

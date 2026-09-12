@@ -12,26 +12,29 @@ import { validarProductoParaEliminar } from '../admin/menuSafety';
 
 type PropsGestionMenu = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
 };
 
-export function useGestionMenu({ db, tenantPath }: PropsGestionMenu) {
+export function useGestionMenu({ db, rutaNegocio }: PropsGestionMenu) {
   const storeCategorias = useStore((s) => s.categorias);
   const storeProductos = useStore((s) => s.productos);
   const listenersActivos = useStore((s) => s.listenersActivos);
   const loading = !listenersActivos;
 
-  const menuRepo = useMemo(() => new MenuRepository(db, tenantPath), [db, tenantPath]);
+  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
 
-  const inventarioRepo = useMemo(() => new RepositorioInventario(db, tenantPath), [db, tenantPath]);
+  const inventarioRepo = useMemo(
+    () => new RepositorioInventario(db, rutaNegocio),
+    [db, rutaNegocio]
+  );
 
   // 🔥 SELF-HEALING: Ejecutar reparación silenciosa al iniciar
   useEffect(() => {
-    if (!tenantPath) return;
+    if (!rutaNegocio) return;
     menuRepo
       .repararIntegridad()
       .catch((err) => console.error('[useGestionMenu] Self-healing failed:', err));
-  }, [menuRepo, tenantPath]);
+  }, [menuRepo, rutaNegocio]);
 
   // Acciones de categorías
   const crearCategoria = async (categoria: Omit<Categoria, 'id'>) => {

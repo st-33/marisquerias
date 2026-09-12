@@ -1,53 +1,18 @@
 import type { Database } from 'firebase/database';
-import { get, off, onValue, ref, runTransaction } from 'firebase/database';
 import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repo';
 import type { Pedido } from '../pedidos.repo';
+import { SQLiteStorageAdapter } from '../../offline';
 
-jest.mock('firebase/database', () => ({
-  get: jest.fn(),
-  off: jest.fn(),
-  onValue: jest.fn(),
-  ref: jest.fn((db, path) => ({ db, path })),
-  runTransaction: jest.fn(),
-}));
-
-type Snapshot = {
-  exists: () => boolean;
-  val: () => unknown;
-};
-
-function snapshot(value: unknown): Snapshot {
-  return {
-    exists: () => value !== null && value !== undefined,
-    val: () => value,
-  };
-}
-
-describe('RegistroVentasRepository', () => {
+describe('RegistroVentasRepository — Persistencia en SQLite', () => {
   const dbMock = {} as unknown as Database;
-  const tenantPath = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
+  const rutaNegocio = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
   const timestamp = new Date(2026, 7, 21, 13, 35, 3).getTime();
-  const fecha = new Date(timestamp);
-  const anio = String(fecha.getFullYear());
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const dia = String(fecha.getDate()).padStart(2, '0');
 
-  const mockGet = get as jest.Mock;
-  const mockOff = off as jest.Mock;
-  const mockOnValue = onValue as jest.Mock;
-  const mockRef = ref as jest.Mock;
-  const mockRunTransaction = runTransaction as jest.Mock;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockGet.mockResolvedValue(snapshot(null));
-    mockRunTransaction.mockImplementation(async (_reference, updater) => {
-      const next = updater(0);
-      return { committed: true, snapshot: snapshot(next) };
-    });
+  beforeEach(async () => {
+    await SQLiteStorageAdapter.clearAll();
   });
 
-  it('crea una venta de pedido con secuencia diaria y ruta aislada por tenant', async () => {
+  it('crea una venta de pedido con secuencia diaria y almacenamiento en SQLite', async () => {
     const pedido: Pedido = {
       id: 'PED-20260821-001',
       tipo: 'mesa',
@@ -68,7 +33,7 @@ describe('RegistroVentasRepository', () => {
       },
     };
 
-    const registro = await new RegistroVentasRepository(dbMock, tenantPath).registrarPedido(
+    const registro = await new RegistroVentasRepository(dbMock, rutaNegocio).registrarPedido(
       pedido,
       timestamp
     );
@@ -84,43 +49,39 @@ describe('RegistroVentasRepository', () => {
       estado: 'pagada',
       timestamp,
     });
-    expect(mockRef).toHaveBeenCalledWith(
-      dbMock,
-      `${tenantPath}/secuencias/ventas/${anio}${mes}${dia}`
-    );
-    expect(mockRef).toHaveBeenCalledWith(
-      dbMock,
-      `${tenantPath}/registro/ventas/${anio}/${mes}/${dia}/${pedido.id}`
-    );
+
+    const guardados = await SQLiteStorageAdapter.obtenerHistorialVentas('puerto-libres');
+    expect(guardados).toHaveLength(1);
+    expect(guardados[0]).toMatchObject({
+      id: pedido.id,
+      negocio_id: 'puerto-libres',
+      tipo: 'pedido_cerrado',
+      total: 300,
+    });
   });
 
-  it('no vuelve a reservar secuencia ni duplica un origen ya proyectado', async () => {
-    const existente = {
-      origen: 'mostrador',
+  it('no vuelve a reservar secuencia ni duplica un origen ya proyectado (idempotencia)', async () => {
+    const entrada = {
+      origen: 'mostrador' as const,
       origenId: 'vc-device-1',
-      numero: 7,
-      canal: 'mostrador',
+      canal: 'mostrador' as const,
       total: 250,
-      estado: 'pagada',
+      estado: 'pagada' as const,
       timestamp,
     };
-    mockGet.mockResolvedValue(snapshot(existente));
 
-    const registro = await new RegistroVentasRepository(dbMock, tenantPath).registrar({
-      origen: 'mostrador',
-      origenId: 'vc-device-1',
-      canal: 'mostrador',
-      total: 250,
-      estado: 'pagada',
-      timestamp,
-    });
+    const repo = new RegistroVentasRepository(dbMock, rutaNegocio);
+    const registro1 = await repo.registrar(entrada);
+    const registro2 = await repo.registrar(entrada);
 
-    expect(registro).toEqual(existente);
-    expect(mockRunTransaction).not.toHaveBeenCalled();
+    expect(registro1).toEqual(registro2);
+
+    const guardados = await SQLiteStorageAdapter.obtenerHistorialVentas('puerto-libres');
+    expect(guardados).toHaveLength(1);
   });
 
-  it('proyecta mostrador sin duplicar la venta legacy', async () => {
-    const registro = await new RegistroVentasRepository(dbMock, tenantPath).registrarMostrador({
+  it('proyecta mostrador a SQLite correctamente', async () => {
+    const registro = await new RegistroVentasRepository(dbMock, rutaNegocio).registrarMostrador({
       id: 'vc-device-2',
       total: 580,
       metodoPago: 'efectivo',
@@ -138,37 +99,29 @@ describe('RegistroVentasRepository', () => {
       total: 580,
       numero: 1,
     });
+
+    const guardados = await SQLiteStorageAdapter.obtenerHistorialVentas('puerto-libres');
+    expect(guardados).toHaveLength(1);
+    expect(guardados[0].total).toBe(580);
+    expect(guardados[0].tipo).toBe('registro_ventas');
   });
 
-  it('suscribe las ventas del día en la ruta financiera y limpia el listener', () => {
-    let callback: ((snap: Snapshot) => void) | undefined;
-    mockOnValue.mockImplementation((_reference, handler) => {
-      callback = handler;
-      return handler;
+  it('obtiene las ventas del día desde SQLite', async () => {
+    const repo = new RegistroVentasRepository(dbMock, rutaNegocio);
+    await repo.registrarMostrador({
+      id: 'venta_1',
+      total: 350,
+      metodoPago: 'tarjeta',
+      items: [{ nombre: 'Ceviche', cantidad: 1, precio: 350, subtotal: 350 }],
+      timestamp,
     });
 
-    const recibido: Record<string, RegistroVenta> = {};
-    const limpiar = new RegistroVentasRepository(dbMock, tenantPath).suscribirDia(
-      timestamp,
-      (registros) => Object.assign(recibido, registros)
-    );
-
-    callback?.(
-      snapshot({
-        venta_1: {
-          origen: 'mostrador',
-          origenId: 'venta_1',
-          numero: 4,
-          canal: 'mostrador',
-          total: 350,
-          estado: 'pagada',
-          timestamp,
-        },
-      })
-    );
-
-    expect(recibido.venta_1).toMatchObject({ origen: 'mostrador', total: 350 });
-    limpiar();
-    expect(mockOff).toHaveBeenCalledWith(expect.anything(), 'value', callback);
+    const ventasDelDia = await repo.obtenerDia(timestamp);
+    expect(ventasDelDia.venta_1).toBeDefined();
+    expect(ventasDelDia.venta_1).toMatchObject({
+      origen: 'mostrador',
+      total: 350,
+      metodoPago: 'tarjeta',
+    });
   });
 });

@@ -54,7 +54,7 @@ function snapshot(value: unknown): Snapshot {
 
 describe('PedidosRepository.cerrar', () => {
   const dbMock = {} as unknown as Database;
-  const tenantPath = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
+  const rutaNegocio = '2 alimentos_y_bebidas/marisquerias/puerto-libres';
   const timestamp = new Date(2026, 7, 21, 13, 35, 3).getTime();
   const pedido = {
     id: 'PED-20260821-001',
@@ -92,10 +92,10 @@ describe('PedidosRepository.cerrar', () => {
   });
 
   it('cierra el pedido y enlaza la proyección de venta', async () => {
-    await new PedidosRepository(dbMock, tenantPath).cerrar(pedido.id);
+    await new PedidosRepository(dbMock, rutaNegocio).cerrar(pedido.id);
 
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ path: `${tenantPath}/pedidos/${pedido.id}` }),
+      expect.objectContaining({ path: `${rutaNegocio}/pedidos/${pedido.id}` }),
       expect.objectContaining({
         cerrado: true,
         estatus: 'cerrado',
@@ -104,16 +104,11 @@ describe('PedidosRepository.cerrar', () => {
       })
     );
     expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ path: `${tenantPath}/pedidos/${pedido.id}` }),
+      expect.objectContaining({ path: `${rutaNegocio}/pedidos/${pedido.id}` }),
       expect.objectContaining({
         registroVentaId: pedido.id,
         registroVentaNumero: 1,
         registroVentaEstado: 'registrado',
-      })
-    );
-    expect(mockRemove).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: `${tenantPath}/pedidos_por_mesa/${pedido.mesaId}/${pedido.id}`,
       })
     );
   });

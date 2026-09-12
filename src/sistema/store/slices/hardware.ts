@@ -5,9 +5,9 @@ import type {
   DispositivoConfig,
   TipoDispositivo,
 } from '../../../sistema/tipos/contratos';
-import { getTenantStorageKey } from './sesion';
+import { getNegocioStorageKey } from './sesion';
 
-type SessionContext = { sesion: { tenantPath: string | null } };
+type SessionContext = { sesion: { rutaNegocio: string | null } };
 
 export const ESTADO_INICIAL_HARDWARE: ContratoHardware = {
   dispositivos: {},
@@ -20,15 +20,15 @@ export const ESTADO_INICIAL_HARDWARE: ContratoHardware = {
   },
 };
 
-function getTenantPath(get: () => HardwareSlice): string | null {
-  return (get() as unknown as SessionContext).sesion.tenantPath;
+function getRutaNegocio(get: () => HardwareSlice): string | null {
+  return (get() as unknown as SessionContext).sesion.rutaNegocio;
 }
 
 function getHardwareKey(
   get: () => HardwareSlice,
   key: 'dispositivos' | 'preferidos'
 ): string | null {
-  return getTenantStorageKey(getTenantPath(get), 'hardware', key);
+  return getNegocioStorageKey(getRutaNegocio(get), 'hardware', key);
 }
 
 export interface AccionesHardware {

@@ -6,16 +6,16 @@ import { useStore } from '../../../../sistema/store';
 import { PanelInventario } from './PanelInventario';
 
 export function PantallaInventario() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
-  if (!tenantPath) return null;
+  if (!rutaNegocio) return null;
 
   return (
     <AdminLayout>
       <View style={styles.container}>
-        <PanelInventario db={db} tenantPath={tenantPath} />
+        <PanelInventario db={db} rutaNegocio={rutaNegocio} />
       </View>
     </AdminLayout>
   );

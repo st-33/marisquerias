@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ref, set, get, update, serverTimestamp } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { ensureTenantBootstrap } from '../../ciclo_de_vida/ensureTenant';
+import { ensureNegocioBootstrap } from '../../ciclo_de_vida/ensureNegocio';
 import { resolverDeviceIdADI } from '../vinculacion/generar-device-id-adi';
 import { resolverAccessCode } from '../vinculacion/resolver-access-code';
 import { resolverConfiguracionInicial } from '../runtime/resolver-configuracion-inicial';
@@ -39,7 +39,7 @@ export class EnsambladorInstalacion {
       try {
         const deviceRef = ref(
           this.db,
-          `${dispositivo.tenantPath}/dispositivos_autorizados/${dispositivo.deviceIdADI}`
+          `${dispositivo.rutaNegocio}/dispositivos/${dispositivo.deviceIdADI}`
         );
         const snap = await get(deviceRef);
 
@@ -107,23 +107,23 @@ export class EnsambladorInstalacion {
       // 1. Validar y resolver access code (lanza error si expiró, revocó, etc.)
       const resolvedCode = await resolverAccessCode(this.db, accessCode);
 
-      // Regla: El tenant DEBE existir previamente en RTDB. No creamos tenants desde el cliente.
-      const tenantRef = ref(this.db, resolvedCode.tenantPath);
-      const tenantSnap = await get(tenantRef);
-      if (!tenantSnap.exists()) {
+      // Regla: El negocio DEBE existir previamente en RTDB. No creamos negocios desde el cliente.
+      const negocioRef = ref(this.db, resolvedCode.rutaNegocio);
+      const negocioSnap = await get(negocioRef);
+      if (!negocioSnap.exists()) {
         return {
           ok: false,
-          error: `Error de instalación: El tenant en la ruta '${resolvedCode.tenantPath}' no está registrado en el sistema central.`,
+          error: `Error de instalación: El negocio en la ruta '${resolvedCode.rutaNegocio}' no está registrado en el sistema central.`,
         };
       }
 
-      // 2. Garantizar bootstrap del tenant (inicializar nodos de impresora, reparto, etc.)
-      await ensureTenantBootstrap(this.db, resolvedCode.tenantPath);
+      // 2. Garantizar bootstrap del negocio (inicializar nodos de impresora, reparto, etc.)
+      await ensureNegocioBootstrap(this.db, resolvedCode.rutaNegocio);
 
       // 3. Resolver configuración asignada al dispositivo
       const { dispositivoConfig } = await resolverConfiguracionInicial(
         this.db,
-        resolvedCode.tenantPath,
+        resolvedCode.rutaNegocio,
         deviceIdADI
       );
 
@@ -131,7 +131,7 @@ export class EnsambladorInstalacion {
       if (dispositivoConfig.estado === 'bloqueado' || dispositivoConfig.estado === 'reemplazado') {
         return {
           ok: false,
-          error: `El dispositivo con ID ${deviceIdADI} está bloqueado o fue reemplazado en el tenant.`,
+          error: `El dispositivo con ID ${deviceIdADI} está bloqueado o fue reemplazado en el negocio.`,
         };
       }
 
@@ -152,10 +152,7 @@ export class EnsambladorInstalacion {
       }
 
       // 5. Registrar el dispositivo autorizado en RTDB
-      const deviceRef = ref(
-        this.db,
-        `${resolvedCode.tenantPath}/dispositivos_autorizados/${deviceIdADI}`
-      );
+      const deviceRef = ref(this.db, `${resolvedCode.rutaNegocio}/dispositivos/${deviceIdADI}`);
       const timestampActual = Date.now();
 
       const registrationPayload = {
@@ -166,6 +163,7 @@ export class EnsambladorInstalacion {
           `Fierro ADI ${deviceIdADI.substring(4, 10)}`,
         estado: dispositivoConfig.estado,
         rolActivo: dispositivoConfig.rolActivo,
+        rol_asignado: dispositivoConfig.rolActivo,
         rolesPermitidos: dispositivoConfig.rolesPermitidos.reduce<Record<string, boolean>>(
           (acc, r) => {
             acc[r] = true;
@@ -186,10 +184,18 @@ export class EnsambladorInstalacion {
       await set(deviceRef, registrationPayload);
 
       // 6. Guardar la vinculación local
+      const canonicoId =
+        resolvedCode.negocio_id_canonico ||
+        resolvedCode.negocioIdCanonico ||
+        resolvedCode.negocio_id;
+
       const dispositivoVinculado: DispositivoVinculado = {
         deviceIdADI,
-        tenantPath: resolvedCode.tenantPath,
-        tenantId: resolvedCode.tenantId,
+        rutaNegocio: resolvedCode.rutaNegocio,
+        negocioId: resolvedCode.negocioId,
+        negocio_id: canonicoId,
+        ruta_negocio: resolvedCode.rutaNegocio,
+        categoria_id: resolvedCode.categoriaId,
         niche: resolvedCode.nichoId,
         category: resolvedCode.categoriaId,
         aliasDispositivo: registrationPayload.alias,
@@ -206,13 +212,13 @@ export class EnsambladorInstalacion {
         reemplazadoPorDeviceId: registrationPayload.reemplazadoPorDeviceId || undefined,
       };
 
-      // 7. Cargar y normalizar las features del tenant (Aislamiento de Firebase en UI)
-      const caractSnap = await get(ref(this.db, `${resolvedCode.tenantPath}/caracteristicas`));
+      // 7. Cargar y normalizar las features del negocio (Aislamiento de Firebase en UI)
+      const caractSnap = await get(ref(this.db, `${resolvedCode.rutaNegocio}/caracteristicas`));
       let rawFeat: any = {};
       if (caractSnap.exists()) {
         rawFeat = { caracteristicas: caractSnap.val() };
       } else {
-        const featuresSnap = await get(ref(this.db, `${resolvedCode.tenantPath}/features`));
+        const featuresSnap = await get(ref(this.db, `${resolvedCode.rutaNegocio}/features`));
         rawFeat = featuresSnap.exists() ? featuresSnap.val() : {};
       }
       const flat = normalizarCaracteristicas(rawFeat);
@@ -250,7 +256,7 @@ export class EnsambladorInstalacion {
     try {
       const heartbeatRef = ref(
         this.db,
-        `${dispositivo.tenantPath}/dispositivos_autorizados/${dispositivo.deviceIdADI}/ultimoHeartbeat`
+        `${dispositivo.rutaNegocio}/dispositivos/${dispositivo.deviceIdADI}/ultimoHeartbeat`
       );
       await set(heartbeatRef, serverTimestamp());
     } catch {

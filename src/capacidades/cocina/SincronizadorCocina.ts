@@ -4,6 +4,7 @@
  */
 
 import { getRtdb } from '../../sistema/firebase';
+import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repo';
 import { useInventoryV2Store, useOperacionStore, useStore } from '../../sistema/store';
 
 export type DescuentoResult = {
@@ -24,10 +25,27 @@ export class SincronizadorCocina {
   ): Promise<DescuentoResult> {
     try {
       const db = getRtdb();
-      const tenantPath = useStore.getState().sesion.tenantPath || '';
+
+      // Guard de inicialización básica del store
+      if (!useStore || typeof useStore.getState !== 'function') {
+        throw new Error(
+          '[SincronizadorCocina] useStore no está disponible o no ha sido inicializado.'
+        );
+      }
+
+      const rutaNegocio = useStore.getState().sesion?.rutaNegocio || '';
 
       // 1. Obtener producto con receta del store local
-      const producto = useOperacionStore.getState().productos[productoId];
+      let producto = useOperacionStore.getState().productos?.[productoId];
+      if (!producto) {
+        // Breve espera por si los productos están terminando de sincronizar
+        for (let intento = 1; intento <= 3; intento++) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          producto = useOperacionStore.getState().productos?.[productoId];
+          if (producto) break;
+        }
+      }
+
       if (!producto) {
         return { success: false, error: `Producto ${productoId} no encontrado` };
       }
@@ -39,9 +57,65 @@ export class SincronizadorCocina {
 
       // 2. Validar stock instantáneamente con el store
       // En V2 el stock está distribuido por áreas/contenedores.
-      // Debemos decidir de qué área descontar o si hay una lógica de fallback.
-      const catalog = useInventoryV2Store.getState().catalog;
-      const areas = useInventoryV2Store.getState().areas;
+      const checkStoreListo = () => {
+        const state = useInventoryV2Store.getState();
+        const cat = state?.catalog;
+        const ar = state?.areas;
+        return Boolean(cat && Object.keys(cat).length > 0 && ar && Object.keys(ar).length > 0);
+      };
+
+      let catalog = useInventoryV2Store.getState()?.catalog;
+      let areas = useInventoryV2Store.getState()?.areas;
+
+      // Si el catálogo o las áreas están vacíos (store no inicializado), activar contingencia
+      if (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) {
+        // Contingencia 1: Reintentos breves para esperar hidratación de listeners
+        const MAX_INTENTOS = 3;
+        const DELAY_MS = 250;
+        for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+          if (checkStoreListo()) {
+            break;
+          }
+        }
+
+        const refreshed = useInventoryV2Store.getState();
+        catalog = refreshed?.catalog;
+        areas = refreshed?.areas;
+
+        // Contingencia 2: Si el store persiste vacío, consultar directamente al repositorio de persistencia
+        if (
+          (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) &&
+          rutaNegocio
+        ) {
+          try {
+            const repo = new InventoryV2Repository(db, rutaNegocio);
+            const [catRemoto, areasRemotas] = await Promise.all([
+              repo.obtenerCatalogo(),
+              repo.obtenerAreas(),
+            ]);
+            if (
+              catRemoto &&
+              Object.keys(catRemoto).length > 0 &&
+              areasRemotas &&
+              Object.keys(areasRemotas).length > 0
+            ) {
+              catalog = catRemoto;
+              areas = areasRemotas;
+            }
+          } catch (repoErr) {
+            console.warn('[SincronizadorCocina] Contingencia directa con repositorio falló:', repoErr);
+          }
+        }
+      }
+
+      // Si tras la contingencia el inventario sigue sin estar disponible:
+      // NO hacemos return ciego ni evaluamos stock contra colecciones vacías (evita falso "sin stock").
+      if (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) {
+        throw new Error(
+          `[SincronizadorCocina] Store de inventario no inicializado (catálogo o áreas vacíos). Descuento pospuesto para ${productoId} para prevenir falso sin stock.`
+        );
+      }
       const sinStock: string[] = [];
 
       for (const [itemId, cantidadReceta] of Object.entries(receta)) {
@@ -87,7 +161,7 @@ export class SincronizadorCocina {
         if (contenedorId) {
           await ajustarDelta({
             db,
-            tenantPath,
+            rutaNegocio,
             containerId: contenedorId,
             itemId,
             delta: -cantidadA_Descontar,

@@ -18,8 +18,8 @@ import { BluetoothPrinterModal, ProductPickerOverlay, PuestoMando, VariantsModal
 import { useMeseroLogic, useProductSelector, useVariantSelector } from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
-  const tenantId = useStore((s) => s.sesion.tenantId) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
+  const negocioId = useStore((s) => s.sesion.negocioId) || '';
   const access_code = useStore((s) => s.sesion.access_code) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
@@ -51,7 +51,7 @@ function MeseroScreenContent() {
   // 👂 Escuchar items listos de CUALQUIER mesa
   useItemStatusListener({
     db,
-    tenantPath,
+    rutaNegocio,
     enabled: true,
     onItemReady: useCallback(
       ({ mesaId, itemName }) => {
@@ -104,9 +104,9 @@ function MeseroScreenContent() {
     solicitarEntrega,
   } = useMeseroLogic({
     db,
-    tenantPath,
+    rutaNegocio,
     accessCode: access_code,
-    tenantId,
+    negocioId,
     ensureConnection,
     onPrintBill: useCallback(
       (mesaId: string) => {
@@ -317,8 +317,8 @@ function MeseroScreenContent() {
 }
 
 export function MeseroScreen() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
-  return <MeseroScreenContent key={tenantPath || 'no-tenant'} />;
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
+  return <MeseroScreenContent key={rutaNegocio || 'no-negocio'} />;
 }
 
 export default MeseroScreen;

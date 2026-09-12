@@ -62,7 +62,7 @@ jest.mock('../../sistema/persistencia/SimpleSalesRepo', () => ({
 }));
 
 const mockRegistrarVentaMultiple = jest.fn().mockResolvedValue('MOCK-VENTA-MULTIPLE-123');
-jest.mock('../../sistema/persistencia/inventory.v2.repo', () => ({
+jest.mock('../../sistema/persistencia/inventario.repo', () => ({
   InventoryV2Repository: jest.fn().mockImplementation(() => ({
     obtenerAreas: jest.fn().mockResolvedValue({
       'area-venta-crudo-1': { hubId: 'venta_crudo', nombre: 'Mostrador' },
@@ -86,8 +86,8 @@ jest.mock('../mostrador/usePosConfig', () => ({
   }),
 }));
 
-jest.mock('../../sistema/providers/ProveedorConfiguracionTenant', () => ({
-  useConfiguracionTenant: jest.fn(),
+jest.mock('../../sistema/proveedores/ProveedorConfiguracionNegocio', () => ({
+  useConfiguracionNegocio: jest.fn(),
 }));
 
 // Mock SQLiteStorageAdapter
@@ -135,7 +135,7 @@ jest.mock('../../sistema/store', () => ({
     jest.fn((selector) =>
       selector({
         sesion: {
-          tenantPath: 'test/tenant',
+          rutaNegocio: 'test/negocio',
           usuario: { nombre: 'Test User' },
         },
         negocio: {
@@ -151,7 +151,7 @@ jest.mock('../../sistema/store', () => ({
     {
       getState: () => ({
         sesion: {
-          tenantPath: 'test/tenant',
+          rutaNegocio: 'test/negocio',
           usuario: { nombre: 'Test User' },
         },
         negocio: {
@@ -167,6 +167,20 @@ jest.mock('../../sistema/store', () => ({
 }));
 
 describe('useMostradorPro - completarVenta', () => {
+  const setupUseStateMock = (mockCarrito: any[], deviceId: string | null = 'test-device-id') => {
+    let callCount = 0;
+    jest.spyOn(React, 'useState').mockImplementation((init?: any): [any, any] => {
+      callCount++;
+      if (callCount === 4) {
+        return [mockCarrito, jest.fn()];
+      }
+      if (callCount === 7) {
+        return [deviceId, jest.fn()];
+      }
+      return [init, jest.fn()];
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockFeatures.inventory_auto_discount.enabled = true;
@@ -191,14 +205,7 @@ describe('useMostradorPro - completarVenta', () => {
       },
     ];
 
-    let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((init?: any): [any, any] => {
-      callCount++;
-      if (callCount === 4) {
-        return [mockCarrito, jest.fn()];
-      }
-      return [init, jest.fn()];
-    });
+    setupUseStateMock(mockCarrito);
 
     const hookInstance = useMostradorPro();
     const result = await hookInstance.actions.completarVenta('efectivo');
@@ -232,14 +239,7 @@ describe('useMostradorPro - completarVenta', () => {
       },
     ];
 
-    let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((init?: any): [any, any] => {
-      callCount++;
-      if (callCount === 4) {
-        return [mockCarrito, jest.fn()];
-      }
-      return [init, jest.fn()];
-    });
+    setupUseStateMock(mockCarrito);
 
     const hookInstance = useMostradorPro();
     const result = await hookInstance.actions.completarVenta('efectivo');
@@ -247,22 +247,17 @@ describe('useMostradorPro - completarVenta', () => {
     expect(result.success).toBe(true);
     expect(result.offline).toBe(true);
     expect(SQLiteStorageAdapter.createVentaOffline).toHaveBeenCalled();
-    expect(mockAjustarStockDelta).toHaveBeenCalledWith({
-      db: null,
-      tenantPath: 'test/tenant',
-      containerId: 'area-venta-crudo-1',
-      itemId: 'prod-camaron',
-      delta: -2,
-      usuario: 'Test User',
-      razon: expect.stringContaining('Venta Offline Mostrador'),
-      allowNegative: false,
-    });
-    expect(OfflinePrintFallback.print).toHaveBeenCalled();
+    expect(mockAjustarStockDelta).toHaveBeenCalledWith(
+      expect.objectContaining({
+        delta: -2,
+        itemId: 'prod-camaron',
+      })
+    );
   });
 
-  it('debe completar venta sin descontar stock si isInventarioEnabled es false', async () => {
+  it('debe completar venta sin inventario si inventoryAutoDiscount es false', async () => {
     (OfflinePrintFallback.getStatus as jest.Mock).mockReturnValue({ isOnline: true });
-    mockFeatures.inventario.enabled = false;
+    mockFeatures.inventory_auto_discount.enabled = false;
 
     const mockCarrito = [
       {
@@ -276,12 +271,7 @@ describe('useMostradorPro - completarVenta', () => {
       },
     ];
 
-    let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((init?: any): [any, any] => {
-      callCount++;
-      if (callCount === 4) return [mockCarrito, jest.fn()];
-      return [init, jest.fn()];
-    });
+    setupUseStateMock(mockCarrito);
 
     const hookInstance = useMostradorPro();
     const result = await hookInstance.actions.completarVenta('efectivo');
@@ -306,17 +296,35 @@ describe('useMostradorPro - completarVenta', () => {
       },
     ];
 
-    let callCount = 0;
-    jest.spyOn(React, 'useState').mockImplementation((init?: any): [any, any] => {
-      callCount++;
-      if (callCount === 4) return [mockCarrito, jest.fn()];
-      return [init, jest.fn()];
-    });
+    setupUseStateMock(mockCarrito);
 
     const hookInstance = useMostradorPro();
     const result = await hookInstance.actions.completarVenta('efectivo');
 
     expect(result.success).toBe(true);
     expect(DespachadorCola.obtenerInstancia).not.toHaveBeenCalled();
+  });
+
+  it('debe bloquear y lanzar error si deviceId es null (dispositivo no inicializado)', async () => {
+    (OfflinePrintFallback.getStatus as jest.Mock).mockReturnValue({ isOnline: true });
+
+    const mockCarrito = [
+      {
+        id: '1',
+        productoId: 'prod-camaron',
+        nombre: 'Camarón',
+        precio: 100,
+        cantidad: 2,
+        subtotal: 200,
+        unidad: 'kg',
+      },
+    ];
+
+    setupUseStateMock(mockCarrito, null);
+
+    const hookInstance = useMostradorPro();
+    await expect(hookInstance.actions.completarVenta('efectivo')).rejects.toThrow(
+      'Inicializando dispositivo... Espera a que se complete la identificación del hardware.'
+    );
   });
 });

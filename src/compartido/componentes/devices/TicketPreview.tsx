@@ -6,7 +6,7 @@ const TICKET_WIDTH = 280;
 const TICKET_HEIGHT = 500;
 
 const SAMPLE_ORDER = {
-  tenantName: 'Mi Restaurante',
+  nombreNegocio: 'Mi Restaurante',
   fecha: new Date(),
   mesa: 'Mesa 12',
   items: [
@@ -59,7 +59,7 @@ const capitalizeFirst = (text: string) => {
 
 type Props = {
   template: TicketTemplate | null;
-  tenantName?: string;
+  nombreNegocio?: string;
   selectedId?: string | null;
   onSelect?: (elementId: string | null) => void;
   onChange?: (elementId: string, cambios: Partial<TicketTemplateElemento>) => void;
@@ -74,7 +74,7 @@ type SampleItem = {
 };
 
 type SampleData = {
-  tenantName: string;
+  nombreNegocio: string;
   fecha: Date;
   mesa: string;
   items: SampleItem[];
@@ -88,7 +88,7 @@ const clamp = (value: number, min: number, max: number) => {
 
 export function TicketPreview({
   template,
-  tenantName,
+  nombreNegocio,
   selectedId,
   onSelect,
   onChange,
@@ -102,10 +102,10 @@ export function TicketPreview({
     const total = SAMPLE_ORDER.items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
     return {
       ...SAMPLE_ORDER,
-      tenantName: tenantName || SAMPLE_ORDER.tenantName,
+      nombreNegocio: nombreNegocio || SAMPLE_ORDER.nombreNegocio,
       total,
     };
-  }, [template, tenantName]);
+  }, [template, nombreNegocio]);
 
   if (!template || !sample) {
     return (
@@ -140,8 +140,8 @@ export function TicketPreview({
     switch (elemento.tipo) {
       case 'texto': {
         let contenido = elemento.contenido || '';
-        if (contenido.includes('{{tenantName}}')) {
-          contenido = contenido.replace('{{tenantName}}', capitalizeFirst(sample.tenantName));
+        if (contenido.includes('{{nombreNegocio}}')) {
+          contenido = contenido.replace('{{nombreNegocio}}', capitalizeFirst(sample.nombreNegocio));
         }
         if (contenido.includes('{{mesa}}')) {
           contenido = contenido.replace('{{mesa}}', sample.mesa);
@@ -376,8 +376,11 @@ const EditableTicketElement: React.FC<EditableTicketElementProps> = ({
   ]);
 
   let resolvedTexto = contenido || '';
-  if (resolvedTexto.includes('{{tenantName}}')) {
-    resolvedTexto = resolvedTexto.replace('{{tenantName}}', capitalizeFirst(sample.tenantName));
+  if (resolvedTexto.includes('{{nombreNegocio}}')) {
+    resolvedTexto = resolvedTexto.replace(
+      '{{nombreNegocio}}',
+      capitalizeFirst(sample.nombreNegocio)
+    );
   }
   if (resolvedTexto.includes('{{mesa}}')) {
     resolvedTexto = resolvedTexto.replace('{{mesa}}', sample.mesa);

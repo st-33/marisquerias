@@ -23,8 +23,8 @@ import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store'
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
 import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
-import { ProveedorConfiguracionTenant } from '../src/sistema/proveedores/ProveedorConfiguracionTenant';
-import { useInicializacionServiciosTenant } from '../src/sistema/instalacion/hooks/useInicializacionServiciosTenant';
+import { ProveedorConfiguracionNegocio } from '../src/sistema/proveedores/ProveedorConfiguracionNegocio';
+import { useInicializacionServiciosNegocio } from '../src/sistema/instalacion/hooks/useInicializacionServiciosNegocio';
 import { useAdminFeatures } from '../src/capacidades/admin';
 import { useSincronizarPedidosLogistica } from '../src/capacidades/logistica';
 import { getRtdb } from '../src/sistema/firebase';
@@ -58,8 +58,8 @@ export default function RootLayout() {
   useAuthGuard(isReady && !isPublicRoute);
   useAppListeners(isReady);
 
-  const tenantPath = useStore((state) => state.sesion.tenantPath);
-  const tenantId = useStore((state) => state.sesion.tenantId);
+  const rutaNegocio = useStore((state) => state.sesion.rutaNegocio);
+  const negocioId = useStore((state) => state.sesion.negocioId);
   const dataSources = useStore((state) => state.dataSources);
   const estadoInstalacion = useStore((state) => state.estadoInstalacion);
   const operacionDb = useMemo(
@@ -68,11 +68,11 @@ export default function RootLayout() {
   );
   useSincronizarPedidosLogistica({
     db: operacionDb,
-    tenantId,
-    tenantPath,
+    negocioId,
+    rutaNegocio,
   });
   const { features: adminFeatures, loading: adminFeaturesLoading } = useAdminFeatures({
-    tenantPath: tenantPath || undefined,
+    rutaNegocio: rutaNegocio || undefined,
   });
 
   // 🛡️ Guardia de Navegación de la Fábrica en Runtime (Fase 3)
@@ -101,7 +101,7 @@ export default function RootLayout() {
   }, [adminFeatures, adminFeaturesLoading, pathname, isReady, router]);
 
   // Orquestador de servicios (DOGMA: Cero lógica de negocio en layout)
-  useInicializacionServiciosTenant({ estadoInstalacion, tenantPath });
+  useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegocio });
 
   // B. 🛡️ Manejo Seguro del Lifecycle de Bluetooth (prevenir SecurityException)
   useEffect(() => {
@@ -117,8 +117,8 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider tenantPath={tenantPath || ''}>
-      <RootLayoutContent isReady={isReady} pathname={pathname} tenantPath={tenantPath || null} />
+    <ThemeProvider rutaNegocio={rutaNegocio || ''}>
+      <RootLayoutContent isReady={isReady} pathname={pathname} rutaNegocio={rutaNegocio || null} />
     </ThemeProvider>
   );
 }
@@ -126,22 +126,22 @@ export default function RootLayout() {
 function RootLayoutContent({
   isReady,
   pathname,
-  tenantPath,
+  rutaNegocio,
 }: {
   isReady: boolean;
   pathname: string;
-  tenantPath: string | null;
+  rutaNegocio: string | null;
 }) {
   const { theme } = useAppTheme();
   const router = useRouter();
-  const needsTenant = pathname.startsWith('/_role') && !tenantPath;
+  const needsNegocio = pathname.startsWith('/_role') && !rutaNegocio;
 
   useEffect(() => {
-    if (!isReady || !needsTenant) return;
+    if (!isReady || !needsNegocio) return;
     router.replace('/access');
-  }, [isReady, needsTenant, router]);
+  }, [isReady, needsNegocio, router]);
 
-  if (needsTenant) {
+  if (needsNegocio) {
     return (
       <View
         style={{
@@ -168,8 +168,8 @@ function RootLayoutContent({
 
   return (
     <ProveedorFierros>
-      <ProveedorConfiguracionTenant>
-        <GestorHubGlobal tenantPath={tenantPath} />
+      <ProveedorConfiguracionNegocio>
+        <GestorHubGlobal rutaNegocio={rutaNegocio} />
 
         <GestureHandlerRootView
           style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
@@ -198,7 +198,7 @@ function RootLayoutContent({
             </View>
           </ProveedorAudioNotificaciones>
         </GestureHandlerRootView>
-      </ProveedorConfiguracionTenant>
+      </ProveedorConfiguracionNegocio>
     </ProveedorFierros>
   );
 }

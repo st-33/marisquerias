@@ -17,7 +17,7 @@ import {
 import { useSesion } from '../../../src/sistema/store';
 import { useFierros } from '../../../src/sistema/impresion/fierros';
 import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
-import { useConfiguracionTenant } from '../../../src/sistema/proveedores/ProveedorConfiguracionTenant';
+import { useConfiguracionNegocio } from '../../../src/sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useDevicesManagement } from '../../../src/capacidades/dispositivos';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;
@@ -38,24 +38,24 @@ export default function AdminDeviceSettings() {
     error: hardwareError,
   } = useFierros();
   const {
-    config: tenantConfig,
+    config: negocioConfig,
     isLoading: isConfigLoading,
     error: configError,
-  } = useConfiguracionTenant();
+  } = useConfiguracionNegocio();
 
   const [scannedDevices, setScannedDevices] = useState<DispositivoFierro[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
   // 🔌 MODO HUB DUAL
-  const { tenantPath } = useSesion();
+  const { rutaNegocio } = useSesion();
   const { hubConfig, actions: deviceActions } = useDevicesManagement();
 
-  const [hubDeviceId, setHubDeviceId] = useState<string>('hub_local');
+  const [hubDeviceId, setHubDeviceId] = useState<string | null>(null);
 
   const isHubEnabled = hubConfig?.enabled === true;
   const hubDestino: HubDestino = hubConfig?.destination ?? null;
-  const effectiveHubDeviceId = hubConfig?.deviceId || hubDeviceId;
+  const effectiveHubDeviceId = hubConfig?.deviceId || hubDeviceId || '';
 
   // 📑 TABS
   const [tabActiva, setTabActiva] = useState<TabActiva>('impresoras');
@@ -75,11 +75,16 @@ export default function AdminDeviceSettings() {
       try {
         if (hubConfig?.deviceId) return;
         const storedDeviceId = await AsyncStorage.getItem('adi_hub_device_id');
-        const generated = dispositivoActivo?.direccion
-          ? `hub_${dispositivoActivo.direccion}`
-          : 'hub_local';
-        const nextDeviceId = storedDeviceId || generated;
-        if (!storedDeviceId) {
+        let nextDeviceId = storedDeviceId;
+        if (!nextDeviceId) {
+          if (dispositivoActivo?.direccion) {
+            nextDeviceId = `hub_${dispositivoActivo.direccion}`;
+          } else {
+            const { resolverDeviceIdADI } = await import(
+              '../../../src/sistema/instalacion/vinculacion/generar-device-id-adi'
+            );
+            nextDeviceId = await resolverDeviceIdADI();
+          }
           await AsyncStorage.setItem('adi_hub_device_id', nextDeviceId);
         }
         if (activo) setHubDeviceId(nextDeviceId);
@@ -158,7 +163,7 @@ export default function AdminDeviceSettings() {
   };
 
   const handleTestPrint = useCallback(async () => {
-    if (!estaConectado || !tenantConfig) {
+    if (!estaConectado || !negocioConfig) {
       Alert.alert(
         'Error',
         'Asegúrese de que la impresora esté conectada y la configuración cargada.'
@@ -167,8 +172,8 @@ export default function AdminDeviceSettings() {
     }
 
     const ticketConfig = {
-      nombreNegocio: tenantConfig?.ticket?.header || 'Mi Negocio',
-      mensajeFinal: tenantConfig?.ticket?.footer || 'Gracias',
+      nombreNegocio: negocioConfig?.ticket?.header || 'Mi Negocio',
+      mensajeFinal: negocioConfig?.ticket?.footer || 'Gracias',
     };
 
     try {
@@ -221,7 +226,7 @@ export default function AdminDeviceSettings() {
     } catch (e: any) {
       Alert.alert('Error de Impresión', e.message);
     }
-  }, [estaConectado, tenantConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
+  }, [estaConectado, negocioConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
 
   if (isConfigLoading) {
     return (
@@ -270,7 +275,7 @@ export default function AdminDeviceSettings() {
         {tabActiva === 'impresoras' && (
           <>
             {/* 1. SELECTOR DE DESTINO HUB */}
-            {tenantPath && (
+            {rutaNegocio && (
               <View style={styles.section}>
                 <View style={styles.sectionHeaderCol}>
                   <Text style={styles.sectionTitle}>1. Destino del Hub</Text>
@@ -302,7 +307,7 @@ export default function AdminDeviceSettings() {
                     </Text>
                   </Pressable>
                   {/* MOSTRADOR OPTION - FEATURE GATED */}
-                  {tenantConfig?.features?.module_venta_crudo !== false && (
+                  {negocioConfig?.features?.module_venta_crudo !== false && (
                     <Pressable
                       style={[
                         styles.destinoBtn,
@@ -332,7 +337,7 @@ export default function AdminDeviceSettings() {
             )}
 
             {/* 2. MODO HUB SWITCH */}
-            {tenantPath && (
+            {rutaNegocio && (
               <View style={[styles.hubSection, !hubDestino && styles.hubSectionDisabled]}>
                 <View style={styles.hubHeader}>
                   <View style={styles.hubIconContainer}>
@@ -420,12 +425,12 @@ export default function AdminDeviceSettings() {
             {configError && (
               <Text style={styles.errorText}>Error al cargar config: {configError.message}</Text>
             )}
-            {tenantConfig && (
+            {negocioConfig && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Vista Previa del Ticket</Text>
                 <View style={styles.ticketPreview}>
                   <Text style={styles.ticketText}>
-                    {tenantConfig?.ticket?.header || 'Nombre del Negocio'}
+                    {negocioConfig?.ticket?.header || 'Nombre del Negocio'}
                   </Text>
                   <Text style={styles.ticketText}>--------------------------------</Text>
                   <Text style={styles.ticketText}>PRODUCTO CANT X PRECIO</Text>
@@ -436,7 +441,7 @@ export default function AdminDeviceSettings() {
                   <Text style={styles.ticketText}>TOTAL: $20.00</Text>
 
                   <Text style={styles.ticketText}>
-                    {tenantConfig?.ticket?.footer || 'Mensaje de Despedida'}
+                    {negocioConfig?.ticket?.footer || 'Mensaje de Despedida'}
                   </Text>
                 </View>
               </View>

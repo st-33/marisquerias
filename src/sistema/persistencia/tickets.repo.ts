@@ -1,6 +1,6 @@
 import { ref, onValue, off, set, update, get } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 export type TicketElementTipo = 'texto' | 'listaProductos' | 'total' | 'fechaHora';
 
@@ -40,13 +40,13 @@ export type TicketTemplatesPorRol = Record<string, TicketTemplate>;
 export class TicketTemplatesRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private basePath() {
-    return `${this.tenantPath}/ajustes/dispositivos/tickets`;
+    return `${this.rutaNegocio}/ajustes/dispositivos/tickets`;
   }
 
   suscribirTemplates(callback: (templates: TicketTemplatesPorRol) => void) {

@@ -1,16 +1,20 @@
-import type { IdentidadTenant, Referencia, TipoReferencia } from './contratos';
+import type { IdentidadNegocio, Referencia, TipoReferencia } from './contratos';
 
-export function identidadTenantDesdePath(tenantPath: string): IdentidadTenant {
-  const partes = tenantPath.split('/').filter(Boolean);
+export function identidadNegocioDesdeRuta(rutaNegocio: string): IdentidadNegocio {
+  const partes = rutaNegocio.split('/').filter(Boolean);
   return {
-    tenantPath,
-    tenantId: partes[partes.length - 1] || '',
+    rutaNegocio,
+    negocioId: partes[partes.length - 1] || '',
     categoriaId: partes[partes.length - 2] || '',
   };
 }
 
-export function crearReferencia(tipo: TipoReferencia, id: string, tenantPath?: string): Referencia {
-  return tenantPath ? { tipo, id, tenantPath } : { tipo, id };
+export function crearReferencia(
+  tipo: TipoReferencia,
+  id: string,
+  rutaNegocio?: string
+): Referencia {
+  return rutaNegocio ? { tipo, id, rutaNegocio } : { tipo, id };
 }
 
 export function crearIdDeterminista(prefijo: string, ...partes: string[]): string {
@@ -22,13 +26,13 @@ export function crearIdDeterminista(prefijo: string, ...partes: string[]): strin
 export function crearHuellaSenal(senal: {
   id: string;
   operationId: string;
-  tenantPath: string;
+  rutaNegocio: string;
   idempotencyKey: string;
   tipo: string;
   pedidoId: string;
 }): string {
   return [
-    senal.tenantPath,
+    senal.rutaNegocio,
     senal.id,
     senal.operationId,
     senal.idempotencyKey,
@@ -38,9 +42,9 @@ export function crearHuellaSenal(senal: {
 }
 
 export function mismoResultado(
-  resultado: { tenantPath: string; eventId: string },
-  tenantPath: string,
+  resultado: { rutaNegocio: string; eventId: string },
+  rutaNegocio: string,
   eventId: string
 ): boolean {
-  return resultado.tenantPath === tenantPath && resultado.eventId === eventId;
+  return resultado.rutaNegocio === rutaNegocio && resultado.eventId === eventId;
 }

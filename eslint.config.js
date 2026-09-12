@@ -16,6 +16,20 @@ module.exports = defineConfig([
   },
   prettierConfig,
   {
-    ignores: ['dist/*', '.expo/*', 'Evidencia/**/*', 'android/**/*', 'ios/**/*'],
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: ['dist/*', '.expo/*', 'Evidencia/**/*', 'android/**/*', 'ios/**/*', 'backups/**/*'],
   },
 ]);

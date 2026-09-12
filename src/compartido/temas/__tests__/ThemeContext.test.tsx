@@ -28,16 +28,16 @@ function ThemeProbe({ onContext }: { onContext: (context: ThemeContextValue) => 
   return null;
 }
 
-describe('ThemeProvider — aislamiento por tenant', () => {
-  const tenantMarisqueria = 'alimentos_y_bebidas/marisquerias/el-arrecife';
-  const tenantRestaurante = 'alimentos_y_bebidas/restaurantes/la-barca';
+describe('ThemeProvider — aislamiento por negocio', () => {
+  const negocioMarisqueria = 'alimentos_y_bebidas/marisquerias/el-arrecife';
+  const negocioRestaurante = 'alimentos_y_bebidas/restaurantes/la-barca';
   let renderer: ReactTestRenderer | undefined;
   let context: ThemeContextValue | undefined;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetItem.mockImplementation(async (key: string) =>
-      key === `@adi_theme_preference:${tenantMarisqueria}` ? 'elite' : null
+      key === `@adi_theme_preference:${negocioMarisqueria}` ? 'elite' : null
     );
   });
 
@@ -47,21 +47,21 @@ describe('ThemeProvider — aislamiento por tenant', () => {
     context = undefined;
   });
 
-  it('lee la preferencia del tenant y escribe en su propia clave', async () => {
+  it('lee la preferencia del negocio y escribe en su propia clave', async () => {
     const onContext = (value: ThemeContextValue) => {
       context = value;
     };
 
     await act(async () => {
       renderer = create(
-        <ThemeProvider tenantPath={tenantMarisqueria}>
+        <ThemeProvider rutaNegocio={negocioMarisqueria}>
           <ThemeProbe onContext={onContext} />
         </ThemeProvider>
       );
       await Promise.resolve();
     });
 
-    expect(mockGetItem).toHaveBeenCalledWith(`@adi_theme_preference:${tenantMarisqueria}`);
+    expect(mockGetItem).toHaveBeenCalledWith(`@adi_theme_preference:${negocioMarisqueria}`);
     expect(context?.themeType).toBe('elite');
     expect(context?.categoryDefault).toBe('elite');
 
@@ -70,19 +70,19 @@ describe('ThemeProvider — aislamiento por tenant', () => {
     });
 
     expect(mockSetItem).toHaveBeenCalledWith(
-      `@adi_theme_preference:${tenantMarisqueria}`,
+      `@adi_theme_preference:${negocioMarisqueria}`,
       'default'
     );
   });
 
-  it('recarga la clave del nuevo tenant y no hereda la preferencia anterior', async () => {
+  it('recarga la clave del nuevo negocio y no hereda la preferencia anterior', async () => {
     const onContext = (value: ThemeContextValue) => {
       context = value;
     };
 
     await act(async () => {
       renderer = create(
-        <ThemeProvider tenantPath={tenantMarisqueria}>
+        <ThemeProvider rutaNegocio={negocioMarisqueria}>
           <ThemeProbe onContext={onContext} />
         </ThemeProvider>
       );
@@ -91,14 +91,14 @@ describe('ThemeProvider — aislamiento por tenant', () => {
 
     await act(async () => {
       renderer?.update(
-        <ThemeProvider tenantPath={tenantRestaurante}>
+        <ThemeProvider rutaNegocio={negocioRestaurante}>
           <ThemeProbe onContext={onContext} />
         </ThemeProvider>
       );
       await Promise.resolve();
     });
 
-    expect(mockGetItem).toHaveBeenLastCalledWith(`@adi_theme_preference:${tenantRestaurante}`);
+    expect(mockGetItem).toHaveBeenLastCalledWith(`@adi_theme_preference:${negocioRestaurante}`);
     expect(context?.themeType).toBe('default');
     expect(context?.categoryDefault).toBe('default');
   });

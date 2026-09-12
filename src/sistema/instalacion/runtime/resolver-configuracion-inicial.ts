@@ -17,17 +17,17 @@ export interface ConfiguracionInicial {
 }
 
 /**
- * Obtiene del tenant las características generales y la configuración particular
+ * Obtiene del negocio las características generales y la configuración particular
  * de este dispositivo (roles asignados, módulos habilitados, estado, nivel operativo y herencia de roles).
  */
 export async function resolverConfiguracionInicial(
   db: Database,
-  tenantPath: string,
+  rutaNegocio: string,
   deviceIdADI: string
 ): Promise<ConfiguracionInicial> {
-  const caracteristicasRef = ref(db, `${tenantPath}/caracteristicas`);
-  const featuresRef = ref(db, `${tenantPath}/features`);
-  const deviceRef = ref(db, `${tenantPath}/dispositivos_autorizados/${deviceIdADI}`);
+  const caracteristicasRef = ref(db, `${rutaNegocio}/caracteristicas`);
+  const featuresRef = ref(db, `${rutaNegocio}/features`);
+  const deviceRef = ref(db, `${rutaNegocio}/dispositivos/${deviceIdADI}`);
 
   const [caractSnap, featSnap, deviceSnap] = await Promise.all([
     get(caracteristicasRef),
@@ -40,7 +40,7 @@ export async function resolverConfiguracionInicial(
     caracteristicas = { roles: featSnap.val() };
   }
 
-  // Fallback si no hay configuración cargada en el tenant
+  // Fallback si no hay configuración cargada en el negocio
   if (!caracteristicas) {
     caracteristicas = {
       roles: {
@@ -67,7 +67,7 @@ export async function resolverConfiguracionInicial(
 
   if (deviceSnap.exists()) {
     const deviceData = deviceSnap.val();
-    rolActivo = deviceData.rolActivo || deviceData.rolAsignado || null;
+    rolActivo = deviceData.rolActivo || deviceData.rol_asignado || deviceData.rolAsignado || null;
     estado = deviceData.estado || 'activo';
     alias = deviceData.alias;
     nivelOperativo = deviceData.nivelOperativo || 'operador';
@@ -102,7 +102,7 @@ export async function resolverConfiguracionInicial(
   }
 
   // Si el dispositivo no tiene roles configurados explícitamente en RTDB,
-  // hereda todos los roles habilitados a nivel de características globales del tenant
+  // hereda todos los roles habilitados a nivel de características globales del negocio
   if (rolesPermitidos.length === 0 && caracteristicas.roles) {
     const rolesConfig = caracteristicas.roles;
 

@@ -16,7 +16,7 @@
  * ```ts
  * const { items, loading, addItem, removeItem, updateItem } = useSynchronizedArray({
  *   db,
- *   path: `${tenantPath}/mesas_pendientes/${mesaId}/items`,
+ *   path: `${rutaNegocio}/mesas_pendientes/${mesaId}/items`,
  *   optimistic: true, // UI instantánea
  * });
  * ```
@@ -37,7 +37,7 @@ export interface UseSynchronizedArrayConfig<T extends SynchronizableItem> {
   /** Instancia de Firebase Database */
   db: Database;
 
-  /** Path completo en Firebase (ej: "tenant/mesas_pendientes/mesa1/items") */
+  /** Path completo en Firebase (ej: "negocio/mesas_pendientes/mesa1/items") */
   path: string | null;
 
   /** Habilitar updates optimistas (default: true) */

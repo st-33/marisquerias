@@ -15,7 +15,7 @@ const log = createLogger('gestionarImpresion');
 
 type GestionarImpresionProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   selectedTable: string | null;
   tablesRef: React.MutableRefObject<any[]>;
   liveItems: any[];
@@ -44,7 +44,7 @@ const formatVariantsForPrintWithLabels = (
 
 export function useGestionarImpresion({
   db,
-  tenantPath,
+  rutaNegocio,
   selectedTable,
   tablesRef,
   liveItems,
@@ -54,7 +54,7 @@ export function useGestionarImpresion({
   onPrintBill,
   pedidoActivo,
 }: GestionarImpresionProps) {
-  const printPolicies = usePrintPolicies({ db, tenantPath });
+  const printPolicies = usePrintPolicies({ db, rutaNegocio });
   const printPoliciesRef = useRef(printPolicies);
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export function useGestionarImpresion({
 
         log.info(`📡 Encolando job: ${jobId}`);
 
-        const job = await DespachadorCola.encolarRemotoIdempotente(db, tenantPath, {
+        const job = await DespachadorCola.encolarRemotoIdempotente(db, rutaNegocio, {
           idTrabajo: jobId,
           idPedido: pedidoId,
           proposito: 'cuenta',
@@ -177,7 +177,7 @@ export function useGestionarImpresion({
       onPrintBill,
       isPrinting,
       db,
-      tenantPath,
+      rutaNegocio,
       tablesRef,
     ]
   );

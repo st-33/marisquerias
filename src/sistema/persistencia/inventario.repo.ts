@@ -18,7 +18,7 @@ import {
 } from 'firebase/database';
 import { z } from 'zod';
 import { stripVoidDeep } from '../../logica/dominio/itemCanonical';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 // --- Esquemas de Datos ---
 
@@ -109,13 +109,13 @@ export class InventoryV2Repository {
 
   constructor(
     private db: Database,
-    tenantPath: string
+    rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
-    this.baseRef = `${tenantPath}/inventory_v2`;
+    assertValidRutaNegocio(rutaNegocio);
+    this.baseRef = `${rutaNegocio}/inventario`;
   }
 
-  // ==================== CATÁLOGO (Global por Tenant) ====================
+  // ==================== CATÁLOGO (Global por Negocio) ====================
 
   async crearItem(item: Omit<InventoryItemV2, 'id' | 'updatedAt'>): Promise<string> {
     const r = ref(this.db, `${this.baseRef}/catalog`);

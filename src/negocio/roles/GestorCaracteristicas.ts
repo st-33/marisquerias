@@ -1,6 +1,6 @@
 import { useStore } from '../../sistema/store';
 
-/** Resuelve una feature anidada del tenant. */
+/** Resuelve una feature anidada del negocio. */
 export function obtenerValorCaracteristica(
   features: Record<string, any> | undefined,
   path: string

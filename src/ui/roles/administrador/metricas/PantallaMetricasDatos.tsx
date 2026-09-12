@@ -64,7 +64,7 @@ export function PantallaMetricasDatos() {
   const metricCardWidth = isMobile ? '100%' : '48%';
   const predictionCardWidth = isMobile ? '100%' : isTablet ? '48%' : '32%';
 
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s: any) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
@@ -84,7 +84,10 @@ export function PantallaMetricasDatos() {
   });
 
   // 🧠 Lógica del módulo
-  const { metrics, loading, actions, features, dateFilter } = useLogicaMetricas({ db, tenantPath });
+  const { metrics, loading, actions, features, dateFilter } = useLogicaMetricas({
+    db,
+    rutaNegocio,
+  });
   const fechaDelDia = useMemo(() => {
     const fecha = new Date();
     fecha.setHours(12, 0, 0, 0);
@@ -95,7 +98,7 @@ export function PantallaMetricasDatos() {
     loading: ventasDelDiaLoading,
     error: ventasDelDiaError,
     recargar: recargarVentasDelDia,
-  } = useRegistroVentasDelDia({ db, tenantPath, timestamp: fechaDelDia });
+  } = useRegistroVentasDelDia({ db, rutaNegocio, timestamp: fechaDelDia });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
 

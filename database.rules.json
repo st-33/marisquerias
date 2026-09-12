@@ -12,11 +12,11 @@
 
     "2 alimentos_y_bebidas": {
       "marisquerias": {
-        "$tenantId": {
+        "$negocioId": {
           ".read": true,
           ".write": true,
 
-          "dispositivos_autorizados": {
+          "dispositivos": {
             "$deviceId": {
               ".validate": "data.exists()",
               "rol": { ".validate": "newData.val() === data.val()" },
@@ -31,8 +31,8 @@
       }
     },
 
-    "tenants": {
-      "$tenantId": {
+    "negocios": {
+      "$negocioId": {
         ".read": "auth != null",
         ".write": false
       }

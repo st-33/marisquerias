@@ -41,7 +41,7 @@ describe('IntegracionLogisticaPedido', () => {
         codigo: 'ACEPTADA',
         eventId: senal.id,
         operationId: senal.operationId,
-        tenantPath: senal.tenant.tenantPath,
+        rutaNegocio: senal.negocio.rutaNegocio,
         eventos: [],
         senales: [],
         mision: { id: 'MIS-MOTOR-001', estado: 'propuesta' },
@@ -58,8 +58,8 @@ describe('IntegracionLogisticaPedido', () => {
     );
 
     const result = await adapter.solicitarEntrega(pedidoBase(), {
-      tenantId: 'marisqueria-puerto-libres',
-      tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+      negocioId: 'marisqueria-puerto-libres',
+      rutaNegocio: 'alimentos_y_bebidas/marisquerias/puerto-libres',
     });
 
     expect(result).toEqual({
@@ -71,9 +71,9 @@ describe('IntegracionLogisticaPedido', () => {
     expect(procesar.mock.calls[0][0]).toMatchObject({
       schemaVersion: 1,
       tipo: 'pedido.requiere_entrega',
-      tenant: {
-        tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
-        tenantId: 'puerto-libres',
+      negocio: {
+        rutaNegocio: 'alimentos_y_bebidas/marisquerias/puerto-libres',
+        negocioId: 'puerto-libres',
         categoriaId: 'marisquerias',
       },
       actor: { tipo: 'negocio', id: 'marisqueria-puerto-libres' },
@@ -81,7 +81,7 @@ describe('IntegracionLogisticaPedido', () => {
         {
           tipo: 'pedido',
           id: 'PED-20260827-001',
-          tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+          rutaNegocio: 'alimentos_y_bebidas/marisquerias/puerto-libres',
         },
       ],
       payload: {
@@ -124,8 +124,8 @@ describe('IntegracionLogisticaPedido', () => {
     );
 
     const result = await adapter.solicitarEntrega(pedidoBase(), {
-      tenantId: 'marisqueria-puerto-libres',
-      tenantPath: '2 alimentos_y_bebidas/marisquerias/puerto-libres',
+      negocioId: 'marisqueria-puerto-libres',
+      rutaNegocio: 'alimentos_y_bebidas/marisquerias/puerto-libres',
     });
 
     expect(result).toEqual({
@@ -137,7 +137,8 @@ describe('IntegracionLogisticaPedido', () => {
     expect(missionRequests[0]).toMatchObject({
       tipo: 'delivery',
       pedidoId: 'PED-20260827-001',
-      tenantId: 'marisqueria-puerto-libres',
+      negocioId: 'marisqueria-puerto-libres',
+      rutaNegocio: 'alimentos_y_bebidas/marisquerias/puerto-libres',
       cliente: {
         nombre: 'Cliente de prueba',
         ubicacion: { direccion: 'Calle de prueba 10, Libres, Puebla', lat: 19.465, lng: -97.313 },
@@ -171,7 +172,7 @@ describe('IntegracionLogisticaPedido', () => {
 
     const result = await adapter.solicitarEntrega(
       pedidoBase({ destino: { direccion: 'Solo dirección' } }),
-      { tenantId: 'tenant-1', tenantPath: 'marisquerias/tenant-1' }
+      { negocioId: 'negocio-1', rutaNegocio: 'marisquerias/negocio-1' }
     );
 
     expect(result.success).toBe(false);
@@ -195,7 +196,7 @@ describe('IntegracionLogisticaPedido', () => {
 
     const result = await adapter.solicitarEntrega(
       pedidoBase({ tipo: 'mesa', modalidad: 'presencial', logistica: null }),
-      { tenantId: 'tenant-1', tenantPath: 'marisquerias/tenant-1' }
+      { negocioId: 'negocio-1', rutaNegocio: 'marisquerias/negocio-1' }
     );
 
     expect(result).toEqual({
@@ -213,7 +214,7 @@ describe('IntegracionLogisticaPedido', () => {
     const unsubscribe = jest.fn();
     const motor: MotorLogistico = {
       crearMisionDelivery: jest.fn(),
-      suscribirPorTenant: (_tenantId, callback) => {
+      suscribirPorNegocio: (_negocioId, callback) => {
         listener = callback;
         return unsubscribe;
       },
@@ -223,7 +224,7 @@ describe('IntegracionLogisticaPedido', () => {
       motor
     );
 
-    const stop = adapter.suscribirActualizaciones('tenant-1', ['PED-1'], (update) => {
+    const stop = adapter.suscribirActualizaciones('negocio-1', ['PED-1'], (update) => {
       updates.push(update);
     });
     listener?.({
@@ -260,7 +261,7 @@ describe('IntegracionLogisticaPedido', () => {
           referenciaMision: 'MIS-EXISTENTE',
         },
       }),
-      { tenantId: 'tenant-1', tenantPath: 'marisquerias/tenant-1' }
+      { negocioId: 'negocio-1', rutaNegocio: 'marisquerias/negocio-1' }
     );
 
     expect(result).toEqual({

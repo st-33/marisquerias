@@ -22,14 +22,14 @@ export type ItemReadyCallback = (data: {
 
 type UseItemStatusListenerProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   onItemReady: ItemReadyCallback;
   enabled?: boolean;
 };
 
 export function useItemStatusListener({
   db,
-  tenantPath,
+  rutaNegocio,
   onItemReady,
   enabled = true,
 }: UseItemStatusListenerProps) {
@@ -39,7 +39,7 @@ export function useItemStatusListener({
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (!enabled || !tenantPath) return;
+    if (!enabled || !rutaNegocio) return;
 
     // Evitar notificaciones en el primer render (carga inicial)
     if (isFirstRender.current) {
@@ -101,5 +101,5 @@ export function useItemStatusListener({
         previousItemsRef.current.delete(key);
       }
     });
-  }, [pedidos, tenantPath, onItemReady, enabled]);
+  }, [pedidos, rutaNegocio, onItemReady, enabled]);
 }

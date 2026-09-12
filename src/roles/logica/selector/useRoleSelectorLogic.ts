@@ -3,7 +3,7 @@
  * Hook cerebro que maneja toda la lógica del selector de roles.
  *
  * RESPONSABILIDADES:
- * - Obtener roles habilitados del tenant
+ * - Obtener roles habilitados del negocio
  * - Obtener nombre del negocio
  * - Manejar sonido de ola y vibración al presionar
  * - Manejar navegación y logout
@@ -27,9 +27,9 @@ export interface RolInfo {
 
 export function useRoleSelectorLogic() {
   const db = getRtdb();
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const clearSession = useStore((s) => s.clearSession);
-  const tenantId = useStore((s) => s.sesion.tenantId);
+  const negocioId = useStore((s) => s.sesion.negocioId);
 
   // Limpiar sonido de feedback al desmontar
   useEffect(() => {
@@ -39,7 +39,7 @@ export function useRoleSelectorLogic() {
   }, []);
 
   // Obtener roles habilitados
-  const { loading, getRolesHabilitados } = useEmpaquetadorRoles({ db, tenantPath });
+  const { loading, getRolesHabilitados } = useEmpaquetadorRoles({ db, rutaNegocio });
 
   const roles = useMemo((): RolInfo[] => {
     const habilitados = getRolesHabilitados();
@@ -53,13 +53,13 @@ export function useRoleSelectorLogic() {
 
   // Nombre del negocio formateado
   const nombreNegocio = useMemo(() => {
-    const idFromPath = (tenantId || '').split('/').pop() || '';
-    const esMarisqueria = (tenantPath || '').includes('/marisquerias/');
+    const idFromPath = (negocioId || '').split('/').pop() || '';
+    const esMarisqueria = (rutaNegocio || '').includes('/marisquerias/');
     const base = idFromPath.replace(/^marisqueria-/, '').replace(/-/g, ' ');
     const titleCase = base.replace(/\b\w/g, (c: string) => c.toUpperCase());
     if (!titleCase) return 'Mi Negocio';
     return esMarisqueria ? `Marisquería ${titleCase}` : titleCase;
-  }, [tenantPath, tenantId]);
+  }, [rutaNegocio, negocioId]);
 
   // Reproducir feedback (sonido + vibración)
   const playFeedback = useCallback(async () => {

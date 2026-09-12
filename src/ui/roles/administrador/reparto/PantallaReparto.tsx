@@ -9,7 +9,7 @@ import { useGestionReparto } from '../../../../capacidades/reparto';
 import { TarjetaConfig } from './componentes/TarjetaConfig';
 
 export function PantallaReparto() {
-  const { loading, umbrales, horarios, costos, actions } = useGestionReparto();
+  const { loading, umbrales, horarios, actions } = useGestionReparto();
 
   const ejecutarGuardado = async (guardado: () => Promise<void>) => {
     try {
@@ -49,12 +49,7 @@ export function PantallaReparto() {
             />
             <TarjetaConfig
               titulo="Costos y reglas"
-              subtitulo={`Base: $${costos.base} · Por km: $${costos.porKm} · Mínimo: $${costos.minimo}`}
-              onPress={() =>
-                ejecutarGuardado(() =>
-                  actions.guardarCostos({ base: Math.max(0, (costos.base || 0) + 1) })
-                )
-              }
+              subtitulo="Tarifas gestionadas externamente por el servicio de reparto (ADIRepart)"
             />
           </>
         )}

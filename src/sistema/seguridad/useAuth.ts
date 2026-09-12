@@ -30,35 +30,39 @@ export function useAuth() {
 
         // 2.5 Registrar dispositivo de forma persistente en el sistema de seguridad
         const { deviceBinding } = await import('./deviceBinding');
-        await deviceBinding.registerDevice(dispositivo.tenantPath);
+        await deviceBinding.registerDevice(dispositivo.rutaNegocio);
 
         // 3. Guardar sesión con rol inicial asignado
         const rolInicial = dispositivo.rolActivo || null;
+        const negocioIdCanonico = dispositivo.negocio_id || dispositivo.negocioId;
         await setSession({
           access_code: clean,
-          tenantPath: dispositivo.tenantPath,
-          tenantId: dispositivo.tenantId,
+          rutaNegocio: dispositivo.rutaNegocio,
+          ruta_negocio: dispositivo.rutaNegocio,
+          negocioId: dispositivo.negocioId,
+          negocio_id: negocioIdCanonico,
           niche: dispositivo.niche,
           category: dispositivo.category || null,
+          categoria_id: dispositivo.categoria_id || dispositivo.category || null,
           rol: rolInicial,
         });
 
-        // Las features se persisten después de fijar el tenant activo.
+        // Las features se persisten después de fijar el negocio activo.
         setFeatures(installRes.features);
 
         // Configurar usuario en Sentry para tracking
         setUser({
-          id: dispositivo.tenantId,
-          tenantId: dispositivo.tenantId,
+          id: negocioIdCanonico,
+          negocioId: negocioIdCanonico,
           rol: rolInicial || 'none',
         });
 
         logger.info('AUTH', 'Login exitoso con dispositivo endurecido', {
-          tenantId: dispositivo.tenantId,
+          negocioId: dispositivo.negocioId,
           niche: dispositivo.niche,
         });
         logger.event('login_success', {
-          tenantId: dispositivo.tenantId,
+          negocioId: dispositivo.negocioId,
           niche: dispositivo.niche,
         });
 

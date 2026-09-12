@@ -26,7 +26,7 @@ import type { FabItem } from '../../../../sistema/tipos/contratos';
 // --- COMPONENTS ---
 
 export function PantallaMesas() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const insets = useSafeAreaInsets();
@@ -35,7 +35,7 @@ export function PantallaMesas() {
   const isNarrowLayout = width < 420;
 
   // 🧠 CEREBRO
-  const { mesas, cantidad, resumen, loading, actions } = useGestionMesas({ db, tenantPath });
+  const { mesas, cantidad, resumen, loading, actions } = useGestionMesas({ db, rutaNegocio });
 
   // 👐 MANOS - Estado UI
   const [editMode, setEditMode] = useState(false);

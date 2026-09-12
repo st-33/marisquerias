@@ -5,7 +5,7 @@
  */
 
 import { useRef, useCallback } from 'react';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
 import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repo';
 import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { useStore } from '../../../sistema/store';

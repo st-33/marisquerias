@@ -1,6 +1,7 @@
 import type { Database } from 'firebase/database';
-import { get, off, onValue, ref, runTransaction } from 'firebase/database';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio } from '../rtdb/guards';
+import { descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
+import { SQLiteStorageAdapter, type HistorialVenta } from '../offline';
 import type { Pedido } from './pedidos.repo';
 
 export type OrigenRegistroVenta = 'pedido' | 'mostrador';
@@ -70,48 +71,53 @@ function resumirItems(pedido: Pedido): ResumenItemVenta[] {
 }
 
 export class RegistroVentasRepository {
+  private readonly negocioId: string;
+
   constructor(
     private readonly db: Database,
-    private readonly tenantPath: string
+    private readonly rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
-  }
-
-  private getBasePath(): string {
-    return `${this.tenantPath}/registro/ventas`;
-  }
-
-  private getSequencePath(ymd: string): string {
-    return `${this.tenantPath}/secuencias/ventas/${ymd}`;
-  }
-
-  private getRecordPath(fecha: FechaRegistro, origenId: string): string {
-    return `${this.getBasePath()}/${fecha.anio}/${fecha.mes}/${fecha.dia}/${origenId}`;
+    assertValidRutaNegocio(rutaNegocio);
+    const identidad = descomponer_ruta_negocio(rutaNegocio);
+    this.negocioId = identidad?.negocio_id || rutaNegocio;
   }
 
   async registrar(entrada: EntradaRegistroVenta): Promise<RegistroVenta> {
     const fecha = resolverFecha(entrada.timestamp);
-    const registroRef = ref(this.db, this.getRecordPath(fecha, entrada.origenId));
-    const existente = await get(registroRef);
 
-    if (existente.exists()) {
-      return existente.val() as RegistroVenta;
+    // Verificar si ya existe en SQLite (idempotencia)
+    const existentes = await SQLiteStorageAdapter.obtenerHistorialVentas(this.negocioId, {
+      fecha: fecha.ymd,
+    });
+    const existente = existentes.find((r) => r.id === entrada.origenId);
+    if (existente) {
+      try {
+        return JSON.parse(existente.datos_json) as RegistroVenta;
+      } catch {
+        // Fallback
+      }
     }
 
-    const secuenciaRef = ref(this.db, this.getSequencePath(fecha.ymd));
-    const resultadoSecuencia = await runTransaction(secuenciaRef, (actual) => {
-      const numero = typeof actual === 'number' && Number.isFinite(actual) ? actual : 0;
-      return numero + 1;
-    });
-    const numero = Number(resultadoSecuencia.snapshot.val());
-
-    const payload = sanitizeRtdbPayload({
+    const numero = existentes.length + 1;
+    const registro: RegistroVenta = {
       ...entrada,
       numero,
-    }) as RegistroVenta;
+    };
 
-    const resultadoRegistro = await runTransaction(registroRef, (actual) => actual ?? payload);
-    return (resultadoRegistro.snapshot.val() as RegistroVenta) || payload;
+    const historial: HistorialVenta = {
+      id: entrada.origenId,
+      negocio_id: this.negocioId,
+      tipo: entrada.origen === 'pedido' ? 'pedido_cerrado' : 'registro_ventas',
+      fecha: fecha.ymd,
+      timestamp: entrada.timestamp,
+      total: entrada.total,
+      metodo_pago: entrada.metodoPago || null,
+      datos_json: JSON.stringify(registro),
+      sincronizado: 1,
+    };
+
+    await SQLiteStorageAdapter.guardarHistorialVenta(historial);
+    return registro;
   }
 
   async registrarPedido(
@@ -155,21 +161,41 @@ export class RegistroVentasRepository {
 
   async obtenerDia(timestamp: number): Promise<Record<string, RegistroVenta>> {
     const fecha = resolverFecha(timestamp);
-    const snapshot = await get(
-      ref(this.db, `${this.getBasePath()}/${fecha.anio}/${fecha.mes}/${fecha.dia}`)
-    );
-    return (snapshot.val() as Record<string, RegistroVenta> | null) || {};
+    const historial = await SQLiteStorageAdapter.obtenerHistorialVentas(this.negocioId, {
+      fecha: fecha.ymd,
+    });
+
+    const resultado: Record<string, RegistroVenta> = {};
+    for (const item of historial) {
+      try {
+        const parsed = JSON.parse(item.datos_json) as RegistroVenta;
+        resultado[item.id] = parsed;
+      } catch {
+        resultado[item.id] = {
+          origen: item.tipo === 'pedido_cerrado' ? 'pedido' : 'mostrador',
+          origenId: item.id,
+          numero: 1,
+          canal: item.tipo === 'pedido_cerrado' ? 'restaurante' : 'mostrador',
+          total: item.total,
+          estado: 'pagada',
+          timestamp: item.timestamp,
+          metodoPago: item.metodo_pago || undefined,
+        };
+      }
+    }
+    return resultado;
   }
 
   suscribirDia(
     timestamp: number,
     callback: (registros: Record<string, RegistroVenta>) => void
   ): () => void {
-    const fecha = resolverFecha(timestamp);
-    const diaRef = ref(this.db, `${this.getBasePath()}/${fecha.anio}/${fecha.mes}/${fecha.dia}`);
-    const cb = onValue(diaRef, (snapshot) => {
-      callback((snapshot.val() as Record<string, RegistroVenta> | null) || {});
+    let activo = true;
+    void this.obtenerDia(timestamp).then((registros) => {
+      if (activo) callback(registros);
     });
-    return () => off(diaRef, 'value', cb as any);
+    return () => {
+      activo = false;
+    };
   }
 }

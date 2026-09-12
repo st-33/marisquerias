@@ -12,12 +12,14 @@ import {
   useMissingAssignments,
   usePedidos,
   useVentas,
+  useStore,
 } from '../../sistema/store';
+import { SQLiteStorageAdapter, type HistorialVenta } from '../../sistema/offline';
 import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
 
 /**
  * Hook para calcular métricas de ventas del módulo Métricas y Datos.
- * ⚡ OPTIMIZADO: Lee directamente del store centralizado siguiendo el DOGMA V2.
+ * ⚡ OPTIMIZADO: Lee directamente del store centralizado y SQLite siguiendo el DOGMA V2.
  *
  * Historial: antes `useAdminMetrics.ts` (herencia de `src/verticales/admin/logica/`).
  */
@@ -30,6 +32,9 @@ export function useMetricasVentas({
 }) {
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [historialVentas, setHistorialVentas] = useState<HistorialVenta[]>([]);
+
+  const negocioId = useStore((s) => s.sesion.negocio_id || s.sesion.negocioId);
 
   // 🔌 DOGMA V2: Reactividad total vía Store
   const pedidosData = usePedidos();
@@ -37,6 +42,22 @@ export function useMetricasVentas({
   const inventarioData = useInventoryCatalog();
   const ventasData = useVentas();
   const missingAssignments = useMissingAssignments();
+
+  useEffect(() => {
+    let activo = true;
+    const cargarHistorial = async () => {
+      try {
+        const registros = await SQLiteStorageAdapter.obtenerHistorialVentas(negocioId || undefined);
+        if (activo) setHistorialVentas(registros);
+      } catch (err) {
+        logger.error('METRICAS', 'Error cargando historial de SQLite', err as Error);
+      }
+    };
+    cargarHistorial();
+    return () => {
+      activo = false;
+    };
+  }, [negocioId]);
 
   useEffect(() => {
     const calculateMetrics = () => {
@@ -143,23 +164,43 @@ export function useMetricasVentas({
           }
         });
 
-        // 5. Ventas Crudo (si está habilitado)
-        if (includeVentaCrudo && ventasData) {
-          Object.values(ventasData).forEach((v: any) => {
-            if (v.estatus === 'cancelado') return;
+        // 5. Ventas Mostrador / Crudo (desde SQLite historial_ventas con fallback a store)
+        if (includeVentaCrudo) {
+          const ventasSueltasSQLite = (historialVentas || []).filter(
+            (h) => h.tipo === 'venta_suelto' || h.tipo === 'registro_ventas'
+          );
 
-            const ts = ensureNumberTimestamp(v.timestamp);
-            if (ts >= minTs && ts <= maxTs) {
-              const totalVenta = Number(v.total || v.total_general || 0);
-              totalVentas += totalVenta;
-              totalOrdenes++;
+          if (ventasSueltasSQLite.length > 0) {
+            ventasSueltasSQLite.forEach((h) => {
+              const ts = h.timestamp;
+              if (ts >= minTs && ts <= maxTs) {
+                const totalVenta = Number(h.total || 0);
+                totalVentas += totalVenta;
+                totalOrdenes++;
 
-              const hora = new Date(ts).getHours();
-              const horaLabel = `${hora}:00`;
-              ventasPorHoraMap[horaLabel] = (ventasPorHoraMap[horaLabel] || 0) + totalVenta;
-              horaPedidosCountMap[horaLabel] = (horaPedidosCountMap[horaLabel] || 0) + 1;
-            }
-          });
+                const hora = new Date(ts).getHours();
+                const horaLabel = `${hora}:00`;
+                ventasPorHoraMap[horaLabel] = (ventasPorHoraMap[horaLabel] || 0) + totalVenta;
+                horaPedidosCountMap[horaLabel] = (horaPedidosCountMap[horaLabel] || 0) + 1;
+              }
+            });
+          } else if (ventasData) {
+            Object.values(ventasData).forEach((v: any) => {
+              if (v.estatus === 'cancelado') return;
+
+              const ts = ensureNumberTimestamp(v.timestamp);
+              if (ts >= minTs && ts <= maxTs) {
+                const totalVenta = Number(v.total || v.total_general || 0);
+                totalVentas += totalVenta;
+                totalOrdenes++;
+
+                const hora = new Date(ts).getHours();
+                const horaLabel = `${hora}:00`;
+                ventasPorHoraMap[horaLabel] = (ventasPorHoraMap[horaLabel] || 0) + totalVenta;
+                horaPedidosCountMap[horaLabel] = (horaPedidosCountMap[horaLabel] || 0) + 1;
+              }
+            });
+          }
         }
 
         // 6. Formatear arrays para charts y métricas derivadas
@@ -252,6 +293,7 @@ export function useMetricasVentas({
     mesasData,
     inventarioData,
     ventasData,
+    historialVentas,
     missingAssignments,
     dateFilter,
     includeVentaCrudo,

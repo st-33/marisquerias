@@ -18,16 +18,16 @@ import type {
 
 type PropsUseInventario = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
 };
 
-export function useInventario({ db, tenantPath }: PropsUseInventario) {
+export function useInventario({ db, rutaNegocio }: PropsUseInventario) {
   const catalog = useInventoryCatalog();
   const sections = useInventorySections();
   const areas = useInventoryAreas();
 
   const inventoryListenersActivos = useInventoryV2Store((s) => s.inventoryListenersActivos);
-  const loading = !tenantPath || !inventoryListenersActivos;
+  const loading = !rutaNegocio || !inventoryListenersActivos;
 
   // --- Helpers de Computación ---
 
@@ -66,16 +66,16 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
 
   const actions = {
     crearItem: (item: Omit<InsumoInventario, 'id' | 'updatedAt'>) =>
-      useInventoryV2Store.getState().crearItem(db, tenantPath, item),
+      useInventoryV2Store.getState().crearItem(db, rutaNegocio, item),
 
     crearArea: (area: Omit<AreaInventario, 'id' | 'updatedAt'>) =>
-      useInventoryV2Store.getState().crearArea(db, tenantPath, area),
+      useInventoryV2Store.getState().crearArea(db, rutaNegocio, area),
 
     crearContenedor: (
       contenedor: Omit<AreaInventario, 'id' | 'updatedAt' | 'stock'> & {
         stock?: Record<string, number>;
       }
-    ) => useInventoryV2Store.getState().crearContenedor(db, tenantPath, contenedor),
+    ) => useInventoryV2Store.getState().crearContenedor(db, rutaNegocio, contenedor),
 
     crearItemEnContenedor: (params: {
       containerId: string;
@@ -84,7 +84,7 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
     }) =>
       useInventoryV2Store.getState().crearItemEnContenedor({
         db,
-        tenantPath,
+        rutaNegocio,
         ...params,
       }),
 
@@ -95,11 +95,11 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
     }) =>
       useInventoryV2Store.getState().crearItemEnSeccion({
         db,
-        tenantPath,
+        rutaNegocio,
         ...params,
       }),
 
-    seedPresets: () => useInventoryV2Store.getState().seedPresets(db, tenantPath),
+    seedPresets: () => useInventoryV2Store.getState().seedPresets(db, rutaNegocio),
 
     ajustarStockDelta: (params: {
       containerId: string;
@@ -111,7 +111,7 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
     }) =>
       useInventoryV2Store.getState().ajustarStockDelta({
         db,
-        tenantPath,
+        rutaNegocio,
         ...params,
       }),
 
@@ -125,7 +125,7 @@ export function useInventario({ db, tenantPath }: PropsUseInventario) {
     }) =>
       useInventoryV2Store.getState().ajustarStockDeltaSeccion({
         db,
-        tenantPath,
+        rutaNegocio,
         ...params,
       }),
   };

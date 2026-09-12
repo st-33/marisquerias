@@ -1,8 +1,11 @@
-import { descomponerRutaTenant, validarRutaTenant } from '../../sistema/rtdb/rutas/RutaTenant';
+import {
+  descomponer_ruta_negocio,
+  validar_ruta_negocio,
+} from '../../sistema/rtdb/rutas/ruta_negocio';
 import { ErrorMotor } from './errores';
 import type {
   ContextoOperativo,
-  IdentidadTenant,
+  IdentidadNegocio,
   Referencia,
   SenalEntrada,
   UbicacionOperativa,
@@ -55,10 +58,10 @@ function validarUbicacion(ubicacion: UbicacionOperativa, nombre: string) {
 function validarReferencia(referencia: Referencia) {
   texto(referencia?.id, 'referencias[].id');
   texto(referencia?.tipo, 'referencias[].tipo');
-  if (referencia.tenantPath !== undefined && !validarRutaTenant(referencia.tenantPath)) {
+  if (referencia.rutaNegocio !== undefined && !validar_ruta_negocio(referencia.rutaNegocio)) {
     throw new ErrorMotor(
       'REFERENCIA_INCONSISTENTE',
-      'La referencia contiene un tenantPath inválido',
+      'La referencia contiene una rutaNegocio inválida',
       {
         referencia,
       }
@@ -71,15 +74,15 @@ export function normalizarSenalEntrada(senal: SenalEntrada): SenalEntrada {
     throw new ErrorMotor('SENAL_INVALIDA', 'La señal debe ser un objeto');
   }
 
-  const tenantPath = texto(senal.tenant?.tenantPath, 'tenant.tenantPath');
-  const tenant = descomponerRutaTenant(tenantPath);
-  if (!tenant) {
-    throw new ErrorMotor('TENANT_INCORRECTO', `tenantPath inválido: ${tenantPath}`);
+  const rutaNegocio = texto(senal.negocio?.rutaNegocio, 'negocio.rutaNegocio');
+  const negocio = descomponer_ruta_negocio(rutaNegocio);
+  if (!negocio) {
+    throw new ErrorMotor('NEGOCIO_INCORRECTO', `rutaNegocio inválida: ${rutaNegocio}`);
   }
-  validarIdentidadTenant({
-    tenantPath,
-    tenantId: texto(senal.tenant?.tenantId, 'tenant.tenantId'),
-    categoriaId: texto(senal.tenant?.categoriaId, 'tenant.categoriaId'),
+  validarIdentidadNegocio({
+    rutaNegocio,
+    negocioId: texto(senal.negocio?.negocioId, 'negocio.negocioId'),
+    categoriaId: texto(senal.negocio?.categoriaId, 'negocio.categoriaId'),
   });
 
   if (!senal.payload || typeof senal.payload !== 'object') {
@@ -89,10 +92,10 @@ export function normalizarSenalEntrada(senal: SenalEntrada): SenalEntrada {
   const referencias = Array.isArray(senal.referencias) ? senal.referencias : [];
   referencias.forEach(validarReferencia);
   referencias.forEach((referencia) => {
-    if (referencia.tenantPath && referencia.tenantPath !== tenant.tenantPath) {
-      throw new ErrorMotor('REFERENCIA_INCONSISTENTE', 'Una referencia pertenece a otro tenant', {
-        signalTenantPath: tenant.tenantPath,
-        referenceTenantPath: referencia.tenantPath,
+    if (referencia.rutaNegocio && referencia.rutaNegocio !== negocio.rutaNegocio) {
+      throw new ErrorMotor('REFERENCIA_INCONSISTENTE', 'Una referencia pertenece a otro negocio', {
+        signalRutaNegocio: negocio.rutaNegocio,
+        referenceRutaNegocio: referencia.rutaNegocio,
         referencia,
       });
     }
@@ -112,13 +115,13 @@ export function normalizarSenalEntrada(senal: SenalEntrada): SenalEntrada {
     );
   }
 
-  if (referenciaPedido.tenantPath && referenciaPedido.tenantPath !== tenant.tenantPath) {
+  if (referenciaPedido.rutaNegocio && referenciaPedido.rutaNegocio !== negocio.rutaNegocio) {
     throw new ErrorMotor(
       'REFERENCIA_INCONSISTENTE',
-      'La referencia del pedido pertenece a otro tenant',
+      'La referencia del pedido pertenece a otro negocio',
       {
-        signalTenantPath: tenant.tenantPath,
-        referenceTenantPath: referenciaPedido.tenantPath,
+        signalRutaNegocio: negocio.rutaNegocio,
+        referenceRutaNegocio: referenciaPedido.rutaNegocio,
       }
     );
   }
@@ -141,36 +144,36 @@ export function normalizarSenalEntrada(senal: SenalEntrada): SenalEntrada {
     operationId: texto(senal.operationId, 'operationId'),
     occurredAt: fechaISO(senal.occurredAt),
     idempotencyKey: texto(senal.idempotencyKey, 'idempotencyKey'),
-    tenant: {
-      tenantPath: tenant.tenantPath,
-      tenantId: tenant.tenantId,
-      categoriaId: tenant.categoriaId,
+    negocio: {
+      rutaNegocio: negocio.rutaNegocio,
+      negocioId: negocio.negocioId,
+      categoriaId: negocio.categoriaId,
     },
     referencias,
   } as SenalEntrada;
 }
 
 export function validarContextoParaSenal(contexto: ContextoOperativo | null, senal: SenalEntrada) {
-  if (!contexto || !contexto.tenantExiste) {
+  if (!contexto || !contexto.negocioExiste) {
     throw new ErrorMotor(
-      'TENANT_NO_ENCONTRADO',
-      `Tenant no encontrado: ${senal.tenant.tenantPath}`
+      'NEGOCIO_NO_ENCONTRADO',
+      `Negocio no encontrado: ${senal.negocio.rutaNegocio}`
     );
   }
 
-  if (contexto.tenantPath !== senal.tenant.tenantPath) {
+  if (contexto.rutaNegocio !== senal.negocio.rutaNegocio) {
     throw new ErrorMotor(
-      'TENANT_INCORRECTO',
-      'El contexto resuelto no coincide con el tenant de la señal',
+      'NEGOCIO_INCORRECTO',
+      'El contexto resuelto no coincide con el negocio de la señal',
       {
-        signalTenantPath: senal.tenant.tenantPath,
-        contextTenantPath: contexto.tenantPath,
+        signalRutaNegocio: senal.negocio.rutaNegocio,
+        contextRutaNegocio: contexto.rutaNegocio,
       }
     );
   }
 
   if (!contexto.habilitado) {
-    throw new ErrorMotor('TENANT_DESHABILITADO', `Tenant deshabilitado: ${contexto.tenantPath}`);
+    throw new ErrorMotor('NEGOCIO_DESHABILITADO', `Negocio deshabilitado: ${contexto.rutaNegocio}`);
   }
 
   if (!contexto.capacidades.motorLogistico || !contexto.capacidades.solicitudesLogisticas) {
@@ -186,42 +189,42 @@ export function validarContextoParaSenal(contexto: ContextoOperativo | null, sen
   if (senal.tipo === 'pedido.requiere_entrega' && !contexto.capacidades.delivery) {
     throw new ErrorMotor(
       'CAPACIDAD_DESACTIVADA',
-      'La capacidad de delivery no está activa para el tenant'
+      'La capacidad de delivery no está activa para el negocio'
     );
   }
 
-  validarIdentidadTenant(contexto);
+  validarIdentidadNegocio(contexto);
 
   if (!contexto.actoresAutorizados.includes(senal.actor.tipo)) {
     throw new ErrorMotor(
       'ACTOR_NO_AUTORIZADO',
-      `El actor ${senal.actor.tipo} no está autorizado en el tenant`
+      `El actor ${senal.actor.tipo} no está autorizado en el negocio`
     );
   }
 
   if (contexto.actorIdsAutorizados && !contexto.actorIdsAutorizados.includes(senal.actor.id)) {
     throw new ErrorMotor(
       'ACTOR_NO_AUTORIZADO',
-      `El actor ${senal.actor.id} no está autorizado en el tenant`
+      `El actor ${senal.actor.id} no está autorizado en el negocio`
     );
   }
 }
 
-export function validarIdentidadTenant(tenant: IdentidadTenant) {
-  if (!tenant || !validarRutaTenant(tenant.tenantPath)) {
-    throw new ErrorMotor('TENANT_INCORRECTO', 'Identidad tenant inválida');
+export function validarIdentidadNegocio(negocio: IdentidadNegocio) {
+  if (!negocio || !validar_ruta_negocio(negocio.rutaNegocio)) {
+    throw new ErrorMotor('NEGOCIO_INCORRECTO', 'Identidad negocio inválida');
   }
-  const descompuesto = descomponerRutaTenant(tenant.tenantPath);
+  const descompuesto = descomponer_ruta_negocio(negocio.rutaNegocio);
   if (
     !descompuesto ||
-    descompuesto.tenantId !== tenant.tenantId ||
-    descompuesto.categoriaId !== tenant.categoriaId
+    descompuesto.negocioId !== negocio.negocioId ||
+    descompuesto.categoriaId !== negocio.categoriaId
   ) {
     throw new ErrorMotor(
-      'TENANT_INCORRECTO',
-      'Los componentes del tenant no coinciden con su tenantPath',
+      'NEGOCIO_INCORRECTO',
+      'Los componentes del negocio no coinciden con su rutaNegocio',
       {
-        tenant,
+        negocio,
       }
     );
   }

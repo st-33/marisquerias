@@ -74,7 +74,7 @@ export interface PropsPantallaMenuAdmin {
 
 export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const l = useMemo(() => ({ ...ETIQUETAS_MENU_POR_DEFECTO, ...labels }), [labels]);
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const { width } = useWindowDimensions();
@@ -87,7 +87,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     getProductosPorCategoria,
     validacionActive,
     validandoActive,
-  } = useGestionMenu({ db, tenantPath });
+  } = useGestionMenu({ db, rutaNegocio });
   const catalog = useInventoryCatalog();
   const areas = useInventoryAreas();
 

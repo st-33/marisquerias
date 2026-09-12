@@ -14,4 +14,5 @@ export type {
   OfflinePedido,
   OfflineProducto,
   OfflineVenta,
+  HistorialVenta,
 } from './storage/SQLiteStorageAdapter';

@@ -9,21 +9,21 @@ import {
 import { transicionarMision, transicionarPedido } from '../nucleo/transiciones';
 import { validarContextoParaSenal } from '../nucleo/validaciones';
 
-const tenantA = {
-  tenantPath: 'marisquerias/el-arrecife',
-  tenantId: 'el-arrecife',
+const negocioA = {
+  rutaNegocio: 'marisquerias/el-arrecife',
+  negocioId: 'el-arrecife',
   categoriaId: 'marisquerias',
 } as const;
 
-const tenantB = {
-  tenantPath: 'marisquerias/la-perla',
-  tenantId: 'la-perla',
+const negocioB = {
+  rutaNegocio: 'marisquerias/la-perla',
+  negocioId: 'la-perla',
   categoriaId: 'marisquerias',
 } as const;
 
 const contextoActivo: ContextoOperativo = {
-  ...tenantA,
-  tenantExiste: true,
+  ...negocioA,
+  negocioExiste: true,
   habilitado: true,
   capacidades: {
     motorLogistico: true,
@@ -40,7 +40,7 @@ function crearSenalEntrega(
     id: 'evt-pedido-001',
     schemaVersion: 1,
     operationId: 'op-pedido-001',
-    tenant: tenantA,
+    negocio: negocioA,
     origen: 'negocio',
     canal: 'negocio',
     actor: { tipo: 'negocio', id: 'el-arrecife' },
@@ -48,7 +48,7 @@ function crearSenalEntrega(
     tipo: 'pedido.requiere_entrega',
     occurredAt: '2026-08-27T12:00:00.000Z',
     idempotencyKey: 'idem-pedido-001',
-    referencias: [{ tipo: 'pedido', id: 'pedido-001', tenantPath: tenantA.tenantPath }],
+    referencias: [{ tipo: 'pedido', id: 'pedido-001', rutaNegocio: negocioA.rutaNegocio }],
     payload: {
       pedidoId: 'pedido-001',
       estadoPedido: 'confirmado',
@@ -66,7 +66,7 @@ function crearSenalCancelacion(): SenalEntrada {
     id: 'evt-pedido-001-cancelado',
     schemaVersion: 1,
     operationId: 'op-pedido-001-cancelado',
-    tenant: tenantA,
+    negocio: negocioA,
     origen: 'negocio',
     canal: 'negocio',
     actor: { tipo: 'negocio', id: 'el-arrecife' },
@@ -74,7 +74,7 @@ function crearSenalCancelacion(): SenalEntrada {
     tipo: 'pedido.cancelado',
     occurredAt: '2026-08-27T12:05:00.000Z',
     idempotencyKey: 'idem-pedido-001-cancelado',
-    referencias: [{ tipo: 'pedido', id: 'pedido-001', tenantPath: tenantA.tenantPath }],
+    referencias: [{ tipo: 'pedido', id: 'pedido-001', rutaNegocio: negocioA.rutaNegocio }],
     payload: {
       pedidoId: 'pedido-001',
       motivo: 'cliente_canceló',
@@ -137,11 +137,11 @@ describe('MotorLogistico', () => {
     ).toThrow('No se puede cancelar');
   });
 
-  it('rechaza un contexto que pertenece a otro tenant', () => {
-    const señal = crearSenalEntrega({ tenant: tenantB });
+  it('rechaza un contexto que pertenece a otro negocio', () => {
+    const señal = crearSenalEntrega({ negocio: negocioB });
 
     expect(() => validarContextoParaSenal(contextoActivo, señal)).toThrow(
-      'no coincide con el tenant'
+      'no coincide con el negocio'
     );
   });
 
@@ -156,7 +156,7 @@ describe('MotorLogistico', () => {
     });
   });
 
-  it('rechaza un actor no autorizado por el tenant', async () => {
+  it('rechaza un actor no autorizado por el negocio', async () => {
     const { motor } = crearMotor({
       ...contextoActivo,
       actoresAutorizados: ['sistema'],
@@ -190,7 +190,7 @@ describe('MotorLogistico', () => {
           id: 'evt-pedido-002',
           operationId: 'op-pedido-002',
           idempotencyKey: 'idem-pedido-001',
-          referencias: [{ tipo: 'pedido', id: 'pedido-002', tenantPath: tenantA.tenantPath }],
+          referencias: [{ tipo: 'pedido', id: 'pedido-002', rutaNegocio: negocioA.rutaNegocio }],
           payload: {
             pedidoId: 'pedido-002',
             estadoPedido: 'confirmado',
@@ -237,7 +237,7 @@ describe('MotorLogistico', () => {
   it('rechaza referencias de pedido inconsistentes con la señal', async () => {
     const { motor } = crearMotor();
     const señal = crearSenalEntrega({
-      referencias: [{ tipo: 'pedido', id: 'otro-pedido', tenantPath: tenantA.tenantPath }],
+      referencias: [{ tipo: 'pedido', id: 'otro-pedido', rutaNegocio: negocioA.rutaNegocio }],
     });
 
     await expect(motor.procesar(señal)).rejects.toMatchObject({

@@ -7,7 +7,7 @@
 import type { Database } from 'firebase/database';
 import { off, onValue, ref, set, update } from 'firebase/database';
 import type { PrintPolicies, PrinterRef } from '../impresion/legacy/policies';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 /**
  * Configuración de formato de ticket
@@ -41,25 +41,25 @@ export type TicketConfig = {
 export class DevicesRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private getPoliciesPath() {
-    return `${this.tenantPath}/ajustes/dispositivos/impresion/politicas`;
+    return `${this.rutaNegocio}/impresion/politicas`;
   }
 
   private getDefaultPrinterPath() {
-    return `${this.tenantPath}/ajustes/dispositivos/impresion/defaultPrinter`;
+    return `${this.rutaNegocio}/impresion/rutas/defaultPrinter`;
   }
 
   private getTestMessagePath() {
-    return `${this.tenantPath}/ajustes/dispositivos/impresion/testMessage`;
+    return `${this.rutaNegocio}/impresion/destinos/testMessage`;
   }
 
   private getTicketConfigPath() {
-    return `${this.tenantPath}/ajustes/ticket`;
+    return `${this.rutaNegocio}/ajustes/ticket`;
   }
 
   /**
@@ -141,7 +141,7 @@ export class DevicesRepository {
   }
 
   private getHubConfigPath() {
-    return `${this.tenantPath}/config/hub`;
+    return `${this.rutaNegocio}/impresion/hubs`;
   }
 
   /**

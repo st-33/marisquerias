@@ -6,11 +6,20 @@ export interface DispositivoVinculado {
   /** Identificador único persistente local generado para ADI en este dispositivo */
   deviceIdADI: string;
 
-  /** Path de la RTDB del tenant (ej: "marisquerias/el-arrecife") */
-  tenantPath: string;
+  /** Path de la RTDB del negocio (ej: "marisquerias/el-arrecife") */
+  rutaNegocio: string;
 
-  /** Identificador corto del tenant (ej: "puerto-libres") */
-  tenantId: string;
+  /** Identificador corto del negocio (ej: "puerto-libres") */
+  negocioId: string;
+
+  /** Identidad canónica universal (ej: "puerto_libres") */
+  negocio_id?: string;
+
+  /** Ruta física en RTDB (ej: "marisquerias/marisqueria-puerto-libres") */
+  ruta_negocio?: string;
+
+  /** Categoría canónica (ej: "marisquerias") */
+  categoria_id?: string;
 
   /** Nicho operacional (ej: "2 alimentos_y_bebidas", "comercio_minorista") */
   niche: string;

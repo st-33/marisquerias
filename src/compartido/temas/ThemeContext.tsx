@@ -7,7 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Platform } from 'react-native';
-import { descomponerRutaTenant } from '../../sistema/rtdb/rutas/RutaTenant';
+import { descomponer_ruta_negocio } from '../../sistema/rtdb/rutas/ruta_negocio';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -178,16 +178,16 @@ export interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const STORAGE_KEY_PREFIX = '@adi_theme_preference:';
 
-function getStorageKey(tenantPath: string): string {
-  return `${STORAGE_KEY_PREFIX}${tenantPath || 'global'}`;
+function getStorageKey(rutaNegocio: string): string {
+  return `${STORAGE_KEY_PREFIX}${rutaNegocio || 'global'}`;
 }
 
 /**
  * Mapa de categorías RTDB → tema visual.
- * Clave: segundo segmento del tenantPath (la categoría).
+ * Clave: segundo segmento del rutaNegocio (la categoría).
  * Esto evita hardcodear strings de categoría en código de plataforma.
  *
- * Evidencia RTDB: 2 alimentos_y_bebidas/marisquerias/{tenant}
+ * Evidencia RTDB: 2 alimentos_y_bebidas/marisquerias/{negocio}
  *   → segmento[1] = 'marisquerias' → tema 'elite'
  */
 const CATEGORIA_TEMA_MAP: Record<string, ThemeType> = {
@@ -195,10 +195,10 @@ const CATEGORIA_TEMA_MAP: Record<string, ThemeType> = {
   // Futuros: cafeterias: 'default', panaderias: 'warm', etc.
 };
 
-function detectCategoryTheme(tenantPath: string): ThemeType {
-  // tenantPath formato: "nicho/categoria/tenant"
-  const identidad = descomponerRutaTenant(tenantPath);
-  const categoria = identidad?.categoriaId;
+function detectCategoryTheme(rutaNegocio: string): ThemeType {
+  // rutaNegocio formato: "nicho/categoria/negocio"
+  const identidad = descomponer_ruta_negocio(rutaNegocio);
+  const categoria = identidad?.categoria_id ?? identidad?.categoriaId;
 
   return (categoria ? CATEGORIA_TEMA_MAP[categoria] : undefined) ?? 'default';
 }
@@ -212,40 +212,40 @@ function getThemeObject(type: ThemeType): AppTheme {
 // ═══════════════════════════════════════════════════════════════════
 interface ThemeProviderProps {
   children: React.ReactNode;
-  tenantPath?: string;
+  rutaNegocio?: string;
 }
 
-export function ThemeProvider({ children, tenantPath = '' }: ThemeProviderProps) {
-  const categoryDefault = detectCategoryTheme(tenantPath);
+export function ThemeProvider({ children, rutaNegocio = '' }: ThemeProviderProps) {
+  const categoryDefault = detectCategoryTheme(rutaNegocio);
   const [themeType, setThemeType] = useState<ThemeType>(categoryDefault);
-  const [loadedTenantPath, setLoadedTenantPath] = useState<string | null>(null);
+  const [loadedRutaNegocio, setLoadedRutaNegocio] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    AsyncStorage.getItem(getStorageKey(tenantPath))
+    AsyncStorage.getItem(getStorageKey(rutaNegocio))
       .then((saved) => {
         if (cancelled) return;
         setThemeType(saved === 'elite' || saved === 'default' ? saved : categoryDefault);
-        setLoadedTenantPath(tenantPath);
+        setLoadedRutaNegocio(rutaNegocio);
       })
       .catch(() => {
         if (cancelled) return;
         setThemeType(categoryDefault);
-        setLoadedTenantPath(tenantPath);
+        setLoadedRutaNegocio(rutaNegocio);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [categoryDefault, tenantPath]);
+  }, [categoryDefault, rutaNegocio]);
 
   const setTheme = useCallback(
     (type: ThemeType) => {
       setThemeType(type);
-      AsyncStorage.setItem(getStorageKey(tenantPath), type).catch(console.warn);
+      AsyncStorage.setItem(getStorageKey(rutaNegocio), type).catch(console.warn);
     },
-    [tenantPath]
+    [rutaNegocio]
   );
 
   const toggleTheme = useCallback(() => {
@@ -266,7 +266,7 @@ export function ThemeProvider({ children, tenantPath = '' }: ThemeProviderProps)
     [themeType, setTheme, toggleTheme, categoryDefault]
   );
 
-  if (loadedTenantPath !== tenantPath) return null;
+  if (loadedRutaNegocio !== rutaNegocio) return null;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

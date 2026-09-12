@@ -78,13 +78,13 @@ export interface Venta {
 
 interface UsePOSProps {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   vendedor?: string;
 }
 
-export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
+export function usePOS({ db, rutaNegocio, vendedor }: UsePOSProps) {
   // Repositorios
-  const menuRepo = useMemo(() => new MenuRepository(db, tenantPath), [db, tenantPath]);
+  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
   const {
     basculaActiva,
     estaConectado,
@@ -106,7 +106,7 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
 
   // Cargar productos del menú
   useEffect(() => {
-    if (!tenantPath) return;
+    if (!rutaNegocio) return;
 
     const unsub = menuRepo.suscribirProductos((productosData) => {
       setProductos(productosData);
@@ -114,7 +114,7 @@ export function usePOS({ db, tenantPath, vendedor }: UsePOSProps) {
     });
 
     return unsub;
-  }, [menuRepo, tenantPath]);
+  }, [menuRepo, rutaNegocio]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ACCIONES - CARRITO

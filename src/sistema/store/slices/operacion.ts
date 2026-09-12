@@ -20,8 +20,8 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref, update } from 'firebase/database';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
-import { validarRutaTenant } from '../../rtdb/rutas/RutaTenant';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../../rtdb/guards';
+import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';
 import type {
   ClientePedido,
   LogisticaPedido,
@@ -159,17 +159,17 @@ export interface AccionesOperacion {
    * Inicializa los listeners centralizados de Firebase
    * SOLO debe llamarse UNA vez al iniciar la app
    */
-  inicializarOperacionListeners: (db: Database, tenantPath: string) => () => void;
+  inicializarOperacionListeners: (db: Database, rutaNegocio: string) => () => void;
 
   // === ACCIONES DE MESAS ===
   actualizarMesaLocal: (mesaId: string, data: Partial<MesaBase>) => void;
   actualizarMesa: (
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     mesaId: string,
     data: Partial<MesaBase>
   ) => Promise<void>;
-  liberarMesa: (db: Database, tenantPath: string, mesaId: string) => Promise<void>;
+  liberarMesa: (db: Database, rutaNegocio: string, mesaId: string) => Promise<void>;
 
   // === ACCIONES DE PEDIDOS ===
   actualizarPedidoLocal: (pedidoId: string, data: Partial<PedidoBase>) => void;
@@ -229,9 +229,9 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   // ─────────────────────────────────────────────────────────────────────────
   // INICIALIZACIÓN DE LISTENERS
   // ─────────────────────────────────────────────────────────────────────────
-  inicializarOperacionListeners: (db: Database, tenantPath: string) => {
-    if (!validarRutaTenant(tenantPath)) {
-      logger.error('STORE', 'No se montan listeners de operación con tenantPath inválido');
+  inicializarOperacionListeners: (db: Database, rutaNegocio: string) => {
+    if (!validar_ruta_negocio(rutaNegocio)) {
+      logger.error('STORE', 'No se montan listeners de operación con rutaNegocio inválido');
       return () => {};
     }
 
@@ -240,12 +240,12 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
       return () => {};
     }
 
-    logger.info('STORE', '🔌 Inicializando listeners centralizados', { tenantPath });
+    logger.info('STORE', '🔌 Inicializando listeners centralizados', { rutaNegocio });
 
     const cleanupFunctions: (() => void)[] = [];
 
     // 1. MESAS - Un solo listener para todas las mesas
-    const mesasRef = ref(db, `${tenantPath}/mesas`);
+    const mesasRef = ref(db, `${rutaNegocio}/mesas`);
     const mesasCallback = onValue(mesasRef, (snap) => {
       const data = snap.val() || {};
       const mesasFiltradas: Record<string, MesaBase> = {};
@@ -264,7 +264,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(mesasRef, 'value', mesasCallback as any));
 
     // 2. PEDIDOS - Un solo listener para todos los pedidos
-    const pedidosRef = ref(db, `${tenantPath}/pedidos`);
+    const pedidosRef = ref(db, `${rutaNegocio}/pedidos`);
     const pedidosCallback = onValue(pedidosRef, (snap) => {
       const data = snap.val() || {};
       const pedidos: Record<string, PedidoBase> = {};
@@ -282,7 +282,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
 
     // 3. MENÚ (Categorías) - Un solo listener
-    const categoriasRef = ref(db, `${tenantPath}/menu/categorias`);
+    const categoriasRef = ref(db, `${rutaNegocio}/menu/categorias`);
     const categoriasCallback = onValue(categoriasRef, (snap) => {
       const data = snap.val() || {};
       const categorias: Record<string, CategoriaBase> = {};
@@ -300,7 +300,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
 
     // 4. MENÚ (Productos) - Un solo listener
-    const productosRef = ref(db, `${tenantPath}/menu/productos`);
+    const productosRef = ref(db, `${rutaNegocio}/menu/productos`);
     const productosCallback = onValue(productosRef, (snap) => {
       const data = snap.val() || {};
       const productos: Record<string, ProductoBase> = {};
@@ -317,16 +317,8 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     });
     cleanupFunctions.push(() => off(productosRef, 'value', productosCallback as any));
 
-    // 5. VENTAS - Listener para métricas
-    const ventasRef = ref(db, `${tenantPath}/ventas`);
-    const ventasCallback = onValue(ventasRef, (snap) => {
-      const data = snap.val() || {};
-      set({ ventas: data, ultimaActualizacion: Date.now() });
-    });
-    cleanupFunctions.push(() => off(ventasRef, 'value', ventasCallback as any));
-
     set({ listenersActivos: true });
-    logger.info('STORE', '✅ Listeners centralizados activos (5 total)');
+    logger.info('STORE', '✅ Listeners centralizados activos (4 total)');
 
     // Retornar función de cleanup
     let cleaned = false;
@@ -353,8 +345,8 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     }));
   },
 
-  actualizarMesa: async (db, tenantPath, mesaId, data) => {
-    assertValidTenantPath(tenantPath);
+  actualizarMesa: async (db, rutaNegocio, mesaId, data) => {
+    assertValidRutaNegocio(rutaNegocio);
     const now = Date.now();
     const payload = sanitizeRtdbPayload({ ...data, updatedAt: now });
 
@@ -363,7 +355,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${tenantPath}/mesas/${mesaId}`), payload);
+      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
     } catch (error) {
       logger.error('STORE', 'Error actualizando mesa', error as Error);
       // TODO: Rollback optimistic update on error
@@ -371,8 +363,8 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     }
   },
 
-  liberarMesa: async (db, tenantPath, mesaId) => {
-    assertValidTenantPath(tenantPath);
+  liberarMesa: async (db, rutaNegocio, mesaId) => {
+    assertValidRutaNegocio(rutaNegocio);
     const now = Date.now();
     const payload = { estado: 'libre', pedidoActivoId: null, updatedAt: now };
 
@@ -381,7 +373,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${tenantPath}/mesas/${mesaId}`), payload);
+      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
     } catch (error) {
       logger.error('STORE', 'Error liberando mesa', error as Error);
       throw error;

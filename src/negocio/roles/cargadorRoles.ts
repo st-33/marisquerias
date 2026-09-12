@@ -1,12 +1,12 @@
 /**
  * 🧠 CEREBRO: Cargador de Roles y Features
- * Hook de lógica pura para cargar características/features del tenant
+ * Hook de lógica pura para cargar características/features del negocio
  * SEPARACIÓN SAGRADA: Solo lógica, cero UI
  */
 
 import { useCallback, useState } from 'react';
 import type { Database } from 'firebase/database';
-import { TenantRepository } from '../../sistema/persistencia/tenant.repo';
+import { NegocioRepository } from '../../sistema/persistencia/negocio.repo';
 import {
   normalizarCaracteristicas,
   type CaracteristicasPlanas,
@@ -15,7 +15,7 @@ import type { Feature } from '../../sistema/tipos/contratos';
 
 type PropsCargadorRoles = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   onFeaturesLoaded?: (features: Record<string, Feature>) => void;
 };
 
@@ -30,18 +30,18 @@ function adaptarCaracteristicas(flat: CaracteristicasPlanas): Record<string, Fea
   return adapted;
 }
 
-export function useCargadorRoles({ db, tenantPath, onFeaturesLoaded }: PropsCargadorRoles) {
-  const tenantRepo = useState(() => new TenantRepository(db, tenantPath))[0];
+export function useCargadorRoles({ db, rutaNegocio, onFeaturesLoaded }: PropsCargadorRoles) {
+  const negocioRepo = useState(() => new NegocioRepository(db, rutaNegocio))[0];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Cargar features del tenant (solo si no están ya cargadas)
+   * Cargar features del negocio (solo si no están ya cargadas)
    */
   const loadFeatures = useCallback(
     async (force = false) => {
-      if (!tenantPath) {
-        setError('No hay tenantPath');
+      if (!rutaNegocio) {
+        setError('No hay rutaNegocio');
         return;
       }
 
@@ -50,10 +50,10 @@ export function useCargadorRoles({ db, tenantPath, onFeaturesLoaded }: PropsCarg
 
       try {
         // Asegurar bootstrap primero
-        await tenantRepo.asegurarBootstrap();
+        await negocioRepo.asegurarBootstrap();
 
         // Obtener características o features
-        const rawFeat = await tenantRepo.obtenerCaracteristicasOFeatures();
+        const rawFeat = await negocioRepo.obtenerCaracteristicasOFeatures();
 
         if (!rawFeat) {
           setError('No se encontraron características ni features');
@@ -77,7 +77,7 @@ export function useCargadorRoles({ db, tenantPath, onFeaturesLoaded }: PropsCarg
         setLoading(false);
       }
     },
-    [tenantPath, tenantRepo, onFeaturesLoaded]
+    [rutaNegocio, negocioRepo, onFeaturesLoaded]
   );
 
   return {

@@ -25,13 +25,13 @@ import type {
 
 type PanelInventarioProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   niche?: string;
 };
 
 type ViewMode = 'areas' | 'containers' | 'items_section' | 'items_area' | 'items_container';
 
-export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: PanelInventarioProps) {
+export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: PanelInventarioProps) {
   const { width } = useWindowDimensions();
   const isLarge = width > 800;
 
@@ -50,7 +50,7 @@ export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: Panel
     actions,
   } = useInventario({
     db,
-    tenantPath,
+    rutaNegocio,
   });
 
   const catalog = catalogSinTipar as InsumoConId[];
@@ -781,4 +781,3 @@ export function PanelInventario({ db, tenantPath, niche = 'restaurante' }: Panel
     </View>
   );
 }
-

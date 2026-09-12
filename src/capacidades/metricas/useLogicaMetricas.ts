@@ -8,14 +8,14 @@
  *
  * Historial: antes `useAdminLogic.ts` en `src/capacidades/metricas`
  * (comentario anterior apuntaba a `src/verticales/admin/logica/useAdminLogic.ts`).
- * El tipo `TenantFeatures` se trasladó a `useAdminFeatures.ts` para romper el
+ * El tipo `NegocioFeatures` se trasladó a `useAdminFeatures.ts` para romper el
  * ciclo de tipos entre capacidades/admin y capacidades/metricas.
  */
 
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
-import { TenantRepository } from '../../sistema/persistencia';
-import { useAdminFeatures, type TenantFeatures } from '../admin/useAdminFeatures';
+import { NegocioRepository } from '../../sistema/persistencia';
+import { useAdminFeatures, type NegocioFeatures } from '../admin/useAdminFeatures';
 import { useMetricasVentas } from './useMetricasVentas';
 
 export type DateFilter = 'hoy' | 'ayer' | 'hace3dias' | 'semana' | 'mes' | 'todo';
@@ -45,9 +45,9 @@ export type MetricasPanel = {
  * Hook central del módulo: compone los feature flags administrativos,
  * el cálculo de métricas y el filtro de período en una sola interfaz.
  */
-export function useLogicaMetricas({ db, tenantPath }: { db: Database; tenantPath: string }) {
+export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegocio: string }) {
   // Carga de feature flags (responsabilidad compartida de la capacidad admin)
-  const { features, loading: featuresLoading } = useAdminFeatures({ db, tenantPath });
+  const { features, loading: featuresLoading } = useAdminFeatures({ db, rutaNegocio });
 
   // Filtro de período (estado local del módulo)
   const [dateFilter, setDateFilter] = useState<DateFilter>('hoy');
@@ -58,11 +58,11 @@ export function useLogicaMetricas({ db, tenantPath }: { db: Database; tenantPath
 
   const loading = featuresLoading || metricsLoading;
 
-  // Acción para activar o desactivar un flag del tenant
-  const toggleFeature = async (feature: keyof TenantFeatures, enabled: boolean) => {
-    const tenantRepo = new TenantRepository(db, tenantPath);
+  // Acción para activar o desactivar un flag del negocio
+  const toggleFeature = async (feature: keyof NegocioFeatures, enabled: boolean) => {
+    const negocioRepo = new NegocioRepository(db, rutaNegocio);
     const featureKey = feature.replace('admin_', '');
-    await tenantRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
+    await negocioRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
   };
 
   // Refrescar métricas (no-op real: el hook reacciona solo al store)
@@ -81,6 +81,6 @@ export function useLogicaMetricas({ db, tenantPath }: { db: Database; tenantPath
     error: null,
     actions: { toggleFeature, refreshMetrics, setDateFilter: setDateFilterAction },
     dateFilter,
-    hasFeature: (feature: keyof TenantFeatures) => features[feature] === true,
+    hasFeature: (feature: keyof NegocioFeatures) => features[feature] === true,
   };
 }

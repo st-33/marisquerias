@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
 });
 
 export function CocinaScreen() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const inventoryAutoDiscount =
@@ -124,7 +124,7 @@ export function CocinaScreen() {
   // 🧠 CEREBRO: Hook de lógica pura (usa repositorios)
   const { orders, stats, loading, actions } = useCocinaLogic({
     db,
-    tenantPath,
+    rutaNegocio,
     urgentThresholdMinutes: 15, // Alerta roja después de 15 minutos
     autoDescuentoInventario: inventoryAutoDiscount,
   });

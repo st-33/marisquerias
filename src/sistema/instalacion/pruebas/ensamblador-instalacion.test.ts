@@ -45,8 +45,8 @@ jest.mock('../../monitoreo', () => ({
   setUser: jest.fn(),
 }));
 
-jest.mock('../../ciclo_de_vida/ensureTenant', () => ({
-  ensureTenantBootstrap: jest.fn().mockResolvedValue(undefined),
+jest.mock('../../ciclo_de_vida/ensureNegocio', () => ({
+  ensureNegocioBootstrap: jest.fn().mockResolvedValue(undefined),
 }));
 
 describe('Módulo de Instalación y Device Binding - Hardened', () => {
@@ -75,7 +75,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
 
       const result = await resolverAccessCode(dbMock, 'PUEBLA-01');
 
-      expect(result.tenantPath).toBe('marisquerias/puerto-libres');
+      expect(result.rutaNegocio).toBe('marisquerias/puerto-libres');
       expect(result.estado).toBe('activo');
     });
 
@@ -83,7 +83,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const snapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'revocado',
         }),
       };
@@ -98,7 +98,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const snapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'expirado',
         }),
       };
@@ -113,7 +113,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const snapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'activo',
           expiraEn: Date.now() - 1000, // Hace 1 segundo
         }),
@@ -129,7 +129,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const snapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'activo',
           maxUsos: 3,
           usosActuales: 3,
@@ -146,7 +146,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const snapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'activo',
           maxUsos: 5,
           usosActuales: 2,
@@ -156,7 +156,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
 
       const result = await resolverAccessCode(dbMock, 'MULTIUSE-CODE');
 
-      expect(result.tenantPath).toBe('marisquerias/puerto-libres');
+      expect(result.rutaNegocio).toBe('marisquerias/puerto-libres');
       expect(result.usosActuales).toBe(2);
     });
   });
@@ -180,7 +180,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
         .mockResolvedValueOnce(featSnapMock)
         .mockResolvedValueOnce(deviceSnapMock);
 
-      const result = await resolverConfiguracionInicial(dbMock, 'tenants/1', 'ADI-DEV-1');
+      const result = await resolverConfiguracionInicial(dbMock, 'negocios/1', 'ADI-DEV-1');
 
       expect(result.dispositivoConfig.nivelOperativo).toBe('segundo_al_mando');
       expect(result.dispositivoConfig.puedeCambiarRol).toBe(false);
@@ -197,8 +197,8 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
     it('debe permitir bypass si vínculo local existe y RTDB confirma estado activo', async () => {
       const localData = {
         deviceIdADI: 'ADI-DEV-1',
-        tenantPath: 'marisquerias/puerto-libres',
-        tenantId: 'marisquerias/puerto-libres',
+        rutaNegocio: 'marisquerias/puerto-libres',
+        negocioId: 'marisquerias/puerto-libres',
         niche: '2 alimentos_y_bebidas',
         rolActivo: 'mesero',
         rolesPermitidos: ['mesero'],
@@ -228,8 +228,8 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
     it('bloquea dispositivo desde RTDB y limpia vínculo local', async () => {
       const localData = {
         deviceIdADI: 'ADI-DEV-1',
-        tenantPath: 'marisquerias/puerto-libres',
-        tenantId: 'marisquerias/puerto-libres',
+        rutaNegocio: 'marisquerias/puerto-libres',
+        negocioId: 'marisquerias/puerto-libres',
         niche: '2 alimentos_y_bebidas',
         rolActivo: 'mesero',
         rolesPermitidos: ['mesero'],
@@ -258,8 +258,8 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
     it('detecta dispositivo reemplazado y limpia vínculo local', async () => {
       const localData = {
         deviceIdADI: 'ADI-DEV-1',
-        tenantPath: 'marisquerias/puerto-libres',
-        tenantId: 'marisquerias/puerto-libres',
+        rutaNegocio: 'marisquerias/puerto-libres',
+        negocioId: 'marisquerias/puerto-libres',
         niche: '2 alimentos_y_bebidas',
         rolActivo: 'mesero',
         rolesPermitidos: ['mesero'],
@@ -288,8 +288,8 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
     it('permite cargar la vinculación si está en mantenimiento sin invalidarla del todo (pero inoperativa)', async () => {
       const localData = {
         deviceIdADI: 'ADI-DEV-1',
-        tenantPath: 'marisquerias/puerto-libres',
-        tenantId: 'marisquerias/puerto-libres',
+        rutaNegocio: 'marisquerias/puerto-libres',
+        negocioId: 'marisquerias/puerto-libres',
         niche: '2 alimentos_y_bebidas',
         rolActivo: 'mesero',
         rolesPermitidos: ['mesero'],
@@ -316,18 +316,18 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       expect(AsyncStorage.removeItem).not.toHaveBeenCalled(); // No se limpia para que pueda reanudar al salir del mantenimiento
     });
 
-    it('evita crear tenant desde cliente (falla la instalación si el tenant no existe)', async () => {
+    it('evita crear negocio desde cliente (falla la instalación si el negocio no existe)', async () => {
       // Mock del resolvedor del access code
       const codeSnapMock = {
         exists: () => true,
         val: () => 'marisquerias/puerto-libres',
       };
-      // Mock de la presencia del tenant en la base de datos (exists: false)
-      const tenantSnapMock = {
-        exists: () => false, // EL TENANT NO EXISTE PREVIAMENTE
+      // Mock de la presencia del negocio en la base de datos (exists: false)
+      const negocioSnapMock = {
+        exists: () => false, // EL NEGOCIO NO EXISTE PREVIAMENTE
       };
 
-      (get as jest.Mock).mockResolvedValueOnce(codeSnapMock).mockResolvedValueOnce(tenantSnapMock);
+      (get as jest.Mock).mockResolvedValueOnce(codeSnapMock).mockResolvedValueOnce(negocioSnapMock);
 
       const result = await ensamblador.instalar('PUEBLA-01', 'Tablet Fails');
 
@@ -342,14 +342,14 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
       const codeSnapMock = {
         exists: () => true,
         val: () => ({
-          tenantPath: 'marisquerias/puerto-libres',
+          rutaNegocio: 'marisquerias/puerto-libres',
           estado: 'activo',
           maxUsos: 10,
           usosActuales: 4,
         }),
       };
-      // 2. tenantRef check
-      const tenantSnapMock = {
+      // 2. negocioRef check
+      const negocioSnapMock = {
         exists: () => true,
       };
       // 3. resolverConfiguracionInicial (caract, features, device)
@@ -362,7 +362,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
 
       (get as jest.Mock)
         .mockResolvedValueOnce(codeSnapMock) // resolverAccessCode
-        .mockResolvedValueOnce(tenantSnapMock) // tenant check
+        .mockResolvedValueOnce(negocioSnapMock) // negocio check
         .mockResolvedValueOnce(caractSnapMock) // resolverConfiguracion (caract)
         .mockResolvedValueOnce(featSnapMock) // resolverConfiguracion (features)
         .mockResolvedValueOnce(deviceSnapMock) // resolverConfiguracion (device)

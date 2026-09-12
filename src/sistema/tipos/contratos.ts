@@ -28,20 +28,29 @@ export interface ContratoSesion {
   /** Código de acceso del usuario (puede ser PIN, password, etc.) */
   access_code: string | null;
 
-  /** Path completo del tenant en Firebase (e.g., "marisquerias/marisqueria-puerto-libres") */
-  tenantPath: string | null;
+  /** Path completo del negocio en Firebase (e.g., "marisquerias/marisqueria-puerto-libres") */
+  rutaNegocio: string | null;
 
-  /** ID único del tenant (e.g., "marisqueria-puerto-libres") */
-  tenantId: string | null;
+  /** ID único del negocio (e.g., "marisqueria-puerto-libres") */
+  negocioId: string | null;
 
-  /** Nicho del negocio (e.g., "2 alimentos_y_bebidas", "talleres", "barberias") */
+  /** Nicho del negocio (e.g., "alimentos_y_bebidas", "talleres", "barberias") */
   niche: string | null;
 
   /** Categoría específica del negocio dentro del nicho (e.g., "marisquerias", "taquerias", "abarrotes") */
   category: string | null;
 
-  /** Rol activo del usuario en este tenant (e.g., "admin", "mesero", "cocina") */
+  /** Rol activo del usuario en este negocio (e.g., "admin", "mesero", "cocina") */
   rol: string | null;
+
+  /** Identidad canónica universal (ej: "puerto_libres") */
+  negocio_id?: string | null;
+
+  /** Ruta física del negocio en RTDB (ej: "marisquerias/marisqueria-puerto-libres") */
+  ruta_negocio?: string | null;
+
+  /** Categoría canónica (ej: "marisquerias") */
+  categoria_id?: string | null;
 
   /** Metadata adicional del usuario (nombre, email, etc.) */
   usuario?: {
@@ -49,6 +58,20 @@ export interface ContratoSesion {
     email?: string;
     avatar?: string;
   };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTRATO LOGÍSTICO (ECOSISTEMA SERVICIO A DOMICILIO)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface PedidoLogisticoEvent {
+  evento_id: string;
+  negocio_id: string; // Identidad canónica
+  pedido_id: string;
+  canal_origen: 'web' | 'whatsapp' | 'llamada' | 'red_social' | 'restaurante' | 'mesera';
+  tipo_operacion: 'entrega_domicilio' | 'apoyo_logistico';
+  timestamp: string; // ISO-8601
+  idempotencia_key: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -400,8 +423,8 @@ export function setFeature(
 export const ESTADO_INICIAL: EstadoGlobal = {
   sesion: {
     access_code: null,
-    tenantPath: null,
-    tenantId: null,
+    rutaNegocio: null,
+    negocioId: null,
     niche: null,
     category: null,
     rol: null,

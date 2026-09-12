@@ -3,7 +3,7 @@ import {
   type InventoryAreaV2,
   type InventoryItemV2,
   type InventorySectionId,
-} from './inventory.v2.repo';
+} from './inventario.repo';
 
 export { InventoryV2Repository as RepositorioInventario };
 

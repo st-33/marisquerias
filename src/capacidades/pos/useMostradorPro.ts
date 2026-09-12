@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../sistema/persistencia';
-import { InventoryV2Repository } from '../../sistema/persistencia/inventory.v2.repo';
+import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repo';
 import type { Categoria } from '../../sistema/persistencia/menu.repo';
 import { SimpleSalesRepo } from '../../sistema/persistencia/SimpleSalesRepo';
 import { getRtdb } from '../../sistema/firebase';
@@ -17,7 +17,7 @@ import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallba
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
-import { useConfiguracionTenant } from '../../sistema/proveedores/ProveedorConfiguracionTenant';
+import { useConfiguracionNegocio } from '../../sistema/proveedores/ProveedorConfiguracionNegocio';
 import { usePosConfig } from '../mostrador/usePosConfig';
 import { useCaracteristica } from '../../negocio/roles/GestorCaracteristicas';
 
@@ -40,7 +40,7 @@ function stripUndefinedDeep<T>(input: T): T {
 
 export type UseMostradorProProps = {
   db?: any;
-  tenantPath?: string;
+  rutaNegocio?: string;
 };
 
 export function useMostradorPro(props?: UseMostradorProProps) {
@@ -50,24 +50,27 @@ export function useMostradorPro(props?: UseMostradorProProps) {
   const [carrito, setCarrito] = useState<any[]>([]);
   const [ultimoTicket, setUltimoTicket] = useState<any | null>(null);
   const [efectivo, setEfectivo] = useState<string>('');
-  const [deviceId, setDeviceId] = useState<string>('desconocido');
+  const [deviceId, setDeviceId] = useState<string | null>(null);
 
-  const storeTenantPath = useStore((state) => state.sesion.tenantPath) || '';
+  const storeRutaNegocio = useStore((state) => state.sesion.rutaNegocio) || '';
   const ds = useStore((state) => state.dataSources);
   const usuario = useStore((state) => state.sesion.usuario?.nombre) || 'Mostrador';
 
-  const tenantPath = props?.tenantPath !== undefined ? props.tenantPath : storeTenantPath;
+  const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
 
   const db = useMemo(() => {
     if (props?.db) return props.db;
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
 
-  useConfiguracionTenant();
-  const { config: posConfig, loading: configLoading } = usePosConfig(db, tenantPath);
-  const menuRepo = useMemo(() => new MenuRepository(db, tenantPath), [db, tenantPath]);
-  const salesRepo = useMemo(() => new SimpleSalesRepo(db, tenantPath), [db, tenantPath]);
-  const inventoryRepo = useMemo(() => new InventoryV2Repository(db, tenantPath), [db, tenantPath]);
+  useConfiguracionNegocio();
+  const { config: posConfig, loading: configLoading } = usePosConfig(db, rutaNegocio);
+  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
+  const salesRepo = useMemo(() => new SimpleSalesRepo(db, rutaNegocio), [db, rutaNegocio]);
+  const inventoryRepo = useMemo(
+    () => new InventoryV2Repository(db, rutaNegocio),
+    [db, rutaNegocio]
+  );
 
   useEffect(() => {
     resolverDeviceIdADI()
@@ -86,7 +89,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   // --- Carga de Datos ---
   useEffect(() => {
-    if (!tenantPath) return;
+    if (!rutaNegocio) return;
 
     // Cargar caché local primero por si estamos offline o para render rápido
     const cargarCacheOffline = async () => {
@@ -125,7 +128,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       unsubMenu();
       unsubCats();
     };
-  }, [tenantPath, menuRepo]);
+  }, [rutaNegocio, menuRepo]);
 
   // --- Computados ---
   const total = useMemo(
@@ -196,6 +199,12 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     });
 
     // 1. Preparar Payload
+    if (!deviceId) {
+      throw new Error(
+        'Inicializando dispositivo... Espera a que se complete la identificación del hardware.'
+      );
+    }
+
     const randomHash = Math.random().toString(36).substring(2, 10).toUpperCase();
     const ventaId = `vc_${deviceId}_${Date.now()}_${randomHash}`;
     const payload = stripUndefinedDeep({
@@ -251,7 +260,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
         console.log('[MostradorPro] 🖨️ ONLINE -> Hub');
         const spooler = DespachadorCola.obtenerInstancia(
           db,
-          tenantPath,
+          rutaNegocio,
           'pos_venta_crudo',
           {},
           'dispositivo'
@@ -296,7 +305,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
             for (const item of inventoryItems) {
               await storeState.ajustarStockDelta({
                 db: null as any,
-                tenantPath,
+                rutaNegocio,
                 containerId: areaId,
                 itemId: item.productoId,
                 delta: -item.cantidad,
@@ -348,7 +357,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     const jobId = `reprint_vc_${Date.now()}`;
     const spooler = DespachadorCola.obtenerInstancia(
       db,
-      tenantPath,
+      rutaNegocio,
       'pos_venta_crudo',
       {},
       'dispositivo'
@@ -376,6 +385,8 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     setEfectivo,
     cambio,
     isHubOnline: true,
+    deviceId,
+    isDeviceReady: Boolean(deviceId),
     isBasculaEnabled,
     isImpresionEnabled,
     isInventarioEnabled,

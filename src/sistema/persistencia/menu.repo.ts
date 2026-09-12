@@ -4,7 +4,7 @@
  */
 
 import type { Database } from 'firebase/database';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 import { get, off, onValue, push, ref, remove, set, update } from 'firebase/database';
 
 export type Categoria = {
@@ -119,9 +119,9 @@ export type VariantRule = {
 export class MenuRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private slugify(x?: string | null) {
@@ -192,17 +192,13 @@ export class MenuRepository {
   }
 
   private getFlatProductosPath() {
-    return `${this.tenantPath}/menu/productos`;
+    return `${this.rutaNegocio}/menu/productos`;
   }
   private getCategoriasPath() {
-    return `${this.tenantPath}/menu/categorias`;
+    return `${this.rutaNegocio}/menu/categorias`;
   }
-  private getIndexPath() {
-    return `${this.tenantPath}/menu/productos_index`;
-  }
-
   private async ensureUniqueCategorySlug(base: string, excludeId?: string): Promise<string> {
-    const snap = await get(ref(this.db, `${this.tenantPath}/menu/categorias`));
+    const snap = await get(ref(this.db, `${this.rutaNegocio}/menu/categorias`));
     const cats = ((snap.val() as any) || {}) as Record<string, { slug?: string; nombre?: string }>;
     const existing = new Set(
       Object.entries(cats)
@@ -220,12 +216,15 @@ export class MenuRepository {
     base: string,
     excludeProdId?: string
   ): Promise<string> {
-    const snap = await get(ref(this.db, this.getIndexPath()));
-    const idx = ((snap.val() as any) || {}) as Record<string, { catId?: string; slug?: string }>;
+    const snap = await get(ref(this.db, this.getFlatProductosPath()));
+    const prods = ((snap.val() as any) || {}) as Record<
+      string,
+      { categoriaId?: string; slug?: string; nombre?: string }
+    >;
     const existing = new Set(
-      Object.entries(idx)
-        .filter(([pid, e]) => pid !== excludeProdId && e?.catId === catId)
-        .map(([_, e]) => e?.slug)
+      Object.entries(prods)
+        .filter(([pid, p]) => pid !== excludeProdId && p?.categoriaId === catId)
+        .map(([_, p]) => p?.slug || this.slugify(p?.nombre))
         .filter(Boolean) as string[]
     );
     if (!existing.has(base)) return base;
@@ -240,7 +239,7 @@ export class MenuRepository {
    * Suscribirse a todas las categorías
    */
   suscribirCategorias(callback: (categorias: Record<string, Categoria>) => void): () => void {
-    const r = ref(this.db, `${this.tenantPath}/menu/categorias`);
+    const r = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
     const cb = onValue(r, (snap) => {
       callback((snap.val() as any) || {});
     });
@@ -251,7 +250,7 @@ export class MenuRepository {
    * Obtener todas las categorías
    */
   async obtenerCategorias(): Promise<Record<string, Categoria>> {
-    const snap = await get(ref(this.db, `${this.tenantPath}/menu/categorias`));
+    const snap = await get(ref(this.db, `${this.rutaNegocio}/menu/categorias`));
     return (snap.val() as any) || {};
   }
 
@@ -259,7 +258,7 @@ export class MenuRepository {
    * Crear categoría
    */
   async crearCategoria(categoria: Omit<Categoria, 'id'>): Promise<string> {
-    const r = ref(this.db, `${this.tenantPath}/menu/categorias`);
+    const r = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
     const newRef = push(r);
     const base = this.slugify(categoria.nombre);
     const slug = await this.ensureUniqueCategorySlug(base);
@@ -277,7 +276,7 @@ export class MenuRepository {
       patch.slug = await this.ensureUniqueCategorySlug(base, categoriaId);
     }
     await update(
-      ref(this.db, `${this.tenantPath}/menu/categorias/${categoriaId}`),
+      ref(this.db, `${this.rutaNegocio}/menu/categorias/${categoriaId}`),
       sanitizeRtdbPayload(patch)
     );
   }
@@ -286,7 +285,7 @@ export class MenuRepository {
    * Eliminar categoría
    */
   async eliminarCategoria(categoriaId: string): Promise<void> {
-    await remove(ref(this.db, `${this.tenantPath}/menu/categorias/${categoriaId}`));
+    await remove(ref(this.db, `${this.rutaNegocio}/menu/categorias/${categoriaId}`));
   }
 
   // ==================== PRODUCTOS ====================
@@ -401,20 +400,6 @@ export class MenuRepository {
    * Obtener producto por ID
    */
   async obtenerProductoPorId(productoId: string): Promise<Producto | null> {
-    const idxSnap = await get(ref(this.db, `${this.getIndexPath()}/${productoId}`)).catch(
-      () => null as any
-    );
-    const idx =
-      idxSnap && (idxSnap as any).exists && (idxSnap as any).exists() ? idxSnap.val() : null;
-    if (idx && idx.catId) {
-      const nestedSnap = await get(
-        ref(this.db, `${this.getCategoriasPath()}/${idx.catId}/productos/${productoId}`)
-      );
-      if (nestedSnap.exists()) {
-        const val = (nestedSnap.val() as any) || null;
-        return val ? ({ id: productoId, ...val } as Producto) : null;
-      }
-    }
     const flatSnap = await get(ref(this.db, `${this.getFlatProductosPath()}/${productoId}`));
     const fval = (flatSnap.val() as any) || null;
     return fval ? ({ id: productoId, ...fval } as Producto) : null;
@@ -435,14 +420,6 @@ export class MenuRepository {
     // Nested write (canonical)
     const catId = producto.categoriaId;
     await set(ref(this.db, `${this.getCategoriasPath()}/${catId}/productos/${id}`), payload);
-    // Index write (lookup)
-    await set(ref(this.db, `${this.getIndexPath()}/${id}`), {
-      catId,
-      nombre: producto.nombre,
-      precio: producto.precio,
-      slug: payload.slug || null,
-      hasReceta: !!producto?.receta,
-    });
     return id;
   }
 
@@ -497,13 +474,6 @@ export class MenuRepository {
         merged
       );
     }
-    // Index
-    await update(ref(this.db, `${this.getIndexPath()}/${productoId}`), {
-      catId: nextCat,
-      nombre: patch.nombre ?? current?.nombre,
-      precio: patch.precio ?? current?.precio,
-      slug: patch.slug ?? current?.slug ?? null,
-    } as any);
   }
 
   /**
@@ -520,8 +490,6 @@ export class MenuRepository {
     if (catId) {
       await remove(ref(this.db, `${this.getCategoriasPath()}/${catId}/productos/${productoId}`));
     }
-    // Index
-    await remove(ref(this.db, `${this.getIndexPath()}/${productoId}`));
   }
 
   /**

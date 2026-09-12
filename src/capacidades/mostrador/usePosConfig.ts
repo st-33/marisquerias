@@ -17,11 +17,11 @@ const DEFAULT_CONFIG: PosConfig = {
   quickCashButtons: true,
 };
 
-export function usePosConfig(customDb?: Database, customTenantPath?: string) {
-  const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
+export function usePosConfig(customDb?: Database, customRutaNegocio?: string) {
+  const storeRutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
 
-  const tenantPath = customTenantPath !== undefined ? customTenantPath : storeTenantPath;
+  const rutaNegocio = customRutaNegocio !== undefined ? customRutaNegocio : storeRutaNegocio;
 
   const db = useMemo(() => {
     if (customDb) return customDb;
@@ -32,8 +32,8 @@ export function usePosConfig(customDb?: Database, customTenantPath?: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!tenantPath) return;
-    const configRef = ref(db, `${tenantPath}/config/pos`);
+    if (!rutaNegocio) return;
+    const configRef = ref(db, `${rutaNegocio}/config/pos`);
 
     const unsub = onValue(configRef, (snapshot) => {
       const val = snapshot.val();
@@ -47,11 +47,11 @@ export function usePosConfig(customDb?: Database, customTenantPath?: string) {
     });
 
     return () => unsub();
-  }, [db, tenantPath]);
+  }, [db, rutaNegocio]);
 
   const updateConfig = async (newConfig: Partial<PosConfig>) => {
-    if (!tenantPath) return;
-    const configRef = ref(db, `${tenantPath}/config/pos`);
+    if (!rutaNegocio) return;
+    const configRef = ref(db, `${rutaNegocio}/config/pos`);
     await set(configRef, { ...config, ...newConfig });
   };
 

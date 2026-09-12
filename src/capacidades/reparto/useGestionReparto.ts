@@ -10,26 +10,25 @@ import {
   RepartoAjustesRepository,
   type AjustesReparto,
 } from '../../sistema/persistencia/reparto-ajustes.repo';
-import {
-  validarCostosReparto,
-  validarHorariosReparto,
-  validarUmbralesReparto,
-} from './validarAjustes';
+import { validarHorariosReparto, validarUmbralesReparto } from './validarAjustes';
 
 type PropsGestionReparto = {
   db?: Database;
-  tenantPath?: string;
+  rutaNegocio?: string;
 };
 
 export function useGestionReparto(props?: PropsGestionReparto) {
-  const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const storeRutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
-  const tenantPath = props?.tenantPath !== undefined ? props.tenantPath : storeTenantPath;
+  const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
   const db = useMemo(() => {
     if (props?.db) return props.db;
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
-  const ajustesRepo = useMemo(() => new RepartoAjustesRepository(db, tenantPath), [db, tenantPath]);
+  const ajustesRepo = useMemo(
+    () => new RepartoAjustesRepository(db, rutaNegocio),
+    [db, rutaNegocio]
+  );
 
   const [umbrales, setUmbrales] = useState<AjustesReparto['umbrales']>({
     stockBajo: 5,
@@ -40,27 +39,20 @@ export function useGestionReparto(props?: PropsGestionReparto) {
     habilitado: false,
     ventanas: [{ inicio: '09:00', fin: '18:00' }],
   });
-  const [costos, setCostos] = useState<AjustesReparto['costos']>({
-    base: 20,
-    porKm: 5,
-    minimo: 20,
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!tenantPath) return;
+    if (!rutaNegocio) return;
     const unsubUmbrales = ajustesRepo.suscribirUmbrales((data) => {
       setUmbrales(data);
       setLoading(false);
     });
     const unsubHorarios = ajustesRepo.suscribirHorarios(setHorarios);
-    const unsubCostos = ajustesRepo.suscribirCostos(setCostos);
     return () => {
       unsubUmbrales();
       unsubHorarios();
-      unsubCostos();
     };
-  }, [ajustesRepo, tenantPath]);
+  }, [ajustesRepo, rutaNegocio]);
 
   const guardarUmbrales = async (u: Partial<AjustesReparto['umbrales']>) => {
     await ajustesRepo.actualizarUmbrales(validarUmbralesReparto(u));
@@ -68,18 +60,14 @@ export function useGestionReparto(props?: PropsGestionReparto) {
   const guardarHorarios = async (h: Partial<AjustesReparto['horarios']>) => {
     await ajustesRepo.actualizarHorarios(validarHorariosReparto(h));
   };
-  const guardarCostos = async (c: Partial<AjustesReparto['costos']>) => {
-    await ajustesRepo.actualizarCostos(validarCostosReparto(c));
-  };
   const toggleHorarios = async () => {
     await ajustesRepo.toggleHorarios(!horarios.habilitado);
   };
 
   return {
-    loading: tenantPath ? loading : false,
+    loading: rutaNegocio ? loading : false,
     umbrales,
     horarios,
-    costos,
-    actions: { guardarUmbrales, guardarHorarios, guardarCostos, toggleHorarios },
+    actions: { guardarUmbrales, guardarHorarios, toggleHorarios },
   };
 }

@@ -16,15 +16,15 @@ export class ContextoOperativoEnMemoria implements PuertoContextoOperativo {
   private readonly contextos = new Map<string, ContextoOperativo>();
 
   constructor(contextos: readonly ContextoOperativo[] = []) {
-    contextos.forEach((contexto) => this.contextos.set(contexto.tenantPath, contexto));
+    contextos.forEach((contexto) => this.contextos.set(contexto.rutaNegocio, contexto));
   }
 
-  async obtenerContexto(tenantPath: string): Promise<ContextoOperativo | null> {
-    return this.contextos.get(tenantPath) || null;
+  async obtenerContexto(rutaNegocio: string): Promise<ContextoOperativo | null> {
+    return this.contextos.get(rutaNegocio) || null;
   }
 
   establecer(contexto: ContextoOperativo) {
-    this.contextos.set(contexto.tenantPath, contexto);
+    this.contextos.set(contexto.rutaNegocio, contexto);
   }
 }
 
@@ -33,19 +33,19 @@ export class PersistenciaMotorEnMemoria implements PuertoPersistenciaMotor {
   readonly solicitudes: SolicitudLogistica[] = [];
   readonly misiones: MisionLogistica[] = [];
 
-  async buscarPorEvento(tenantPath: string, eventId: string) {
+  async buscarPorEvento(rutaNegocio: string, eventId: string) {
     return (
       this.procesamientos.find(
-        (registro) => registro.tenantPath === tenantPath && registro.eventId === eventId
+        (registro) => registro.rutaNegocio === rutaNegocio && registro.eventId === eventId
       ) || null
     );
   }
 
-  async buscarPorIdempotencia(tenantPath: string, idempotencyKey: string) {
+  async buscarPorIdempotencia(rutaNegocio: string, idempotencyKey: string) {
     return (
       this.procesamientos.find(
         (registro) =>
-          registro.tenantPath === tenantPath && registro.idempotencyKey === idempotencyKey
+          registro.rutaNegocio === rutaNegocio && registro.idempotencyKey === idempotencyKey
       ) || null
     );
   }
@@ -53,16 +53,17 @@ export class PersistenciaMotorEnMemoria implements PuertoPersistenciaMotor {
   async guardarProcesamiento(registro: RegistroProcesamiento) {
     const index = this.procesamientos.findIndex(
       (existente) =>
-        existente.tenantPath === registro.tenantPath && existente.eventId === registro.eventId
+        existente.rutaNegocio === registro.rutaNegocio && existente.eventId === registro.eventId
     );
     if (index === -1) this.procesamientos.push(registro);
     else this.procesamientos[index] = registro;
   }
 
-  async buscarSolicitudPorPedido(tenantPath: string, pedidoId: string) {
+  async buscarSolicitudPorPedido(rutaNegocio: string, pedidoId: string) {
     return (
       this.solicitudes.find(
-        (solicitud) => solicitud.tenant.tenantPath === tenantPath && solicitud.pedidoId === pedidoId
+        (solicitud) =>
+          solicitud.negocio.rutaNegocio === rutaNegocio && solicitud.pedidoId === pedidoId
       ) || null
     );
   }
@@ -74,17 +75,18 @@ export class PersistenciaMotorEnMemoria implements PuertoPersistenciaMotor {
   async actualizarSolicitud(solicitud: SolicitudLogistica) {
     const index = this.solicitudes.findIndex(
       (existente) =>
-        existente.tenant.tenantPath === solicitud.tenant.tenantPath && existente.id === solicitud.id
+        existente.negocio.rutaNegocio === solicitud.negocio.rutaNegocio &&
+        existente.id === solicitud.id
     );
     if (index === -1) throw new Error(`Solicitud inexistente: ${solicitud.id}`);
     this.solicitudes[index] = solicitud;
   }
 
-  async buscarMisionPorSolicitud(tenantPath: string, solicitudId: string) {
+  async buscarMisionPorSolicitud(rutaNegocio: string, solicitudId: string) {
     return (
       this.misiones.find(
         (mision) =>
-          mision.tenant.tenantPath === tenantPath && mision.solicitudLogisticaId === solicitudId
+          mision.negocio.rutaNegocio === rutaNegocio && mision.solicitudLogisticaId === solicitudId
       ) || null
     );
   }
@@ -96,7 +98,7 @@ export class PersistenciaMotorEnMemoria implements PuertoPersistenciaMotor {
   async actualizarMision(mision: MisionLogistica) {
     const index = this.misiones.findIndex(
       (existente) =>
-        existente.tenant.tenantPath === mision.tenant.tenantPath && existente.id === mision.id
+        existente.negocio.rutaNegocio === mision.negocio.rutaNegocio && existente.id === mision.id
     );
     if (index === -1) throw new Error(`Misión inexistente: ${mision.id}`);
     this.misiones[index] = mision;

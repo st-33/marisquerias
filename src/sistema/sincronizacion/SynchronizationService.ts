@@ -31,7 +31,7 @@ export interface SynchronizableItem {
  * Configuración de sincronización
  */
 export interface SyncConfig {
-  /** Path completo en Firebase (ej: "tenant/mesas_pendientes/mesa1/items") */
+  /** Path completo en Firebase (ej: "negocio/mesas_pendientes/mesa1/items") */
   path: string;
 
   /** Tiempo en ms para detectar ecos locales (default: 150ms) */

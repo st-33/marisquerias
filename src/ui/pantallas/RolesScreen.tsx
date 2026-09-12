@@ -9,10 +9,10 @@ import { useStore } from '../../sistema/store';
 import { RoleSelectorElite } from '..';
 
 export function RolesScreen() {
-  const tenantPath = useStore((s) => s.sesion.tenantPath) || '';
-  const tenantId = useStore((s) => s.sesion.tenantId);
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
+  const negocioId = useStore((s) => s.sesion.negocioId);
 
-  if (!tenantPath || !tenantId) {
+  if (!rutaNegocio || !negocioId) {
     return (
       <View
         style={{

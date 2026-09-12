@@ -7,11 +7,11 @@ import {
 
 export function useRegistroVentasDelDia({
   db,
-  tenantPath,
+  rutaNegocio,
   timestamp,
 }: {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   timestamp: number;
 }) {
   const [registros, setRegistros] = useState<RegistroVenta[]>([]);
@@ -23,7 +23,7 @@ export function useRegistroVentasDelDia({
     let cancelled = false;
 
     const cargar = async () => {
-      if (!tenantPath) {
+      if (!rutaNegocio) {
         if (!cancelled) {
           setRegistros([]);
           setLoading(false);
@@ -34,7 +34,7 @@ export function useRegistroVentasDelDia({
       setError(null);
 
       try {
-        const datos = await new RegistroVentasRepository(db, tenantPath).obtenerDia(timestamp);
+        const datos = await new RegistroVentasRepository(db, rutaNegocio).obtenerDia(timestamp);
         if (!cancelled) {
           setRegistros(
             Object.values(datos).sort((a, b) => a.numero - b.numero || a.timestamp - b.timestamp)
@@ -54,7 +54,7 @@ export function useRegistroVentasDelDia({
     return () => {
       cancelled = true;
     };
-  }, [db, tenantPath, timestamp, recarga]);
+  }, [db, rutaNegocio, timestamp, recarga]);
 
   const recargar = useCallback(() => {
     setLoading(true);

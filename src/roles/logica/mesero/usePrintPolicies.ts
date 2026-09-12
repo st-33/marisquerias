@@ -1,7 +1,7 @@
 /**
  * 📜 HOOK - POLÍTICAS DE IMPRESIÓN
  *
- * Lee en tiempo real las restricciones de impresión definidas para el tenant
+ * Lee en tiempo real las restricciones de impresión definidas para el negocio
  * (qué roles pueden imprimir cuentas, tickets, etc.) y mantiene la UI sincronizada
  * mientras la RTDB cambia. Se asegura de limpiar el listener al desmontar.
  */
@@ -19,18 +19,18 @@ export type PrintPolicies = {
 
 type UsePrintPoliciesProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
 };
 
-export function usePrintPolicies({ db, tenantPath }: UsePrintPoliciesProps) {
+export function usePrintPolicies({ db, rutaNegocio }: UsePrintPoliciesProps) {
   const [policies, setPolicies] = useState<PrintPolicies>({});
 
   useEffect(() => {
-    if (!tenantPath) return;
-    const r = ref(db, `${tenantPath}/ajustes/dispositivos/impresion/politicas`);
+    if (!rutaNegocio) return;
+    const r = ref(db, `${rutaNegocio}/impresion/politicas`);
     const cb = onValue(r, (snap) => setPolicies((snap.val() as PrintPolicies) || {}));
     return () => off(r, 'value', cb as any);
-  }, [db, tenantPath]);
+  }, [db, rutaNegocio]);
 
   return {
     ...policies,

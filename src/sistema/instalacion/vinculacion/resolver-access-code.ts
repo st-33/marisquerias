@@ -1,12 +1,12 @@
 import { get, ref } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import {
-  descomponerRutaTenant,
-  esRutaLegacy,
-  type IdentidadTenant,
-} from '../../rtdb/rutas/RutaTenant';
+  descomponer_ruta_negocio,
+  es_ruta_legacy,
+  type IdentidadNegocio,
+} from '../../rtdb/rutas/ruta_negocio';
 
-export interface InfoAccessCode extends IdentidadTenant {
+export interface InfoAccessCode extends IdentidadNegocio {
   accessCode: string;
   estado: 'activo' | 'usado' | 'revocado' | 'expirado';
   maxUsos?: number;
@@ -23,10 +23,10 @@ export interface InfoAccessCode extends IdentidadTenant {
  * Firebase es la única fuente de verdad: no existe resolución local ni fallback.
  *
  * Contrato de nodo remoto `access_codes/{CODIGO}`:
- *   - string  -> tenantPath directo (formato legible, válido si son 2 segmentos)
- *   - object  -> { tenantPath: string, estado?, maxUsos?, usosActuales?, expiraEn?, ... }
+ *   - string  -> rutaNegocio directo (formato legible, válido si son 2 segmentos)
+ *   - object  -> { rutaNegocio: string, estado?, maxUsos?, usosActuales?, expiraEn?, ... }
  *
- * El tenantPath resuelto debe tener exactamente 2 segmentos: {categoria}/{negocio}.
+ * El rutaNegocio resuelto debe tener exactamente 2 segmentos: {categoria}/{negocio}.
  * Si RTDB no responde, el código no existe o la ruta es inválida, el resolver falla explícitamente.
  */
 export async function resolverAccessCode(
@@ -47,7 +47,7 @@ export async function resolverAccessCode(
 
   const val: unknown = snapshot.val();
 
-  let tenantPath = '';
+  let rutaNegocio = '';
   let estado: 'activo' | 'usado' | 'revocado' | 'expirado' = 'activo';
   let maxUsos: number | undefined;
   let usosActuales: number | undefined;
@@ -58,10 +58,10 @@ export async function resolverAccessCode(
   let modulosPermitidos: string[] | undefined;
 
   if (typeof val === 'string') {
-    tenantPath = val;
+    rutaNegocio = val;
   } else if (val !== null && typeof val === 'object') {
     const obj = val as Record<string, unknown>;
-    tenantPath = typeof obj.tenantPath === 'string' ? obj.tenantPath : '';
+    rutaNegocio = typeof obj.rutaNegocio === 'string' ? obj.rutaNegocio : '';
     if (
       obj.estado === 'activo' ||
       obj.estado === 'usado' ||
@@ -84,15 +84,15 @@ export async function resolverAccessCode(
     }
   }
 
-  if (!tenantPath) {
-    throw new Error('La referencia del tenant asociada al código está vacía');
+  if (!rutaNegocio) {
+    throw new Error('La referencia del negocio asociada al código está vacía');
   }
 
-  if (esRutaLegacy(tenantPath)) {
+  if (es_ruta_legacy(rutaNegocio)) {
     throw new Error('El código de acceso apunta a una ruta obsoleta. Contacta a soporte.');
   }
 
-  const identidad = descomponerRutaTenant(tenantPath);
+  const identidad = descomponer_ruta_negocio(rutaNegocio);
   if (!identidad) {
     throw new Error('Estructura de ruta inválida o incompleta');
   }

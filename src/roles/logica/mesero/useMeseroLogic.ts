@@ -10,7 +10,7 @@
 import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventory.v2.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
 import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
 import {
   useItemsPedido,
@@ -60,9 +60,9 @@ export type OrderItem = {
 
 type UseMeseroLogicProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   accessCode: string;
-  tenantId: string;
+  negocioId: string;
   onPrintBill?: (mesaId: string) => void;
   onFreeMesa?: (mesaId: string) => void;
   ensureConnection?: () => boolean | Promise<boolean>;
@@ -70,19 +70,19 @@ type UseMeseroLogicProps = {
 
 export function useMeseroLogic({
   db,
-  tenantPath,
+  rutaNegocio,
   accessCode,
-  tenantId,
+  negocioId,
   onPrintBill,
   onFreeMesa,
   ensureConnection,
 }: UseMeseroLogicProps) {
   // Repositorios especializados
-  const pedidosRepo = useMemo(() => new PedidosRepository(db, tenantPath), [db, tenantPath]);
-  const mesasRepo = useMemo(() => new MesasRepository(db, tenantPath), [db, tenantPath]);
+  const pedidosRepo = useMemo(() => new PedidosRepository(db, rutaNegocio), [db, rutaNegocio]);
+  const mesasRepo = useMemo(() => new MesasRepository(db, rutaNegocio), [db, rutaNegocio]);
   const inventarioV2Repo = useMemo(
-    () => new InventoryV2Repository(db, tenantPath),
-    [db, tenantPath]
+    () => new InventoryV2Repository(db, rutaNegocio),
+    [db, rutaNegocio]
   );
   const repartoUrl = useStore((state) => state.dataSources.repartoUrl);
   const logisticaHabilitada = useStore((state) =>
@@ -119,9 +119,9 @@ export function useMeseroLogic({
     isOnline,
   } = useSharedDrafts({
     db,
-    tenantPath,
+    rutaNegocio,
     mesaId: selectedTable,
-    tenantId,
+    negocioId,
   });
 
   const activeSubpedidoId = 'default';
@@ -184,7 +184,7 @@ export function useMeseroLogic({
       activePendingItemsRef,
       clearPendingItems,
       addDraftItem,
-      tenantId,
+      negocioId,
       pedidosRepo,
       mesasRepo,
     });
@@ -215,8 +215,8 @@ export function useMeseroLogic({
 
       // 3. Obtener drafts de la mesa
       // Los borradores sólo se consideran para la mesa activa. La fuente de verdad
-      // está acotada por tenantPath + mesaId en useSharedDrafts; no leer el slice
-      // global keyed únicamente por mesa evita arrastres al cambiar de tenant.
+      // está acotada por rutaNegocio + mesaId en useSharedDrafts; no leer el slice
+      // global keyed únicamente por mesa evita arrastres al cambiar de negocio.
       const hasPending = table.id === selectedTable && activePendingItems.length > 0;
 
       return {
@@ -285,13 +285,13 @@ export function useMeseroLogic({
     setSolicitandoEntrega(true);
     try {
       return await integracionLogistica.solicitarEntrega(pedidoActivo as any, {
-        tenantId,
-        tenantPath,
+        negocioId,
+        rutaNegocio,
       });
     } finally {
       setSolicitandoEntrega(false);
     }
-  }, [integracionLogistica, logisticaHabilitada, pedidoActivo, tenantId, tenantPath]);
+  }, [integracionLogistica, logisticaHabilitada, pedidoActivo, negocioId, rutaNegocio]);
 
   const liveItems = useMemo((): OrderItem[] => {
     if (!pedidoActivoId) return [];
@@ -344,7 +344,7 @@ export function useMeseroLogic({
     requestBill,
   } = useGestionarImpresion({
     db,
-    tenantPath,
+    rutaNegocio,
     selectedTable,
     tablesRef,
     liveItems,

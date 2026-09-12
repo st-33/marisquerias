@@ -34,7 +34,7 @@ Este módulo implementa la arquitectura formal para la instalación y vinculaci�
             │
             ├───▶ Verificar Estado del Dispositivo (Activo / Bloqueado)
             │
-            ├───▶ Registrar/Actualizar Auditoría en RTDB (dispositivos_autorizados)
+            ├───▶ Registrar/Actualizar Auditoría en RTDB (dispositivos)
             │
             └───▶ Persistir Localmente (AsyncStorage) y retornar resultado
             │

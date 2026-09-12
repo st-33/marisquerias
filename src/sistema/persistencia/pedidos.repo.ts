@@ -9,7 +9,7 @@ import { get, off, onValue, ref, remove, runTransaction, set, update } from 'fir
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
 import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { resolver } from '../../sistema/utilidades/paths';
-import { assertValidTenantPath } from '../rtdb/guards';
+import { assertValidRutaNegocio } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 import { RegistroVentasRepository } from './registroVentas.repo';
 import type {
@@ -83,17 +83,17 @@ export type Pedido = {
 export class PedidosRepository {
   constructor(
     private db: Database,
-    private tenantPath: string
+    private rutaNegocio: string
   ) {
-    assertValidTenantPath(tenantPath);
+    assertValidRutaNegocio(rutaNegocio);
   }
 
   private getBasePath() {
-    return `${this.tenantPath}/${resolver('pedidos')}`;
+    return `${this.rutaNegocio}/${resolver('pedidos')}`;
   }
 
   private getSequencesPath() {
-    return `${this.tenantPath}/secuencias`;
+    return `${this.rutaNegocio}/secuencias`;
   }
 
   private formatDateYYYYMMDD(ts: number) {
@@ -250,14 +250,6 @@ export class PedidosRepository {
       const productCode = this.slugify((raw as any).nombre || undefined);
       await this.agregarItem(id, { ...(raw as any), productCode });
     }
-    // Index por mesa: acelerar descubrimiento de pedido activo por mesa
-    if ((pedido as any).mesaId) {
-      const mesaId = (pedido as any).mesaId as string;
-      await set(
-        ref(this.db, `${this.tenantPath}/pedidos_por_mesa/${mesaId}/${id}`),
-        ensureNumberTimestamp(Date.now())
-      );
-    }
     return id;
   }
 
@@ -394,8 +386,8 @@ export class PedidosRepository {
         return;
       }
 
-      const productosRef = ref(this.db, `${this.tenantPath}/${resolver('menu_productos')}`);
-      const categoriasRef = ref(this.db, `${this.tenantPath}/menu/categorias`);
+      const productosRef = ref(this.db, `${this.rutaNegocio}/${resolver('menu_productos')}`);
+      const categoriasRef = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
 
       const [productosSnap, categoriasSnap] = await Promise.all([
         get(productosRef),
@@ -467,7 +459,7 @@ export class PedidosRepository {
         const jobId = `job_comanda_v1_${pedidoId}_${now}`;
 
         // Fire-and-forget: No bloqueamos el flujo principal
-        DespachadorCola.encolarRemoto(this.db, this.tenantPath, {
+        DespachadorCola.encolarRemoto(this.db, this.rutaNegocio, {
           idTrabajo: jobId,
           idPedido: pedidoId,
           proposito: 'comanda',
@@ -572,10 +564,10 @@ export class PedidosRepository {
     });
 
     try {
-      const registro = await new RegistroVentasRepository(this.db, this.tenantPath).registrarPedido(
-        pedidoCerrado,
-        now
-      );
+      const registro = await new RegistroVentasRepository(
+        this.db,
+        this.rutaNegocio
+      ).registrarPedido(pedidoCerrado, now);
       await this.actualizar(pedidoId, {
         registroVentaId: registro.origenId,
         registroVentaNumero: registro.numero,
@@ -588,14 +580,6 @@ export class PedidosRepository {
         registroVentaError: error instanceof Error ? error.message : String(error),
       });
     }
-
-    // Intentar limpiar índice por mesa
-    try {
-      const mesaId = pedidoActual.mesaId;
-      if (mesaId) {
-        await remove(ref(this.db, `${this.tenantPath}/pedidos_por_mesa/${mesaId}/${pedidoId}`));
-      }
-    } catch {}
   }
 
   /**

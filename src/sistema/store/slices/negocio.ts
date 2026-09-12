@@ -1,20 +1,20 @@
 import type { StateCreator } from 'zustand';
 import type { ContratoNegocio } from '../../../sistema/tipos/contratos';
 import { setFeature as setFeatureHelper } from '../../../sistema/tipos/contratos';
-import { storage, getTenantStorageKey } from './sesion';
+import { storage, getNegocioStorageKey } from './sesion';
 
-type SessionContext = { sesion: { tenantPath: string | null } };
+type SessionContext = { sesion: { rutaNegocio: string | null } };
 
 export const ESTADO_INICIAL_NEGOCIO: ContratoNegocio = {
   features: {},
 };
 
-function getTenantPath(get: () => NegocioSlice): string | null {
-  return (get() as unknown as SessionContext).sesion.tenantPath;
+function getRutaNegocio(get: () => NegocioSlice): string | null {
+  return (get() as unknown as SessionContext).sesion.rutaNegocio;
 }
 
-async function persistFeatures(tenantPath: string | null, features: ContratoNegocio['features']) {
-  const key = getTenantStorageKey(tenantPath, 'negocio', 'features');
+async function persistFeatures(rutaNegocio: string | null, features: ContratoNegocio['features']) {
+  const key = getNegocioStorageKey(rutaNegocio, 'negocio', 'features');
   if (!key) return;
 
   try {
@@ -37,19 +37,19 @@ export const createNegocioSlice: StateCreator<NegocioSlice, [], [], NegocioSlice
   negocio: ESTADO_INICIAL_NEGOCIO,
 
   setFeatures(features) {
-    const tenantPath = getTenantPath(get);
+    const rutaNegocio = getRutaNegocio(get);
     set((state) => ({
       negocio: { ...state.negocio, features },
     }));
-    void persistFeatures(tenantPath, features);
+    void persistFeatures(rutaNegocio, features);
   },
 
   setFeature(path, enabled, config) {
     const negocio = get().negocio;
     const newNegocio = setFeatureHelper(negocio, path, enabled, config);
-    const tenantPath = getTenantPath(get);
+    const rutaNegocio = getRutaNegocio(get);
     set({ negocio: newNegocio });
-    void persistFeatures(tenantPath, newNegocio.features);
+    void persistFeatures(rutaNegocio, newNegocio.features);
   },
 
   setConfiguracion(config) {

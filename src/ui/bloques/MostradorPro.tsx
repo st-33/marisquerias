@@ -95,6 +95,7 @@ export function MostradorPro() {
     isHubOnline,
     actions,
     isBasculaEnabled,
+    isDeviceReady,
   } = useMostradorPro();
   const { basculaActiva, leerPeso } = useFierros();
 
@@ -383,14 +384,16 @@ export function MostradorPro() {
               <Pressable
                 style={({ pressed }) => [
                   styles.payBtn,
-                  carrito.length === 0 && { opacity: 0.5 },
+                  (carrito.length === 0 || !isDeviceReady) && { opacity: 0.5 },
                   pressed && { transform: [{ scale: 0.97 }] },
                 ]}
                 onPress={() => setShowCheckout(true)}
-                disabled={carrito.length === 0}
+                disabled={carrito.length === 0 || !isDeviceReady}
               >
                 <Ionicons name="print-outline" size={24} color="white" />
-                <Text style={styles.payBtnText}>COBRAR E IMPRIMIR</Text>
+                <Text style={styles.payBtnText}>
+                  {!isDeviceReady ? 'INICIALIZANDO DISPOSITIVO...' : 'COBRAR E IMPRIMIR'}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -500,7 +503,7 @@ export function MostradorPro() {
                 <Text style={styles.keyActionText}>CANCELAR</Text>
               </Pressable>
               <Pressable
-                disabled={isProcessing}
+                disabled={isProcessing || !isDeviceReady}
                 onPress={async () => {
                   setIsProcessing(true);
                   try {
@@ -532,12 +535,18 @@ export function MostradorPro() {
                 }}
                 style={({ pressed }) => [
                   styles.keyConfirm,
-                  (pressed || isProcessing) && { opacity: 0.7, transform: [{ scale: 0.98 }] },
+                  (pressed || isProcessing || !isDeviceReady) && {
+                    opacity: 0.7,
+                    transform: [{ scale: 0.98 }],
+                  },
                   isProcessing && { backgroundColor: '#065f46' },
+                  !isDeviceReady && { backgroundColor: '#4b5563' },
                 ]}
               >
                 {isProcessing ? (
                   <ActivityIndicator color="white" />
+                ) : !isDeviceReady ? (
+                  <Text style={styles.keyActionText}>INICIALIZANDO...</Text>
                 ) : (
                   <Text style={styles.keyActionText}>FINALIZAR</Text>
                 )}

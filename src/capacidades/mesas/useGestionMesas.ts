@@ -15,7 +15,7 @@ import {
 
 type PropsGestionMesas = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
 };
 
 export type { EstadoMesa, Mesa };
@@ -44,16 +44,16 @@ const mapMesaToLayout = (mesa: Mesa, index: number): MesaConLayout => {
   };
 };
 
-export function useGestionMesas({ db, tenantPath }: PropsGestionMesas) {
+export function useGestionMesas({ db, rutaNegocio }: PropsGestionMesas) {
   const [mesas, setMesas] = useState<Record<string, Mesa>>({});
   const [cantidad, setCantidad] = useState<number>(8);
   const [loading, setLoading] = useState(true);
 
-  const mesasRepo = useMemo(() => new MesasRepository(db, tenantPath), [db, tenantPath]);
+  const mesasRepo = useMemo(() => new MesasRepository(db, rutaNegocio), [db, rutaNegocio]);
 
   // Suscribirse a mesas y sincronizar cantidad configurada
   useEffect(() => {
-    if (!tenantPath) return;
+    if (!rutaNegocio) return;
     const unsub = mesasRepo.suscribirTodas((mesasData) => {
       setMesas(mesasData);
       const keys = Object.keys(mesasData || {});
@@ -70,7 +70,7 @@ export function useGestionMesas({ db, tenantPath }: PropsGestionMesas) {
       setLoading(false);
     });
     return unsub;
-  }, [mesasRepo, tenantPath]);
+  }, [mesasRepo, rutaNegocio]);
 
   // Acciones
   const actualizarEstado = async (id: string, estado: EstadoMesa) => {

@@ -5,47 +5,36 @@
     "PERLA-24": "marisquerias/marisqueria-la-perla-del-pueblo",
     "PUERTO-24": "marisquerias/marisqueria-puerto-libres"
   },
-
   "marisquerias": {
     "__plantilla_base": {
       "config": {
         "nombre_comercial": "Plantilla Marisquería",
-        "flags": { "mesas": true, "cocina": true, "delivery": true }
+        "flags": {
+          "mesas": true,
+          "cocina": true,
+          "delivery": true
+        }
       },
-      "dispositivos_autorizados": { "placeholder_uid": true },
-      "menu": { "categorias_menu": {}, "productos": {} },
-      "inventory_v2": {},
+      "menu": {
+        "categorias_menu": {},
+        "productos": {}
+      },
       "pedidos": {},
-      "ventas": {},
-      "caracteristicas": { "roles": { "admin": true, "mesero": true, "cocina": true } }
+      "caracteristicas": {
+        "roles": {
+          "admin": true,
+          "mesero": true,
+          "cocina": true
+        }
+      },
+      "inventario": {},
+      "dispositivos": {
+        "placeholder_uid": true
+      }
     },
-
     "el-arrecife": {
       "__bootstrapDone": true,
       "ajustes": {
-        "dispositivos": {
-          "impresion": {
-            "politicas": {
-              "maxReprintsByRole": {
-                "admin": 999,
-                "mesera": 1
-              },
-              "permitirAdminImprimirCuenta": true,
-              "permitirCocinaImprimirCuenta": true,
-              "permitirMeseraImprimirCuenta": true,
-              "retries": {
-                "write": 3
-              },
-              "timeouts": {
-                "bleConnectMs": 4000,
-                "jobMsBle": 10000,
-                "jobMsLan": 5000,
-                "lanConnectMs": 2000,
-                "writeMs": 2000
-              }
-            }
-          }
-        },
         "reparto": {
           "costos": {
             "base": 22,
@@ -91,74 +80,11 @@
         }
       },
       "config": {
-        "hub": {
-          "destination": "restaurante",
-          "deviceId": "hub_mkjbjsn4_33j3wmlwkde",
-          "enabled": true,
-          "heartbeat": 1782531803060,
-          "updatedAt": 1768716163293
-        },
         "pos": {
           "allowNegativeStock": false,
           "quickCashButtons": true,
           "requirePasskeyForVoid": true,
           "showImagesInPos": true
-        }
-      },
-      "dispositivos_autorizados": {
-        "0b8502302d12e404": {
-          "brand": "motorola",
-          "fechaRegistro": 1767696859344,
-          "isEmulator": false,
-          "model": "moto g04",
-          "systemName": "Android",
-          "systemVersion": "14",
-          "ultimoAcceso": 1774589495826
-        },
-        "56b7e6ee8cffe508": {
-          "brand": "Acer",
-          "fechaRegistro": 1774500719371,
-          "isEmulator": false,
-          "model": "AC50",
-          "systemName": "Android",
-          "systemVersion": "13",
-          "ultimoAcceso": 1774500719371
-        },
-        "804c378c24b0c04e": {
-          "brand": "Lenovo",
-          "fechaRegistro": 1782525782717,
-          "isEmulator": false,
-          "model": "TB310FU",
-          "systemName": "Android",
-          "systemVersion": "13",
-          "ultimoAcceso": 1782525782717
-        },
-        "d0a2790ca6a51f0d": {
-          "brand": "ONN",
-          "fechaRegistro": 1768716147669,
-          "isEmulator": false,
-          "model": "MID8016",
-          "systemName": "Android",
-          "systemVersion": "11",
-          "ultimoAcceso": 1769752437607
-        },
-        "da320f1bdeb95fcd": {
-          "brand": "vivo",
-          "fechaRegistro": 1768599825705,
-          "isEmulator": false,
-          "model": "V2247",
-          "systemName": "Android",
-          "systemVersion": "15",
-          "ultimoAcceso": 1777690288059
-        },
-        "unknown": {
-          "brand": "unknown",
-          "fechaRegistro": 1769130443743,
-          "isEmulator": false,
-          "model": "unknown",
-          "systemName": "unknown",
-          "systemVersion": "unknown",
-          "ultimoAcceso": 1769153072533
         }
       },
       "impresion": {
@@ -310,7 +236,17 @@
           "hub_mjig87p4_5hq22xodsar": {
             "estado": "activo",
             "ultimaComprobacion": 1769160444391
-          }
+          },
+          "hub_mkjbjsn4_33j3wmlwkde": {
+            "destination": "restaurante",
+            "deviceId": "hub_mkjbjsn4_33j3wmlwkde",
+            "enabled": true,
+            "heartbeat": 1782531803060,
+            "updatedAt": 1768716163293,
+            "estado": "activo",
+            "ultimaComprobacion": 1782531803060
+          },
+          "heartbeat": 1782531803060
         },
         "rutas": {
           "-OjcOOXfUwcdC-sqk5AJ": {
@@ -327,98 +263,24 @@
             "hubId": "device_1769130653694",
             "prioridad": "normal"
           }
-        }
-      },
-      "inventario": {
-        "items": {
-          "-Oj7l63JeSvvM243h9b6": {
-            "area": "arCocina",
-            "cantidad": 100,
-            "nombre": "Tortilla Maíz",
-            "umbralBajo": 50,
-            "unidad": "pza",
-            "updatedAt": 1768599708339
-          }
-        }
-      },
-      "inventory_v2": {
-        "areas": {
-          "-OhTeRSRfzJT8Quc69eT": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "metadata": {
-              "isDefault": true
-            },
-            "nombre": "Almacen",
-            "sectionId": "otros",
-            "tipo": "almacen",
-            "updatedAt": 1767249438470
-          },
-          "-OhbY1tkl4XDxbKZhncs": {
-            "hubId": "venta_crudo",
-            "icon": "📦",
-            "metadata": {
-              "isDefault": true
-            },
-            "nombre": "Tara",
-            "sectionId": "otros",
-            "tipo": "almacen",
-            "updatedAt": 1767249438470
-          },
-          "-OhwaE_T8ibN13DdJbc4": {
-            "hubId": "restaurante",
-            "icon": "🧊",
-            "nombre": "REFRI",
-            "parentId": "-OhTeRSRfzJT8Quc69eT",
-            "sectionId": "otros",
-            "tipo": "refri",
-            "updatedAt": 1767321958808
-          },
-          "-OhwaRj9fhJLEpp0iaBF": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "RESTAURANTE",
-            "sectionId": "alimentos",
-            "tipo": "almacen",
-            "updatedAt": 1767322012676
-          },
-          "-OhwaTtOxG_ZIVNRluSa": {
-            "hubId": "restaurante",
-            "icon": "🧊",
-            "nombre": "COCINA",
-            "parentId": "-OhwaRj9fhJLEpp0iaBF",
-            "sectionId": "alimentos",
-            "tipo": "refri",
-            "updatedAt": 1767322021523
-          },
-          "-Ow3dvirYSjxZxjtDJ05": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "Refrigerador ",
-            "sectionId": "alimentos",
-            "tipo": "almacen",
-            "updatedAt": 1782489528366
-          }
         },
-        "catalog": {
-          "-OhTlngVrnVVEUvZkKP9": {
-            "minStock": 30,
-            "nombre": "platos",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767249438470
-          }
-        },
-        "missing_area_assignments": {
-          "-OhTlngVrnVVEUvZkKP9": {
-            "actor": "system",
-            "count": 1,
-            "fallbackAreaId": "__auto_section__",
-            "hubId": "restaurante",
-            "itemId": "-OhTlngVrnVVEUvZkKP9",
-            "lastTs": 1767249438470,
-            "nombre": "platos",
-            "reason": "auto_assign_section"
+        "politicas": {
+          "maxReprintsByRole": {
+            "admin": 999,
+            "mesera": 1
+          },
+          "permitirAdminImprimirCuenta": true,
+          "permitirCocinaImprimirCuenta": true,
+          "permitirMeseraImprimirCuenta": true,
+          "retries": {
+            "write": 3
+          },
+          "timeouts": {
+            "bleConnectMs": 4000,
+            "jobMsBle": 10000,
+            "jobMsLan": 5000,
+            "lanConnectMs": 2000,
+            "writeMs": 2000
           }
         }
       },
@@ -537,21 +399,20 @@
           }
         }
       },
-      "mesas": [
-        null,
-        {
+      "mesas": {
+        "1": {
           "estado": "libre",
           "updatedAt": 1782526771905
         },
-        {
+        "2": {
           "estado": "libre",
           "updatedAt": 1782526761661
         },
-        {
+        "3": {
           "estado": "libre",
           "updatedAt": 1782526759662
         }
-      ],
+      },
       "pedidos": {
         "PED-20260118-001": {
           "_seqItems": 1,
@@ -1098,142 +959,144 @@
           }
         }
       },
-      "ventas": {
-        "-OjPzhU5ptgaVairmrlI": {
-          "id": "-OjPzhU5ptgaVairmrlI",
-          "items": [
-            {
-              "cantidad": 2,
-              "id": "-OhSVDTmsQaQSh1DKq-M-u6lxvz771",
-              "nombre": "Camaron",
-              "precio": 100,
-              "productId": "-OhSVDTmsQaQSh1DKq-M",
-              "productoId": "-OhSVDTmsQaQSh1DKq-M",
-              "subtotal": 200,
-              "unidad": "kg"
-            }
-          ],
-          "metodoPago": "efectivo",
-          "origen": "venta_crudo",
-          "timestamp": 1768905528768,
-          "total": 200,
-          "usuario": "Vendedor"
+      "inventario": {
+        "areas": {
+          "-OhTeRSRfzJT8Quc69eT": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "metadata": {
+              "isDefault": true
+            },
+            "nombre": "Almacen",
+            "sectionId": "otros",
+            "tipo": "almacen",
+            "updatedAt": 1767249438470
+          },
+          "-OhbY1tkl4XDxbKZhncs": {
+            "hubId": "venta_crudo",
+            "icon": "📦",
+            "metadata": {
+              "isDefault": true
+            },
+            "nombre": "Tara",
+            "sectionId": "otros",
+            "tipo": "almacen",
+            "updatedAt": 1767249438470
+          },
+          "-OhwaE_T8ibN13DdJbc4": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "REFRI",
+            "parentId": "-OhTeRSRfzJT8Quc69eT",
+            "sectionId": "otros",
+            "tipo": "refri",
+            "updatedAt": 1767321958808
+          },
+          "-OhwaRj9fhJLEpp0iaBF": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "RESTAURANTE",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767322012676
+          },
+          "-OhwaTtOxG_ZIVNRluSa": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "COCINA",
+            "parentId": "-OhwaRj9fhJLEpp0iaBF",
+            "sectionId": "alimentos",
+            "tipo": "refri",
+            "updatedAt": 1767322021523
+          },
+          "-Ow3dvirYSjxZxjtDJ05": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Refrigerador ",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1782489528366
+          }
         },
-        "-OkCTNPwPSbhQD2BGR1S": {
-          "id": "-OkCTNPwPSbhQD2BGR1S",
-          "items": [
-            {
-              "cantidad": 3,
-              "id": "-OhSVDTmsQaQSh1DKq-M-le5xxm9iy",
-              "nombre": "Camaron",
-              "precio": 100,
-              "productId": "-OhSVDTmsQaQSh1DKq-M",
-              "productoId": "-OhSVDTmsQaQSh1DKq-M",
-              "subtotal": 300,
-              "unidad": "kg"
-            }
-          ],
-          "metodoPago": "efectivo",
-          "origen": "venta_crudo",
-          "timestamp": 1769752598607,
-          "total": 300,
-          "usuario": "Vendedor"
+        "catalog": {
+          "-OhTlngVrnVVEUvZkKP9": {
+            "minStock": 30,
+            "nombre": "platos",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767249438470,
+            "areaId": "-OhTeRSRfzJT8Quc69eT"
+          }
+        }
+      },
+      "dispositivos": {
+        "0b8502302d12e404": {
+          "brand": "motorola",
+          "fechaRegistro": 1767696859344,
+          "isEmulator": false,
+          "model": "moto g04",
+          "systemName": "Android",
+          "systemVersion": "14",
+          "ultimoAcceso": 1774589495826,
+          "rol_asignado": "operador"
         },
-        "-Ow5oTZH5k7rdtGxEp3I": {
-          "id": "-Ow5oTZH5k7rdtGxEp3I",
-          "items": [
-            {
-              "cantidad": 2,
-              "id": "-OhSVDTmsQaQSh1DKq-M-k3khtdmcr",
-              "nombre": "Camaron",
-              "precio": 100,
-              "productId": "-OhSVDTmsQaQSh1DKq-M",
-              "productoId": "-OhSVDTmsQaQSh1DKq-M",
-              "subtotal": 200,
-              "unidad": "kg"
-            }
-          ],
-          "metodoPago": "efectivo",
-          "origen": "venta_crudo",
-          "timestamp": 1782525847002,
-          "total": 200,
-          "usuario": "Mostrador"
+        "56b7e6ee8cffe508": {
+          "brand": "Acer",
+          "fechaRegistro": 1774500719371,
+          "isEmulator": false,
+          "model": "AC50",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1774500719371,
+          "rol_asignado": "operador"
         },
-        "-Ow5ol6sFFxiC2Ex2kea": {
-          "id": "-Ow5ol6sFFxiC2Ex2kea",
-          "items": [
-            {
-              "cantidad": 1,
-              "id": "-OhSVDTmsQaQSh1DKq-M-m0gpfrrkl",
-              "nombre": "Camaron",
-              "precio": 100,
-              "productId": "-OhSVDTmsQaQSh1DKq-M",
-              "productoId": "-OhSVDTmsQaQSh1DKq-M",
-              "subtotal": 100,
-              "unidad": "kg"
-            }
-          ],
-          "metodoPago": "efectivo",
-          "origen": "venta_crudo",
-          "timestamp": 1782525923008,
-          "total": 100,
-          "usuario": "Mostrador"
+        "804c378c24b0c04e": {
+          "brand": "Lenovo",
+          "fechaRegistro": 1782525782717,
+          "isEmulator": false,
+          "model": "TB310FU",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782525782717,
+          "rol_asignado": "operador"
         },
-        "-Ow5ovaFGNf-jODoxtDf": {
-          "id": "-Ow5ovaFGNf-jODoxtDf",
-          "items": [
-            {
-              "cantidad": 10,
-              "id": "-OhSVDTmsQaQSh1DKq-M-ay69drnr1",
-              "nombre": "Camaron",
-              "precio": 100,
-              "productId": "-OhSVDTmsQaQSh1DKq-M",
-              "productoId": "-OhSVDTmsQaQSh1DKq-M",
-              "subtotal": 1000,
-              "unidad": "kg"
-            }
-          ],
-          "metodoPago": "efectivo",
-          "origen": "venta_crudo",
-          "timestamp": 1782525965912,
-          "total": 1000,
-          "usuario": "Mostrador"
+        "d0a2790ca6a51f0d": {
+          "brand": "ONN",
+          "fechaRegistro": 1768716147669,
+          "isEmulator": false,
+          "model": "MID8016",
+          "systemName": "Android",
+          "systemVersion": "11",
+          "ultimoAcceso": 1769752437607,
+          "rol_asignado": "operador"
+        },
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1768599825705,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1777690288059,
+          "rol_asignado": "operador"
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1769130443743,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1769153072533,
+          "_marcado_purga_fase_8": true,
+          "razon_purga": "Dispositivo desconocido / payload legacy sin identificador fisico",
+          "rol_asignado": "operador"
         }
       }
     },
-
     "marisqueria-la-perla-del-pueblo": {
       "__bootstrapDone": true,
       "ajustes": {
-        "dispositivos": {
-          "impresion": {
-            "defaultPrinter": {
-              "address": "10:22:33:71:87:CD",
-              "name": "POS58D87CD"
-            },
-            "politicas": {
-              "maxReprintsByRole": {
-                "admin": 999,
-                "cocina": 3,
-                "mesera": 1
-              },
-              "permitirAdminImprimirCuenta": false,
-              "permitirCocinaImprimirCuenta": false,
-              "permitirMeseraImprimirCuenta": true,
-              "retries": {
-                "write": 3
-              },
-              "timeouts": {
-                "bleConnectMs": 4000,
-                "jobMsBle": 10000,
-                "jobMsLan": 5000,
-                "lanConnectMs": 2000,
-                "writeMs": 2000
-              }
-            },
-            "testMessage": ""
-          }
-        },
         "reparto": {
           "costos": {
             "base": 20,
@@ -1275,31 +1138,6 @@
           "mesero": true
         }
       },
-      "config": {
-        "hub": {
-          "heartbeat": 1767791900935
-        }
-      },
-      "dispositivos_autorizados": {
-        "da320f1bdeb95fcd": {
-          "brand": "vivo",
-          "fechaRegistro": 1767790597386,
-          "isEmulator": false,
-          "model": "V2247",
-          "systemName": "Android",
-          "systemVersion": "15",
-          "ultimoAcceso": 1767828734533
-        },
-        "unknown": {
-          "brand": "unknown",
-          "fechaRegistro": 1767790513309,
-          "isEmulator": false,
-          "model": "unknown",
-          "systemName": "unknown",
-          "systemVersion": "unknown",
-          "ultimoAcceso": 1767790513309
-        }
-      },
       "menu": {
         "categorias": {
           "-OiNZmXhNB60P4-IZXvP": {
@@ -1316,35 +1154,70 @@
           "estado": "libre",
           "updatedAt": 1765969807993
         }
+      },
+      "impresion": {
+        "politicas": {
+          "maxReprintsByRole": {
+            "admin": 999,
+            "cocina": 3,
+            "mesera": 1
+          },
+          "permitirAdminImprimirCuenta": false,
+          "permitirCocinaImprimirCuenta": false,
+          "permitirMeseraImprimirCuenta": true,
+          "retries": {
+            "write": 3
+          },
+          "timeouts": {
+            "bleConnectMs": 4000,
+            "jobMsBle": 10000,
+            "jobMsLan": 5000,
+            "lanConnectMs": 2000,
+            "writeMs": 2000
+          }
+        },
+        "canales": {},
+        "destinos": {
+          "testMessage": ""
+        },
+        "hubs": {
+          "heartbeat": 1767791900935
+        },
+        "rutas": {
+          "defaultPrinter": {
+            "address": "10:22:33:71:87:CD",
+            "name": "POS58D87CD"
+          }
+        }
+      },
+      "dispositivos": {
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1767790597386,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1767828734533,
+          "rol_asignado": "operador"
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1767790513309,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1767790513309,
+          "_marcado_purga_fase_8": true,
+          "razon_purga": "Dispositivo desconocido / payload legacy sin identificador fisico",
+          "rol_asignado": "operador"
+        }
       }
     },
-
     "marisqueria-puerto-libres": {
       "__bootstrapDone": true,
       "ajustes": {
-        "dispositivos": {
-          "impresion": {
-            "politicas": {
-              "maxReprintsByRole": {
-                "admin": 999,
-                "mesera": 1
-              },
-              "permitirAdminImprimirCuenta": true,
-              "permitirCocinaImprimirCuenta": true,
-              "permitirMeseraImprimirCuenta": true,
-              "retries": {
-                "write": 3
-              },
-              "timeouts": {
-                "bleConnectMs": 4000,
-                "jobMsBle": 10000,
-                "jobMsLan": 5000,
-                "lanConnectMs": 2000,
-                "writeMs": 2000
-              }
-            }
-          }
-        },
         "mesas": {
           "cantidad": 7
         },
@@ -1390,13 +1263,6 @@
         }
       },
       "config": {
-        "hub": {
-          "destination": "restaurante",
-          "deviceId": "hub_mqv4390k_nexqrzaxj6",
-          "enabled": true,
-          "heartbeat": 1782538616877,
-          "updatedAt": 1782489278815
-        },
         "pos": {
           "allowNegativeStock": false,
           "quickCashButtons": true,
@@ -1404,397 +1270,45 @@
           "showImagesInPos": true
         }
       },
-      "dispositivos_autorizados": {
-        "0b8502302d12e404": {
-          "brand": "motorola",
-          "fechaRegistro": 1774589497733,
-          "isEmulator": false,
-          "model": "moto g04",
-          "systemName": "Android",
-          "systemVersion": "14",
-          "ultimoAcceso": 1776274275985
-        },
-        "56b7e6ee8cffe508": {
-          "brand": "Acer",
-          "fechaRegistro": 1776236657185,
-          "isEmulator": false,
-          "model": "AC50",
-          "systemName": "Android",
-          "systemVersion": "13",
-          "ultimoAcceso": 1782267902663
-        },
-        "804c378c24b0c04e": {
-          "brand": "Lenovo",
-          "fechaRegistro": 1782538528332,
-          "isEmulator": false,
-          "model": "TB310FU",
-          "systemName": "Android",
-          "systemVersion": "13",
-          "ultimoAcceso": 1782538528332
-        },
-        "d0a2790ca6a51f0d": {
-          "brand": "ONN",
-          "fechaRegistro": 1769752661443,
-          "isEmulator": false,
-          "model": "MID8016",
-          "systemName": "Android",
-          "systemVersion": "11",
-          "ultimoAcceso": 1769949180008
-        },
-        "da320f1bdeb95fcd": {
-          "brand": "vivo",
-          "fechaRegistro": 1777690363902,
-          "isEmulator": false,
-          "model": "V2247",
-          "systemName": "Android",
-          "systemVersion": "15",
-          "ultimoAcceso": 1782705951754
-        },
-        "unknown": {
-          "brand": "unknown",
-          "fechaRegistro": 1782488378751,
-          "isEmulator": false,
-          "model": "unknown",
-          "systemName": "unknown",
-          "systemVersion": "unknown",
-          "ultimoAcceso": 1782488639648
-        }
-      },
       "impresion": {
         "hubs": {
           "hub_mjig87p4_5hq22xodsar": {
             "estado": "activo",
             "ultimaComprobacion": 1770024541208
-          }
-        }
-      },
-      "inventory_v2": {
-        "areas": {
-          "area_alim_almacen": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "Almacén",
-            "sectionId": "alimentos",
-            "tipo": "almacen",
-            "updatedAt": 1767788615839
           },
-          "area_alim_almacen__default": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "Refri Principal",
-            "parentId": "area_alim_almacen",
-            "sectionId": "alimentos",
-            "tipo": "almacen",
-            "updatedAt": 1767788615839
+          "hub_mqv4390k_nexqrzaxj6": {
+            "destination": "restaurante",
+            "deviceId": "hub_mqv4390k_nexqrzaxj6",
+            "enabled": true,
+            "heartbeat": 1782538616877,
+            "updatedAt": 1782489278815,
+            "estado": "activo",
+            "ultimaComprobacion": 1782538616877
           },
-          "area_alim_barra": {
-            "hubId": "restaurante",
-            "icon": "🍸",
-            "nombre": "Barra",
-            "sectionId": "alimentos",
-            "tipo": "otro",
-            "updatedAt": 1767788615839
+          "heartbeat": 1782538616877
+        },
+        "politicas": {
+          "maxReprintsByRole": {
+            "admin": 999,
+            "mesera": 1
           },
-          "area_alim_barra__default": {
-            "hubId": "restaurante",
-            "icon": "🧊",
-            "nombre": "Refri Principal",
-            "parentId": "area_alim_barra",
-            "sectionId": "alimentos",
-            "stock": {
-              "item_alim_cerveza": 24,
-              "item_alim_refresco": 24
-            },
-            "tipo": "refri",
-            "updatedAt": 1767788615839
+          "permitirAdminImprimirCuenta": true,
+          "permitirCocinaImprimirCuenta": true,
+          "permitirMeseraImprimirCuenta": true,
+          "retries": {
+            "write": 3
           },
-          "area_alim_cocina": {
-            "hubId": "restaurante",
-            "icon": "🍳",
-            "nombre": "Cocina",
-            "sectionId": "alimentos",
-            "tipo": "cocina",
-            "updatedAt": 1767788615839
-          },
-          "area_alim_cocina__default": {
-            "hubId": "restaurante",
-            "icon": "🧊",
-            "nombre": "Refri Principal",
-            "parentId": "area_alim_cocina",
-            "sectionId": "alimentos",
-            "stock": {
-              "item_alim_camaron": 21,
-              "item_alim_pescado_entero": 8,
-              "item_alim_pulpo_cocido": 2
-            },
-            "tipo": "refri",
-            "updatedAt": 1767788615839
-          },
-          "area_alim_venta_crudo": {
-            "hubId": "venta_crudo",
-            "icon": "🛒",
-            "nombre": "Venta Crudo",
-            "sectionId": "alimentos",
-            "tipo": "mostrador",
-            "updatedAt": 1767788615839
-          },
-          "area_alim_venta_crudo__default": {
-            "hubId": "venta_crudo",
-            "icon": "📦",
-            "nombre": "Caja Principal",
-            "parentId": "area_alim_venta_crudo",
-            "sectionId": "alimentos",
-            "stock": {
-              "item_alim_calamar_fresco": 4,
-              "item_alim_camaron": 6
-            },
-            "tipo": "mostrador",
-            "updatedAt": 1767788615839
-          },
-          "area_losa_servicio": {
-            "hubId": "restaurante",
-            "icon": "🍽️",
-            "nombre": "Servicio",
-            "sectionId": "losa_cristaleria",
-            "tipo": "otro",
-            "updatedAt": 1767788615839
-          },
-          "area_losa_servicio__default": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "Contenedor Principal",
-            "parentId": "area_losa_servicio",
-            "sectionId": "losa_cristaleria",
-            "stock": {
-              "item_losa_copa": 24,
-              "item_losa_cubierto": 80,
-              "item_losa_plato": 60,
-              "item_losa_vaso": 60
-            },
-            "tipo": "almacen",
-            "updatedAt": 1767788615839
-          },
-          "area_otros_general": {
-            "hubId": "restaurante",
-            "icon": "🧰",
-            "nombre": "General",
-            "sectionId": "otros",
-            "tipo": "otro",
-            "updatedAt": 1767788615839
-          },
-          "area_otros_general__default": {
-            "hubId": "restaurante",
-            "icon": "📦",
-            "nombre": "Contenedor Principal",
-            "parentId": "area_otros_general",
-            "sectionId": "otros",
-            "stock": {
-              "item_otros_bolsas": 200,
-              "item_otros_cloro": 3,
-              "item_otros_jabon": 2,
-              "item_otros_servilletas": 500
-            },
-            "tipo": "almacen",
-            "updatedAt": 1767788615839
+          "timeouts": {
+            "bleConnectMs": 4000,
+            "jobMsBle": 10000,
+            "jobMsLan": 5000,
+            "lanConnectMs": 2000,
+            "writeMs": 2000
           }
         },
-        "catalog": {
-          "item_alim_calamar_fresco": {
-            "minStock": 3,
-            "nombre": "Calamar Fresco",
-            "sectionId": "alimentos",
-            "unidad": "kg",
-            "updatedAt": 1767788615839
-          },
-          "item_alim_camaron": {
-            "minStock": 5,
-            "nombre": "Camarón",
-            "sectionId": "alimentos",
-            "unidad": "kg",
-            "updatedAt": 1767788615839
-          },
-          "item_alim_cerveza": {
-            "minStock": 12,
-            "nombre": "Cerveza",
-            "sectionId": "alimentos",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_alim_pescado_entero": {
-            "minStock": 5,
-            "nombre": "Pescado Entero",
-            "sectionId": "alimentos",
-            "unidad": "kg",
-            "updatedAt": 1767788615839
-          },
-          "item_alim_pulpo_cocido": {
-            "minStock": 3,
-            "nombre": "Pulpo Cocido",
-            "sectionId": "alimentos",
-            "unidad": "kg",
-            "updatedAt": 1767788615839
-          },
-          "item_alim_refresco": {
-            "minStock": 12,
-            "nombre": "Refresco",
-            "sectionId": "alimentos",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_charola": {
-            "minStock": 6,
-            "nombre": "Charola",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_copa": {
-            "minStock": 12,
-            "nombre": "Copa",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_cubierto": {
-            "minStock": 24,
-            "nombre": "Cubierto",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_jarra": {
-            "minStock": 6,
-            "nombre": "Jarra",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_plato": {
-            "minStock": 24,
-            "nombre": "Plato",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_losa_vaso": {
-            "minStock": 24,
-            "nombre": "Vaso",
-            "sectionId": "losa_cristaleria",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_bolsas": {
-            "minStock": 50,
-            "nombre": "Bolsas",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_cloro": {
-            "minStock": 2,
-            "nombre": "Cloro",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_guantes": {
-            "minStock": 1,
-            "nombre": "Guantes",
-            "sectionId": "otros",
-            "unidad": "caja",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_jabon": {
-            "minStock": 2,
-            "nombre": "Jabón",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_papel": {
-            "minStock": 6,
-            "nombre": "Papel",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          },
-          "item_otros_servilletas": {
-            "minStock": 200,
-            "nombre": "Servilletas",
-            "sectionId": "otros",
-            "unidad": "pza",
-            "updatedAt": 1767788615839
-          }
-        },
-        "missing_area_assignments": {
-          "coctel-1": {
-            "actor": "cocina",
-            "count": 10,
-            "fallbackAreaId": "area_alim_almacen",
-            "hubId": "restaurante",
-            "lastTs": 1782525370695,
-            "nombre": "Coctel",
-            "productoId": "coctel-1",
-            "reason": "no_area_assigned"
-          },
-          "duraznos-crema-11": {
-            "actor": "mesero",
-            "count": 2,
-            "fallbackAreaId": "area_alim_almacen",
-            "hubId": "restaurante",
-            "lastTs": 1782478842824,
-            "nombre": "Duraznos con Crema",
-            "productoId": "duraznos-crema-11",
-            "reason": "no_area_assigned"
-          },
-          "filetes-4": {
-            "actor": "cocina",
-            "count": 1,
-            "fallbackAreaId": "area_alim_almacen",
-            "hubId": "restaurante",
-            "lastTs": 1782489414351,
-            "nombre": "Filetes",
-            "productoId": "filetes-4",
-            "reason": "no_area_assigned"
-          },
-          "flan-napolitano-10": {
-            "actor": "mesero",
-            "count": 1,
-            "fallbackAreaId": "area_alim_almacen",
-            "hubId": "restaurante",
-            "lastTs": 1776237839743,
-            "nombre": "Flan Napolitano",
-            "productoId": "flan-napolitano-10",
-            "reason": "no_area_assigned"
-          },
-          "tostada-2": {
-            "actor": "cocina",
-            "count": 1,
-            "fallbackAreaId": "area_alim_almacen",
-            "hubId": "restaurante",
-            "lastTs": 1776237512177,
-            "nombre": "Tostada",
-            "productoId": "tostada-2",
-            "reason": "no_area_assigned"
-          }
-        },
-        "sections": {
-          "alimentos": {
-            "icon": "🍲",
-            "nombre": "Alimentos / Consumibles",
-            "updatedAt": 1767788615839
-          },
-          "losa_cristaleria": {
-            "icon": "🍽️",
-            "nombre": "Losa / Cristalería",
-            "updatedAt": 1767788615839
-          },
-          "otros": {
-            "icon": "📦",
-            "nombre": "Otros",
-            "updatedAt": 1767788615839
-          }
-        }
+        "canales": {},
+        "destinos": {},
+        "rutas": {}
       },
       "menu": {
         "categorias": {
@@ -1940,7 +1454,8 @@
                 "visible": {
                   "digital": true,
                   "mesero": true
-                }
+                },
+                "areaId": "area_alim_almacen"
               },
               "flan-napolitano-10": {
                 "activo": true,
@@ -1956,7 +1471,8 @@
                 "visible": {
                   "digital": true,
                   "mesero": true
-                }
+                },
+                "areaId": "area_alim_almacen"
               },
               "jarra-agua-8": {
                 "activo": true,
@@ -2418,7 +1934,8 @@
                 "visible": {
                   "digital": true,
                   "mesero": true
-                }
+                },
+                "areaId": "area_alim_almacen"
               },
               "consome-c-marisco-1754360356425": {
                 "activo": true,
@@ -2582,7 +2099,8 @@
                 "visible": {
                   "digital": true,
                   "mesero": true
-                }
+                },
+                "areaId": "area_alim_almacen"
               },
               "mojarra-5": {
                 "activo": true,
@@ -2758,7 +2276,8 @@
                 "visible": {
                   "digital": true,
                   "mesero": true
-                }
+                },
+                "areaId": "area_alim_almacen"
               }
             },
             "saltarPreparando": false
@@ -3164,7 +2683,8 @@
             "visible": {
               "digital": true,
               "mesero": true
-            }
+            },
+            "areaId": "area_alim_almacen"
           },
           "consome-c-marisco-1754360356425": {
             "activo": true,
@@ -3192,7 +2712,8 @@
             "visible": {
               "digital": true,
               "mesero": true
-            }
+            },
+            "areaId": "area_alim_almacen"
           },
           "ensalada-1753219184045": {
             "activo": true,
@@ -3344,7 +2865,8 @@
             "visible": {
               "digital": true,
               "mesero": true
-            }
+            },
+            "areaId": "area_alim_almacen"
           },
           "flan-napolitano-10": {
             "activo": true,
@@ -3360,7 +2882,8 @@
             "visible": {
               "digital": true,
               "mesero": true
-            }
+            },
+            "areaId": "area_alim_almacen"
           },
           "jarra-agua-8": {
             "activo": true,
@@ -3708,7 +3231,8 @@
             "visible": {
               "digital": true,
               "mesero": true
-            }
+            },
+            "areaId": "area_alim_almacen"
           }
         },
         "productos_index": {
@@ -3766,37 +3290,36 @@
           }
         }
       },
-      "mesas": [
-        null,
-        {
+      "mesas": {
+        "1": {
           "estado": "libre",
           "updatedAt": 1782525414673
         },
-        {
+        "2": {
           "estado": "libre",
           "updatedAt": 1782525686263
         },
-        {
+        "3": {
           "estado": "libre",
           "updatedAt": 1782525674372
         },
-        {
+        "4": {
           "estado": "libre",
           "updatedAt": 1782525650696
         },
-        {
+        "5": {
           "estado": "libre",
           "updatedAt": 1782525698157
         },
-        {
+        "6": {
           "estado": "libre",
           "updatedAt": 1782525748664
         },
-        {
+        "7": {
           "estado": "libre",
           "updatedAt": 1782525669656
         }
-      ],
+      },
       "pedidos": {
         "PED-20251223-002": {
           "_seqItems": 4,
@@ -3820,9 +3343,15 @@
               "productId": "coctel-1",
               "startedAt": 1766490416844,
               "variantes": {
-                "gSN": ["snCil"],
-                "gTam": ["oMe"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snCil"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             },
             "IT-002": {
@@ -3851,7 +3380,9 @@
               "productCode": "cerveza",
               "productId": "cerveza-🍺-1753220409330",
               "variantes": {
-                "gMar": ["oXX"]
+                "gMar": [
+                  "oXX"
+                ]
               }
             },
             "IT-004": {
@@ -3867,9 +3398,16 @@
               "productId": "coctel-1",
               "startedAt": 1766492092349,
               "variantes": {
-                "gSN": ["snCil", "snPic"],
-                "gTam": ["oMe"],
-                "gTip": ["oPO"]
+                "gSN": [
+                  "snCil",
+                  "snPic"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oPO"
+                ]
               }
             }
           },
@@ -3904,9 +3442,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Durazno"],
+              "variantLabels": [
+                "Durazno"
+              ],
               "variantes": {
-                "gSab": ["oDur"]
+                "gSab": [
+                  "oDur"
+                ]
               }
             }
           },
@@ -3938,11 +3480,21 @@
               "precio": 155,
               "productCode": "coctel",
               "productId": "coctel-1",
-              "variantLabels": ["Aguacate", "Grande", "Camarón"],
+              "variantLabels": [
+                "Aguacate",
+                "Grande",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snAgu"],
-                "gTam": ["oGr"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snAgu"
+                ],
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             },
             "IT-002": {
@@ -3958,11 +3510,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1767696743198,
-              "variantLabels": ["Aguacate", "Grande", "Camarón"],
+              "variantLabels": [
+                "Aguacate",
+                "Grande",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snAgu"],
-                "gTam": ["oGr"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snAgu"
+                ],
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             }
           },
@@ -3997,11 +3559,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1773714076390,
-              "variantLabels": ["Aguacate", "Mediano", "Camarón"],
+              "variantLabels": [
+                "Aguacate",
+                "Mediano",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snAgu"],
-                "gTam": ["oMe"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snAgu"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             },
             "IT-002": {
@@ -4017,9 +3589,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Mango"],
+              "variantLabels": [
+                "Mango"
+              ],
               "variantes": {
-                "gSab": ["oMan"]
+                "gSab": [
+                  "oMan"
+                ]
               }
             }
           },
@@ -4054,11 +3630,27 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1774457691766,
-              "variantLabels": ["Aguacate", "Cebolla", "Cilantro", "Picante", "Mediano", "Camarón"],
+              "variantLabels": [
+                "Aguacate",
+                "Cebolla",
+                "Cilantro",
+                "Picante",
+                "Mediano",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snAgu", "snCeb", "snCil", "snPic"],
-                "gTam": ["oMe"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snAgu",
+                  "snCeb",
+                  "snCil",
+                  "snPic"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             }
           },
@@ -4093,11 +3685,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1776142614911,
-              "variantLabels": ["Cebolla", "Mediano", "Camarón"],
+              "variantLabels": [
+                "Cebolla",
+                "Mediano",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snCeb"],
-                "gTam": ["oMe"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snCeb"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             },
             "IT-002": {
@@ -4113,9 +3715,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Mango"],
+              "variantLabels": [
+                "Mango"
+              ],
               "variantes": {
-                "gSab": ["oMan"]
+                "gSab": [
+                  "oMan"
+                ]
               }
             },
             "IT-003": {
@@ -4145,9 +3751,13 @@
               "productCode": "ensalada",
               "productId": "ensalada-1753219184045",
               "startedAt": 1776142665917,
-              "variantLabels": ["Camarón/Pescado"],
+              "variantLabels": [
+                "Camarón/Pescado"
+              ],
               "variantes": {
-                "gDe": ["oCamPes"]
+                "gDe": [
+                  "oCamPes"
+                ]
               }
             }
           },
@@ -4182,10 +3792,17 @@
               "productCode": "caldo",
               "productId": "caldo-sopa-7",
               "startedAt": 1776237022572,
-              "variantLabels": ["Media Orden", "Mariscos"],
+              "variantLabels": [
+                "Media Orden",
+                "Mariscos"
+              ],
               "variantes": {
-                "gDe": ["oMar"],
-                "gPor": ["oMed"]
+                "gDe": [
+                  "oMar"
+                ],
+                "gPor": [
+                  "oMed"
+                ]
               }
             }
           },
@@ -4234,9 +3851,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Mango"],
+              "variantLabels": [
+                "Mango"
+              ],
               "variantes": {
-                "gSab": ["oMan"]
+                "gSab": [
+                  "oMan"
+                ]
               }
             },
             "IT-003": {
@@ -4252,10 +3873,17 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1776237511267,
-              "variantLabels": ["Grande", "Camarón"],
+              "variantLabels": [
+                "Grande",
+                "Camarón"
+              ],
               "variantes": {
-                "gTam": ["oGr"],
-                "gTip": ["oCam"]
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             },
             "IT-004": {
@@ -4271,9 +3899,13 @@
               "productCode": "tostada",
               "productId": "tostada-2",
               "startedAt": 1776237512093,
-              "variantLabels": ["Camarón"],
+              "variantLabels": [
+                "Camarón"
+              ],
               "variantes": {
-                "gDe": ["oCam"]
+                "gDe": [
+                  "oCam"
+                ]
               }
             },
             "IT-005": {
@@ -4289,9 +3921,13 @@
               "productCode": "ensalada",
               "productId": "ensalada-1753219184045",
               "startedAt": 1776237518091,
-              "variantLabels": ["Mariscos"],
+              "variantLabels": [
+                "Mariscos"
+              ],
               "variantes": {
-                "gDe": ["oMar"]
+                "gDe": [
+                  "oMar"
+                ]
               }
             },
             "IT-006": {
@@ -4307,9 +3943,13 @@
               "precio": 35,
               "productCode": "limonada",
               "productId": "limonada-rusa-7",
-              "variantLabels": ["Rusa"],
+              "variantLabels": [
+                "Rusa"
+              ],
               "variantes": {
-                "gRus": ["oRus"]
+                "gRus": [
+                  "oRus"
+                ]
               }
             },
             "IT-007": {
@@ -4325,9 +3965,13 @@
               "precio": 35,
               "productCode": "cerveza",
               "productId": "cerveza-🍺-1753220409330",
-              "variantLabels": ["XX"],
+              "variantLabels": [
+                "XX"
+              ],
               "variantes": {
-                "gMar": ["oXX"]
+                "gMar": [
+                  "oXX"
+                ]
               }
             },
             "IT-008": {
@@ -4369,11 +4013,25 @@
               "precio": 145,
               "productCode": "michelada",
               "productId": "michelada-1753221954881",
-              "variantLabels": ["Camarones", "Indio", "Clamato", "Magi", "Valentína"],
+              "variantLabels": [
+                "Camarones",
+                "Indio",
+                "Clamato",
+                "Magi",
+                "Valentína"
+              ],
               "variantes": {
-                "gExt": ["oCam"],
-                "gMar": ["oInd"],
-                "gSN": ["snCla", "snMag", "snVal"]
+                "gExt": [
+                  "oCam"
+                ],
+                "gMar": [
+                  "oInd"
+                ],
+                "gSN": [
+                  "snCla",
+                  "snMag",
+                  "snVal"
+                ]
               }
             }
           },
@@ -4407,10 +4065,17 @@
               "productCode": "ensalada",
               "productId": "ensalada-1753219184045",
               "startedAt": 1780906430678,
-              "variantLabels": ["Cebolla ", "Mariscos"],
+              "variantLabels": [
+                "Cebolla ",
+                "Mariscos"
+              ],
               "variantes": {
-                "g1776237674259": ["o1776237882742"],
-                "gDe": ["oMar"]
+                "g1776237674259": [
+                  "o1776237882742"
+                ],
+                "gDe": [
+                  "oMar"
+                ]
               }
             }
           },
@@ -4445,9 +4110,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Guayaba"],
+              "variantLabels": [
+                "Guayaba"
+              ],
               "variantes": {
-                "gSab": ["oGua"]
+                "gSab": [
+                  "oGua"
+                ]
               }
             },
             "IT-002": {
@@ -4463,11 +4132,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1777690139957,
-              "variantLabels": ["Cebolla", "Grande", "Camarón"],
+              "variantLabels": [
+                "Cebolla",
+                "Grande",
+                "Camarón"
+              ],
               "variantes": {
-                "gSN": ["snCeb"],
-                "gTam": ["oGr"],
-                "gTip": ["oCam"]
+                "gSN": [
+                  "snCeb"
+                ],
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oCam"
+                ]
               }
             }
           },
@@ -4502,9 +4181,13 @@
               "precio": 35,
               "productCode": "cerveza",
               "productId": "cerveza-🍺-1753220409330",
-              "variantLabels": ["XX Ambar"],
+              "variantLabels": [
+                "XX Ambar"
+              ],
               "variantes": {
-                "gMar": ["oXXA"]
+                "gMar": [
+                  "oXXA"
+                ]
               }
             },
             "IT-002": {
@@ -4520,10 +4203,17 @@
               "productCode": "caldo",
               "productId": "caldo-sopa-7",
               "startedAt": 1782478386102,
-              "variantLabels": ["Pescado", "Media Orden"],
+              "variantLabels": [
+                "Pescado",
+                "Media Orden"
+              ],
               "variantes": {
-                "gDe": ["oPes"],
-                "gPor": ["oMed"]
+                "gDe": [
+                  "oPes"
+                ],
+                "gPor": [
+                  "oMed"
+                ]
               }
             }
           },
@@ -4588,11 +4278,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1782478878300,
-              "variantLabels": ["Cilantro", "Mediano", "Pulpo"],
+              "variantLabels": [
+                "Cilantro",
+                "Mediano",
+                "Pulpo"
+              ],
               "variantes": {
-                "gSN": ["snCil"],
-                "gTam": ["oMe"],
-                "gTip": ["oPul"]
+                "gSN": [
+                  "snCil"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oPul"
+                ]
               }
             }
           },
@@ -4627,11 +4327,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1782489210848,
-              "variantLabels": ["Cebolla", "Grande", "Campechano"],
+              "variantLabels": [
+                "Cebolla",
+                "Grande",
+                "Campechano"
+              ],
               "variantes": {
-                "gSN": ["snCeb"],
-                "gTam": ["oGr"],
-                "gTip": ["oCamp"]
+                "gSN": [
+                  "snCeb"
+                ],
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oCamp"
+                ]
               }
             },
             "IT-002": {
@@ -4647,9 +4357,13 @@
               "productCode": "caldo",
               "productId": "caldo-sopa-7",
               "startedAt": 1782489211733,
-              "variantLabels": ["Pescado"],
+              "variantLabels": [
+                "Pescado"
+              ],
               "variantes": {
-                "gDe": ["oPes"]
+                "gDe": [
+                  "oPes"
+                ]
               }
             },
             "IT-003": {
@@ -4665,9 +4379,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Mango"],
+              "variantLabels": [
+                "Mango"
+              ],
               "variantes": {
-                "gSab": ["oMan"]
+                "gSab": [
+                  "oMan"
+                ]
               }
             }
           },
@@ -4733,9 +4451,13 @@
               "precio": 25,
               "productCode": "boing",
               "productId": "boing-1753220050777",
-              "variantLabels": ["Guayaba"],
+              "variantLabels": [
+                "Guayaba"
+              ],
               "variantes": {
-                "gSab": ["oGua"]
+                "gSab": [
+                  "oGua"
+                ]
               }
             },
             "IT-002": {
@@ -4751,9 +4473,13 @@
               "productCode": "filetes",
               "productId": "filetes-4",
               "startedAt": 1782489414263,
-              "variantLabels": ["Empapelado"],
+              "variantLabels": [
+                "Empapelado"
+              ],
               "variantes": {
-                "gEst": ["oEmpa"]
+                "gEst": [
+                  "oEmpa"
+                ]
               }
             }
           },
@@ -4788,11 +4514,27 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1782525370004,
-              "variantLabels": ["Aguacate", "Cebolla", "Cilantro", "Picante", "Grande", "Pulpo"],
+              "variantLabels": [
+                "Aguacate",
+                "Cebolla",
+                "Cilantro",
+                "Picante",
+                "Grande",
+                "Pulpo"
+              ],
               "variantes": {
-                "gSN": ["snAgu", "snCeb", "snCil", "snPic"],
-                "gTam": ["oGr"],
-                "gTip": ["oPul"]
+                "gSN": [
+                  "snAgu",
+                  "snCeb",
+                  "snCil",
+                  "snPic"
+                ],
+                "gTam": [
+                  "oGr"
+                ],
+                "gTip": [
+                  "oPul"
+                ]
               }
             },
             "IT-002": {
@@ -4808,11 +4550,21 @@
               "productCode": "coctel",
               "productId": "coctel-1",
               "startedAt": 1782525370541,
-              "variantLabels": ["Picante", "Mediano", "Ostión"],
+              "variantLabels": [
+                "Picante",
+                "Mediano",
+                "Ostión"
+              ],
               "variantes": {
-                "gSN": ["snPic"],
-                "gTam": ["oMe"],
-                "gTip": ["oOst"]
+                "gSN": [
+                  "snPic"
+                ],
+                "gTam": [
+                  "oMe"
+                ],
+                "gTip": [
+                  "oOst"
+                ]
               }
             }
           },
@@ -4861,9 +4613,13 @@
               "productCode": "caldo",
               "productId": "caldo-sopa-7",
               "startedAt": 1782525614107,
-              "variantLabels": ["Mariscos"],
+              "variantLabels": [
+                "Mariscos"
+              ],
               "variantes": {
-                "gDe": ["oMar"]
+                "gDe": [
+                  "oMar"
+                ]
               }
             },
             "IT-003": {
@@ -4879,9 +4635,13 @@
               "productCode": "mojarra",
               "productId": "mojarra-5",
               "startedAt": 1782525615296,
-              "variantLabels": ["Frita"],
+              "variantLabels": [
+                "Frita"
+              ],
               "variantes": {
-                "gEst": ["oFri"]
+                "gEst": [
+                  "oFri"
+                ]
               }
             },
             "IT-004": {
@@ -5002,6 +4762,346 @@
             "job_cuenta_v1_PED-20260415-002": true,
             "job_cuenta_v1_PED-20260415-002_reprint_1776237848819": true
           }
+        }
+      },
+      "inventario": {
+        "areas": {
+          "area_alim_almacen": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Almacén",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_almacen__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_almacen",
+            "sectionId": "alimentos",
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_barra": {
+            "hubId": "restaurante",
+            "icon": "🍸",
+            "nombre": "Barra",
+            "sectionId": "alimentos",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_barra__default": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_barra",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_cerveza": 24,
+              "item_alim_refresco": 24
+            },
+            "tipo": "refri",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_cocina": {
+            "hubId": "restaurante",
+            "icon": "🍳",
+            "nombre": "Cocina",
+            "sectionId": "alimentos",
+            "tipo": "cocina",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_cocina__default": {
+            "hubId": "restaurante",
+            "icon": "🧊",
+            "nombre": "Refri Principal",
+            "parentId": "area_alim_cocina",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_camaron": 21,
+              "item_alim_pescado_entero": 8,
+              "item_alim_pulpo_cocido": 2
+            },
+            "tipo": "refri",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_venta_crudo": {
+            "hubId": "venta_crudo",
+            "icon": "🛒",
+            "nombre": "Venta Crudo",
+            "sectionId": "alimentos",
+            "tipo": "mostrador",
+            "updatedAt": 1767788615839
+          },
+          "area_alim_venta_crudo__default": {
+            "hubId": "venta_crudo",
+            "icon": "📦",
+            "nombre": "Caja Principal",
+            "parentId": "area_alim_venta_crudo",
+            "sectionId": "alimentos",
+            "stock": {
+              "item_alim_calamar_fresco": 4,
+              "item_alim_camaron": 6
+            },
+            "tipo": "mostrador",
+            "updatedAt": 1767788615839
+          },
+          "area_losa_servicio": {
+            "hubId": "restaurante",
+            "icon": "🍽️",
+            "nombre": "Servicio",
+            "sectionId": "losa_cristaleria",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_losa_servicio__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Contenedor Principal",
+            "parentId": "area_losa_servicio",
+            "sectionId": "losa_cristaleria",
+            "stock": {
+              "item_losa_copa": 24,
+              "item_losa_cubierto": 80,
+              "item_losa_plato": 60,
+              "item_losa_vaso": 60
+            },
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          },
+          "area_otros_general": {
+            "hubId": "restaurante",
+            "icon": "🧰",
+            "nombre": "General",
+            "sectionId": "otros",
+            "tipo": "otro",
+            "updatedAt": 1767788615839
+          },
+          "area_otros_general__default": {
+            "hubId": "restaurante",
+            "icon": "📦",
+            "nombre": "Contenedor Principal",
+            "parentId": "area_otros_general",
+            "sectionId": "otros",
+            "stock": {
+              "item_otros_bolsas": 200,
+              "item_otros_cloro": 3,
+              "item_otros_jabon": 2,
+              "item_otros_servilletas": 500
+            },
+            "tipo": "almacen",
+            "updatedAt": 1767788615839
+          }
+        },
+        "catalog": {
+          "item_alim_calamar_fresco": {
+            "minStock": 3,
+            "nombre": "Calamar Fresco",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_camaron": {
+            "minStock": 5,
+            "nombre": "Camarón",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_cerveza": {
+            "minStock": 12,
+            "nombre": "Cerveza",
+            "sectionId": "alimentos",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_pescado_entero": {
+            "minStock": 5,
+            "nombre": "Pescado Entero",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_pulpo_cocido": {
+            "minStock": 3,
+            "nombre": "Pulpo Cocido",
+            "sectionId": "alimentos",
+            "unidad": "kg",
+            "updatedAt": 1767788615839
+          },
+          "item_alim_refresco": {
+            "minStock": 12,
+            "nombre": "Refresco",
+            "sectionId": "alimentos",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_charola": {
+            "minStock": 6,
+            "nombre": "Charola",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_copa": {
+            "minStock": 12,
+            "nombre": "Copa",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_cubierto": {
+            "minStock": 24,
+            "nombre": "Cubierto",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_jarra": {
+            "minStock": 6,
+            "nombre": "Jarra",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_plato": {
+            "minStock": 24,
+            "nombre": "Plato",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_losa_vaso": {
+            "minStock": 24,
+            "nombre": "Vaso",
+            "sectionId": "losa_cristaleria",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_bolsas": {
+            "minStock": 50,
+            "nombre": "Bolsas",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_cloro": {
+            "minStock": 2,
+            "nombre": "Cloro",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_guantes": {
+            "minStock": 1,
+            "nombre": "Guantes",
+            "sectionId": "otros",
+            "unidad": "caja",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_jabon": {
+            "minStock": 2,
+            "nombre": "Jabón",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_papel": {
+            "minStock": 6,
+            "nombre": "Papel",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          },
+          "item_otros_servilletas": {
+            "minStock": 200,
+            "nombre": "Servilletas",
+            "sectionId": "otros",
+            "unidad": "pza",
+            "updatedAt": 1767788615839
+          }
+        },
+        "sections": {
+          "alimentos": {
+            "icon": "🍲",
+            "nombre": "Alimentos / Consumibles",
+            "updatedAt": 1767788615839
+          },
+          "losa_cristaleria": {
+            "icon": "🍽️",
+            "nombre": "Losa / Cristalería",
+            "updatedAt": 1767788615839
+          },
+          "otros": {
+            "icon": "📦",
+            "nombre": "Otros",
+            "updatedAt": 1767788615839
+          }
+        }
+      },
+      "dispositivos": {
+        "0b8502302d12e404": {
+          "brand": "motorola",
+          "fechaRegistro": 1774589497733,
+          "isEmulator": false,
+          "model": "moto g04",
+          "systemName": "Android",
+          "systemVersion": "14",
+          "ultimoAcceso": 1776274275985,
+          "rol_asignado": "operador"
+        },
+        "56b7e6ee8cffe508": {
+          "brand": "Acer",
+          "fechaRegistro": 1776236657185,
+          "isEmulator": false,
+          "model": "AC50",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782267902663,
+          "rol_asignado": "operador"
+        },
+        "804c378c24b0c04e": {
+          "brand": "Lenovo",
+          "fechaRegistro": 1782538528332,
+          "isEmulator": false,
+          "model": "TB310FU",
+          "systemName": "Android",
+          "systemVersion": "13",
+          "ultimoAcceso": 1782538528332,
+          "rol_asignado": "operador"
+        },
+        "d0a2790ca6a51f0d": {
+          "brand": "ONN",
+          "fechaRegistro": 1769752661443,
+          "isEmulator": false,
+          "model": "MID8016",
+          "systemName": "Android",
+          "systemVersion": "11",
+          "ultimoAcceso": 1769949180008,
+          "rol_asignado": "operador"
+        },
+        "da320f1bdeb95fcd": {
+          "brand": "vivo",
+          "fechaRegistro": 1777690363902,
+          "isEmulator": false,
+          "model": "V2247",
+          "systemName": "Android",
+          "systemVersion": "15",
+          "ultimoAcceso": 1782705951754,
+          "rol_asignado": "operador"
+        },
+        "unknown": {
+          "brand": "unknown",
+          "fechaRegistro": 1782488378751,
+          "isEmulator": false,
+          "model": "unknown",
+          "systemName": "unknown",
+          "systemVersion": "unknown",
+          "ultimoAcceso": 1782488639648,
+          "_marcado_purga_fase_8": true,
+          "razon_purga": "Dispositivo desconocido / payload legacy sin identificador fisico",
+          "rol_asignado": "operador"
         }
       }
     }

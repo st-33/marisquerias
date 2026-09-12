@@ -22,7 +22,7 @@ import {
 
 type UseDevicesManagementProps = {
   db?: Database;
-  tenantPath?: string;
+  rutaNegocio?: string;
 };
 
 const DEFAULT_TICKET_CONFIG: TicketConfig = {
@@ -36,17 +36,17 @@ const DEFAULT_TICKET_CONFIG: TicketConfig = {
 };
 
 export function useDevicesManagement(props?: UseDevicesManagementProps) {
-  const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const storeRutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
 
-  const tenantPath = props?.tenantPath !== undefined ? props.tenantPath : storeTenantPath;
+  const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
 
   const db = useMemo(() => {
     if (props?.db) return props.db;
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
 
-  const devicesRepo = useMemo(() => new DevicesRepository(db, tenantPath), [db, tenantPath]);
+  const devicesRepo = useMemo(() => new DevicesRepository(db, rutaNegocio), [db, rutaNegocio]);
 
   // Estado: Políticas de impresión
   const [rawPolicies, setRawPolicies] = useState<Partial<PrintPolicies> | null>(null);
@@ -76,7 +76,7 @@ export function useDevicesManagement(props?: UseDevicesManagementProps) {
 
   // Suscripciones
   useEffect(() => {
-    if (!tenantPath) {
+    if (!rutaNegocio) {
       setTimeout(() => {
         setLoading(false);
       }, 0);
@@ -115,7 +115,7 @@ export function useDevicesManagement(props?: UseDevicesManagementProps) {
       unsubTicketConfig();
       unsubHubConfig();
     };
-  }, [devicesRepo, tenantPath]);
+  }, [devicesRepo, rutaNegocio]);
 
   // Acciones: Políticas
   const togglePermitirMeseraImprimir = useCallback(async () => {

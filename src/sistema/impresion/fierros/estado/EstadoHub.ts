@@ -75,7 +75,7 @@ export const useEstadoHub = create<EstadoHubStore>((set, get) => ({
   // Estado inicial
   habilitado: false,
   destino: null,
-  idDispositivo: 'hub_local',
+  idDispositivo: '',
   inicializado: false,
   enLinea: true,
 

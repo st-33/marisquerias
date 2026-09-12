@@ -120,11 +120,11 @@ function limpiarUndefined<T>(entrada: T): T {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export class DespachadorCola {
-  // 🔒 SINGLETON: Map de instancias únicas por tenant+modo
+  // 🔒 SINGLETON: Map de instancias únicas por negocio+modo
   private static instancias = new Map<string, DespachadorCola>();
 
   private db: Database;
-  private tenantPath: string;
+  private rutaNegocio: string;
   private idDispositivo: string;
   private config: ConfiguracionDespachador;
   private procesando: boolean = false;
@@ -146,13 +146,13 @@ export class DespachadorCola {
 
   private constructor(
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     idDispositivo: string,
     config: Partial<ConfiguracionDespachador> = {},
     modo: ModoOperacion = 'dispositivo'
   ) {
     this.db = db;
-    this.tenantPath = tenantPath;
+    this.rutaNegocio = rutaNegocio;
     this.idDispositivo = idDispositivo;
     this.config = { ...CONFIGURACION_DEFECTO, ...config };
     this.modo = modo;
@@ -161,16 +161,16 @@ export class DespachadorCola {
   }
 
   /**
-   * Obtiene o crea la instancia única para tenant+modo
+   * Obtiene o crea la instancia única para negocio+modo
    */
   public static obtenerInstancia(
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     idDispositivo: string,
     config: Partial<ConfiguracionDespachador> = {},
     modo: ModoOperacion = 'dispositivo'
   ): DespachadorCola {
-    const clave = `${tenantPath}_${modo}`;
+    const clave = `${rutaNegocio}_${modo}`;
 
     let instancia = DespachadorCola.instancias.get(clave);
 
@@ -195,7 +195,7 @@ export class DespachadorCola {
     }
 
     console.log(`[DespachadorCola] 🆕 Creando NUEVA instancia para: ${clave}`);
-    instancia = new DespachadorCola(db, tenantPath, idDispositivo, config, modo);
+    instancia = new DespachadorCola(db, rutaNegocio, idDispositivo, config, modo);
     DespachadorCola.instancias.set(clave, instancia);
 
     return instancia;
@@ -206,10 +206,10 @@ export class DespachadorCola {
    */
   public static async obtenerTrabajo(
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     idTrabajo: string
   ): Promise<TrabajoRTDB | null> {
-    const snapshot = await get(ref(db, `${tenantPath}/spool/jobs/${idTrabajo}`));
+    const snapshot = await get(ref(db, `${rutaNegocio}/spool/jobs/${idTrabajo}`));
     return snapshot.exists() ? (snapshot.val() as TrabajoRTDB) : null;
   }
 
@@ -219,7 +219,7 @@ export class DespachadorCola {
    */
   public static async encolarRemoto(
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     solicitud: SolicitudTrabajoRemoto
   ): Promise<TrabajoRTDB> {
     const idTrabajo = solicitud.idTrabajo || DespachadorCola.generarIdTrabajo(solicitud.proposito);
@@ -240,13 +240,13 @@ export class DespachadorCola {
     }) as TrabajoRTDB;
 
     await Promise.all([
-      set(ref(db, `${tenantPath}/spool/jobs/${idTrabajo}`), trabajo),
+      set(ref(db, `${rutaNegocio}/spool/jobs/${idTrabajo}`), trabajo),
       set(
         ref(
           db,
           canal === 'standard'
-            ? `${tenantPath}/spool/hub/queue/${idTrabajo}`
-            : `${tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`
+            ? `${rutaNegocio}/spool/hub/queue/${idTrabajo}`
+            : `${rutaNegocio}/spool/hub/${canal}/queue/${idTrabajo}`
         ),
         true
       ),
@@ -260,11 +260,11 @@ export class DespachadorCola {
    */
   public static async encolarRemotoIdempotente(
     db: Database,
-    tenantPath: string,
+    rutaNegocio: string,
     solicitud: SolicitudTrabajoRemoto
   ): Promise<TrabajoRTDB> {
     if (solicitud.idTrabajo) {
-      const existente = await DespachadorCola.obtenerTrabajo(db, tenantPath, solicitud.idTrabajo);
+      const existente = await DespachadorCola.obtenerTrabajo(db, rutaNegocio, solicitud.idTrabajo);
       if (
         existente &&
         (existente.state === 'exito' ||
@@ -275,14 +275,14 @@ export class DespachadorCola {
       }
     }
 
-    return DespachadorCola.encolarRemoto(db, tenantPath, solicitud);
+    return DespachadorCola.encolarRemoto(db, rutaNegocio, solicitud);
   }
 
   /**
    * Destruye la instancia singleton
    */
-  public static destruirInstancia(tenantPath: string, modo: ModoOperacion): void {
-    const clave = `${tenantPath}_${modo}`;
+  public static destruirInstancia(rutaNegocio: string, modo: ModoOperacion): void {
+    const clave = `${rutaNegocio}_${modo}`;
     const instancia = DespachadorCola.instancias.get(clave);
 
     if (instancia) {
@@ -310,8 +310,8 @@ export class DespachadorCola {
 
     // Escuchar configuración de ticket
     if (this.listenersConfigTicket.length === 0) {
-      const refAjustes = ref(this.db, `${this.tenantPath}/ajustes/ticket`);
-      const refLegacy = ref(this.db, `${this.tenantPath}/config/ticket`);
+      const refAjustes = ref(this.db, `${this.rutaNegocio}/ajustes/ticket`);
+      const refLegacy = ref(this.db, `${this.rutaNegocio}/config/ticket`);
 
       const unsub1 = onValue(refAjustes, (snap) => {
         this.configTicketAjustes = snap.exists() ? snap.val() : null;
@@ -328,9 +328,9 @@ export class DespachadorCola {
     const rutaCola =
       this.modo === 'hub'
         ? canal === 'standard'
-          ? `${this.tenantPath}/spool/hub/queue`
-          : `${this.tenantPath}/spool/hub/${canal}/queue`
-        : `${this.tenantPath}/spool/devices/${this.idDispositivo}/queue`;
+          ? `${this.rutaNegocio}/spool/hub/queue`
+          : `${this.rutaNegocio}/spool/hub/${canal}/queue`
+        : `${this.rutaNegocio}/spool/devices/${this.idDispositivo}/queue`;
 
     console.log(`[DespachadorCola] 📍 Escuchando cola en: ${rutaCola}`);
 
@@ -472,22 +472,22 @@ export class DespachadorCola {
     };
 
     // Guardar trabajo
-    await set(ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`), trabajoRTDB);
+    await set(ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`), trabajoRTDB);
 
     // Agregar a la cola correspondiente
     if (trabajo.idDispositivo) {
       await set(
         ref(
           this.db,
-          `${this.tenantPath}/spool/devices/${trabajo.idDispositivo}/queue/${idTrabajo}`
+          `${this.rutaNegocio}/spool/devices/${trabajo.idDispositivo}/queue/${idTrabajo}`
         ),
         true
       );
     } else {
       const rutaHub =
         canal === 'standard'
-          ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
-          : `${this.tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`;
+          ? `${this.rutaNegocio}/spool/hub/queue/${idTrabajo}`
+          : `${this.rutaNegocio}/spool/hub/${canal}/queue/${idTrabajo}`;
       await set(ref(this.db, rutaHub), true);
     }
 
@@ -516,9 +516,9 @@ export class DespachadorCola {
       const rutaCola =
         this.modo === 'hub'
           ? canal === 'standard'
-            ? `${this.tenantPath}/spool/hub/queue`
-            : `${this.tenantPath}/spool/hub/${canal}/queue`
-          : `${this.tenantPath}/spool/devices/${this.idDispositivo}/queue`;
+            ? `${this.rutaNegocio}/spool/hub/queue`
+            : `${this.rutaNegocio}/spool/hub/${canal}/queue`
+          : `${this.rutaNegocio}/spool/devices/${this.idDispositivo}/queue`;
 
       const refCola = ref(this.db, rutaCola);
       const snapshot = await get(refCola);
@@ -545,7 +545,7 @@ export class DespachadorCola {
    */
   private async procesarTrabajo(idTrabajo: string): Promise<void> {
     try {
-      const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
+      const refTrabajo = ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`);
       const snapshot = await get(refTrabajo);
 
       if (!snapshot.exists()) {
@@ -645,7 +645,7 @@ export class DespachadorCola {
       }
     } catch (error: any) {
       console.error('[DespachadorCola] Error fatal en trabajo:', idTrabajo, error);
-      const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
+      const refTrabajo = ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`);
       await update(refTrabajo, {
         state: 'pendiente_impresion',
         lastError: error?.message || 'Error desconocido',
@@ -660,7 +660,7 @@ export class DespachadorCola {
 
   private async imprimirComanda(trabajo: TrabajoRTDB): Promise<ResultadoProcesamiento> {
     try {
-      const refPedido = ref(this.db, `${this.tenantPath}/pedidos/${trabajo.orderId}`);
+      const refPedido = ref(this.db, `${this.rutaNegocio}/pedidos/${trabajo.orderId}`);
       const snapshot = await get(refPedido);
       if (!snapshot.exists()) return { exito: false, mensaje: 'Pedido no encontrado' };
 
@@ -702,7 +702,7 @@ export class DespachadorCola {
           '[DespachadorCola] 📋 Sin payload, obteniendo pedido desde RTDB:',
           trabajo.orderId
         );
-        const snap = await get(ref(this.db, `${this.tenantPath}/pedidos/${trabajo.orderId}`));
+        const snap = await get(ref(this.db, `${this.rutaNegocio}/pedidos/${trabajo.orderId}`));
         if (!snap.exists()) {
           console.error('[DespachadorCola] ❌ Pedido no encontrado:', trabajo.orderId);
           return { exito: false, mensaje: 'Pedido no encontrado' };
@@ -745,7 +745,7 @@ export class DespachadorCola {
       const nombreNegocio =
         this.configTicketAjustes?.businessName ||
         this.configTicketLegacy?.header ||
-        this.tenantPath.split('/').pop() ||
+        this.rutaNegocio.split('/').pop() ||
         'Restaurante';
 
       console.log('[DespachadorCola] 🖨️ Llamando a servicioFierros.imprimirCuenta...');
@@ -772,8 +772,8 @@ export class DespachadorCola {
 
       if (!ajustes && !legacy) {
         const [ajustesSnap, legacySnap] = await Promise.all([
-          get(ref(this.db, `${this.tenantPath}/ajustes/ticket`)).catch(() => null as any),
-          get(ref(this.db, `${this.tenantPath}/config/ticket`)).catch(() => null as any),
+          get(ref(this.db, `${this.rutaNegocio}/ajustes/ticket`)).catch(() => null as any),
+          get(ref(this.db, `${this.rutaNegocio}/config/ticket`)).catch(() => null as any),
         ]);
         ajustes = ajustesSnap?.exists?.() ? ajustesSnap.val() : null;
         legacy = legacySnap?.exists?.() ? legacySnap.val() : null;
@@ -810,9 +810,9 @@ export class DespachadorCola {
     const canal = this.config.canal;
     return this.modo === 'hub'
       ? canal === 'standard'
-        ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
-        : `${this.tenantPath}/spool/hub/${canal}/queue/${idTrabajo}`
-      : `${this.tenantPath}/spool/devices/${this.idDispositivo}/queue/${idTrabajo}`;
+        ? `${this.rutaNegocio}/spool/hub/queue/${idTrabajo}`
+        : `${this.rutaNegocio}/spool/hub/${canal}/queue/${idTrabajo}`
+      : `${this.rutaNegocio}/spool/devices/${this.idDispositivo}/queue/${idTrabajo}`;
   }
 
   private rutaColaParaGarbageCollector(idTrabajo: string, trabajo: Partial<TrabajoRTDB>): string {
@@ -820,9 +820,9 @@ export class DespachadorCola {
     const canalNormalizado = canal === 'cuenta' || canal === 'comanda' ? 'standard' : canal;
     return this.modo === 'hub'
       ? canalNormalizado === 'standard'
-        ? `${this.tenantPath}/spool/hub/queue/${idTrabajo}`
-        : `${this.tenantPath}/spool/hub/${canalNormalizado}/queue/${idTrabajo}`
-      : `${this.tenantPath}/spool/devices/${
+        ? `${this.rutaNegocio}/spool/hub/queue/${idTrabajo}`
+        : `${this.rutaNegocio}/spool/hub/${canalNormalizado}/queue/${idTrabajo}`
+      : `${this.rutaNegocio}/spool/devices/${
           trabajo.deviceId || this.idDispositivo
         }/queue/${idTrabajo}`;
   }
@@ -833,7 +833,7 @@ export class DespachadorCola {
   ): Promise<void> {
     await Promise.all([
       set(ref(this.db, this.rutaColaParaGarbageCollector(idTrabajo, trabajo)), null),
-      set(ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`), null),
+      set(ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`), null),
     ]);
     console.log(`[DespachadorCola] 🧹 Trabajo expirado eliminado: ${idTrabajo}`, {
       createdAt: trabajo.createdAt,
@@ -842,7 +842,7 @@ export class DespachadorCola {
   }
 
   private async removerDeCola(idTrabajo: string): Promise<void> {
-    const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
+    const refTrabajo = ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`);
     const snap = await get(refTrabajo);
     const datos = snap.val() || {};
 
@@ -876,7 +876,7 @@ export class DespachadorCola {
   private async ejecutarGarbageCollector(): Promise<void> {
     try {
       console.log(`[DespachadorCola] 🧹 Iniciando GC...`);
-      const refTrabajos = ref(this.db, `${this.tenantPath}/spool/jobs`);
+      const refTrabajos = ref(this.db, `${this.rutaNegocio}/spool/jobs`);
       const snap = await get(refTrabajos);
 
       if (!snap.exists()) return;
@@ -912,7 +912,7 @@ export class DespachadorCola {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async cancelarTrabajo(idTrabajo: string): Promise<void> {
-    const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
+    const refTrabajo = ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`);
     await update(refTrabajo, {
       state: 'fallo',
       lastError: 'Cancelado por usuario',
@@ -922,7 +922,7 @@ export class DespachadorCola {
   }
 
   async reintentarTrabajo(idTrabajo: string): Promise<void> {
-    const refTrabajo = ref(this.db, `${this.tenantPath}/spool/jobs/${idTrabajo}`);
+    const refTrabajo = ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`);
     const snap = await get(refTrabajo);
     if (!snap.exists()) return;
 
@@ -935,7 +935,7 @@ export class DespachadorCola {
 
     if (trabajo.deviceId) {
       await set(
-        ref(this.db, `${this.tenantPath}/spool/devices/${trabajo.deviceId}/queue/${idTrabajo}`),
+        ref(this.db, `${this.rutaNegocio}/spool/devices/${trabajo.deviceId}/queue/${idTrabajo}`),
         true
       );
     }

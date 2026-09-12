@@ -15,7 +15,7 @@ import {
   crearHuellaSenal,
   crearIdDeterminista,
   crearReferencia,
-  identidadTenantDesdePath,
+  identidadNegocioDesdeRuta,
 } from './nucleo/utilidades';
 import type {
   PuertoContextoOperativo,
@@ -45,12 +45,12 @@ export class MotorLogistico implements PuertoEntradaMotor {
 
   async procesar(senalSinNormalizar: SenalEntrada): Promise<ResultadoProcesamiento> {
     const senal = normalizarSenalEntrada(senalSinNormalizar);
-    const tenantPath = senal.tenant.tenantPath;
-    const contexto = await this.dependencias.contexto.obtenerContexto(tenantPath);
+    const rutaNegocio = senal.negocio.rutaNegocio;
+    const contexto = await this.dependencias.contexto.obtenerContexto(rutaNegocio);
     validarContextoParaSenal(contexto, senal);
 
     const repetidoPorEvento = await this.dependencias.persistencia.buscarPorEvento(
-      tenantPath,
+      rutaNegocio,
       senal.id
     );
     if (repetidoPorEvento) {
@@ -58,7 +58,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
     }
 
     const repetidoPorClave = await this.dependencias.persistencia.buscarPorIdempotencia(
-      tenantPath,
+      rutaNegocio,
       senal.idempotencyKey
     );
     if (repetidoPorClave) {
@@ -69,7 +69,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
         'IDEMPOTENCIA_CONFLICTIVA',
         'La idempotencyKey ya pertenece a otro evento',
         {
-          tenantPath,
+          rutaNegocio,
           idempotencyKey: senal.idempotencyKey,
           eventIdExistente: repetidoPorClave.eventId,
           eventIdRecibido: senal.id,
@@ -79,12 +79,12 @@ export class MotorLogistico implements PuertoEntradaMotor {
 
     const pedidoId = senal.payload.pedidoId;
     const solicitudExistente = await this.dependencias.persistencia.buscarSolicitudPorPedido(
-      tenantPath,
+      rutaNegocio,
       pedidoId
     );
     if (solicitudExistente) {
       const misionExistente = await this.dependencias.persistencia.buscarMisionPorSolicitud(
-        tenantPath,
+        rutaNegocio,
         solicitudExistente.id
       );
 
@@ -95,7 +95,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
             codigo: 'PEDIDO_REPETIDO',
             eventId: senal.id,
             operationId: senal.operationId,
-            tenantPath,
+            rutaNegocio,
             solicitudLogistica: solicitudExistente,
             mision: misionExistente || undefined,
             eventos: [],
@@ -120,7 +120,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
         codigo: 'PEDIDO_REPETIDO',
         eventId: senal.id,
         operationId: senal.operationId,
-        tenantPath,
+        rutaNegocio,
         solicitudLogistica: solicitudExistente,
         mision: misionExistente || undefined,
         eventos: [],
@@ -148,22 +148,22 @@ export class MotorLogistico implements PuertoEntradaMotor {
     contexto: ContextoOperativo
   ): Promise<ResultadoProcesamiento> {
     const ahora = this.ahora().toISOString();
-    const { tenant } = senal;
+    const { negocio } = senal;
     const pedidoId = senal.payload.pedidoId;
-    const solicitudId = crearIdDeterminista('solicitud-logistica', tenant.tenantPath, pedidoId);
-    const misionId = crearIdDeterminista('mision', tenant.tenantPath, pedidoId);
-    const referenciaPedido = crearReferencia('pedido', pedidoId, tenant.tenantPath);
+    const solicitudId = crearIdDeterminista('solicitud-logistica', negocio.rutaNegocio, pedidoId);
+    const misionId = crearIdDeterminista('mision', negocio.rutaNegocio, pedidoId);
+    const referenciaPedido = crearReferencia('pedido', pedidoId, negocio.rutaNegocio);
     const referenciaSolicitud = crearReferencia(
       'solicitud_logistica',
       solicitudId,
-      tenant.tenantPath
+      negocio.rutaNegocio
     );
-    const referenciaMision = crearReferencia('mision', misionId, tenant.tenantPath);
-    const identidad = identidadTenantDesdePath(contexto.tenantPath);
+    const referenciaMision = crearReferencia('mision', misionId, negocio.rutaNegocio);
+    const identidad = identidadNegocioDesdeRuta(contexto.rutaNegocio);
 
     const solicitudBase: SolicitudLogistica = {
       id: solicitudId,
-      tenant: identidad,
+      negocio: identidad,
       pedidoId,
       estado: 'solicitada',
       modalidad: senal.payload.modalidad,
@@ -176,7 +176,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
 
     const misionSolicitada: MisionLogistica = {
       id: misionId,
-      tenant: identidad,
+      negocio: identidad,
       solicitudLogisticaId: solicitudId,
       pedidoId,
       estado: 'solicitada',
@@ -246,7 +246,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
       codigo: 'ACEPTADA',
       eventId: senal.id,
       operationId: senal.operationId,
-      tenantPath: tenant.tenantPath,
+      rutaNegocio: negocio.rutaNegocio,
       solicitudLogistica: solicitudBase,
       mision,
       eventos,
@@ -285,10 +285,10 @@ export class MotorLogistico implements PuertoEntradaMotor {
     }
 
     const referencias = [
-      crearReferencia('pedido', senal.payload.pedidoId, senal.tenant.tenantPath),
-      crearReferencia('solicitud_logistica', solicitud.id, senal.tenant.tenantPath),
+      crearReferencia('pedido', senal.payload.pedidoId, senal.negocio.rutaNegocio),
+      crearReferencia('solicitud_logistica', solicitud.id, senal.negocio.rutaNegocio),
       ...(misionCancelada
-        ? [crearReferencia('mision', misionCancelada.id, senal.tenant.tenantPath)]
+        ? [crearReferencia('mision', misionCancelada.id, senal.negocio.rutaNegocio)]
         : []),
     ] as const;
     const eventos: EventoDominio[] = [
@@ -344,7 +344,7 @@ export class MotorLogistico implements PuertoEntradaMotor {
       codigo: 'ACEPTADA',
       eventId: senal.id,
       operationId: senal.operationId,
-      tenantPath: senal.tenant.tenantPath,
+      rutaNegocio: senal.negocio.rutaNegocio,
       solicitudLogistica: solicitudCancelada,
       mision: misionCancelada,
       eventos,
@@ -361,10 +361,10 @@ export class MotorLogistico implements PuertoEntradaMotor {
     payload: Readonly<Record<string, unknown>>
   ): EventoDominio {
     return {
-      id: crearIdDeterminista('evento', senal.tenant.tenantPath, sufijo),
+      id: crearIdDeterminista('evento', senal.negocio.rutaNegocio, sufijo),
       schemaVersion: senal.schemaVersion,
       operationId: senal.operationId,
-      tenant: senal.tenant,
+      negocio: senal.negocio,
       origen: 'motor_logistico',
       destino,
       tipo,
@@ -384,10 +384,10 @@ export class MotorLogistico implements PuertoEntradaMotor {
     payload: Readonly<Record<string, unknown>>
   ): SenalSalida {
     return {
-      id: crearIdDeterminista('senal', senal.tenant.tenantPath, sufijo),
+      id: crearIdDeterminista('senal', senal.negocio.rutaNegocio, sufijo),
       schemaVersion: senal.schemaVersion,
       operationId: senal.operationId,
-      tenant: senal.tenant,
+      negocio: senal.negocio,
       origen: 'motor_logistico',
       destino,
       tipo,
@@ -400,13 +400,13 @@ export class MotorLogistico implements PuertoEntradaMotor {
 
   private async guardarResultado(senal: SenalEntrada, resultado: ResultadoProcesamiento) {
     await this.dependencias.persistencia.guardarProcesamiento({
-      tenantPath: senal.tenant.tenantPath,
+      rutaNegocio: senal.negocio.rutaNegocio,
       eventId: senal.id,
       idempotencyKey: senal.idempotencyKey,
       fingerprint: crearHuellaSenal({
         id: senal.id,
         operationId: senal.operationId,
-        tenantPath: senal.tenant.tenantPath,
+        rutaNegocio: senal.negocio.rutaNegocio,
         idempotencyKey: senal.idempotencyKey,
         tipo: senal.tipo,
         pedidoId: senal.payload.pedidoId,

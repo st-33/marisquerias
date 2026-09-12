@@ -1,1 +1,1 @@
-export * from './resolverConfiguracionTenant';
+export * from './resolverConfiguracionNegocio';

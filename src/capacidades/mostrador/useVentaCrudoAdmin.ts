@@ -15,7 +15,7 @@ import {
 
 type UseVentaCrudoAdminProps = {
   db?: Database;
-  tenantPath?: string;
+  rutaNegocio?: string;
 };
 
 export type RegistroVentaMostrador = RegistroVenta & {
@@ -23,10 +23,10 @@ export type RegistroVentaMostrador = RegistroVenta & {
 };
 
 export function useVentaCrudoAdmin(props?: UseVentaCrudoAdminProps) {
-  const storeTenantPath = useStore((s) => s.sesion.tenantPath) || '';
+  const storeRutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
 
-  const tenantPath = props?.tenantPath !== undefined ? props.tenantPath : storeTenantPath;
+  const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
 
   const db = useMemo(() => {
     if (props?.db) return props.db;
@@ -36,12 +36,12 @@ export function useVentaCrudoAdmin(props?: UseVentaCrudoAdminProps) {
   const [sales, setSales] = useState<RegistroVentaMostrador[]>([]);
   const [loading, setLoading] = useState(true);
   const registroVentasRepo = useMemo(
-    () => new RegistroVentasRepository(db, tenantPath),
-    [db, tenantPath]
+    () => new RegistroVentasRepository(db, rutaNegocio),
+    [db, rutaNegocio]
   );
 
   useEffect(() => {
-    if (!tenantPath) {
+    if (!rutaNegocio) {
       setTimeout(() => {
         setSales([]);
         setLoading(false);
@@ -68,7 +68,7 @@ export function useVentaCrudoAdmin(props?: UseVentaCrudoAdminProps) {
     });
 
     return unsub;
-  }, [registroVentasRepo, tenantPath]);
+  }, [registroVentasRepo, rutaNegocio]);
 
   return {
     sales,

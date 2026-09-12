@@ -26,32 +26,32 @@ type DraftItemSync = DraftItem & { id: string };
 
 type UseSharedDraftsProps = {
   db: Database;
-  tenantPath: string;
+  rutaNegocio: string;
   mesaId: string | null;
-  tenantId: string;
+  negocioId: string;
 };
 
 function sanitizeDraft<T>(item: T): T {
   return JSON.parse(JSON.stringify(item));
 }
 
-export function useSharedDrafts({ db, tenantPath, mesaId }: UseSharedDraftsProps) {
+export function useSharedDrafts({ db, rutaNegocio, mesaId }: UseSharedDraftsProps) {
   const sanitizedMesaId = useMemo(() => {
     if (!mesaId) return null;
     const trimmed = String(mesaId).trim();
     return trimmed.length > 0 && trimmed !== 'undefined' ? trimmed : null;
   }, [mesaId]);
 
-  const sanitizedTenantPath = useMemo(() => {
-    const trimmed = tenantPath?.trim();
+  const sanitizedRutaNegocio = useMemo(() => {
+    const trimmed = rutaNegocio?.trim();
     return trimmed.length > 0 ? trimmed : null;
-  }, [tenantPath]);
+  }, [rutaNegocio]);
 
   // 🔥 NUEVO: Usar sistema unificado de sincronización
   const syncPath = useMemo(() => {
-    if (!sanitizedTenantPath || !sanitizedMesaId) return null;
-    return `${sanitizedTenantPath}/mesas_pendientes/${sanitizedMesaId}/items`;
-  }, [sanitizedTenantPath, sanitizedMesaId]);
+    if (!sanitizedRutaNegocio || !sanitizedMesaId) return null;
+    return `${sanitizedRutaNegocio}/mesas_pendientes/${sanitizedMesaId}/items`;
+  }, [sanitizedRutaNegocio, sanitizedMesaId]);
 
   const {
     items: syncedItems,

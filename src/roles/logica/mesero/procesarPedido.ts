@@ -28,7 +28,7 @@ type ProcesarPedidoProps = {
   activePendingItemsRef: React.MutableRefObject<PendingItem[]>;
   clearPendingItems: (subpedidoId?: string) => Promise<void>;
   addDraftItem: (item: PendingItem) => Promise<any>;
-  tenantId: string;
+  negocioId: string;
   pedidosRepo: PedidosRepository;
   mesasRepo: MesasRepository;
 };
@@ -64,7 +64,7 @@ export function useProcesarPedido({
   activePendingItemsRef,
   clearPendingItems,
   addDraftItem,
-  tenantId,
+  negocioId,
   pedidosRepo,
   mesasRepo,
 }: ProcesarPedidoProps) {
@@ -98,7 +98,7 @@ export function useProcesarPedido({
       // Optimistic draft clean
       await clearPendingItems(subpedidoId);
 
-      const sessionId = `${tenantId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const sessionId = `${negocioId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
       const transactionResult = await mesasRepo.intentarBloquearMesaPedido(
         selectedTable,
@@ -182,7 +182,7 @@ export function useProcesarPedido({
       pedidosRepo,
       mesasRepo,
       clearPendingItems,
-      tenantId,
+      negocioId,
       addDraftItem,
       activePendingItemsRef,
     ]

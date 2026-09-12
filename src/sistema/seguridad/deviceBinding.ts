@@ -23,7 +23,7 @@
  * const isRegistered = await deviceBinding.isDeviceRegistered();
  *
  * // Registrar dispositivo después de login exitoso
- * await deviceBinding.registerDevice(tenantId);
+ * await deviceBinding.registerDevice(negocioId);
  *
  * // Obtener info del dispositivo
  * const info = await deviceBinding.getDeviceInfo();
@@ -33,9 +33,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ref, serverTimestamp, set } from 'firebase/database';
 import DeviceInfo from 'react-native-device-info';
-// 🔥 FIX: getRtdb se carga lazy para evitar dependencia circular
 import { logger } from '../monitoreo';
-import { validarRutaTenant, descomponerRutaTenant } from '../rtdb/rutas/RutaTenant';
+import { validar_ruta_negocio, descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
 const STORAGE_KEY = 'device_registered';
 const STORAGE_KEY_DEVICE_ID = 'device_id';
@@ -91,7 +90,7 @@ export async function getDeviceInfo(): Promise<DeviceInfoData> {
 /**
  * Verificar si el dispositivo actual ya está registrado
  *
- * @returns true si el dispositivo ya está vinculado a un tenant
+ * @returns true si el dispositivo ya está vinculado a un negocio
  */
 export async function isDeviceRegistered(): Promise<boolean> {
   try {
@@ -112,18 +111,32 @@ export async function isDeviceRegistered(): Promise<boolean> {
  * 1. Flag local en AsyncStorage (para saltar pantalla de código)
  * 2. Info del dispositivo en Firebase (para auditoría y revocación)
  *
- * @param tenantPath - Path del tenant (ej: "2 alimentos_y_bebidas/marisquerias/puerto-libres")
+ * @param rutaNegocio - Path del negocio (ej: "2 alimentos_y_bebidas/marisquerias/puerto-libres")
  */
-export async function registerDevice(tenantPath: string): Promise<void> {
+export async function registerDevice(rutaNegocio: string): Promise<void> {
   try {
-    if (!validarRutaTenant(tenantPath)) {
-      throw new Error(`Intento de registrar dispositivo en ruta inválida/legacy: ${tenantPath}`);
+    if (!validar_ruta_negocio(rutaNegocio)) {
+      throw new Error(`Intento de registrar dispositivo en ruta inválida/legacy: ${rutaNegocio}`);
     }
 
     const { resolverDeviceIdADI } =
       await import('../instalacion/vinculacion/generar-device-id-adi');
     const deviceIdADI = await resolverDeviceIdADI();
     const deviceInfo = await getDeviceInfo();
+
+    // Cláusula de guardia estricta contra dispositivos genéricos o corruptos
+    if (
+      !deviceIdADI ||
+      deviceIdADI === 'unknown' ||
+      deviceIdADI.includes('UNKNOWN_HW') ||
+      deviceIdADI.includes('FALLBACK') ||
+      deviceInfo.deviceId === 'unknown' ||
+      deviceInfo.brand.toLowerCase() === 'unknown'
+    ) {
+      const errorMsg = `[deviceBinding] Registro abortado: Dispositivo inválido o genérico (deviceIdADI: ${deviceIdADI}, brand: ${deviceInfo?.brand}, hardwareId: ${deviceInfo?.deviceId})`;
+      logger.error('SECURITY', errorMsg);
+      throw new Error(errorMsg);
+    }
 
     // 1. Guardar flags locales de compatibilidad
     await AsyncStorage.setItem(STORAGE_KEY, 'true');
@@ -136,8 +149,8 @@ export async function registerDevice(tenantPath: string): Promise<void> {
     if (!localVinculo) {
       localVinculo = {
         deviceIdADI,
-        tenantPath,
-        tenantId: descomponerRutaTenant(tenantPath)?.tenantId || 'desconocido',
+        rutaNegocio,
+        negocioId: descomponer_ruta_negocio(rutaNegocio)?.negocio_id || 'desconocido',
         aliasDispositivo: `Fierro ADI ${deviceIdADI.substring(4, 10)}`,
         estado: 'activo',
         nivelOperativo: 'operador',
@@ -152,7 +165,7 @@ export async function registerDevice(tenantPath: string): Promise<void> {
     // 🔥 FIX: Import dinámico para evitar ciclo
     const { getRtdb } = await import('../firebase');
     const db = getRtdb();
-    const deviceRef = ref(db, `${tenantPath}/dispositivos_autorizados/${deviceIdADI}`);
+    const deviceRef = ref(db, `${rutaNegocio}/dispositivos/${deviceIdADI}`);
 
     await set(deviceRef, {
       deviceId: deviceIdADI,
@@ -172,7 +185,7 @@ export async function registerDevice(tenantPath: string): Promise<void> {
     });
 
     logger.event('device_registered', {
-      tenantPath,
+      rutaNegocio,
       deviceId: deviceIdADI,
       model: deviceInfo.model,
     });
@@ -187,13 +200,13 @@ export async function registerDevice(tenantPath: string): Promise<void> {
  *
  * Llamar esto cada vez que la app inicia para mantener registro de actividad.
  *
- * @param tenantPath - Path del tenant
+ * @param rutaNegocio - Path del negocio
  */
-export async function updateLastAccess(tenantPath: string): Promise<void> {
+export async function updateLastAccess(rutaNegocio: string): Promise<void> {
   try {
-    if (!validarRutaTenant(tenantPath)) {
+    if (!validar_ruta_negocio(rutaNegocio)) {
       logger.warn('SECURITY', 'Intento de actualizar último acceso con ruta inválida/legacy', {
-        tenantPath,
+        rutaNegocio,
       });
       return;
     }
@@ -204,7 +217,7 @@ export async function updateLastAccess(tenantPath: string): Promise<void> {
     // 🔥 FIX: Import dinámico para evitar ciclo
     const { getRtdb } = await import('../firebase');
     const db = getRtdb();
-    const deviceRef = ref(db, `${tenantPath}/dispositivos_autorizados/${deviceId}/ultimoAcceso`);
+    const deviceRef = ref(db, `${rutaNegocio}/dispositivos/${deviceId}/ultimoAcceso`);
 
     await set(deviceRef, serverTimestamp());
 
@@ -220,7 +233,7 @@ export async function updateLastAccess(tenantPath: string): Promise<void> {
  * Útil para:
  * - Logout completo
  * - Testing
- * - Cambio de tenant
+ * - Cambio de negocio
  */
 export async function unregisterDevice(): Promise<void> {
   try {

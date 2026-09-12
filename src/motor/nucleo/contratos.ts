@@ -2,7 +2,7 @@
  * Contratos puros del motor logístico distribuido.
  *
  * Este módulo no conoce Firebase, React ni la persistencia del negocio. El Pedido
- * permanece como referencia del tenant; la SolicitudLogistica y la MisionLogistica
+ * permanece como referencia del negocio; la SolicitudLogistica y la MisionLogistica
  * son objetos propios de la coordinación logística.
  */
 
@@ -43,9 +43,9 @@ export interface Actor {
   id: string;
 }
 
-export interface IdentidadTenant {
-  tenantPath: string;
-  tenantId: string;
+export interface IdentidadNegocio {
+  rutaNegocio: string;
+  negocioId: string;
   categoriaId: string;
 }
 
@@ -55,8 +55,8 @@ export interface CapacidadesLogisticas {
   solicitudesLogisticas: boolean;
 }
 
-export interface ContextoOperativo extends IdentidadTenant {
-  tenantExiste: boolean;
+export interface ContextoOperativo extends IdentidadNegocio {
+  negocioExiste: boolean;
   habilitado: boolean;
   capacidades: CapacidadesLogisticas;
   actoresAutorizados: readonly TipoActor[];
@@ -103,7 +103,7 @@ export type TipoReferencia = 'pedido' | 'negocio' | 'ubicacion' | 'solicitud_log
 export interface Referencia {
   tipo: TipoReferencia;
   id: string;
-  tenantPath?: string;
+  rutaNegocio?: string;
 }
 
 export interface NecesidadEntrega {
@@ -125,7 +125,7 @@ export interface SobreSenalBase {
   id: string;
   schemaVersion: VersionEsquemaMotor;
   operationId: string;
-  tenant: IdentidadTenant;
+  negocio: IdentidadNegocio;
   origen: OrigenSenal;
   canal: CanalEntrada;
   actor: Actor;
@@ -149,7 +149,7 @@ export type SenalEntrada = SenalRequiereEntrega | SenalPedidoCancelado;
 
 export interface SolicitudLogistica {
   id: string;
-  tenant: IdentidadTenant;
+  negocio: IdentidadNegocio;
   pedidoId: string;
   estado: EstadoSolicitudLogistica;
   modalidad: ModalidadLogistica;
@@ -163,7 +163,7 @@ export interface SolicitudLogistica {
 
 export interface MisionLogistica {
   id: string;
-  tenant: IdentidadTenant;
+  negocio: IdentidadNegocio;
   solicitudLogisticaId: string;
   pedidoId: string;
   estado: EstadoMisionLogistica;
@@ -186,7 +186,7 @@ export interface EventoDominio {
   id: string;
   schemaVersion: VersionEsquemaMotor;
   operationId: string;
-  tenant: IdentidadTenant;
+  negocio: IdentidadNegocio;
   origen: 'motor_logistico';
   destino: 'negocio' | 'central' | 'repartidor' | 'motor_logistico';
   tipo: TipoEventoDominio;
@@ -202,7 +202,7 @@ export interface SenalSalida {
   id: string;
   schemaVersion: VersionEsquemaMotor;
   operationId: string;
-  tenant: IdentidadTenant;
+  negocio: IdentidadNegocio;
   origen: 'motor_logistico';
   destino: DestinoSenalSalida;
   tipo: 'mision.propuesta' | 'mision.cancelada';
@@ -217,7 +217,7 @@ export interface ResultadoProcesamiento {
   codigo: 'ACEPTADA' | 'EVENTO_REPETIDO' | 'IDEMPOTENCIA_REPETIDA' | 'PEDIDO_REPETIDO';
   eventId: string;
   operationId: string;
-  tenantPath: string;
+  rutaNegocio: string;
   solicitudLogistica?: SolicitudLogistica;
   mision?: MisionLogistica;
   eventos: readonly EventoDominio[];
@@ -225,7 +225,7 @@ export interface ResultadoProcesamiento {
 }
 
 export interface RegistroProcesamiento {
-  tenantPath: string;
+  rutaNegocio: string;
   eventId: string;
   idempotencyKey: string;
   fingerprint: string;

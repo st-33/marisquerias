@@ -8,7 +8,7 @@ export type PathKey =
   | 'menu_productos';
 
 // Resolución básica ES↔EN para evitar romper bases existentes durante transición.
-// Se usa concatenando tenantPath + '/' + resolver(key)
+// Se usa concatenando rutaNegocio + '/' + resolver(key)
 export function resolver(key: PathKey): string {
   switch (key) {
     case 'mesas_estado':

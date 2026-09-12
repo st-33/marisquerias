@@ -1,7 +1,7 @@
-import { push, ref, set, type Database } from 'firebase/database';
+import { ref, push, type Database } from 'firebase/database';
 
 import { RegistroVentasRepository } from './registroVentas.repo';
-import { assertValidTenantPath, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertValidRutaNegocio } from '../rtdb/guards';
 
 export interface VentaSimple {
   id?: string;
@@ -15,51 +15,32 @@ export interface VentaSimple {
 
 export class SimpleSalesRepo {
   private db: Database;
-  private tenantPath: string;
+  private rutaNegocio: string;
 
-  constructor(db: Database, tenantPath: string) {
-    assertValidTenantPath(tenantPath);
+  constructor(db: Database, rutaNegocio: string) {
+    assertValidRutaNegocio(rutaNegocio);
     this.db = db;
-    this.tenantPath = tenantPath;
+    this.rutaNegocio = rutaNegocio;
   }
 
   /**
-   * Registra una venta en el nodo 'ventas' del tenant.
-   * NO afecta inventarios, solo registra la transacción financiera/histórica.
+   * Registra una venta en el registro formal de ventas.
+   * Desacoplado de RTDB /ventas: no realiza escrituras directas al nodo suelto legacy.
    */
   async registrarVenta(venta: VentaSimple): Promise<string> {
-    let ventaId = venta.id;
-    let targetRef;
+    const ventaId =
+      venta.id ||
+      push(ref(this.db, `${this.rutaNegocio}/secuencias/ventas`)).key ||
+      `v_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-    if (ventaId) {
-      targetRef = ref(this.db, `${this.tenantPath}/ventas/${ventaId}`);
-    } else {
-      const ventasRef = ref(this.db, `${this.tenantPath}/ventas`);
-      const newVentaRef = push(ventasRef);
-      ventaId = newVentaRef.key!;
-      targetRef = newVentaRef;
-    }
-
-    const payload = sanitizeRtdbPayload({
-      ...venta,
+    await new RegistroVentasRepository(this.db, this.rutaNegocio).registrarMostrador({
       id: ventaId,
+      total: venta.total,
+      metodoPago: venta.metodoPago,
+      items: venta.items,
+      timestamp: venta.timestamp,
+      usuario: venta.usuario,
     });
-
-    await set(targetRef, payload);
-
-    try {
-      await new RegistroVentasRepository(this.db, this.tenantPath).registrarMostrador({
-        id: ventaId,
-        total: venta.total,
-        metodoPago: venta.metodoPago,
-        items: venta.items,
-        timestamp: venta.timestamp,
-        usuario: venta.usuario,
-      });
-    } catch (error) {
-      // La venta legacy ya quedó registrada; la proyección puede reintentarse sin duplicar.
-      console.warn('[SimpleSalesRepo] Proyección de historial pendiente:', error);
-    }
 
     return ventaId;
   }

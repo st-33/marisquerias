@@ -5,7 +5,7 @@
  * - Opera exclusivamente sobre SQLiteStorageAdapter. CERO Firebase.
  * - Idempotente: cada mutación exige `operationId` + `dedupeKey`.
  * - Variantes como Record<string, string> plano (sin arrays).
- * - Aislado por tenantId + deviceId. Nunca cruza tenants.
+ * - Aislado por negocioId + deviceId. Nunca cruza negocios.
  */
 
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
@@ -98,7 +98,7 @@ export async function inicializarSchemaDrafts(): Promise<void> {
 
 export class DraftsLocalRepo {
   constructor(
-    private readonly tenantId: string,
+    private readonly negocioId: string,
     private readonly deviceId: string
   ) {}
 
@@ -126,7 +126,7 @@ export class DraftsLocalRepo {
     });
   }
 
-  /** Obtiene todos los borradores activos del tenant/dispositivo. */
+  /** Obtiene todos los borradores activos del negocio/dispositivo. */
   async obtenerDraftsAbiertos(): Promise<OrderDraft[]> {
     const adapter = SQLiteStorageAdapter as any;
     if (!adapter.db) return [];

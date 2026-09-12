@@ -36,7 +36,7 @@ export interface OfflinePrintJob {
 
 export interface OfflineInventoryMovement {
   id: string;
-  tenantPath: string;
+  rutaNegocio: string;
   containerId: string;
   itemId: string;
   delta: number;
@@ -72,6 +72,18 @@ export interface OfflinePedido {
   updatedAt: number;
 }
 
+export interface HistorialVenta {
+  id: string;
+  negocio_id: string;
+  tipo: 'pedido_cerrado' | 'registro_ventas' | 'venta_suelto';
+  fecha: string; // ISO o YYYY/MM/DD
+  timestamp: number;
+  total: number;
+  metodo_pago: string | null;
+  datos_json: string;
+  sincronizado?: number;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SQLITE ADAPTER CLASS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -81,6 +93,7 @@ class SQLiteStorageAdapterClass {
   private db: any = null;
   private isInitialized = false;
   private isWeb = Platform.OS === 'web';
+  private webFallbackHistorial = new Map<string, HistorialVenta>();
 
   /**
    * Inicializa la base de datos y crea las tablas.
@@ -153,7 +166,7 @@ class SQLiteStorageAdapterClass {
 
         CREATE TABLE IF NOT EXISTS inventory_queue (
           id TEXT PRIMARY KEY,
-          tenantPath TEXT NOT NULL,
+          rutaNegocio TEXT NOT NULL,
           containerId TEXT NOT NULL,
           itemId TEXT NOT NULL,
           delta REAL NOT NULL,
@@ -165,9 +178,23 @@ class SQLiteStorageAdapterClass {
           attempts INTEGER NOT NULL DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS historial_ventas (
+          id TEXT PRIMARY KEY,
+          negocio_id TEXT NOT NULL,
+          tipo TEXT NOT NULL,
+          fecha TEXT NOT NULL,
+          timestamp INTEGER NOT NULL,
+          total REAL NOT NULL,
+          metodo_pago TEXT,
+          datos_json TEXT NOT NULL,
+          sincronizado INTEGER DEFAULT 1
+        );
+
         CREATE INDEX IF NOT EXISTS idx_ventas_sync ON ventas_offline(syncStatus);
         CREATE INDEX IF NOT EXISTS idx_print_status ON print_queue(status);
         CREATE INDEX IF NOT EXISTS idx_inv_queue_status ON inventory_queue(status);
+        CREATE INDEX IF NOT EXISTS idx_historial_negocio_fecha ON historial_ventas(negocio_id, fecha);
+        CREATE INDEX IF NOT EXISTS idx_historial_tipo ON historial_ventas(tipo);
       `);
 
       this.isInitialized = true;
@@ -427,7 +454,7 @@ class SQLiteStorageAdapterClass {
 
   async enqueueInventoryMovement(params: {
     id: string;
-    tenantPath: string;
+    rutaNegocio: string;
     containerId: string;
     itemId: string;
     delta: number;
@@ -438,13 +465,13 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return;
 
-    const { id, tenantPath, containerId, itemId, delta, usuario, razon, allowNegative } = params;
+    const { id, rutaNegocio, containerId, itemId, delta, usuario, razon, allowNegative } = params;
     await this.db.runAsync(
-      `INSERT INTO inventory_queue (id, tenantPath, containerId, itemId, delta, usuario, razon, allowNegative, createdAt, status, attempts) 
+      `INSERT INTO inventory_queue (id, rutaNegocio, containerId, itemId, delta, usuario, razon, allowNegative, createdAt, status, attempts) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0)`,
       [
         id,
-        tenantPath,
+        rutaNegocio,
         containerId,
         itemId,
         delta,
@@ -520,10 +547,146 @@ class SQLiteStorageAdapterClass {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // HISTORIAL VENTAS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  async guardarHistorialVenta(registro: HistorialVenta): Promise<void> {
+    if (this.isWeb) {
+      this.webFallbackHistorial.set(registro.id, registro);
+      return;
+    }
+    this.ensureInitialized();
+    if (!this.db) return;
+
+    await this.db.runAsync(
+      `INSERT OR REPLACE INTO historial_ventas (id, negocio_id, tipo, fecha, timestamp, total, metodo_pago, datos_json, sincronizado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      [
+        registro.id,
+        registro.negocio_id,
+        registro.tipo,
+        registro.fecha,
+        registro.timestamp,
+        registro.total,
+        registro.metodo_pago,
+        registro.datos_json,
+        registro.sincronizado ?? 1,
+      ]
+    );
+  }
+
+  async guardarHistorialVentasBulk(registros: HistorialVenta[]): Promise<void> {
+    if (this.isWeb) {
+      for (const r of registros) {
+        this.webFallbackHistorial.set(r.id, r);
+      }
+      return;
+    }
+    this.ensureInitialized();
+    if (!this.db || registros.length === 0) return;
+
+    await this.db.withTransactionAsync(async () => {
+      for (const r of registros) {
+        await this.db.runAsync(
+          `INSERT OR REPLACE INTO historial_ventas (id, negocio_id, tipo, fecha, timestamp, total, metodo_pago, datos_json, sincronizado)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          [
+            r.id,
+            r.negocio_id,
+            r.tipo,
+            r.fecha,
+            r.timestamp,
+            r.total,
+            r.metodo_pago,
+            r.datos_json,
+            r.sincronizado ?? 1,
+          ]
+        );
+      }
+    });
+  }
+
+  async obtenerHistorialVentas(
+    negocioId?: string,
+    filtro?: { fecha?: string; tipo?: string; desde?: number; hasta?: number }
+  ): Promise<HistorialVenta[]> {
+    if (this.isWeb || !this.db) {
+      let list = Array.from(this.webFallbackHistorial.values());
+      if (negocioId) list = list.filter((r) => r.negocio_id === negocioId);
+      if (filtro?.fecha) list = list.filter((r) => r.fecha === filtro.fecha);
+      if (filtro?.tipo) list = list.filter((r) => r.tipo === filtro.tipo);
+      if (filtro?.desde !== undefined) list = list.filter((r) => r.timestamp >= filtro.desde!);
+      if (filtro?.hasta !== undefined) list = list.filter((r) => r.timestamp <= filtro.hasta!);
+      return list.sort((a, b) => a.timestamp - b.timestamp);
+    }
+    this.ensureInitialized();
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (negocioId) {
+      conditions.push('negocio_id = ?');
+      params.push(negocioId);
+    }
+    if (filtro?.fecha) {
+      conditions.push('fecha = ?');
+      params.push(filtro.fecha);
+    }
+    if (filtro?.tipo) {
+      conditions.push('tipo = ?');
+      params.push(filtro.tipo);
+    }
+    if (filtro?.desde !== undefined) {
+      conditions.push('timestamp >= ?');
+      params.push(filtro.desde);
+    }
+    if (filtro?.hasta !== undefined) {
+      conditions.push('timestamp <= ?');
+      params.push(filtro.hasta);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const query = `SELECT * FROM historial_ventas ${whereClause} ORDER BY timestamp ASC;`;
+    const rows = await this.db.getAllAsync(query, params);
+    return rows as HistorialVenta[];
+  }
+
+  async contarHistorialVentas(negocioId?: string): Promise<number> {
+    if (this.isWeb || !this.db) {
+      const list = await this.obtenerHistorialVentas(negocioId);
+      return list.length;
+    }
+    this.ensureInitialized();
+    const where = negocioId ? 'WHERE negocio_id = ?' : '';
+    const params = negocioId ? [negocioId] : [];
+    const row = (await this.db.getFirstAsync(
+      `SELECT COUNT(*) as cnt FROM historial_ventas ${where};`,
+      params
+    )) as { cnt: number } | null;
+    return row?.cnt || 0;
+  }
+
+  async sumarTotalHistorialVentas(negocioId?: string): Promise<number> {
+    if (this.isWeb || !this.db) {
+      const list = await this.obtenerHistorialVentas(negocioId);
+      return list.reduce((sum, r) => sum + Number(r.total || 0), 0);
+    }
+    this.ensureInitialized();
+    const where = negocioId ? 'WHERE negocio_id = ?' : '';
+    const params = negocioId ? [negocioId] : [];
+    const row = (await this.db.getFirstAsync(
+      `SELECT COALESCE(SUM(total), 0) as total FROM historial_ventas ${where};`,
+      params
+    )) as { total: number } | null;
+    return row?.total || 0;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // UTILITIES
   // ─────────────────────────────────────────────────────────────────────────
 
   async clearAll(): Promise<void> {
+    this.webFallbackHistorial.clear();
     this.ensureInitialized();
     if (this.isWeb || !this.db) return;
 
@@ -536,6 +699,7 @@ class SQLiteStorageAdapterClass {
       DELETE FROM ventas_offline;
       DELETE FROM print_queue;
       DELETE FROM inventory_queue;
+      DELETE FROM historial_ventas;
     `);
     logger.info('SQLITE_STORAGE', 'All tables cleared');
   }

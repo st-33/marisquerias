@@ -8,14 +8,14 @@ import { deviceBinding } from './deviceBinding';
 /**
  * 🛡️ GUARDIA DE AUTENTICACIÓN (Auth Guard) - Hardened (Nivel Militar)
  * Vigila las fronteras del sistema a nivel de Hardware y Sesión.
- * - Si el hardware no está registrado o el tenantId falta, limpia la sesión y expulsa a login.
+ * - Si el hardware no está registrado o el negocioId falta, limpia la sesión y expulsa a login.
  * - Si está autenticado y registrado, y se encuentra en zona pública, redirige a selector de roles.
  */
 export function useAuthGuard(isSystemReady: boolean) {
   const router = useRouter();
   const segments = useSegments();
-  const tenantId = useStore((s) => s.sesion.tenantId);
-  const tenantPath = useStore((s) => s.sesion.tenantPath);
+  const negocioId = useStore((s) => s.sesion.negocioId);
+  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio);
   const clearSession = useStore((s) => s.clearSession);
   const [deviceChecked, setDeviceChecked] = useState(false);
   const [isDeviceRegisteredState, setIsDeviceRegisteredState] = useState(false);
@@ -28,8 +28,8 @@ export function useAuthGuard(isSystemReady: boolean) {
       try {
         const registrado = await deviceBinding.isDeviceRegistered();
         setIsDeviceRegisteredState(registrado);
-        if (registrado && tenantPath) {
-          await deviceBinding.updateLastAccess(tenantPath);
+        if (registrado && rutaNegocio) {
+          await deviceBinding.updateLastAccess(rutaNegocio);
           logger.info('AUTH', '🛡️ Dispositivo verificado físicamente en frontera.');
         } else if (!registrado) {
           logger.warn('AUTH', '⚠️ Dispositivo no registrado físicamente en frontera.');
@@ -44,7 +44,7 @@ export function useAuthGuard(isSystemReady: boolean) {
     };
 
     verificarDispositivo();
-  }, [isSystemReady, tenantPath]);
+  }, [isSystemReady, rutaNegocio]);
 
   // 2. Controlar la navegación en base a la sesión y el estado de validación
   useEffect(() => {
@@ -53,8 +53,8 @@ export function useAuthGuard(isSystemReady: boolean) {
     // Identificar zona actual (si empieza con (auth))
     const inAuthGroup = segments[0] === '(auth)';
 
-    // 1. Acceso denegado: Dispositivo no enlazado físicamente o sin ID de tenant
-    if ((!tenantId || !isDeviceRegisteredState) && !inAuthGroup) {
+    // 1. Acceso denegado: Dispositivo no enlazado físicamente o sin ID de negocio
+    if ((!negocioId || !isDeviceRegisteredState) && !inAuthGroup) {
       logger.warn(
         'AUTH',
         '⛔ Intrusión o desvinculación detectada. Limpiando sesión y expulsando a Login.'
@@ -66,7 +66,7 @@ export function useAuthGuard(isSystemReady: boolean) {
     }
 
     // 2. Sesión válida: Redirigir fuera de la zona de login
-    if (tenantId && isDeviceRegisteredState && inAuthGroup) {
+    if (negocioId && isDeviceRegisteredState && inAuthGroup) {
       logger.info('AUTH', '✅ Sesión y dispositivo válidos. Redirigiendo a Roles.');
       router.replace(RUTAS.ROLES.SELECTOR);
     }
@@ -75,7 +75,7 @@ export function useAuthGuard(isSystemReady: boolean) {
     deviceChecked,
     isDeviceRegisteredState,
     segments,
-    tenantId,
+    negocioId,
     router,
     clearSession,
   ]);
