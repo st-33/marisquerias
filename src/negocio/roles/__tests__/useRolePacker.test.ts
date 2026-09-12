@@ -13,7 +13,9 @@ jest.mock('firebase/database', () => ({
 // fuera de un componente (useCallback interno de Zustand).
 jest.mock('../../../sistema/store', () => ({
   useStore: jest.fn((selector: (s: any) => any) =>
-    selector({ central: { configuracion: null, estado: null } })
+    typeof selector === 'function'
+      ? selector({ central: { configuracion: null, estado: null }, modulosBloqueados: [] })
+      : { central: { configuracion: null, estado: null }, modulosBloqueados: [] }
   ),
 }));
 
@@ -35,6 +37,8 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
     jest.spyOn(React, 'useEffect').mockImplementation((cb) => {
       effectCallback = cb;
     });
+
+    jest.spyOn(React, 'useMemo').mockImplementation((fn: any) => fn());
 
     let callCount = 0;
     const useStateSpy = jest.spyOn(React, 'useState') as jest.Mock;

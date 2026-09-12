@@ -8,3 +8,4 @@ export { deviceBinding } from './deviceBinding';
 export type { DeviceInfoData } from './deviceBinding';
 export { useAuth } from './useAuth';
 export { useAuthGuard } from './useAuthGuard';
+export { useGobernanzaRealtime } from './useGobernanzaRealtime';

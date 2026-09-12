@@ -65,11 +65,6 @@ export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegoc
     await negocioRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
   };
 
-  // Refrescar métricas (no-op real: el hook reacciona solo al store)
-  const refreshMetrics = async () => {
-    setDateFilter((prev) => prev);
-  };
-
   const setDateFilterAction = (filter: DateFilter) => {
     setDateFilter(filter);
   };
@@ -79,7 +74,7 @@ export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegoc
     metrics,
     loading,
     error: null,
-    actions: { toggleFeature, refreshMetrics, setDateFilter: setDateFilterAction },
+    actions: { toggleFeature, setDateFilter: setDateFilterAction },
     dateFilter,
     hasFeature: (feature: keyof NegocioFeatures) => features[feature] === true,
   };

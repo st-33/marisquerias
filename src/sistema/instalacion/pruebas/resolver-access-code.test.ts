@@ -1,6 +1,6 @@
 import { get } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { resolverAccessCode } from '../vinculacion/resolver-access-code';
+import { resolverAccessCode, resolverNegocioPorCodigo } from '../vinculacion/resolver-access-code';
 
 jest.mock('firebase/database', () => ({
   ref: jest.fn((db: unknown, path: string) => ({ db, path })),
@@ -12,6 +12,34 @@ describe('resolverAccessCode — Fuente de verdad RTDB', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('resolverNegocioPorCodigo — Flujo Normativo Torre de Control', () => {
+    it('resuelve correctamente la ruta del negocio en RTDB', async () => {
+      (get as jest.Mock).mockResolvedValueOnce({
+        exists: () => true,
+        val: () => 'Marisquerias/mpl',
+      });
+
+      const res = await resolverNegocioPorCodigo('MPL-01', dbMock);
+      expect(res).toBe('Marisquerias/mpl');
+      expect(get).toHaveBeenCalledWith(expect.objectContaining({ path: 'codigo_acceso/MPL-01' }));
+    });
+
+    it('devuelve null si el código no existe', async () => {
+      (get as jest.Mock).mockResolvedValueOnce({
+        exists: () => false,
+      });
+
+      const res = await resolverNegocioPorCodigo('INEXISTENTE', dbMock);
+      expect(res).toBeNull();
+    });
+
+    it('devuelve null con código vacío', async () => {
+      const res = await resolverNegocioPorCodigo('   ', dbMock);
+      expect(res).toBeNull();
+      expect(get).not.toHaveBeenCalled();
+    });
   });
 
   // ── 1. Los cuatro códigos reales son resueltos por RTDB ──────────────────────
@@ -163,7 +191,9 @@ describe('resolverAccessCode — Fuente de verdad RTDB', () => {
 
     // Si existiera un mapa local, get no sería llamado para este código
     expect(get).toHaveBeenCalledTimes(1);
-    expect(get).toHaveBeenCalledWith(expect.objectContaining({ path: 'access_codes/ARRECIFE-24' }));
+    expect(get).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'codigo_acceso/ARRECIFE-24' })
+    );
   });
 
   // ── Validaciones de estado: conservadas ──────────────────────────────────────

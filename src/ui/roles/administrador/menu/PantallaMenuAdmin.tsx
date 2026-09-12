@@ -13,6 +13,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -157,6 +158,13 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
         },
       });
     }
+
+    items.push({
+      key: 'selector-roles',
+      label: 'Selector de Roles',
+      icon: <Ionicons name="people" size={22} color={'#FFFFFF'} />,
+      onPress: () => router.replace('/_role/roles'),
+    });
 
     return items;
   }, [activeCat, featureEnabled, showToast]);

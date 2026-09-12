@@ -6,8 +6,7 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx', '**/pruebas/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,
-  // Define globals de RN antes de cargar cualquier módulo
-  setupFiles: ['<rootDir>/src/__mocks__/jest.setup.js'],
+  setupFiles: ['<rootDir>/src/__mocks__/jest.setup.js', '<rootDir>/jest.setup.js'],
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
@@ -27,6 +26,6 @@ module.exports = {
     // react-native — mock ligero para acceso a Platform, AppState, etc. desde código de dominio
     '^react-native$': '<rootDir>/src/__mocks__/react-native.js',
     // @sentry/react-native usa ESM puro — incompatible con Jest sin transpilación nativa.
-    '^@sentry/react-native$': '<rootDir>/src/__mocks__/@sentry/react-native.js',
+    '^@sentry/react-native$': '<rootDir>/src/sistema/monitoreo/__mocks__/sentry.mock.ts',
   },
 };

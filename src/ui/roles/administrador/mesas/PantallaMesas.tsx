@@ -4,6 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -154,6 +155,12 @@ export function PantallaMesas() {
         label: 'Modificar Distribución',
         icon: <Ionicons name="create-outline" size={20} color={'#FFFFFF'} />,
         onPress: () => setEditMode(true),
+      },
+      {
+        key: 'selector-roles',
+        label: 'Selector de Roles',
+        icon: <Ionicons name="people" size={20} color={'#FFFFFF'} />,
+        onPress: () => router.replace('/_role/roles'),
       },
     ];
   }, [editMode, handleSaveLayout]);

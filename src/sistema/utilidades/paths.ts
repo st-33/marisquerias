@@ -3,7 +3,7 @@ export type PathKey =
   | 'pedidos'
   | 'features'
   | 'caracteristicas'
-  | 'access_codes'
+  | 'codigo_acceso'
   | 'menu_categorias'
   | 'menu_productos';
 
@@ -20,8 +20,8 @@ export function resolver(key: PathKey): string {
       return 'features';
     case 'caracteristicas':
       return 'caracteristicas';
-    case 'access_codes':
-      return 'access_codes';
+    case 'codigo_acceso':
+      return 'codigo_acceso';
     case 'menu_categorias':
       return 'menu/categorias';
     case 'menu_productos':

@@ -39,7 +39,6 @@ app-example
 
 # generated native folders
 /ios
-/android
 
 # builds
 marisquerias-final.apk

@@ -41,7 +41,7 @@ module.exports = () => {
       ],
     },
     web: {
-      output: 'static',
+      output: 'single',
       favicon: './assets/images/favicon.png',
       bundler: 'metro',
     },
@@ -72,10 +72,12 @@ module.exports = () => {
     ],
     experiments: {
       typedRoutes: true,
-      reactCompiler: true,
+      reactCompiler: false,
     },
     extra: {
-      router: {},
+      router: {
+        origin: process.env.APP_URL || false,
+      },
       eas: {
         projectId: '7eadd8c1-b45a-481f-b24b-328c7b83055d',
       },

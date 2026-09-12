@@ -19,14 +19,37 @@ export interface InfoAccessCode extends IdentidadNegocio {
 }
 
 /**
+ * Flujo de Login y Resolución (Normativo):
+ * Resuelve la ruta del negocio en RTDB a partir del código de acceso.
+ *
+ * @param codigo - Código de acceso ingresado por el usuario
+ * @param db - Instancia de Firebase Database
+ * @returns String con la ruta del negocio en RTDB (ej: "Marisquerias/mpl") o null si no existe
+ */
+export async function resolverNegocioPorCodigo(codigo: string, db: any): Promise<string | null> {
+  const cod = codigo.trim().toUpperCase();
+  if (!cod) return null;
+  const snapshot = await get(ref(db, `codigo_acceso/${cod}`));
+  if (snapshot.exists()) {
+    const val = snapshot.val();
+    if (typeof val === 'string') return val;
+    if (val && typeof val === 'object' && typeof (val as any).tenantPath === 'string') {
+      return (val as any).tenantPath;
+    }
+    return typeof val === 'string' ? val : null;
+  }
+  return null;
+}
+
+/**
  * Consulta en Firebase RTDB si el código de acceso existe y es válido.
  * Firebase es la única fuente de verdad: no existe resolución local ni fallback.
  *
- * Contrato de nodo remoto `access_codes/{CODIGO}`:
- *   - string  -> rutaNegocio directo (formato legible, válido si son 2 segmentos)
- *   - object  -> { rutaNegocio: string, estado?, maxUsos?, usosActuales?, expiraEn?, ... }
+ * Fuente Contractual: `codigo_acceso/{CODIGO}`
+ *   - string  -> rutaNegocio directo
+ *   - object  -> { rutaNegocio?: string, tenantPath?: string, estado?, maxUsos?, usosActuales?, expiraEn?, ... }
  *
- * El rutaNegocio resuelto debe tener exactamente 2 segmentos: {categoria}/{negocio}.
+ * El rutaNegocio resuelto debe tener una estructura de ruta válida.
  * Si RTDB no responde, el código no existe o la ruta es inválida, el resolver falla explícitamente.
  */
 export async function resolverAccessCode(
@@ -38,7 +61,7 @@ export async function resolverAccessCode(
     throw new Error('El código de acceso no puede estar vacío');
   }
 
-  const codeRef = ref(db, `access_codes/${cleanCode}`);
+  const codeRef = ref(db, `codigo_acceso/${cleanCode}`);
   const snapshot = await get(codeRef);
 
   if (!snapshot.exists()) {
@@ -61,7 +84,12 @@ export async function resolverAccessCode(
     rutaNegocio = val;
   } else if (val !== null && typeof val === 'object') {
     const obj = val as Record<string, unknown>;
-    rutaNegocio = typeof obj.rutaNegocio === 'string' ? obj.rutaNegocio : '';
+    rutaNegocio =
+      typeof obj.rutaNegocio === 'string'
+        ? obj.rutaNegocio
+        : typeof obj.tenantPath === 'string'
+          ? obj.tenantPath
+          : '';
     if (
       obj.estado === 'activo' ||
       obj.estado === 'usado' ||
