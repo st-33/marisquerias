@@ -5,6 +5,8 @@ import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
 import { NegocioRepository, type Caracteristicas } from '../../sistema/persistencia/negocio.repo';
 import { estaFeatureAdminHabilitada } from './menuSafety';
+import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
+import type { CentralConfiguracion, CentralEstado } from '../../sistema/store/slices/central';
 
 /**
  * Contrato de feature flags administrativos del negocio.
@@ -32,12 +34,6 @@ type UseAdminFeaturesProps = {
   db?: Database;
   rutaNegocio?: string;
 };
-
-import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
-import type {
-  CentralConfiguracion,
-  CentralEstado,
-} from '../../sistema/store/slices/central';
 
 /**
  * Normaliza la configuración administrativa de `caracteristicas`.

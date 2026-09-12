@@ -63,6 +63,22 @@ export interface DeviceInfoData {
  * Obtener información del dispositivo actual
  */
 export async function getDeviceInfo(): Promise<DeviceInfoData> {
+  const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+  if (isWeb) {
+    const { obtenerDeviceIdResiliente } = await import(
+      '../instalacion/vinculacion/generar-device-id-adi'
+    );
+    const webId = obtenerDeviceIdResiliente();
+    return {
+      deviceId: webId,
+      brand: 'Web',
+      model: typeof navigator !== 'undefined' ? navigator.userAgent : 'Web Browser',
+      systemVersion: 'Web',
+      systemName: 'Web',
+      isEmulator: false,
+    };
+  }
+
   try {
     const [deviceId, brand, model, systemVersion, systemName, isEmulator] = await Promise.all([
       DeviceInfo.getUniqueId(),
@@ -125,18 +141,22 @@ export async function registerDevice(rutaNegocio: string): Promise<void> {
     const deviceIdADI = await resolverDeviceIdADI();
     const deviceInfo = await getDeviceInfo();
 
-    // Cláusula de guardia estricta contra dispositivos genéricos o corruptos
-    if (
-      !deviceIdADI ||
-      deviceIdADI === 'unknown' ||
-      deviceIdADI.includes('UNKNOWN_HW') ||
-      deviceIdADI.includes('FALLBACK') ||
-      deviceInfo.deviceId === 'unknown' ||
-      deviceInfo.brand.toLowerCase() === 'unknown'
-    ) {
-      const errorMsg = `[deviceBinding] Registro abortado: Dispositivo inválido o genérico (deviceIdADI: ${deviceIdADI}, brand: ${deviceInfo?.brand}, hardwareId: ${deviceInfo?.deviceId})`;
-      logger.error('SECURITY', errorMsg);
-      throw new Error(errorMsg);
+    const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+    // Cláusula de guardia estricta contra dispositivos genéricos o corruptos en nativo
+    if (!isWeb) {
+      if (
+        !deviceIdADI ||
+        deviceIdADI === 'unknown' ||
+        deviceIdADI.includes('UNKNOWN_HW') ||
+        deviceIdADI.includes('FALLBACK') ||
+        deviceInfo.deviceId === 'unknown' ||
+        deviceInfo.brand.toLowerCase() === 'unknown'
+      ) {
+        const errorMsg = `[deviceBinding] Registro abortado: Dispositivo inválido o genérico (deviceIdADI: ${deviceIdADI}, brand: ${deviceInfo?.brand}, hardwareId: ${deviceInfo?.deviceId})`;
+        logger.error('SECURITY', errorMsg);
+        throw new Error(errorMsg);
+      }
     }
 
     // 1. Guardar flags locales de compatibilidad
