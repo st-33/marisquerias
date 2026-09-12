@@ -10,8 +10,9 @@
 
 import type { Database } from 'firebase/database';
 import { off, onValue, ref } from 'firebase/database';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { RUTAS } from '../../compartido/rutas';
+import { useStore } from '../../sistema/store';
 
 export type RolConfig = {
   habilitado: boolean;
@@ -48,6 +49,24 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
   const [config, setConfig] = useState<ConfiguracionNegocio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const modulosBloqueados = useStore((s) => s.modulosBloqueados);
+
+  const esModuloBloqueado = useMemo(() => {
+    const normalizados = (modulosBloqueados || []).map((m) => m.toLowerCase().trim());
+    return (rolKey: string, nombreRol: string): boolean => {
+      const keysAComparar = [
+        rolKey.toLowerCase(),
+        nombreRol.toLowerCase(),
+        rolKey === 'mostrador' ? 'caja' : '',
+        rolKey === 'mostrador' ? 'pos' : '',
+        rolKey === 'mostrador' ? 'venta_crudo' : '',
+        rolKey === 'repart' ? 'reparto' : '',
+        rolKey === 'repart' ? 'repartidor' : '',
+      ].filter(Boolean);
+
+      return normalizados.some((b) => keysAComparar.includes(b));
+    };
+  }, [modulosBloqueados]);
 
   useEffect(() => {
     if (!tenantPath) {
@@ -262,9 +281,15 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
       return [];
     }
 
-    const roles = Object.values(config.roles).filter(
-      (rol): rol is RolConfig => !!rol && rol.habilitado === true
-    );
+    const roles = Object.entries(config.roles)
+      .filter((entry): entry is [keyof RolesDisponibles, RolConfig] => {
+        const [key, rol] = entry;
+        if (!rol || rol.habilitado !== true) return false;
+        if (esModuloBloqueado(key, rol.nombre)) return false;
+        return true;
+      })
+      .map(([_, rol]) => rol);
+
     console.log(
       '[RolePacker] 🔍 getRolesHabilitados:',
       roles.map((r) => r.nombre)
@@ -276,7 +301,10 @@ export function useEmpaquetadorRoles({ db, tenantPath }: PropsEmpaquetadorRoles)
    * Verificar si un rol está habilitado
    */
   const isRolHabilitado = (rolKey: keyof RolesDisponibles): boolean => {
-    return config?.roles[rolKey]?.habilitado === true;
+    const rol = config?.roles[rolKey];
+    if (!rol || rol.habilitado !== true) return false;
+    if (esModuloBloqueado(rolKey, rol.nombre)) return false;
+    return true;
   };
 
   /**

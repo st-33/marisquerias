@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
 import type { ContratoSesion } from '../../../sistema/tipos/contratos';
@@ -31,7 +30,7 @@ export const ESTADO_SESION_INICIAL: ContratoSesion = {
 };
 
 const getStorage = () => {
-  if (Platform.OS === 'web') {
+  if (typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined') {
     return {
       setItem: async (k: string, v: string) => sessionStorage.setItem(k, v),
       getItem: async (k: string) => sessionStorage.getItem(k),
@@ -57,17 +56,20 @@ export interface AccionesSesion {
   setRol: (rol: string) => void;
   setUsuario: (usuario: ContratoSesion['usuario']) => void;
   setEstadoInstalacion: (estado: EstadoInstalacion) => void;
+  setModulosBloqueados: (modulos: string[]) => void;
   clearSession: () => Promise<void>;
 }
 
 export type SesionSlice = {
   sesion: ContratoSesion;
   estadoInstalacion: EstadoInstalacion;
+  modulosBloqueados: string[];
 } & AccionesSesion;
 
 export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> = (set, get) => ({
   sesion: ESTADO_SESION_INICIAL,
   estadoInstalacion: 'HIDRATANDO',
+  modulosBloqueados: [],
 
   async setSession(sesion) {
     const previousTenantPath = get().sesion.tenantPath;
@@ -125,6 +127,10 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
 
   setEstadoInstalacion(estado) {
     set({ estadoInstalacion: estado });
+  },
+
+  setModulosBloqueados(modulos) {
+    set({ modulosBloqueados: modulos });
   },
 
   async clearSession() {

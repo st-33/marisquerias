@@ -9,6 +9,12 @@ jest.mock('firebase/database', () => ({
   off: jest.fn(),
 }));
 
+jest.mock('../../../sistema/store', () => ({
+  useStore: jest.fn((selector) =>
+    typeof selector === 'function' ? selector({ modulosBloqueados: [] }) : { modulosBloqueados: [] }
+  ),
+}));
+
 describe('useEmpaquetadorRoles — Autoridad Remota', () => {
   const dbMock = {} as Database;
   const tenantPath = 'marisquerias/el-arrecife';
@@ -27,6 +33,8 @@ describe('useEmpaquetadorRoles — Autoridad Remota', () => {
     jest.spyOn(React, 'useEffect').mockImplementation((cb) => {
       effectCallback = cb;
     });
+
+    jest.spyOn(React, 'useMemo').mockImplementation((fn: any) => fn());
 
     let callCount = 0;
     const useStateSpy = jest.spyOn(React, 'useState') as jest.Mock;

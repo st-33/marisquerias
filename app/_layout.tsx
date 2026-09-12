@@ -16,7 +16,7 @@ import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracte
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorHub';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FabRadial from '../src/ui/bloques/FabRadial';
-import { useAuthGuard } from '../src/sistema/seguridad';
+import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
@@ -54,6 +54,7 @@ export default function RootLayout() {
 
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.includes(route)) || pathname === '/';
   useAuthGuard(isReady && !isPublicRoute);
+  useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
 
   const tenantPath = useStore((state) => state.sesion.tenantPath);

@@ -22,7 +22,7 @@ import * as Sentry from '@sentry/react-native';
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || '';
 
 // Detectar si estamos en producción
-const isProduction = !__DEV__;
+const isProduction = typeof __DEV__ !== 'undefined' ? !__DEV__ : process.env.NODE_ENV === 'production';
 
 /**
  * Inicializar Sentry

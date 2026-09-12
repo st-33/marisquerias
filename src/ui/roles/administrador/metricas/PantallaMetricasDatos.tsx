@@ -17,7 +17,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
@@ -156,6 +156,14 @@ export function PantallaMetricasDatos() {
       });
     }
 
+    // Nodo burbuja para regresar a la pantalla de selector de roles
+    items.push({
+      key: 'selector-roles',
+      label: 'Selector de Roles',
+      icon: <Ionicons name="people" size={22} color="white" />,
+      onPress: () => router.replace('/_role/roles'),
+    });
+
     return items;
   }, [features]);
 
@@ -195,12 +203,6 @@ export function PantallaMetricasDatos() {
                 filtroActual={dateFilter}
                 onSeleccionar={(filtro) => actions.setDateFilter(filtro)}
               />
-              <Pressable
-                onPress={actions.refreshMetrics}
-                style={({ pressed }) => [styles.refreshBtn, pressed && styles.btnPressed]}
-              >
-                <Ionicons name="refresh" size={20} color="#3b82f6" />
-              </Pressable>
             </View>
           </View>
 
@@ -425,14 +427,6 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: '800',
     letterSpacing: -0.4,
-  },
-  refreshBtn: {
-    padding: 8,
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
-  },
-  btnPressed: {
-    opacity: 0.7,
   },
   content: {
     flex: 1,
