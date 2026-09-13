@@ -69,3 +69,8 @@ expo-env.d.ts
 # database dumps and static reports
 *rtdb*.json
 eslint_report.json
+
+# Temporary scratch files and logs
+*.log
+suite_auditoria.js
+test_visual.js
