@@ -65,3 +65,7 @@ android/app/src/main/res/values-night/
 
 expo-env.d.ts
 # @end expo-cli
+
+# database dumps and static reports
+*rtdb*.json
+eslint_report.json
