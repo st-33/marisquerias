@@ -15,15 +15,8 @@ else
   git commit -m "$MENSAJE"
 fi
 
-echo "🚀 Sincronizando con GitHub (rama-2 y main)..."
-# 1. Subir rama de trabajo
-git push origin rama-2
-
-# 2. Replicar a main para Google AI Studio sin salir de rama-2
-git checkout main
-git merge rama-2 --ff-only
+echo "🚀 Sincronizando con GitHub (main)..."
 git push origin main
-git checkout rama-2
 
-echo "✅ Sincronización completa: rama-2 y main al día en GitHub."
+echo "✅ Sincronización completa: main al día en la nube."
 
