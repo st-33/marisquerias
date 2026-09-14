@@ -23,7 +23,6 @@ export function PanelVentasResumen({ titulo, monto, datos }: PanelVentasResumenP
           <Text style={styles.monto}>{monto}</Text>
         </View>
         <View style={styles.indicador}>
-          <Text style={styles.tituloGrafica}>Evolución por hora</Text>
           <Ionicons name="trending-up" size={22} color="#5ED0B0" />
         </View>
       </View>
