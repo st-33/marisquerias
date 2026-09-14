@@ -5,7 +5,7 @@
 
 import { LineChart } from 'react-native-gifted-charts';
 import { useMemo } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useAppTheme } from '../../../../../compartido/temas/ThemeContext';
 
 interface GraficaVentasTiempoProps {
@@ -19,6 +19,7 @@ export const GraficaVentasTiempo = ({ data, height = 190 }: GraficaVentasTiempoP
   const accent = isElite ? '#5ED0B0' : '#3B82F6';
   const accentStart = isElite ? '#3C90DA' : '#2563EB';
   const chartWidth = Math.max(245, Math.min(650, width - 142));
+  const isWeb = Platform.OS === 'web';
 
   const chartData = useMemo(() => {
     const source = data?.length
@@ -46,8 +47,8 @@ export const GraficaVentasTiempo = ({ data, height = 190 }: GraficaVentasTiempoP
     <View style={styles.container}>
       <LineChart
         areaChart
-        isAnimated
-        animateOnDataChange
+        isAnimated={!isWeb}
+        animateOnDataChange={!isWeb}
         animationDuration={720}
         data={chartData}
         width={chartWidth}

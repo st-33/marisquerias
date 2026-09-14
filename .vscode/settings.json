@@ -1,4 +1,9 @@
 {
   "workbench.colorTheme": "Default High Contrast",
-  "java.compile.nullAnalysis.mode": "disabled"
+  "java.compile.nullAnalysis.mode": "disabled",
+  "builder.serverUrl": "http://localhost:8081/",
+  "builder.command": "",
+  "builder.runDevServer": false,
+  "builder.autoDetectDevServer": true,
+  "builder.launchType": "editor"
 }
