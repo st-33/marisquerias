@@ -101,6 +101,7 @@ export function useMetricasVentas({
         const vendedoresMap = new Map<string, ResumenVendedor>();
         const horaPedidosCountMap: Record<string, number> = {};
         const ventasPorHoraMap: Record<string, number> = {};
+        const eventosVentas: { timestamp: number; total: number }[] = [];
         const ventasPorCategoriaMap: Record<string, number> = {};
         const productosMap: Record<string, { nombre: string; ventas: number }> = {};
 
@@ -127,6 +128,7 @@ export function useMetricasVentas({
 
             totalVentas += pedidoTotal;
             totalOrdenes++;
+            eventosVentas.push({ timestamp: ts, total: pedidoTotal });
 
             // Acumular por hora
             const hora = new Date(ts).getHours();
@@ -177,6 +179,7 @@ export function useMetricasVentas({
                 const totalVenta = Number(h.total || 0);
                 totalVentas += totalVenta;
                 totalOrdenes++;
+                eventosVentas.push({ timestamp: ts, total: totalVenta });
 
                 const hora = new Date(ts).getHours();
                 const horaLabel = `${hora}:00`;
@@ -193,6 +196,7 @@ export function useMetricasVentas({
                 const totalVenta = Number(v.total || v.total_general || 0);
                 totalVentas += totalVenta;
                 totalOrdenes++;
+                eventosVentas.push({ timestamp: ts, total: totalVenta });
 
                 const hora = new Date(ts).getHours();
                 const horaLabel = `${hora}:00`;
@@ -211,6 +215,8 @@ export function useMetricasVentas({
           const mapKey = dateFilter === 'hoy' ? `${i}:00` : `${i * 2}:00`;
           ventasPorHora.push({ label, total: ventasPorHoraMap[mapKey] || 0 });
         }
+
+        eventosVentas.sort((a, b) => a.timestamp - b.timestamp);
 
         // ventasPorCategoria: ordenar por total descendente
         const ventasPorCategoria = Object.entries(ventasPorCategoriaMap)
@@ -276,6 +282,7 @@ export function useMetricasVentas({
             value: c.total,
           })),
           topPlatillos: productosEstrella,
+          eventosVentas,
           ventasPorHora,
           ventasPorCategoria,
           productosEstrella,
