@@ -439,6 +439,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   mainMetricCard: {
+    marginRight: 'auto',
     backgroundColor: '#151E31',
     borderRadius: 22,
     padding: 24,
