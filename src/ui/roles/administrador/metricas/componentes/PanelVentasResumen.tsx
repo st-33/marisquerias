@@ -13,7 +13,6 @@ type PanelVentasResumenProps = {
   monto: string;
   subtitulo: string;
   datos: DatoVenta[];
-  tituloGrafica?: string;
   subtituloGrafica?: string;
 };
 
@@ -22,7 +21,6 @@ export function PanelVentasResumen({
   monto,
   subtitulo,
   datos,
-  tituloGrafica = 'Evolución por hora',
   subtituloGrafica = 'Ventas en tiempo real',
 }: PanelVentasResumenProps) {
   return (
@@ -34,7 +32,6 @@ export function PanelVentasResumen({
           <Text style={styles.subtitulo}>{subtitulo}</Text>
         </View>
         <View style={styles.indicador}>
-          <Text style={styles.tituloGrafica}>{tituloGrafica}</Text>
           <Ionicons name="trending-up" size={22} color="#5ED0B0" />
         </View>
       </View>
@@ -85,11 +82,6 @@ const styles = StyleSheet.create({
   indicador: {
     alignItems: 'flex-end',
     gap: 6,
-  },
-  tituloGrafica: {
-    color: '#D4D9E4',
-    fontSize: 13,
-    fontStyle: 'italic',
   },
   subtituloGrafica: {
     color: '#64748B',

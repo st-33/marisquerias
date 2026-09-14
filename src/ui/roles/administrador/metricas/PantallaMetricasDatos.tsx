@@ -236,7 +236,6 @@ export function PantallaMetricasDatos() {
                 label: d.label,
                 total: d.monto ?? d.total ?? 0,
               }))}
-              tituloGrafica={`Evolución por ${dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}`}
               subtituloGrafica={`Ventas en tiempo real · ${dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hoy' : 'período seleccionado'}`}
             />
 
