@@ -39,10 +39,10 @@ import { SeccionAlertas } from './componentes/SeccionAlertas';
 import { SeccionGrafica } from './componentes/SeccionGrafica';
 import { SeccionPredicciones } from './componentes/SeccionPredicciones';
 import { TarjetaMetrica } from './componentes/TarjetaMetrica';
+import { PanelVentasResumen } from './componentes/PanelVentasResumen';
 import { VistaSinDatos } from './componentes/VistaSinDatos';
 import { GraficaDistribucionVentas } from './graficas/GraficaDistribucionVentas';
 import { GraficaTopProductos } from './graficas/GraficaTopProductos';
-import { GraficaVentasTiempo } from './graficas/GraficaVentasTiempo';
 
 const PALETA_GRAFICAS = [
   '#3b82f6',
@@ -218,10 +218,9 @@ export function PantallaMetricasDatos() {
                 : null,
             ]}
           >
-            {/* Métrica principal - Ventas filtradas */}
-            <View style={styles.mainMetricCard}>
-              <Text style={styles.mainMetricLabel}>
-                {dateFilter === 'hoy'
+            <PanelVentasResumen
+              titulo={
+                dateFilter === 'hoy'
                   ? 'Ventas de Hoy'
                   : dateFilter === 'ayer'
                     ? 'Ventas de Ayer'
@@ -229,16 +228,16 @@ export function PantallaMetricasDatos() {
                       ? 'Ventas últimos 3 días'
                       : dateFilter === 'semana'
                         ? 'Ventas de esta Semana'
-                        : 'Ventas de este Mes'}
-              </Text>
-              <Text style={styles.mainMetricValue}>
-                ${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}
-              </Text>
-              <Text style={styles.mainMetricSubtitle}>
-                {metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0}{' '}
-                subpedidos finalizados
-              </Text>
-            </View>
+                        : 'Ventas de este Mes'
+              }
+              monto={`$${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}`}
+              subtitulo={`${metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0} subpedidos finalizados`}
+              datos={metrics.ventasPorHora.map((d: any) => ({
+                label: d.label,
+                total: d.monto ?? d.total ?? 0,
+              }))}
+              subtituloGrafica={`Ventas en tiempo real · ${dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hoy' : 'período seleccionado'}`}
+            />
 
             <RegistroVentasDia
               registros={ventasDelDia}
@@ -298,26 +297,6 @@ export function PantallaMetricasDatos() {
               loading={loadingPredicciones}
               anchoTarjeta={predictionCardWidth}
             />
-
-            {/* Gráfico de Ventas en el Tiempo */}
-            <SeccionGrafica
-              icono="trending-up"
-              color="#10b981"
-              titulo="Ventas en el Tiempo"
-              subtitulo={`Evolución por ${dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hora' : 'día'}`}
-            >
-              {metrics.ventasPorHora.length > 0 ? (
-                <GraficaVentasTiempo
-                  data={metrics.ventasPorHora.map((d: any) => ({
-                    label: d.label,
-                    total: d.monto ?? d.total ?? 0,
-                  }))}
-                  height={220}
-                />
-              ) : (
-                <VistaSinDatos texto="Sin datos para el período seleccionado" />
-              )}
-            </SeccionGrafica>
 
             {/* Gráfico de Distribución de Ventas */}
             <SeccionGrafica
@@ -437,35 +416,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 20,
     gap: 20,
-  },
-  mainMetricCard: {
-    marginRight: 'auto',
-    backgroundColor: '#151E31',
-    borderRadius: 22,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(151,181,237,0.24)',
-    elevation: 9,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.35,
-    shadowRadius: 26,
-  },
-  mainMetricLabel: {
-    color: '#94a3b8',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mainMetricValue: {
-    color: '#f8fafc',
-    fontSize: 38,
-    fontWeight: '900',
-    marginVertical: 4,
-  },
-  mainMetricSubtitle: {
-    color: '#3b82f6',
-    fontSize: 14,
-    fontWeight: '600',
   },
   metricsGrid: {
     flexDirection: 'row',
