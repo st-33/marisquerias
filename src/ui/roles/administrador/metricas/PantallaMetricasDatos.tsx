@@ -231,12 +231,10 @@ export function PantallaMetricasDatos() {
                         : 'Ventas de este Mes'
               }
               monto={`$${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}`}
-              subtitulo={`${metrics?.vendedorHero?.subpedidosCountHero ?? metrics?.ordenesFiltradas ?? 0} subpedidos finalizados`}
-              datos={metrics.ventasPorHora.map((d: any) => ({
-                label: d.label,
-                total: d.monto ?? d.total ?? 0,
+              datos={metrics.eventosVentas.map((evento: any) => ({
+                timestamp: evento.timestamp,
+                total: evento.total,
               }))}
-              subtituloGrafica={`Ventas en tiempo real · ${dateFilter === 'hoy' || dateFilter === 'ayer' ? 'hoy' : 'período seleccionado'}`}
             />
 
             <RegistroVentasDia

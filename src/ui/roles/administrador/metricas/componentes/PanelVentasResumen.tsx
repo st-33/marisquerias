@@ -4,38 +4,29 @@ import { GraficaVentasTiempo } from '../graficas/GraficaVentasTiempo';
 import { VistaSinDatos } from './VistaSinDatos';
 
 type DatoVenta = {
-  label: string;
+  timestamp: number;
   total: number;
 };
 
 type PanelVentasResumenProps = {
   titulo: string;
   monto: string;
-  subtitulo: string;
   datos: DatoVenta[];
-  subtituloGrafica?: string;
 };
 
-export function PanelVentasResumen({
-  titulo,
-  monto,
-  subtitulo,
-  datos,
-  subtituloGrafica = 'Ventas en tiempo real',
-}: PanelVentasResumenProps) {
+export function PanelVentasResumen({ titulo, monto, datos }: PanelVentasResumenProps) {
   return (
     <View style={styles.panel}>
       <View style={styles.encabezado}>
         <View>
           <Text style={styles.titulo}>{titulo}</Text>
           <Text style={styles.monto}>{monto}</Text>
-          <Text style={styles.subtitulo}>{subtitulo}</Text>
         </View>
         <View style={styles.indicador}>
+          <Text style={styles.tituloGrafica}>Evolución por hora</Text>
           <Ionicons name="trending-up" size={22} color="#5ED0B0" />
         </View>
       </View>
-      <Text style={styles.subtituloGrafica}>{subtituloGrafica}</Text>
       {datos.length > 0 ? (
         <GraficaVentasTiempo data={datos} height={220} />
       ) : (
@@ -74,18 +65,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 44,
   },
-  subtitulo: {
-    color: '#5ED0B0',
-    fontSize: 13,
-    fontWeight: '600',
-  },
   indicador: {
     alignItems: 'flex-end',
     gap: 6,
   },
-  subtituloGrafica: {
-    color: '#64748B',
-    fontSize: 12,
-    marginTop: 12,
+  tituloGrafica: {
+    color: '#D4D9E4',
+    fontSize: 13,
+    fontStyle: 'italic',
   },
 });
