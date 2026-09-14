@@ -74,3 +74,6 @@ eslint_report.json
 *.log
 suite_auditoria.js
 test_visual.js
+
+# Git hooks
+.husky/
