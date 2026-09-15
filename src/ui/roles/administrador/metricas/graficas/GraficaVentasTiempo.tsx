@@ -43,6 +43,20 @@ function formatearMoneda(valor: number): string {
   return `$${Math.round(valor).toLocaleString('es-MX')}`;
 }
 
+function formatearHoraAmPm(hora: number): string {
+  if (hora === 0) return '12 AM';
+  if (hora < 12) return `${hora} AM`;
+  if (hora === 12) return '12 PM';
+  return `${hora - 12} PM`;
+}
+
+function formatearHoraDetalle(hora: number): string {
+  if (hora === 0) return '12:00 AM';
+  if (hora < 12) return `${hora}:00 AM`;
+  if (hora === 12) return '12:00 PM';
+  return `${hora - 12}:00 PM`;
+}
+
 /**
  * Genera una curva suave tipo onda Bézier que NUNCA perfora hacia abajo
  * del baseline (elimina rebotes negativos o valles por debajo de 0).
@@ -182,9 +196,10 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
     return `${linePath} L ${ultimoX.toFixed(1)},${baseline.toFixed(1)} L ${primerX.toFixed(1)},${baseline.toFixed(1)} Z`;
   }, [linePath, plotWidth, baseline]);
 
-  // Etiquetas horarias clave (horario diurno/comercial sin repetir 00:00 en la esquina)
-  // El 0 en el origen representa tanto el 0 del dinero como el inicio del tiempo.
-  const marcasHorarias = [4, 8, 12, 16, 20];
+  // Marcas regulares cada 4 horas a lo largo del día (4 AM, 8 AM, 12 PM, 4 PM, 8 PM, 11 PM)
+  const marcasTextoHoras = useMemo(() => {
+    return [4, 8, 12, 16, 20, 23];
+  }, []);
 
   return (
     <View style={styles.contenedor}>
@@ -192,7 +207,7 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
       <View style={styles.tooltipContenedor}>
         {puntoActivo && puntoActivo.total > 0 ? (
           <View style={[styles.badgeTooltip, { borderColor: accent }]}>
-            <Text style={styles.badgeHora}>{puntoActivo.labelHora} hrs</Text>
+            <Text style={styles.badgeHora}>{formatearHoraDetalle(puntoActivo.hora)}</Text>
             <Text style={styles.badgeSeparador}>•</Text>
             <Text style={[styles.badgeTotal, { color: accentLight }]}>
               {formatearMoneda(puntoActivo.total)}
@@ -286,33 +301,37 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
           />
         ) : null}
 
-        {/* Eje X: marcas y horas con tipografía clara y legible */}
-        {marcasHorarias.map((hora) => {
+        {/* Ticks en cada una de las 24 horas (ritmo continuo de horas espaciadas) */}
+        {puntosPorHora.map((punto) => (
+          <Line
+            key={`tick-hora-${punto.hora}`}
+            x1={punto.x}
+            y1={baseline}
+            x2={punto.x}
+            y2={baseline + (marcasTextoHoras.includes(punto.hora) ? 6 : 3)}
+            stroke={marcasTextoHoras.includes(punto.hora) ? '#64748B' : 'rgba(100, 116, 139, 0.4)'}
+            strokeWidth={marcasTextoHoras.includes(punto.hora) ? 1.2 : 1}
+          />
+        ))}
+
+        {/* Etiquetas de texto del eje X en formato AM / PM */}
+        {marcasTextoHoras.map((hora) => {
           const punto = puntosPorHora[hora];
           if (!punto) return null;
           const esActivo = puntoActivo?.hora === hora;
 
           return (
-            <Fragment key={`eje-x-${hora}`}>
-              <Line
-                x1={punto.x}
-                y1={baseline}
-                x2={punto.x}
-                y2={baseline + 6}
-                stroke="#64748B"
-                strokeWidth={1.2}
-              />
-              <SvgText
-                x={punto.x}
-                y={baseline + 20}
-                fill={esActivo ? accentLight : '#CBD5E1'}
-                fontSize="12"
-                fontWeight={esActivo ? '800' : '600'}
-                textAnchor="middle"
-              >
-                {punto.labelHora}
-              </SvgText>
-            </Fragment>
+            <SvgText
+              key={`label-hora-${hora}`}
+              x={punto.x}
+              y={baseline + 20}
+              fill={esActivo ? accentLight : '#CBD5E1'}
+              fontSize="12"
+              fontWeight={esActivo ? '800' : '600'}
+              textAnchor="middle"
+            >
+              {formatearHoraAmPm(hora)}
+            </SvgText>
           );
         })}
 
