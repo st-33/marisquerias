@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
@@ -145,7 +145,7 @@ function agruparPorHora(
   data: EventoVenta[],
   plotWidth: number,
   plotHeight: number,
-  baseline: number,
+  baseline: number
 ) {
   const acumPorHora = Array.from({ length: HORAS_DEL_DIA }, (_, h) => ({
     hora: h,
@@ -219,7 +219,7 @@ function agruparPorDia(
   rangoFin: number,
   plotWidth: number,
   plotHeight: number,
-  baseline: number,
+  baseline: number
 ) {
   const diasRango = generarDiasDelRango(rangoInicio, rangoFin);
   const totalDias = diasRango.length;
@@ -277,9 +277,7 @@ function agruparPorDia(
     marcas = diasRango.map((_, i) => i).filter((i) => i % 2 === 0 || i === totalDias - 1);
   } else {
     // Mensual: cada 5 días + último
-    marcas = diasRango
-      .map((_, i) => i)
-      .filter((i) => i % 5 === 0 || i === totalDias - 1);
+    marcas = diasRango.map((_, i) => i).filter((i) => i % 5 === 0 || i === totalDias - 1);
   }
 
   return { puntos, maximoEscala: escala, marcasIndices: marcas };
@@ -473,9 +471,13 @@ export function GraficaVentasTiempo({
         {puntos.map((punto) => {
           if (punto.total === 0) return null;
           const esActivo = puntoActivo?.indice === punto.indice;
+          const interactProps =
+            Platform.OS === 'web'
+              ? ({ onClick: () => setSeleccionManual(punto) } as any)
+              : { onPress: () => setSeleccionManual(punto) };
 
           return (
-            <G key={`punto-${punto.indice}`} onPress={() => setSeleccionManual(punto)}>
+            <G key={`punto-${punto.indice}`} {...interactProps}>
               {/* Área de toque amplia */}
               <Circle cx={punto.x} cy={punto.y} r={22} fill="transparent" />
 

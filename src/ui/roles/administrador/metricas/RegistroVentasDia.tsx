@@ -117,7 +117,10 @@ export function RegistroVentasDia({
           {registros.map((registro) => {
             const estado = colorEstado(registro.estado);
             return (
-              <View key={`${registro.origen}-${registro.origenId}`} style={styles.row}>
+              <View
+                key={`${registro.origen}-${registro.origenId || 'sin-id'}-${registro.numero}-${registro.timestamp}`}
+                style={styles.row}
+              >
                 <Text style={[styles.number, { color: estado }]}>{registro.numero}</Text>
                 <Text style={styles.mesa}>
                   {compacto
@@ -139,18 +142,23 @@ export function RegistroVentasDia({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#111827',
-    borderColor: '#27324A',
-    borderRadius: 12,
+    backgroundColor: '#0D111A',
+    borderColor: 'rgba(244, 201, 93, 0.14)',
+    borderRadius: 14,
     borderWidth: 1,
     marginBottom: 18,
     padding: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 14,
     gap: 10,
   },
   headerTitle: {
@@ -159,9 +167,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    color: '#f9fafb',
+    color: '#F4F0E8',
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
   actions: {
     alignItems: 'center',
@@ -170,17 +179,19 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignItems: 'center',
-    borderColor: '#27324A',
+    borderColor: 'rgba(244, 201, 93, 0.2)',
     borderRadius: 8,
     borderWidth: 1,
+    backgroundColor: '#080A0F',
     flexDirection: 'row',
     minHeight: 32,
     paddingHorizontal: 8,
     paddingVertical: 5,
   },
   dateButtonText: {
-    color: '#cbd5f5',
+    color: '#CBD5E1',
     fontSize: 11,
+    fontWeight: '600',
     textTransform: 'capitalize',
   },
   rows: {
@@ -188,12 +199,14 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderRadius: 9,
+    backgroundColor: '#080A0F',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     flexDirection: 'row',
     gap: 10,
     minHeight: 42,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 8,
   },
   number: {
@@ -202,16 +215,17 @@ const styles = StyleSheet.create({
     minWidth: 24,
   },
   mesa: {
-    color: '#cbd5f5',
+    color: '#CBD5E1',
     flex: 1,
     fontSize: 13,
+    fontWeight: '500',
   },
   total: {
     fontSize: 14,
     fontWeight: '800',
   },
   hora: {
-    color: '#94a3b8',
+    color: '#8291A5',
     fontSize: 12,
     minWidth: 78,
     textAlign: 'right',
@@ -223,11 +237,11 @@ const styles = StyleSheet.create({
     minHeight: 72,
   },
   muted: {
-    color: '#94a3b8',
+    color: '#8291A5',
     fontSize: 13,
   },
   error: {
-    color: '#f87171',
+    color: '#EF4444',
     fontSize: 13,
     fontWeight: '700',
   },

@@ -18,11 +18,13 @@ export function SeccionGrafica({ icono, color, titulo, subtitulo, children }: Se
   return (
     <View style={styles.tarjeta}>
       <View style={styles.encabezado}>
-        <View>
+        <View style={styles.titulosCol}>
           <Text style={styles.titulo}>{titulo}</Text>
           {subtitulo ? <Text style={styles.subtitulo}>{subtitulo}</Text> : null}
         </View>
-        <Ionicons name={icono} size={24} color={color} />
+        <View style={[styles.iconoBadge, { backgroundColor: `${color}18`, borderColor: `${color}35` }]}>
+          <Ionicons name={icono} size={20} color={color} />
+        </View>
       </View>
       {children}
     </View>
@@ -31,11 +33,16 @@ export function SeccionGrafica({ icono, color, titulo, subtitulo, children }: Se
 
 const styles = StyleSheet.create({
   tarjeta: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
+    backgroundColor: '#0D111A',
+    borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(244, 201, 93, 0.14)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 4,
   },
   encabezado: {
     flexDirection: 'row',
@@ -43,13 +50,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  titulosCol: {
+    flex: 1,
+    marginRight: 12,
+  },
   titulo: {
-    color: '#f8fafc',
-    fontSize: 18,
-    fontWeight: '700',
+    color: '#F4F0E8',
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   subtitulo: {
-    color: '#64748b',
-    fontSize: 13,
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  iconoBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

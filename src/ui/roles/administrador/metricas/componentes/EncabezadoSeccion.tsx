@@ -25,8 +25,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   titulo: {
-    color: '#f8fafc',
-    fontSize: 18,
-    fontWeight: '700',
+    color: '#F4F0E8',
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
 });

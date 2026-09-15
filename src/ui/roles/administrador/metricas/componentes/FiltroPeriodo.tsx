@@ -53,29 +53,36 @@ export function FiltroPeriodo({ filtroActual, onSeleccionar }: FiltroPeriodoProp
 const styles = StyleSheet.create({
   fila: {
     flexDirection: 'row',
-    backgroundColor: '#0f172a',
-    borderRadius: 10,
+    backgroundColor: '#0D111A',
+    borderRadius: 12,
     padding: 4,
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 201, 93, 0.16)',
   },
   scrollFila: {
     maxWidth: '80%',
   },
   boton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 9,
   },
   botonActivo: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#F4C95D',
+    shadowColor: '#F4C95D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   textoBoton: {
-    color: '#94a3b8',
+    color: '#8291A5',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   textoBotonActivo: {
-    color: '#ffffff',
-    fontWeight: '700',
+    color: '#080A0F',
+    fontWeight: '900',
   },
 });

@@ -128,3 +128,62 @@ export function es_ruta_legacy(ruta: string): boolean {
 }
 
 export const esRutaLegacy = es_ruta_legacy;
+
+/**
+ * Resuelve el nombre visible y legible del negocio a partir de su ID, ruta o configuración.
+ * Mapea identificadores conocidos como 'mpl' a 'Marisquería Puerto Libres'.
+ */
+export function resolver_nombre_negocio({
+  nombreConfig,
+  negocioId,
+  rutaNegocio,
+  accessCode,
+}: {
+  nombreConfig?: string | null;
+  negocioId?: string | null;
+  rutaNegocio?: string | null;
+  accessCode?: string | null;
+}): string {
+  if (nombreConfig && typeof nombreConfig === 'string' && nombreConfig.trim()) {
+    return nombreConfig.trim();
+  }
+
+  const idFromPath = (negocioId || '').split('/').pop() || '';
+  const idLower = idFromPath.toLowerCase();
+  const rutaLower = (rutaNegocio || '').toLowerCase();
+  const codeUpper = (accessCode || '').toUpperCase();
+
+  // Mapeo canónico: MPL / Puerto Libres -> Marisquería Puerto Libres
+  if (
+    idLower === 'mpl' ||
+    idLower === 'marisqueria-mpl' ||
+    idLower.includes('puerto-libres') ||
+    idLower.includes('puerto_libres') ||
+    rutaLower.includes('/mpl') ||
+    rutaLower.endsWith('/mpl') ||
+    rutaLower.includes('puerto-libres') ||
+    rutaLower.includes('puerto_libres') ||
+    codeUpper.includes('MPL')
+  ) {
+    return 'Marisquería Puerto Libres';
+  }
+
+  const esMarisqueria =
+    /(?:^|\/)marisquerias?(?:\/|$)/i.test(rutaNegocio || '') ||
+    rutaLower.includes('marisqueria') ||
+    idLower.includes('marisqueria');
+
+  const base = idFromPath
+    .replace(/^marisquerias?[-_]/i, '')
+    .replace(/[-_]/g, ' ')
+    .trim();
+
+  const titleCase = base.replace(/\b\w/g, (c: string) => c.toUpperCase());
+  if (!titleCase) return 'Mi Negocio';
+
+  return esMarisqueria && !titleCase.toLowerCase().includes('marisquer')
+    ? `Marisquería ${titleCase}`
+    : titleCase;
+}
+
+export const resolverNombreNegocio = resolver_nombre_negocio;

@@ -33,6 +33,7 @@ import {
   useRegistroVentasDelDia,
 } from '../../../../capacidades/metricas';
 import { AtmosphereLayer } from '../../../../ui/primitivos/AtmosphereLayer';
+import { resolver_nombre_negocio } from '../../../../sistema/rtdb/rutas/ruta_negocio';
 import { RegistroVentasDia } from './RegistroVentasDia';
 import { FiltroPeriodo } from './componentes/FiltroPeriodo';
 import { SeccionAlertas } from './componentes/SeccionAlertas';
@@ -45,13 +46,13 @@ import { GraficaDistribucionVentas } from './graficas/GraficaDistribucionVentas'
 import { GraficaTopProductos } from './graficas/GraficaTopProductos';
 
 const PALETA_GRAFICAS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#14b8a6',
-  '#f97316',
+  '#F4C95D',
+  '#5ED0B0',
+  '#38BDF8',
+  '#E07A5F',
+  '#A78BFA',
+  '#D4A843',
+  '#2DD4BF',
 ];
 
 export function PantallaMetricasDatos() {
@@ -65,6 +66,19 @@ export function PantallaMetricasDatos() {
   const predictionCardWidth = isMobile ? '100%' : isTablet ? '48%' : '32%';
 
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
+  const negocioId = useStore((s) => s.sesion.negocioId);
+  const accessCode = useStore((s) => s.sesion.access_code);
+  const nombreConfigStore = useStore((s) => s.negocio?.configuracion?.nombre);
+
+  const nombreNegocio = useMemo(() => {
+    return resolver_nombre_negocio({
+      nombreConfig: nombreConfigStore,
+      negocioId,
+      rutaNegocio,
+      accessCode,
+    });
+  }, [nombreConfigStore, negocioId, rutaNegocio, accessCode]);
+
   const ds = useStore((s: any) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
@@ -199,7 +213,12 @@ export function PantallaMetricasDatos() {
           <View style={[styles.header, isMobile && styles.headerMobile]}>
             <View style={styles.headerLeft}>
               <Ionicons name="stats-chart" size={26} color="#ffffff" />
-              <Text style={styles.title}>Métricas y Datos</Text>
+              <View>
+                <Text style={styles.title}>Métricas y Datos</Text>
+                {nombreNegocio ? (
+                  <Text style={styles.businessSubtitle}>{nombreNegocio}</Text>
+                ) : null}
+              </View>
             </View>
             <View style={[styles.headerRight, isMobile && styles.headerRightMobile]}>
               <FiltroPeriodo
@@ -221,7 +240,7 @@ export function PantallaMetricasDatos() {
             <PanelVentasResumen
               dateFilter={dateFilter}
               monto={`$${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}`}
-              datos={metrics.eventosVentas.map((evento: any) => ({
+              datos={(metrics?.eventosVentas ?? []).map((evento: any) => ({
                 timestamp: evento.timestamp,
                 total: evento.total,
               }))}
@@ -251,7 +270,7 @@ export function PantallaMetricasDatos() {
                   metrics?.vendedorEstrella?.subpedidos ?? 0
                 } subpedidos)`}
                 icono="trophy"
-                color="#f59e0b"
+                color="#F4C95D"
                 containerStyle={{ width: metricCardWidth }}
               />
               <TarjetaMetrica
@@ -259,7 +278,7 @@ export function PantallaMetricasDatos() {
                 valor={metrics?.platilloMasVendido?.nombre ?? 'Sin ventas'}
                 subtitulo={`${metrics?.platilloMasVendido?.cantidad ?? 0} unidades vendidas`}
                 icono="flame"
-                color="#ef4444"
+                color="#E07A5F"
                 containerStyle={{ width: metricCardWidth }}
               />
               <TarjetaMetrica
@@ -267,7 +286,7 @@ export function PantallaMetricasDatos() {
                 valor={metrics?.horaPico?.hora ?? 'N/A'}
                 subtitulo={`${metrics?.horaPico?.pedidos ?? 0} pedidos en esta hora`}
                 icono="time"
-                color="#8b5cf6"
+                color="#A78BFA"
                 containerStyle={{ width: metricCardWidth }}
               />
             </View>
@@ -289,18 +308,18 @@ export function PantallaMetricasDatos() {
             {/* Gráfico de Distribución de Ventas */}
             <SeccionGrafica
               icono="pie-chart"
-              color="#3b82f6"
+              color="#F4C95D"
               titulo="Distribución de Ventas"
-              subtitulo="Por tipo de origen"
+              subtitulo="Por categoría de platillo"
             >
-              {metrics.distribucionVentas.length > 0 ? (
+              {(metrics?.distribucionVentas?.length ?? 0) > 0 ? (
                 <GraficaDistribucionVentas
                   title=""
                   data={metrics.distribucionVentas.map((d: any, index: number) => ({
                     name: d.label || d.name || 'Origen',
                     population: Number(d.value || d.population || 0),
                     color: PALETA_GRAFICAS[index % PALETA_GRAFICAS.length],
-                    legendFontColor: '#94a3b8',
+                    legendFontColor: '#8291A5',
                     legendFontSize: 12,
                   }))}
                 />
@@ -312,11 +331,11 @@ export function PantallaMetricasDatos() {
             {/* Top 5 Platillos Más Vendidos */}
             <SeccionGrafica
               icono="bar-chart"
-              color="#f59e0b"
+              color="#5ED0B0"
               titulo="Top 5 Platillos Más Vendidos"
               subtitulo="Por unidades vendidas"
             >
-              {metrics.topPlatillos.length > 0 ? (
+              {(metrics?.topPlatillos?.length ?? 0) > 0 ? (
                 <GraficaTopProductos title="" data={metrics.topPlatillos} />
               ) : (
                 <VistaSinDatos texto="Sin datos de platillos" />
@@ -397,6 +416,14 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontWeight: '800',
     letterSpacing: -0.4,
+  },
+  businessSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   content: {
     flex: 1,

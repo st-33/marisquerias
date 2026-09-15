@@ -10,12 +10,13 @@
  */
 
 import { router } from 'expo-router';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, Vibration } from 'react-native';
+import { onValue, ref } from 'firebase/database';
 import { SoundBank } from '../../../sistema/audio/soundBank';
 import { useStore } from '../../../sistema/store';
 import { useEmpaquetadorRoles } from '../../../negocio/roles/empaquetadorRoles';
-
+import { resolver_nombre_negocio } from '../../../sistema/rtdb/rutas/ruta_negocio';
 import { getRtdb } from '../../../sistema/firebase';
 
 export interface RolInfo {
@@ -30,6 +31,29 @@ export function useRoleSelectorLogic() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const clearSession = useStore((s) => s.clearSession);
   const negocioId = useStore((s) => s.sesion.negocioId);
+  const accessCode = useStore((s) => s.sesion.access_code);
+  const nombreConfigStore = useStore((s) => s.negocio?.configuracion?.nombre);
+
+  const [nombreRemoto, setNombreRemoto] = useState<string | null>(null);
+
+  // Escuchar nombre configurado en RTDB si existe
+  useEffect(() => {
+    if (!rutaNegocio) return;
+    const unsubNombre = onValue(ref(db, `${rutaNegocio}/nombre`), (snap) => {
+      if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
+        setNombreRemoto(snap.val().trim());
+      }
+    });
+    const unsubConfigNombre = onValue(ref(db, `${rutaNegocio}/configuracion/nombre`), (snap) => {
+      if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
+        setNombreRemoto(snap.val().trim());
+      }
+    });
+    return () => {
+      unsubNombre();
+      unsubConfigNombre();
+    };
+  }, [db, rutaNegocio]);
 
   // Limpiar sonido de feedback al desmontar
   useEffect(() => {
@@ -51,15 +75,15 @@ export function useRoleSelectorLogic() {
     }));
   }, [getRolesHabilitados]);
 
-  // Nombre del negocio formateado
+  // Nombre del negocio formateado canónicamente (ej. "Marisquería Puerto Libres")
   const nombreNegocio = useMemo(() => {
-    const idFromPath = (negocioId || '').split('/').pop() || '';
-    const esMarisqueria = (rutaNegocio || '').includes('/marisquerias/');
-    const base = idFromPath.replace(/^marisqueria-/, '').replace(/-/g, ' ');
-    const titleCase = base.replace(/\b\w/g, (c: string) => c.toUpperCase());
-    if (!titleCase) return 'Mi Negocio';
-    return esMarisqueria ? `Marisquería ${titleCase}` : titleCase;
-  }, [rutaNegocio, negocioId]);
+    return resolver_nombre_negocio({
+      nombreConfig: nombreRemoto || nombreConfigStore,
+      negocioId,
+      rutaNegocio,
+      accessCode,
+    });
+  }, [nombreRemoto, nombreConfigStore, negocioId, rutaNegocio, accessCode]);
 
   // Reproducir feedback (sonido + vibración)
   const playFeedback = useCallback(async () => {

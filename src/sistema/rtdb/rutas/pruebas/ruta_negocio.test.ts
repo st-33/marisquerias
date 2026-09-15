@@ -7,6 +7,8 @@ import {
   validarRutaNegocio,
   descomponerRutaNegocio,
   crearRutaNegocio,
+  resolver_nombre_negocio,
+  resolverNombreNegocio,
 } from '../ruta_negocio';
 import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/ensureNegocio';
 import { get, set } from 'firebase/database';
@@ -144,6 +146,44 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(descomponer_ruta_negocio('marisquerias')).toBe(null);
       expect(descomponer_ruta_negocio('restaurantero/el-arrecife')).toBe(null);
       expect(descomponerRutaNegocio('marisquerias')).toBe(null);
+    });
+  });
+
+  describe('resolver_nombre_negocio', () => {
+    it('retorna nombreConfig cuando está presente', () => {
+      expect(
+        resolver_nombre_negocio({
+          nombreConfig: 'Marisquería Puerto Libres',
+          negocioId: 'mpl',
+        })
+      ).toBe('Marisquería Puerto Libres');
+    });
+
+    it('resuelve mpl a Marisquería Puerto Libres', () => {
+      expect(resolver_nombre_negocio({ negocioId: 'mpl' })).toBe('Marisquería Puerto Libres');
+      expect(resolver_nombre_negocio({ rutaNegocio: 'marisquerias/mpl' })).toBe('Marisquería Puerto Libres');
+      expect(resolver_nombre_negocio({ accessCode: 'MPL-01' })).toBe('Marisquería Puerto Libres');
+      expect(resolver_nombre_negocio({ negocioId: 'marisqueria-puerto-libres' })).toBe('Marisquería Puerto Libres');
+    });
+
+    it('formatea negocios estándar y marisquerías correctamente', () => {
+      expect(
+        resolver_nombre_negocio({
+          negocioId: 'el-arrecife',
+          rutaNegocio: 'marisquerias/el-arrecife',
+        })
+      ).toBe('Marisquería El Arrecife');
+
+      expect(
+        resolver_nombre_negocio({
+          negocioId: 'la-esquina-del-cafe',
+          rutaNegocio: 'cafeterias/la-esquina-del-cafe',
+        })
+      ).toBe('La Esquina Del Cafe');
+    });
+
+    it('retorna Mi Negocio como fallback si no hay información', () => {
+      expect(resolver_nombre_negocio({})).toBe('Mi Negocio');
     });
   });
 

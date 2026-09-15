@@ -32,11 +32,15 @@ export function BrandSeal({ nombreNegocio }: BrandSealProps) {
       // [11Ene8:47.pm] fontFamily: tipografía según plataforma y modo Elite (Georgia/serif para Elite)
       fontFamily:
         Platform.OS === 'ios' ? (isElite ? 'Georgia' : 'System') : isElite ? 'serif' : 'sans-serif',
-      // [11Ene8:47.pm] fontSize: si nombre >18 chars usa 24, sino 32 (escalado por theme.scale)
-      fontSize: Math.round((nombreNegocio.length > 24 ? 30 : 36) * theme.scale),
+      // [11Ene8:47.pm] fontSize: escala armónica según longitud del nombre del negocio
+      fontSize: Math.round((nombreNegocio.length > 20 ? 28 : 36) * theme.scale),
+      lineHeight: Math.round((nombreNegocio.length > 20 ? 34 : 42) * theme.scale),
       fontWeight: '700',
-      // [11Ene8:47.pm] letterSpacing: espaciado entre letras (máx 8px)
-      letterSpacing: Math.min(8, Math.round(6 * theme.scale)),
+      // [11Ene8:47.pm] letterSpacing: espaciado entre letras equilibrado (evita desborde en nombres largos)
+      letterSpacing: Math.min(
+        nombreNegocio.length > 20 ? 4 : 8,
+        Math.round((nombreNegocio.length > 20 ? 3 : 6) * theme.scale)
+      ),
       textTransform: 'uppercase',
       // [11Ene8:47.pm] color: color del texto desde paleta dinámica
       color: colors.text,

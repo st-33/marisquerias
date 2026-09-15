@@ -4,19 +4,16 @@ import type { PrediccionPlatillo } from '../../../../../capacidades/metricas';
 
 function estadoDePrediccion(prediccion: PrediccionPlatillo): { texto: string; color: string } {
   if (prediccion.cantidadPosible === 0) {
-    return { texto: 'AGOTADO', color: '#ef4444' };
+    return { texto: 'AGOTADO', color: '#EF4444' };
   }
   if (prediccion.stockSuficiente) {
-    return { texto: 'OK', color: '#10b981' };
+    return { texto: 'STOCK OK', color: '#5ED0B0' };
   }
-  return { texto: 'REVISAR', color: '#f59e0b' };
+  return { texto: 'REVISAR', color: '#F4C95D' };
 }
 
 /**
- * Tarjeta individual de predicción de reabastecimiento.
- * Se tipificó contra `PrediccionPlatillo` y se eliminaron los campos defensivos
- * heredados (`estadoStock`, `platilloId`, `nombrePlatillo`, `promedioDiario`,
- * `diasRestantes`, `fechaRecompraSugerida`) que ya no existen en el contrato real.
+ * Tarjeta individual de predicción de reabastecimiento con estética Elite.
  */
 export function TarjetaPrediccion({
   prediccion,
@@ -26,7 +23,7 @@ export function TarjetaPrediccion({
   ancho?: DimensionValue;
 }) {
   const { texto, color } = estadoDePrediccion(prediccion);
-  const diasRestantes = prediccion.stockSuficiente ? '∞' : '0';
+  const diasRestantes = prediccion.stockSuficiente ? 'Óptimo' : 'Crítico';
 
   return (
     <View style={[styles.tarjeta, ancho !== undefined ? { width: ancho } : null]}>
@@ -34,7 +31,12 @@ export function TarjetaPrediccion({
         <Text style={styles.nombre} numberOfLines={1}>
           {prediccion.productoNombre}
         </Text>
-        <View style={[styles.insignia, { backgroundColor: `${color}20` }]}>
+        <View
+          style={[
+            styles.insignia,
+            { backgroundColor: `${color}18`, borderColor: `${color}40`, borderWidth: 1 },
+          ]}
+        >
           <Text style={[styles.insigniaTexto, { color }]}>{texto}</Text>
         </View>
       </View>
@@ -46,14 +48,14 @@ export function TarjetaPrediccion({
         </View>
         <View style={styles.metrica}>
           <Text style={[styles.metricaValor, { color }]}>{diasRestantes}</Text>
-          <Text style={styles.metricaEtiqueta}>Días rest.</Text>
+          <Text style={styles.metricaEtiqueta}>Estado stock</Text>
         </View>
       </View>
 
       <View style={styles.pie}>
-        <Ionicons name="cube-outline" size={14} color="#9ca3af" />
+        <Ionicons name="cube-outline" size={13} color="#8291A5" />
         <Text style={styles.limitante} numberOfLines={1}>
-          Limitante: {prediccion.ingredienteLimitante}
+          Limitante: {prediccion.ingredienteLimitante || 'Ninguno'}
         </Text>
       </View>
     </View>
@@ -62,11 +64,16 @@ export function TarjetaPrediccion({
 
 const styles = StyleSheet.create({
   tarjeta: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
+    backgroundColor: '#0D111A',
+    borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(244, 201, 93, 0.12)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   encabezado: {
     flexDirection: 'row',
@@ -75,7 +82,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   nombre: {
-    color: '#f8fafc',
+    color: '#F4F0E8',
     fontSize: 14,
     fontWeight: '700',
     flex: 1,
@@ -87,29 +94,32 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   insigniaTexto: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
   metricas: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#33415550',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     marginBottom: 8,
   },
   metrica: {
     alignItems: 'center',
   },
   metricaValor: {
-    color: '#f8fafc',
+    color: '#F4F0E8',
     fontSize: 16,
     fontWeight: '800',
   },
   metricaEtiqueta: {
-    color: '#64748b',
-    fontSize: 11,
+    color: '#8291A5',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
   },
   pie: {
     flexDirection: 'row',
@@ -117,7 +127,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   limitante: {
-    color: '#9ca3af',
+    color: '#8291A5',
     fontSize: 11,
+    flex: 1,
   },
 });

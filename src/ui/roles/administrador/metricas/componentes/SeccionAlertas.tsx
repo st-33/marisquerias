@@ -52,28 +52,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
   tarjetaCritica: {
-    backgroundColor: '#ef444410',
-    borderColor: '#ef444440',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(239, 68, 68, 0.35)',
   },
   tarjetaMedia: {
-    backgroundColor: '#f59e0b10',
-    borderColor: '#f59e0b40',
+    backgroundColor: 'rgba(244, 201, 93, 0.08)',
+    borderColor: 'rgba(244, 201, 93, 0.35)',
   },
   contenido: {
     flex: 1,
   },
   titulo: {
-    color: '#f8fafc',
+    color: '#F4F0E8',
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 2,
   },
   mensaje: {
-    color: '#cbd5e1',
+    color: '#CBD5E1',
     fontSize: 13,
+    lineHeight: 18,
   },
 });

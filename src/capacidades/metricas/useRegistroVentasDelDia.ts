@@ -67,16 +67,29 @@ export function useRegistroVentasDelDia({
 
   // Fusionar registros locales de SQLite con los pedidos y ventas en tiempo real del Store
   const fechaObj = new Date(timestamp);
-  const minTs = new Date(fechaObj.getFullYear(), fechaObj.getMonth(), fechaObj.getDate(), 0, 0, 0).getTime();
-  const maxTs = new Date(fechaObj.getFullYear(), fechaObj.getMonth(), fechaObj.getDate(), 23, 59, 59, 999).getTime();
+  const minTs = new Date(
+    fechaObj.getFullYear(),
+    fechaObj.getMonth(),
+    fechaObj.getDate(),
+    0,
+    0,
+    0
+  ).getTime();
+  const maxTs = new Date(
+    fechaObj.getFullYear(),
+    fechaObj.getMonth(),
+    fechaObj.getDate(),
+    23,
+    59,
+    59,
+    999
+  ).getTime();
 
   const mapaUnificado: Record<string, RegistroVenta> = { ...registrosSQLite };
 
   // 1. Integrar pedidos cerrados/pagados del Store si no existen en SQLite
   if (pedidosData) {
-    const pedidos = Object.values(pedidosData)
-      .map(normalizePedido)
-      .filter(Boolean);
+    const pedidos = Object.values(pedidosData).map(normalizePedido).filter(Boolean);
 
     pedidos.forEach((p: any) => {
       if (p.estatus === 'cancelado') return;

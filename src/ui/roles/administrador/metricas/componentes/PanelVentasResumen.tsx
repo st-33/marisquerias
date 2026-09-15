@@ -64,7 +64,10 @@ function calcularModoYRango(dateFilter: DateFilter): {
 
 export function PanelVentasResumen({ monto, datos, dateFilter }: PanelVentasResumenProps) {
   const titulo = TITULO_POR_FILTRO[dateFilter] || 'Registro de Ventas';
-  const { modo, rangoInicio, rangoFin } = useMemo(() => calcularModoYRango(dateFilter), [dateFilter]);
+  const { modo, rangoInicio, rangoFin } = useMemo(
+    () => calcularModoYRango(dateFilter),
+    [dateFilter]
+  );
 
   return (
     <View style={styles.panel}>

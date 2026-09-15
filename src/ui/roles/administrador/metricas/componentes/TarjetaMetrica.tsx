@@ -29,7 +29,7 @@ export function TarjetaMetrica({
 }: TarjetaMetricaProps) {
   return (
     <LinearGradient
-      colors={[`${color}32`, '#111722']}
+      colors={[`${color}28`, '#0D111A']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.tarjeta, containerStyle]}
@@ -70,11 +70,11 @@ export function TarjetaMetrica({
 
 const styles = StyleSheet.create({
   tarjeta: {
-    backgroundColor: '#111722',
+    backgroundColor: '#0D111A',
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(222,229,242,0.16)',
+    borderColor: 'rgba(244, 201, 93, 0.12)',
     overflow: 'hidden',
     minHeight: 150,
   },
@@ -102,27 +102,28 @@ const styles = StyleSheet.create({
   insigniaTendencia: {
     padding: 4,
     borderRadius: 6,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#080A0F',
   },
   insigniaTendenciaArriba: {
-    backgroundColor: '#10b98115',
+    backgroundColor: 'rgba(94, 208, 176, 0.15)',
   },
   insigniaTendenciaAbajo: {
-    backgroundColor: '#ef444415',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   valor: {
-    color: '#f8fafc',
+    color: '#F4F0E8',
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 4,
+    letterSpacing: -0.3,
   },
   titulo: {
-    color: '#94a3b8',
+    color: '#94A3B8',
     fontSize: 13,
     fontWeight: '600',
   },
   subtitulo: {
-    color: '#64748b',
+    color: '#8291A5',
     fontSize: 11,
     marginTop: 2,
   },

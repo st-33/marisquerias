@@ -11,12 +11,13 @@ export function VistaSinDatos({ texto }: { texto: string }) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 180,
+    height: 140,
     alignItems: 'center',
     justifyContent: 'center',
   },
   texto: {
-    color: '#64748b',
-    fontSize: 14,
+    color: '#8291A5',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
