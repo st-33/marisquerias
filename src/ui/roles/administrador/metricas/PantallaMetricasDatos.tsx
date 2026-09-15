@@ -219,17 +219,7 @@ export function PantallaMetricasDatos() {
             ]}
           >
             <PanelVentasResumen
-              titulo={
-                dateFilter === 'hoy'
-                  ? 'Ventas de Hoy'
-                  : dateFilter === 'ayer'
-                    ? 'Ventas de Ayer'
-                    : dateFilter === 'hace3dias'
-                      ? 'Ventas últimos 3 días'
-                      : dateFilter === 'semana'
-                        ? 'Ventas de esta Semana'
-                        : 'Ventas de este Mes'
-              }
+              dateFilter={dateFilter}
               monto={`$${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}`}
               datos={metrics.eventosVentas.map((evento: any) => ({
                 timestamp: evento.timestamp,

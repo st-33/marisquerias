@@ -17,19 +17,32 @@ interface EventoVenta {
   total: number;
 }
 
+export type ModoGrafica = 'hora' | 'dia';
+
 interface GraficaVentasTiempoProps {
   data: EventoVenta[];
   height?: number;
+  /** 'hora' = eje X en horas (hoy/ayer), 'dia' = eje X en días (3 días/semana/mes) */
+  modo?: ModoGrafica;
+  /** Timestamp de inicio del rango (necesario para modo 'dia') */
+  rangoInicio?: number;
+  /** Timestamp de fin del rango (necesario para modo 'dia') */
+  rangoFin?: number;
 }
 
-type PuntoHora = {
-  hora: number;
-  labelHora: string;
+// --- Tipos internos ---
+
+type PuntoGrafica = {
+  indice: number;
+  label: string;
+  labelCorto: string;
   total: number;
   transacciones: number;
   x: number;
   y: number;
 };
+
+// --- Constantes ---
 
 const HORAS_DEL_DIA = 24;
 const DIVISIONES_VERTICAL = 5;
@@ -38,6 +51,8 @@ const MARGEN_IZQUIERDO = 58;
 const MARGEN_DERECHO = 18;
 const MARGEN_SUPERIOR = 20;
 const MARGEN_INFERIOR = 36;
+
+// --- Utilidades de formato ---
 
 function formatearMoneda(valor: number): string {
   return `$${Math.round(valor).toLocaleString('es-MX')}`;
@@ -57,11 +72,23 @@ function formatearHoraDetalle(hora: number): string {
   return `${hora - 12}:00 PM`;
 }
 
-/**
- * Genera una curva suave tipo onda Bézier que NUNCA perfora hacia abajo
- * del baseline (elimina rebotes negativos o valles por debajo de 0).
- */
-function generarCurvaOndaSinRebote(puntos: PuntoHora[], baseline: number): string {
+const DIAS_SEMANA_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function formatearDiaCorto(fecha: Date): string {
+  return `${DIAS_SEMANA_CORTO[fecha.getDay()]} ${fecha.getDate()}`;
+}
+
+function formatearDiaDetalle(fecha: Date): string {
+  return fecha.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+// --- Generación de curva Bézier ---
+
+function generarCurvaOndaSinRebote(puntos: PuntoGrafica[], baseline: number): string {
   if (puntos.length === 0) return '';
   if (puntos.length === 1) return `M ${puntos[0].x},${puntos[0].y}`;
 
@@ -72,13 +99,11 @@ function generarCurvaOndaSinRebote(puntos: PuntoHora[], baseline: number): strin
     const p2 = puntos[i + 1];
     const dx = p2.x - p1.x;
 
-    // Caso 1: Ambos están en cero -> línea plana exacta en el eje
     if (p1.total === 0 && p2.total === 0) {
       d += ` L ${p2.x.toFixed(1)},${baseline.toFixed(1)}`;
       continue;
     }
 
-    // Caso 2: Sube desde cero hacia una venta -> despegue suave y tangente arriba
     if (p1.total === 0 && p2.total > 0) {
       const cp1x = p1.x + dx * 0.45;
       const cp1y = baseline;
@@ -88,7 +113,6 @@ function generarCurvaOndaSinRebote(puntos: PuntoHora[], baseline: number): strin
       continue;
     }
 
-    // Caso 3: Cae desde una venta hacia cero -> descenso suave y llegada tangente al suelo
     if (p1.total > 0 && p2.total === 0) {
       const cp1x = p1.x + dx * 0.35;
       const cp1y = p1.y;
@@ -98,7 +122,6 @@ function generarCurvaOndaSinRebote(puntos: PuntoHora[], baseline: number): strin
       continue;
     }
 
-    // Caso 4: Ambos tienen ventas -> onda suave entre picos sin descender del baseline
     const p0 = i > 0 ? puntos[i - 1] : p1;
     const p3 = i < puntos.length - 2 ? puntos[i + 2] : p2;
 
@@ -116,7 +139,161 @@ function generarCurvaOndaSinRebote(puntos: PuntoHora[], baseline: number): strin
   return d;
 }
 
-export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVentasTiempoProps) {
+// --- Lógica de agrupación por HORA (modo='hora') ---
+
+function agruparPorHora(
+  data: EventoVenta[],
+  plotWidth: number,
+  plotHeight: number,
+  baseline: number,
+) {
+  const acumPorHora = Array.from({ length: HORAS_DEL_DIA }, (_, h) => ({
+    hora: h,
+    total: 0,
+    transacciones: 0,
+  }));
+
+  (data || []).forEach((evento) => {
+    const ts = Number(evento.timestamp);
+    const total = Math.max(0, Number(evento.total) || 0);
+    if (Number.isFinite(ts) && total > 0) {
+      const h = new Date(ts).getHours();
+      if (h >= 0 && h < HORAS_DEL_DIA) {
+        acumPorHora[h].total += total;
+        acumPorHora[h].transacciones += 1;
+      }
+    }
+  });
+
+  const maxRaw = Math.max(100, ...acumPorHora.map((item) => item.total));
+  const magnitud = Math.pow(10, Math.floor(Math.log10(maxRaw)));
+  const escala = Math.ceil(maxRaw / magnitud) * magnitud;
+
+  const xPorHora = plotWidth / (HORAS_DEL_DIA - 1);
+  const yPorValor = plotHeight / escala;
+
+  const puntos: PuntoGrafica[] = acumPorHora.map((item) => {
+    const x = MARGEN_IZQUIERDO + item.hora * xPorHora;
+    const y = baseline - item.total * yPorValor;
+    return {
+      indice: item.hora,
+      label: formatearHoraDetalle(item.hora),
+      labelCorto: formatearHoraAmPm(item.hora),
+      total: item.total,
+      transacciones: item.transacciones,
+      x,
+      y,
+    };
+  });
+
+  // Marcas cada 4 horas
+  const marcas = [4, 8, 12, 16, 20, 23];
+
+  return { puntos, maximoEscala: escala, marcasIndices: marcas };
+}
+
+// --- Lógica de agrupación por DÍA (modo='dia') ---
+
+function generarDiasDelRango(rangoInicio: number, rangoFin: number): Date[] {
+  const dias: Date[] = [];
+  const inicio = new Date(rangoInicio);
+  inicio.setHours(0, 0, 0, 0);
+  const fin = new Date(rangoFin);
+  fin.setHours(23, 59, 59, 999);
+
+  const cursor = new Date(inicio);
+  while (cursor <= fin) {
+    dias.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias;
+}
+
+function claveYMD(fecha: Date): string {
+  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+}
+
+function agruparPorDia(
+  data: EventoVenta[],
+  rangoInicio: number,
+  rangoFin: number,
+  plotWidth: number,
+  plotHeight: number,
+  baseline: number,
+) {
+  const diasRango = generarDiasDelRango(rangoInicio, rangoFin);
+  const totalDias = diasRango.length;
+
+  // Bucket por día
+  const acumPorDia: Record<string, { total: number; transacciones: number }> = {};
+  for (const dia of diasRango) {
+    acumPorDia[claveYMD(dia)] = { total: 0, transacciones: 0 };
+  }
+
+  (data || []).forEach((evento) => {
+    const ts = Number(evento.timestamp);
+    const total = Math.max(0, Number(evento.total) || 0);
+    if (Number.isFinite(ts) && total > 0) {
+      const fecha = new Date(ts);
+      const clave = claveYMD(fecha);
+      if (acumPorDia[clave]) {
+        acumPorDia[clave].total += total;
+        acumPorDia[clave].transacciones += 1;
+      }
+    }
+  });
+
+  const maxRaw = Math.max(100, ...Object.values(acumPorDia).map((d) => d.total));
+  const magnitud = Math.pow(10, Math.floor(Math.log10(maxRaw)));
+  const escala = Math.ceil(maxRaw / magnitud) * magnitud;
+
+  const xPorDia = totalDias > 1 ? plotWidth / (totalDias - 1) : plotWidth;
+  const yPorValor = plotHeight / escala;
+
+  const puntos: PuntoGrafica[] = diasRango.map((dia, i) => {
+    const clave = claveYMD(dia);
+    const acum = acumPorDia[clave] || { total: 0, transacciones: 0 };
+    const x = MARGEN_IZQUIERDO + i * xPorDia;
+    const y = baseline - acum.total * yPorValor;
+
+    return {
+      indice: i,
+      label: formatearDiaDetalle(dia),
+      labelCorto: totalDias <= 7 ? formatearDiaCorto(dia) : String(dia.getDate()),
+      total: acum.total,
+      transacciones: acum.transacciones,
+      x,
+      y,
+    };
+  });
+
+  // Marcas inteligentes según cantidad de días
+  let marcas: number[];
+  if (totalDias <= 7) {
+    // Todos los días
+    marcas = diasRango.map((_, i) => i);
+  } else if (totalDias <= 14) {
+    // Cada 2 días
+    marcas = diasRango.map((_, i) => i).filter((i) => i % 2 === 0 || i === totalDias - 1);
+  } else {
+    // Mensual: cada 5 días + último
+    marcas = diasRango
+      .map((_, i) => i)
+      .filter((i) => i % 5 === 0 || i === totalDias - 1);
+  }
+
+  return { puntos, maximoEscala: escala, marcasIndices: marcas };
+}
+
+// --- Componente principal ---
+
+export function GraficaVentasTiempo({
+  data,
+  height = ALTO_GRAFICA,
+  modo = 'hora',
+  rangoInicio,
+  rangoFin,
+}: GraficaVentasTiempoProps) {
   const { width } = useWindowDimensions();
   const { isElite } = useAppTheme();
 
@@ -129,65 +306,28 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
   const plotHeight = Math.max(130, height - MARGEN_SUPERIOR - MARGEN_INFERIOR);
   const baseline = MARGEN_SUPERIOR + plotHeight;
 
-  // 1. Agrupar ventas por cada hora del día (0..23)
-  const { puntosPorHora, maximoEscala } = useMemo(() => {
-    const acumPorHora = Array.from({ length: HORAS_DEL_DIA }, (_, h) => ({
-      hora: h,
-      total: 0,
-      transacciones: 0,
-    }));
-
-    (data || []).forEach((evento) => {
-      const ts = Number(evento.timestamp);
-      const total = Math.max(0, Number(evento.total) || 0);
-      if (Number.isFinite(ts) && total > 0) {
-        const h = new Date(ts).getHours();
-        if (h >= 0 && h < HORAS_DEL_DIA) {
-          acumPorHora[h].total += total;
-          acumPorHora[h].transacciones += 1;
-        }
-      }
-    });
-
-    const maxRaw = Math.max(100, ...acumPorHora.map((item) => item.total));
-    const magnitud = Math.pow(10, Math.floor(Math.log10(maxRaw)));
-    const escala = Math.ceil(maxRaw / magnitud) * magnitud;
-
-    const xPorHora = plotWidth / (HORAS_DEL_DIA - 1);
-    const yPorValor = plotHeight / escala;
-
-    const puntos: PuntoHora[] = acumPorHora.map((item) => {
-      const x = MARGEN_IZQUIERDO + item.hora * xPorHora;
-      const y = baseline - item.total * yPorValor;
-      const labelHora = `${String(item.hora).padStart(2, '0')}:00`;
-      return {
-        ...item,
-        labelHora,
-        x,
-        y,
-      };
-    });
-
-    return {
-      puntosPorHora: puntos,
-      maximoEscala: escala,
-    };
-  }, [data, plotWidth, plotHeight, baseline]);
+  // Agrupar según modo
+  const { puntos, maximoEscala, marcasIndices } = useMemo(() => {
+    if (modo === 'dia' && rangoInicio != null && rangoFin != null) {
+      return agruparPorDia(data, rangoInicio, rangoFin, plotWidth, plotHeight, baseline);
+    }
+    return agruparPorHora(data, plotWidth, plotHeight, baseline);
+  }, [data, modo, rangoInicio, rangoFin, plotWidth, plotHeight, baseline]);
 
   // Selección interactiva
   const puntoMayor = useMemo(() => {
-    const conVenta = puntosPorHora.filter((p) => p.total > 0);
+    const conVenta = puntos.filter((p) => p.total > 0);
     if (conVenta.length === 0) return null;
     return [...conVenta].sort((a, b) => b.total - a.total)[0];
-  }, [puntosPorHora]);
+  }, [puntos]);
 
-  const [seleccionManual, setSeleccionManual] = useState<PuntoHora | null>(null);
+  const [seleccionManual, setSeleccionManual] = useState<PuntoGrafica | null>(null);
   const puntoActivo = seleccionManual || puntoMayor;
 
-  // Curvas de onda garantizadas sin descensos por debajo del baseline
+  // Curva Bézier
   const linePath = useMemo(() => {
-    return generarCurvaOndaSinRebote(puntosPorHora, baseline);
-  }, [puntosPorHora, baseline]);
+    return generarCurvaOndaSinRebote(puntos, baseline);
+  }, [puntos, baseline]);
 
   const areaPath = useMemo(() => {
     if (!linePath) return '';
@@ -196,18 +336,13 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
     return `${linePath} L ${ultimoX.toFixed(1)},${baseline.toFixed(1)} L ${primerX.toFixed(1)},${baseline.toFixed(1)} Z`;
   }, [linePath, plotWidth, baseline]);
 
-  // Marcas regulares cada 4 horas a lo largo del día (4 AM, 8 AM, 12 PM, 4 PM, 8 PM, 11 PM)
-  const marcasTextoHoras = useMemo(() => {
-    return [4, 8, 12, 16, 20, 23];
-  }, []);
-
   return (
     <View style={styles.contenedor}>
       {/* Badge / Tooltip superior */}
       <View style={styles.tooltipContenedor}>
         {puntoActivo && puntoActivo.total > 0 ? (
           <View style={[styles.badgeTooltip, { borderColor: accent }]}>
-            <Text style={styles.badgeHora}>{formatearHoraDetalle(puntoActivo.hora)}</Text>
+            <Text style={styles.badgeHora}>{puntoActivo.label}</Text>
             <Text style={styles.badgeSeparador}>•</Text>
             <Text style={[styles.badgeTotal, { color: accentLight }]}>
               {formatearMoneda(puntoActivo.total)}
@@ -217,7 +352,7 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
             </Text>
           </View>
         ) : (
-          <Text style={styles.tooltipAyuda}>Tocá cualquier punto para ver el monto y la hora</Text>
+          <Text style={styles.tooltipAyuda}>Tocá cualquier punto para ver el detalle</Text>
         )}
       </View>
 
@@ -247,7 +382,6 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
                 strokeDasharray={esOrigen ? undefined : '3 5'}
                 strokeWidth={esOrigen ? 1.8 : 1}
               />
-              {/* En la esquina sólo un 0 compartido; arriba montos formateados */}
               <SvgText
                 x={MARGEN_IZQUIERDO - 10}
                 y={y + 4}
@@ -287,7 +421,7 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
           />
         ) : null}
 
-        {/* Línea guía vertical de la hora seleccionada */}
+        {/* Línea guía vertical de la selección activa */}
         {puntoActivo ? (
           <Line
             x1={puntoActivo.x}
@@ -301,28 +435,28 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
           />
         ) : null}
 
-        {/* Ticks en cada una de las 24 horas (ritmo continuo de horas espaciadas) */}
-        {puntosPorHora.map((punto) => (
+        {/* Ticks del eje X */}
+        {puntos.map((punto) => (
           <Line
-            key={`tick-hora-${punto.hora}`}
+            key={`tick-${punto.indice}`}
             x1={punto.x}
             y1={baseline}
             x2={punto.x}
-            y2={baseline + (marcasTextoHoras.includes(punto.hora) ? 6 : 3)}
-            stroke={marcasTextoHoras.includes(punto.hora) ? '#64748B' : 'rgba(100, 116, 139, 0.4)'}
-            strokeWidth={marcasTextoHoras.includes(punto.hora) ? 1.2 : 1}
+            y2={baseline + (marcasIndices.includes(punto.indice) ? 6 : 3)}
+            stroke={marcasIndices.includes(punto.indice) ? '#64748B' : 'rgba(100, 116, 139, 0.4)'}
+            strokeWidth={marcasIndices.includes(punto.indice) ? 1.2 : 1}
           />
         ))}
 
-        {/* Etiquetas de texto del eje X en formato AM / PM */}
-        {marcasTextoHoras.map((hora) => {
-          const punto = puntosPorHora[hora];
+        {/* Etiquetas del eje X */}
+        {marcasIndices.map((idx) => {
+          const punto = puntos[idx];
           if (!punto) return null;
-          const esActivo = puntoActivo?.hora === hora;
+          const esActivo = puntoActivo?.indice === idx;
 
           return (
             <SvgText
-              key={`label-hora-${hora}`}
+              key={`label-${idx}`}
               x={punto.x}
               y={baseline + 20}
               fill={esActivo ? accentLight : '#CBD5E1'}
@@ -330,18 +464,18 @@ export function GraficaVentasTiempo({ data, height = ALTO_GRAFICA }: GraficaVent
               fontWeight={esActivo ? '800' : '600'}
               textAnchor="middle"
             >
-              {formatearHoraAmPm(hora)}
+              {punto.labelCorto}
             </SvgText>
           );
         })}
 
-        {/* Puntos interactivos sobre las horas con ventas */}
-        {puntosPorHora.map((punto) => {
+        {/* Puntos interactivos sobre valores con ventas */}
+        {puntos.map((punto) => {
           if (punto.total === 0) return null;
-          const esActivo = puntoActivo?.hora === punto.hora;
+          const esActivo = puntoActivo?.indice === punto.indice;
 
           return (
-            <G key={`punto-${punto.hora}`} onPress={() => setSeleccionManual(punto)}>
+            <G key={`punto-${punto.indice}`} onPress={() => setSeleccionManual(punto)}>
               {/* Área de toque amplia */}
               <Circle cx={punto.x} cy={punto.y} r={22} fill="transparent" />
 

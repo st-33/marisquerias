@@ -64,7 +64,7 @@ export function RegistroVentasDia({
       <View style={styles.header}>
         <View style={styles.headerTitle}>
           <Ionicons name="receipt-outline" size={21} color="#3b82f6" />
-          <Text style={styles.title}>Ventas del día</Text>
+          <Text style={styles.title}>Registro de Ventas</Text>
         </View>
         <View style={styles.actions}>
           <Pressable

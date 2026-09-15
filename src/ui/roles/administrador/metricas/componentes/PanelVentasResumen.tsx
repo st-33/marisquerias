@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { GraficaVentasTiempo } from '../graficas/GraficaVentasTiempo';
+import type { DateFilter } from '../../../../../capacidades/metricas';
+import { GraficaVentasTiempo, type ModoGrafica } from '../graficas/GraficaVentasTiempo';
 import { VistaSinDatos } from './VistaSinDatos';
 
 type DatoVenta = {
@@ -9,12 +11,61 @@ type DatoVenta = {
 };
 
 type PanelVentasResumenProps = {
-  titulo: string;
   monto: string;
   datos: DatoVenta[];
+  dateFilter: DateFilter;
 };
 
-export function PanelVentasResumen({ titulo, monto, datos }: PanelVentasResumenProps) {
+const TITULO_POR_FILTRO: Record<DateFilter, string> = {
+  hoy: 'Registro de Ventas — Hoy',
+  ayer: 'Registro de Ventas — Ayer',
+  hace3dias: 'Registro de Ventas — Últimos 3 días',
+  semana: 'Registro de Ventas — Semana',
+  mes: 'Registro de Ventas — Mes',
+  todo: 'Registro de Ventas — Histórico',
+};
+
+/**
+ * Calcula el modo de la gráfica y el rango de fechas
+ * en base al filtro de período seleccionado.
+ */
+function calcularModoYRango(dateFilter: DateFilter): {
+  modo: ModoGrafica;
+  rangoInicio: number;
+  rangoFin: number;
+} {
+  const ahora = Date.now();
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const inicioHoy = hoy.getTime();
+
+  switch (dateFilter) {
+    case 'hoy':
+      return { modo: 'hora', rangoInicio: inicioHoy, rangoFin: ahora };
+
+    case 'ayer': {
+      const inicioAyer = inicioHoy - 86400000;
+      return { modo: 'hora', rangoInicio: inicioAyer, rangoFin: inicioHoy - 1 };
+    }
+
+    case 'hace3dias':
+      return { modo: 'dia', rangoInicio: inicioHoy - 3 * 86400000, rangoFin: ahora };
+
+    case 'semana':
+      return { modo: 'dia', rangoInicio: ahora - 7 * 86400000, rangoFin: ahora };
+
+    case 'mes':
+      return { modo: 'dia', rangoInicio: ahora - 30 * 86400000, rangoFin: ahora };
+
+    default:
+      return { modo: 'dia', rangoInicio: ahora - 30 * 86400000, rangoFin: ahora };
+  }
+}
+
+export function PanelVentasResumen({ monto, datos, dateFilter }: PanelVentasResumenProps) {
+  const titulo = TITULO_POR_FILTRO[dateFilter] || 'Registro de Ventas';
+  const { modo, rangoInicio, rangoFin } = useMemo(() => calcularModoYRango(dateFilter), [dateFilter]);
+
   return (
     <View style={styles.panel}>
       <View style={styles.encabezado}>
@@ -27,7 +78,13 @@ export function PanelVentasResumen({ titulo, monto, datos }: PanelVentasResumenP
         </View>
       </View>
       {datos.length > 0 ? (
-        <GraficaVentasTiempo data={datos} height={220} />
+        <GraficaVentasTiempo
+          data={datos}
+          height={220}
+          modo={modo}
+          rangoInicio={rangoInicio}
+          rangoFin={rangoFin}
+        />
       ) : (
         <VistaSinDatos texto="Sin datos para el período seleccionado" />
       )}
@@ -67,10 +124,5 @@ const styles = StyleSheet.create({
   indicador: {
     alignItems: 'flex-end',
     gap: 6,
-  },
-  tituloGrafica: {
-    color: '#D4D9E4',
-    fontSize: 13,
-    fontStyle: 'italic',
   },
 });
