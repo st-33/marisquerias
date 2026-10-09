@@ -18,7 +18,6 @@
     "paths": {
       "@assets/*": ["./assets/*"],
       "@compartido/*": ["./src/compartido/*"],
-      "@ecosistema/*": ["./src/compartido/ecosistema/*"],
       "@temas/*": ["./src/compartido/temas/*"],
       "@components/*": ["./src/compartido/componentes/*"],
       "@hooks/*": ["./src/compartido/hooks/*"],
