@@ -6,7 +6,7 @@
 
 ## ORIGEN
 
-- Terminos: COMANDAL, PARTIDA, MESA, COCINA, TICKET, VENTA POR ORDEN.
+- Terminos: COMANDA, PARTIDA, MESA, COCINA, TICKET, VENTA POR ORDEN.
 - Formulas: (producto + variante + cantidad = partida); (partida + partida = comanda).
 - Reglas: COMANDAS Y ELABORACION.
 - Codigo real: `src/logica/dominio/status.ts`, `src/sistema/tipos/pos.ts`, `src/roles/logica/mesero/*`, `src/roles/logica/cocina/*`.
@@ -37,7 +37,7 @@ type ItemPedido = {
 };
 ```
 
-## PASO 01: CICLO DE VIDA DE LA COMANDAL
+## PASO 01: CICLO DE VIDA DE LA COMANDA
 
 ### ESPECIFICACION
 

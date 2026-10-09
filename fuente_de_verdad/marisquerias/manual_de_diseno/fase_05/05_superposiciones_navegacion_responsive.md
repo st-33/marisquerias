@@ -8,7 +8,7 @@
 
 - Terminos: SUPERPOSICION, TRANSICION VISUAL, NAVEGACION VISUAL, UNIDAD NAVEGABLE, MODAL, GESTO, FLUJO TEMPORAL VISUAL.
 - Formulas: pantalla + transicion_visual = navegacion_visual; superposicion + cierre_visual = flujo_temporal_visual.
-- Codigo real: `src/ui/bloques/TransicionPantalla.tsx`, `src/ui/bloques/ModernAlert.tsx`.
+- Codigo real: `src/ui/bloques/TransicionPantalla.tsx`, `src/compartido/componentes/ui/ModernAlert.tsx`.
 
 ## CONTRATO DE DURACIONES (VALORES EXACTOS)
 

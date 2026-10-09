@@ -812,7 +812,7 @@ Todo termino aqui asentado declara obligatoriamente su campo de alcance (`Alcanc
 - Fecha: 2026-10-08
 - Definicion: Molde neutro gobernado que define el arbol fisico de carpetas (manual_de_construccion, manual_de_diseno, planos) y archivos LEEME iniciales necesarios para materializar un aplicable.
 
-## 135.- COMANDAL
+## 135.- COMANDA
 
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09

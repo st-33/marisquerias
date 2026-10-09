@@ -225,7 +225,7 @@ termino + definicion = entrada_terminos
 - Alcance: Ecosistema
 - Fecha: 2026-10-08
 
-## 38. COMANDAL
+## 38. COMANDA
 
 producto + variante + cantidad = partida
 partida + partida = comanda
