@@ -7,40 +7,54 @@
 ## ORIGEN
 
 - Terminos: INVENTARIO, EXISTENCIA, MERMA, BASCULA, DESPACHO POR PESO, MARISCO.
-- Formulas: (existencia - merma = existencia_ajustada) y (marisco + bascula + peso = despacho_por_peso).
-- Reglas: DESPACHO POR PESO Y BASCULA (rubro en reglas.md).
-- Codigo real inspeccionado: `src/capacidades/inventario/*`, `src/sistema/persistencia/inventario.repo.ts`, `src/capacidades/pos/useMostradorPro.ts`, `src/capacidades/mostrador/useVentaCrudoAdmin.ts`.
+- Formulas: existencia - merma = existencia_ajustada; marisco + bascula + peso = despacho_por_peso.
+- Reglas: DESPACHO POR PESO Y BASCULA.
+- Codigo real: `src/capacidades/inventario/useInventario.ts`, `src/sistema/persistencia/inventario.repo.ts`, `src/sistema/servicios/ContratoHardware.ts`, `src/capacidades/pos/useMostradorPro.ts`.
+
+## CONTRATO DE ENTRADA
+
+- `useInventario({ db: Database; rutaNegocio: string })` es el cerebro de inventario.
+- Unidad canonica de despacho: `coerceUnidad -> 'kg' | 'g' | 'l' | 'ml' | 'pza' | 'caja'`.
 
 ## PASO 01: PERSISTENCIA DE INVENTARIO
 
 ### ESPECIFICACION
 
-- `src/sistema/persistencia/inventario.repo.ts` y `contratos-inventario.ts` declaran el contrato de existencias de insumos, mariscos y productos.
-- `src/capacidades/inventario/useInventario.ts` expone la logica de gestion y consulta de inventario.
+- `inventario.repo.ts` y `contratos-inventario.ts` declaran el contrato de existencias bajo `{rutaNegocio}/inventario`.
+- Existencia: `{ insumoId, cantidad, unidad, minimo? }`.
 
 ## PASO 02: AJUSTE DE EXISTENCIAS Y MERMA
 
 ### ESPECIFICACION
 
-- La merma se registra para ajustar la existencia real del insumo (deterioro o desecacion del marisco).
-- El panel `PanelInventario` permite registrar el ajuste de existencias.
+- `existencia - merma = existencia_ajustada`; la merma registra el motivo (deterioro o desecacion).
+- `PanelInventario` registra el ajuste; ninguna merma queda sin motivo.
 
-## PASO 03: LECTURA DE BASCULA
+## PASO 03: CONTRATO DE BASCULA
 
 ### ESPECIFICACION
 
-- La bascula es un dispositivo de hardware (`TipoDispositivo: 'bascula'`) que transmite el peso del marisco al punto de venta.
-- La lectura se expresa en la unidad de peso declarada y se valida antes del cobro.
+- `ContratoHardware` declara la interfaz de bascula:
+  - `setScale({ address, name, unidadPorDefecto, precision, tara?, timeout? }): void`
+  - `leerPeso({ aplicarTara?, esperarEstabilidad?, timeout? }): Promise<{ success, peso?, unidad?, message?, estable? }>`
+  - `tararBascula(): Promise<{ success, peso?, unidad?, message? }>`
+  - `hasScale(): boolean`
 
 ## PASO 04: DESPACHO POR PESO
 
 ### ESPECIFICACION
 
-- En la modalidad de venta por peso el precio se calcula a partir del peso registrado por la bascula y no por unidad.
-- `useVentaCrudoAdmin` y `useMostradorPro` gobiernan el flujo de venta por peso en mostrador.
+- Precio calculado `peso * precioPorUnidad`; la lectura muestra peso, unidad, estabilidad y error.
+- `useMostradorPro()` gobierna el carrito y el cobro.
+- Sin bascula disponible: la interfaz ofrece entrada manual o cancelacion explicita; nunca lectura simulada.
 
 ## PASO 05: DESCUENTO AUTOMATICO
 
 ### ESPECIFICACION
 
-- El despacho por peso descuenta la existencia correspondiente del inventario en la misma operacion de venta.
+- El despacho descuenta la existencia en la misma operacion de venta.
+- Con stock insuficiente, la venta se bloquea con retroalimentacion explicita.
+
+## CONTRATO DE SALIDA
+
+- Toda venta por peso queda trazable a una lectura validada de bascula; el inventario se ajusta de forma atomica con la venta; la merma siempre registra motivo.

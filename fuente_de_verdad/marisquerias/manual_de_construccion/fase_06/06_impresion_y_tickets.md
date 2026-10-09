@@ -8,38 +8,56 @@
 
 - Terminos: IMPRESORA TERMICA, TICKET, PARTIDA, COCINA.
 - Formulas: partida + impresora_termica = ticket_cocina.
-- Reglas: IMPRESION Y TICKETS (rubro en reglas.md).
-- Codigo real inspeccionado: `src/sistema/impresion/fierros/*`, `src/sistema/servicios/TicketFormatter.ts`, `src/sistema/persistencia/tickets.repo.ts`.
+- Reglas: IMPRESION Y TICKETS.
+- Codigo real: `src/sistema/impresion/fierros/*`, `src/sistema/servicios/ContratoHardware.ts`, `src/sistema/persistencia/tickets.repo.ts`.
 
-## PASO 01: ABSTRACTIÓN DE DISPOSITIVOS DE IMPRESION
+## CONTRATO DE ENTRADA
 
-### ESPECIFICACION
+- `ContratoHardware` define la interfaz de impresion y bascula (abstraccion total).
+- `PrintResult = { success: boolean; message: string; jobId?: string }`.
 
-- `src/sistema/impresion/fierros/contratos/IControladorFierros.ts` y `tipos.ts` declaran el contrato del controlador de impresion.
-- Los adaptadores `AdaptadorBluetooth.ts` y `AdaptadorEscPos.ts` implementan los protocolos de conexion bluetooth y ESC/POS.
-
-## PASO 02: COLA Y DESPACHO DE IMPRESION
+## PASO 01: CONTRATO DE IMPRESORA
 
 ### ESPECIFICACION
 
-- `src/sistema/impresion/fierros/cola/DespachadorCola.ts` encola los trabajos de impresion y los despacha con tolerancia a expiracion.
-- `src/sistema/impresion/fierros/estado/EstadoHub.ts` mantiene el estado del hub de impresion.
+- Metodos del contrato:
+  - `setPrinter(address, name): Promise<void> | void`
+  - `loadPersistedConfig(): Promise<void>`
+  - `getPrinter(): { address: string | null; name: string | null }`
+  - `hasPrinter(): boolean`
+  - `imprimirComanda(pedido, opciones?): Promise<PrintResult>`
+  - `imprimirCuenta(pedido, opciones?): Promise<PrintResult>`
+  - `imprimirTicketVenta(venta): Promise<PrintResult>`
+  - `imprimirPrueba(mensaje?): Promise<PrintResult>`
 
-## PASO 03: HUB GLOBAL DE IMPRESION
-
-### ESPECIFICACION
-
-- `src/sistema/impresion/fierros/hub/GestorHub.tsx` expone `GestorHubGlobal` que se monta en el layout raiz para orquestar los dispositivos.
-
-## PASO 04: FORMATEO DE TICKET
-
-### ESPECIFICACION
-
-- `src/sistema/servicios/TicketFormatter.ts` formatea el contenido del ticket: cabecera, detalle, total y modalidad de venta (orden o peso).
-- Todo ticket de cocina deriva de una partida y porta su destinatario de area.
-
-## PASO 05: PERSISTENCIA DE TICKETS
+## PASO 02: ADAPTADORES DE PROTOCOLO
 
 ### ESPECIFICACION
 
-- `src/sistema/persistencia/tickets.repo.ts` registra los tickets emitidos para su consulta y reimpresion.
+- `AdaptadorBluetooth.ts` y `AdaptadorEscPos.ts` implementan los protocolos bluetooth-classic/bluetooth-le y ESC/POS.
+- `IControladorFierros` y `tipos.ts` declaran el contrato del controlador.
+
+## PASO 03: COLA Y DESPACHO
+
+### ESPECIFICACION
+
+- `DespachadorCola.ts` encola trabajos de impresion y los despacha con TTL de 48 horas y arranque no bloqueante.
+- Estados de spool: `pendiente_aprobacion` -> `pendiente_impresion` -> `impresion_enviada` -> `exito` | `fallo`.
+
+## PASO 04: HUB GLOBAL
+
+### ESPECIFICACION
+
+- `GestorHub.tsx` expone `GestorHubGlobal` montado en el layout raiz.
+- `EstadoHub.ts` mantiene el estado del hub; `ServicioFierros` es singleton (`servicioFierros`).
+
+## PASO 05: FORMATEO Y PERSISTENCIA
+
+### ESPECIFICACION
+
+- `TicketFormatter.ts` formatea cabecera, detalle, total y modalidad (orden o peso).
+- `tickets.repo.ts` persiste tickets bajo `{rutaNegocio}/tickets` para consulta y reimpresion.
+
+## CONTRATO DE SALIDA
+
+- Toda partida de cocina puede derivar un ticket con destinatario de area; toda venta cobrada porta ticket si la impresora esta disponible; `PrintResult.success` falso implica mensaje de error por el que reintentar.

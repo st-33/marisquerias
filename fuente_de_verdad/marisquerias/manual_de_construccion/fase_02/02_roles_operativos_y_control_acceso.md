@@ -6,42 +6,59 @@
 
 ## ORIGEN
 
-- Terminos: ROL OPERATIVO, ACCESO, HABILITACION, CAPACIDAD HABILITADA, CATEGORIA DE MENU.
+- Terminos: ROL OPERATIVO, CAPACIDAD HABILITADA, ACCESO, HABILITACION.
 - Formulas: rol_operativo + pantalla = capacidad_habilitada.
 - Plantillas: PLANTILLA DE INSTRUCCION EN MANUAL DE CONSTRUCCION.
-- Codigo real inspeccionado: `src/negocio/roles/*`, `src/sistema/seguridad/*`, `src/composicion/registroPantallas.ts`.
+- Codigo real: `src/negocio/roles/*`, `src/sistema/seguridad/*`, `src/composicion/registroPantallas.ts`, `src/sistema/instalacion/contratos/*`.
 
-## PASO 01: DECLARACION DE ROLES
+## CONTRATO DE ENTRADA
 
-### ESPECIFICACION
+- Roles operativos declarados: `mesero`, `cocina`, `mostrador`, `administrador`, `repartidor`.
+- Identidad del negocio: `IdentidadNegocio { rutaNegocio: string; negocioId: string; categoriaId: string }`.
 
-- Los roles operativos del giro son: mesero, cocina, mostrador, administrador y repartidor.
-- Cada rol se declara en minusculas y corresponde a una carpeta de pantalla en `app/_role/`.
-
-## PASO 02: EMPAQUETADO DE ROLES
+## PASO 01: EMPAQUETADO DE ROLES
 
 ### ESPECIFICACION
 
-- `src/negocio/roles/empaquetadorRoles.ts` resuelve el conjunto de capacidades habilitadas por rol a partir de la configuracion del negocio en RTDB (`{rutaNegocio}/caracteristicas` y `{rutaNegocio}/features`).
-- `src/negocio/roles/GestorCaracteristicas.ts` expone `estaCaracteristicaHabilitada` para consultar la habilitacion de una feature generica.
+- `useEmpaquetadorRoles({ db, rutaNegocio })` lee `{rutaNegocio}/caracteristicas` y `{rutaNegocio}/features` de la RTDB.
+- Rolas resultantes: `admin`, `mesero`, `cocina`, `mostrador`, `reparto`, `repartidor` segun la carga de roles.
+- `estaCaracteristicaHabilitada(feature: string, defecto: boolean): boolean` consulta la habilitacion generica.
 
-## PASO 03: CAPACIDADES HABILITADAS POR GOBIERNO
-
-### ESPECIFICACION
-
-- `estaCapacidadHabilitadaPorCentral` (en `src/sistema/central/useCentralConfig.ts`) consulta la configuracion remota del negocio para habilitar o bloquear capacidades como mostrador y reparto.
-- Regla de oro: la consulta de capacidades remota no bloquea la operacion local de forma sincrona; si no responde, la operacion local continua.
-
-## PASO 04: GUARDAS DE ACCESO
+## PASO 02: CAPACIDADES HABILITADAS POR GOBIERNO
 
 ### ESPECIFICACION
 
-- `src/sistema/seguridad/useAuth.ts` y `useAuthGuard` controlan la sesion activa y la identidad del negocio.
-- `src/sistema/seguridad/deviceBinding.ts` vincula la identidad del dispositivo a la sesion del negocio mediante `resolverDeviceIdADI`.
+- `estaCapacidadHabilitadaPorCentral(config, capacidad)` consulta la configuracion remota (`central/negocios/{id}/configuracion`).
+- Contrato de no-bloqueo: configuracion `null` = operacion local permitida (cero bloqueos sincronos).
+- Capacidades gobernadas: `mostrador`, `reparto` y anidadas bajo `config.capacidades`.
 
-## PASO 05: RUTEO POR ROL
+## PASO 03: VINCULACION DE DISPOSITIVO
 
 ### ESPECIFICACION
 
-- El registro global `REGISTRO_PANTALLAS` mapea cada clave de rol a su vista presentacional (mesero -> MeseroScreen, cocina -> CocinaScreen, mostrador -> MostradorPro, etc.).
-- La ruta `/_role/roles` presenta el selector de rol del negocio, que dirige al usuario a su pantalla segun el rol activo.
+- `DispositivoVinculado` declara: `deviceIdADI`, `rutaNegocio`, `negocioId`, `rolActivo: string | null`, `rolesPermitidos: string[]`, `modulosPermitidos: Record<string, boolean>`, `estado: 'activo' | 'bloqueado' | 'mantenimiento' | 'reemplazado'`, `puedeCambiarRol: boolean`, `vinculadoEn: number`, `actualizadoEn: number`.
+- `nivelOperativo?: 'admin' | 'segundo_al_mando' | 'operador' | 'consulta'`.
+
+## PASO 04: CONTRATO DE INSTALACION
+
+### ESPECIFICACION
+
+- `ContratoInstalacion { accessCode: string; aliasDispositivo?: string }`.
+- `ResultadoInstalacion` (union discriminada): `{ ok: true; dispositivo: DispositivoVinculado; features: Record<string, Feature> } | { ok: false; error: string }`.
+
+## PASO 05: GUARDAS DE ACCESO
+
+### ESPECIFICACION
+
+- `useAuth` y `useAuthGuard` controlan sesion e identidad del negocio.
+- `deviceBinding.ts` vincula `resolverDeviceIdADI` a la sesion del negocio.
+
+## PASO 06: RUTEO POR ROL
+
+### ESPECIFICACION
+
+- `REGISTRO_PANTALLAS` mapea cada clave de rol a su vista; `/_role/roles` es el selector.
+
+## CONTRATO DE SALIDA
+
+- Cada rol resuelve exactamente una pantalla inicial; las capacidades no habilitadas por gobierno quedan ocultas; un dispositivo bloqueado (`estado: 'bloqueado'`) no arranca la aplicacion.

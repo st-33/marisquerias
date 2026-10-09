@@ -6,49 +6,63 @@
 
 ## ORIGEN
 
-- Terminos: PANTALLA, ROL OPERATIVO, CARRITO, KPI, MESA, PARTIDA, MOSTRADOR, COCINA, REPARTO.
+- Terminos: PANTALLA, ROL OPERATIVO, CARRITO, KPI, MESA, PARTIDA, MOSTRADOR, COCINA, REPARTO, SHELL.
 - Formulas: pantalla + ruta = unidad_navegable; rol_operativo + pantalla = capacidad_habilitada.
-- Reglas: CONSISTENCIA VISUAL (rubro en reglas_diseno.md).
-- Fuente real: `DESIGN.md` seccion 7 y `src/ui/pantallas/*`, `src/ui/roles/*`.
+- Fuente real: `DESIGN.md` seccion 7, `src/ui/pantallas/*`, `src/ui/roles/*`.
+
+## CONTRATO DE EXPERIENCIA POR ROL (TABLA CANONICA)
+
+| Rol | Pantalla inicial | Accion dominante | Datos siempre visibles |
+| --- | --- | --- | --- |
+| administrador | Resumen de operacion | Abrir modulo / revisar alerta | Negocio activo, ventas, alertas, permisos |
+| mostrador | Venta de mostrador | Agregar producto / cobrar | Carrito, total, metodo de pago, pendientes |
+| mesero | Mapa/lista de mesas | Abrir mesa / enviar comanda | Mesa, productos, notas, estado del pedido |
+| cocina | Cola de cocina | Marcar estado de preparacion | Numero, tiempo, prioridad, lineas del pedido |
+| reparto | Pedidos de reparto | Asignar / actualizar entrega | Direccion, estado, responsable |
 
 ## PASO 01: SHELL COMPARTIDO
 
 ### ESPECIFICACION
 
-- El shell incluye cabecera breve con nombre de pantalla, contexto operativo y senal de conectividad.
+- Shell incluye cabecera breve: nombre de pantalla, contexto operativo y senal de conectividad.
 - La navegacion no oculta una venta o comanda en curso sin advertencia.
 
-## PASO 02: PANTALLA DE ADMINISTRADOR
+## PASO 02: ADMINISTRADOR
 
 ### ESPECIFICACION
 
 - Inicia con resumen de ventas y alertas que conduzcan a una accion.
-- Los modulos Menu, Inventario, Mesas, Dispositivos y Reparto aparecen como entradas claras con estado breve.
+- Modulos Menu, Inventario, Mesas, Dispositivos y Reparto como entradas claras con estado breve.
 
-## PASO 03: PANTALLA DE MOSTRADOR
-
-### ESPECIFICACION
-
-- Se divide en seleccion, detalle de venta y cierre; el carrito permanece visible y el total queda anclado.
-- Para productos por peso, la lectura muestra peso, unidad, estabilidad y error; sin bascula se ofrece entrada manual o cancelacion explicita, nunca una lectura simulada.
-
-## PASO 04: PANTALLA DE MESERO
+## PASO 03: MOSTRADOR
 
 ### ESPECIFICACION
 
-- Comienza por la mesa y termina en comanda enviada o cuenta solicitada.
-- Las mesas comunican estado (libre, ocupada, pendiente, cuenta solicitada, bloqueada) con texto y senal visual.
+- Divicion: seleccion, detalle de venta, cierre; carrito visible y total anclado.
+- Por peso: peso, unidad, estabilidad y error visibles; sin bascula, entrada manual o cancelacion explicita.
 
-## PASO 05: PANTALLA DE COCINA (KDS)
-
-### ESPECIFICACION
-
-- Prioriza lectura a distancia; cada comanda muestra numero, mesa o canal, tiempo transcurrido y lineas agrupadas.
-- Los estados avanzan de forma inequivoca: recibida -> en preparacion -> lista -> entregada.
-
-## PASO 06: PANTALLA DE REPARTO
+## PASO 04: MESERO
 
 ### ESPECIFICACION
 
-- Trata el estado de entrega como secuencia de trabajo: pendiente, asignado, en camino, entregado, incidencia.
-- Las acciones destructivas o irreversibles solicitan confirmacion y explican el efecto.
+- De la mesa a comanda enviada o cuenta solicitada.
+- Estados de mesa: libre, ocupada, pendiente, cuenta solicitada, bloqueada (texto + senal visual).
+
+## PASO 05: COCINA (KDS)
+
+### ESPECIFICACION
+
+- Numero, mesa/canal, tiempo transcurrido y lineas agrupadas.
+- Estados: recibida -> en preparacion -> lista -> entregada.
+- Pedido duplicado o perdida de red muestra senal de reconciliacion, no una segunda tarjeta.
+
+## PASO 06: REPARTO
+
+### ESPECIFICACION
+
+- Secuencia: pendiente, asignado, en camino, entregado, incidencia.
+- Acciones destructivas solicitan confirmacion y explican el efecto.
+
+## CONTRATO DE SALIDA
+
+- Cada rol ve solo sus tareas y permisos; los datos de riesgo (totales, estados, peso, stock) tienen espacio y contraste propios; la accion principal es visible sin explorar menus secundarios.
