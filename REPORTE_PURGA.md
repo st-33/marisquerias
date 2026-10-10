@@ -179,3 +179,21 @@ renombrados en vuelo de los Lotes 4–6). Se restauró la barrera binaria a VERD
 **Barrera binaria**: `npx tsc --noEmit` (0 errores) y `npm test` (23/23 suites, 147 tests).
 Commit de sellado: `81bfc85 refactor(sistema): sellar linea base verde del Lote 7`.
 
+---
+
+## LOTE 7 — AVANCE DE RENOMBRADOS (Archivos 91–135)
+
+### Rebautizados con `git mv` + puente (0 roturas):
+1. `src/compartido/temas/ThemeContext.tsx` ➔ `ContextoTema.tsx` (puente: `ThemeContext.tsx`).
+2. `src/sistema/central/CentralListener.ts` ➔ `OyenteCentral.ts` (puente: `CentralListener.ts`).
+3. **Sufijo de persistencia** `.repo` ➔ `.repositorio` en 12 repositorios canónicos:
+   - `borradores.repo.ts`, `dispositivos.repo.ts`, `inventario.repo.ts`, `menu.repo.ts`,
+     `mesas.repo.ts`, `negocio.repo.ts`, `pedidos.repo.ts`, `registroVentas.repo.ts`,
+     `reparto-ajustes.repo.ts`, `reparto.repo.ts`, `tickets.repo.ts`, `ventasSimples.repo.ts`.
+   - Puentes legacy (`devices.repo.ts`, `drafts.repo.ts`, `SimpleSalesRepo.ts`) reencauzados
+     al nuevo sufijo.
+   - Barril `persistencia/index.ts` y ~30 consumidores migrados.
+
+**Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repositorio`).
+
