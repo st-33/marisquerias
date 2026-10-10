@@ -216,3 +216,18 @@ Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repo
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 Commits: `716f5b7` (clases Repositorio), `3495876` (tipos SinConexion), `a437c06` (Fuente).
 
+### Hispianización de motores, sincronización, audio y servicios offline:
+- `CentralListener` → `OyenteCentral` (interfases `OyenteCentralCallbacks`, `OpcionesOyenteCentral`).
+- `KitchenQueueEngine` → `MotorColaCocina`; singleton `motorColaCocina`.
+- `SynchronizationService` → `ServicioSincronizacion`; singleton `servicioSincronizacion`.
+- `SyncDebugger` → `DepuradorSincronizacion`; `SyncMetricsCollector` → `MetricasSincronizacion`.
+- `SoundBankClass` → `BancoSonidos`; singleton `bancoSonidos`.
+- `OfflineInventorySyncClass` → `SincronizacionInventarioOffline`;
+  `OfflinePrintFallbackClass` → `RespaldoImpresionOffline`;
+  `OfflineSalesSyncClass` → `SincronizacionVentasOffline`.
+- Todos conservan alias inglés (`export { X as Y }`) para retrocompatibilidad total.
+
+**Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+Commits: `a3c9c1a` (OyenteCentral), `a29606e` (MotorColaCocina), `a2390ed` (ServicioSincronizacion),
+`0d58e97` (SyncDebugger/SyncMetrics), `e894e33` (SoundBank/Offline*).
+
