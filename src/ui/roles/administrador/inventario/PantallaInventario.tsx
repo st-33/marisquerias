@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AdminLayout } from '../../../../compartido/componentes/layouts/AdminLayout';
+import { DisenoAdministrador as AdminLayout } from '../../../../compartido/componentes/layouts/DisenoAdministrador';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import { PanelInventario } from './PanelInventario';

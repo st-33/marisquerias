@@ -7,7 +7,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MesasRepository } from '../../../sistema/persistencia';
 import { useMesas } from '../../../sistema/store';
-import { createLogger } from '../../../sistema/utilidades/logger';
+import { createLogger } from '../../../sistema/monitoreo';
 
 const log = createLogger('gestionarMesas');
 

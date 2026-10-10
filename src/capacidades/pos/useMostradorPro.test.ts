@@ -55,7 +55,7 @@ jest.mock('../../sistema/persistencia', () => ({
 }));
 
 const mockRegistrarVenta = jest.fn().mockResolvedValue('MOCK-VENTA-123');
-jest.mock('../../sistema/persistencia/SimpleSalesRepo', () => ({
+jest.mock('../../sistema/persistencia/ventasSimples.repo', () => ({
   SimpleSalesRepo: jest.fn().mockImplementation(() => ({
     registrarVenta: mockRegistrarVenta,
   })),

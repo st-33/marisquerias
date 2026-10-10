@@ -1,4 +1,4 @@
-import { normalizarFeaturesAdmin } from '../useAdminFeatures';
+import { normalizarFeaturesAdmin } from '../useFuncionalidadesAdmin';
 
 jest.mock('../../../sistema/monitoreo', () => ({
   logger: {

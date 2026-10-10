@@ -248,3 +248,53 @@
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 - Definicion: Vista de pantalla que explica por que no hay datos y que accion tomar (sin datos, sin conexion o filtro sin coincidencias).
+
+## 42.- FONDO LIQUIDO
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Capa ambiental visual compuesta por gradientes dinamicos y orbes flotantes con animacion continua, reservada para temas de alta jerarquia estetica.
+
+## 43.- SELLO DE MARCA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Bloque visual de identidad que expone el nombre del negocio y su lema distintivo en la cabecera o selector de accesos.
+
+## 44.- CONMUTADOR DE TEMA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Control visual interactivo que permite alternar dinamicamente entre la paleta clasica y la paleta elite, adaptando las superficies de color y contrastes en tiempo real.
+
+## 45.- INSIGNIA DE MESA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Elemento grafico compacto adherido a la celda de una mesa que proyecta estado operativo inmediato (items preparados, pendientes o alertas visuales).
+
+## 46.- PANEL DE ESTADO DE SINCRONIZACION
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Componente de observabilidad en interfaz que despliega el estado de conexion, marca temporal de ultima sincronizacion y flujo de eventos locales y remotos.
+
+## 47.- CAPA DE ATMOSFERA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Superficie visual ambiental de fondo encargada de renderizar efectos graduales, orbes luminosos o degradados decorativos sin interferir con la capa de interaccion activa.
+
+## 48.- ACCION RADIAL FLOTANTE
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Componente de accion primaria flotante que, al interactuar con el, despliega opciones satelites en trayectoria circular para seleccion contextual rapida.
+
+## 49.- SELECTOR DE ROL ELITE
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Vista inmersiva de autenticacion y navegacion de perfiles de operacion (caja, mesero, cocina, administracion) provista de retroalimentacion haptica y soporte de tema liquido.
+
+

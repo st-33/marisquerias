@@ -23,8 +23,8 @@ import { useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 import { useNotifications } from '../../../../compartido/hooks/useNotifications';
 import { useStoreNotifications } from '../../../../compartido/hooks/useStoreNotifications';
-import { logger } from '../../../../compartido/utils/logger';
-import { AdminLayout } from '../../../../compartido/componentes/layouts/AdminLayout';
+import { logger } from '../../../../sistema/monitoreo';
+import { DisenoAdministrador as AdminLayout } from '../../../../compartido/componentes/layouts/DisenoAdministrador';
 import { usePuenteAccionesFlotantes } from '../../../../capacidades/admin';
 import {
   useAlertasInteligentes,
@@ -142,7 +142,7 @@ export function PantallaMetricasDatos() {
         key: 'inventory',
         label: 'Inventario',
         icon: <Ionicons name="cube" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/inventory'),
+        onPress: () => router.push('/_role/admin/inventario'),
       });
     }
 
@@ -151,7 +151,7 @@ export function PantallaMetricasDatos() {
         key: 'tables',
         label: 'Mesas',
         icon: <Ionicons name="grid" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/tables'),
+        onPress: () => router.push('/_role/admin/mesas'),
       });
     }
 
@@ -160,7 +160,7 @@ export function PantallaMetricasDatos() {
         key: 'devices',
         label: 'Dispositivos',
         icon: <Ionicons name="hardware-chip" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/devices'),
+        onPress: () => router.push('/_role/admin/dispositivos'),
       });
     }
 
@@ -169,7 +169,7 @@ export function PantallaMetricasDatos() {
         key: 'repart',
         label: 'ADI Repart',
         icon: <Ionicons name="car" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/repart'),
+        onPress: () => router.push('/_role/admin/reparto'),
       });
     }
 

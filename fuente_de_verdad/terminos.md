@@ -938,3 +938,59 @@ Todo termino aqui asentado declara obligatoriamente su campo de alcance (`Alcanc
 - Fecha: 2026-10-09
 - Definicion: Insumo o producto principal del giro (camaron, pescado, molusco, crustaceo) que se vende fresco, por peso o preparado en platillo.
 
+## 156.- REGISTRO DE OBSERVABILIDAD
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Mecanismo unico y centralizado de emision y captura de eventos, diagnosticos y errores de ejecucion en cliente, integrado con niveles de severidad y telemetria sin duplicidad de utilidades locales.
+
+## 157.- METRICAS DE SINCRONIZACION
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Sistema de telemetria y medicion de latencias, tasas de conflicto y exito en las operaciones de replicacion en tiempo real entre terminales locales y el nodo remoto.
+
+## 158.- SERVICIO DE SINCRONIZACION
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Motor transaccional unificado responsable de orquestar suscripciones en tiempo real, resolucion de ecos optimistas locales y convergencia de colecciones sincronizables.
+
+## 159.- SISTEMA DE NOTIFICACIONES
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Mecanismo reactivo para la emision, escucha y gestion de avisos operativos entre canales (cocina, administracion, mesero) mediante la RTDB.
+
+## 160.- NORMALIZADOR DE COMANDA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Conjunto de reglas y funciones de dominio encargadas de transformar y sanear payloads heterogeneos de pedidos hacia el contrato estricto de comanda y partida.
+
+## 161.- CONTROLADOR DE CICLO DE VIDA DE NEGOCIO
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Administrador central que gobierna el montaje, aislamiento por negocio y purga sincronizada de suscripciones, almacenamiento y estados al cambiar o cerrar sesion.
+
+## 162.- MOTOR DE COLA DE COCINA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Motor ciego sin interfaz que organiza, prioriza cronologicamente y despacha el flujo de comandas y partidas hacia las estaciones de preparacion (KDS).
+
+## 163.- VINCULACION DE DISPOSITIVO
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Protocolo de seguridad que enlaza la huella unica del dispositivo fisico con la autorizacion de terminal en el negocio, suprimiendo la solicitud recurrente de credenciales.
+
+## 164.- RESPALDO DE IMPRESION OFFLINE
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Estrategia de degradacion elegante que redirige trabajos de impresion a colas locales de SQLite o Bluetooth directo cuando la conexion con la nube es nula.
+
+
+

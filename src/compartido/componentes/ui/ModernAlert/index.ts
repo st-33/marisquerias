@@ -3,6 +3,6 @@
  * Sistema de alertas modernas con separación correcta
  */
 
-export { useModernAlert } from './useModernAlert';
-export { ModernAlertView } from './ModernAlertView';
-export type { AlertType, AlertConfig } from './useModernAlert';
+export { useAlertaModerna, useModernAlert } from './useAlertaModerna';
+export { VistaAlertaModerna, ModernAlertView } from './VistaAlertaModerna';
+export type { AlertType, AlertConfig } from './useAlertaModerna';

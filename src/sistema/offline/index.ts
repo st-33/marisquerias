@@ -1,18 +1,2 @@
-/**
- * 🗃️ SISTEMA OFFLINE - PUNTO DE ENTRADA (Capa Depurada)
- *
- * Mantiene exclusivamente la infraestructura SQLite activa y real,
- * purgando los stubs y stores offline sin persistencia real.
- */
-
-// SQLite Storage (para datos estructurados POS y cola de impresión)
-export { SQLiteStorageAdapter } from './storage/SQLiteStorageAdapter';
-export type {
-  OfflinePrintJob,
-  OfflineCategoria,
-  OfflineMesa,
-  OfflinePedido,
-  OfflineProducto,
-  OfflineVenta,
-  HistorialVenta,
-} from './storage/SQLiteStorageAdapter';
+/** @deprecated Usar `sistema/sin_conexion`. */
+export * from '../sin_conexion';

@@ -19,7 +19,7 @@ import {
   useProductos,
   useStore,
 } from '../../../sistema/store';
-import { createLogger } from '../../../sistema/utilidades/logger';
+import { createLogger } from '../../../sistema/monitoreo';
 
 import { useGestionarMesas } from './gestionarMesas';
 import { useDescontarInventario } from './descontarInventario';

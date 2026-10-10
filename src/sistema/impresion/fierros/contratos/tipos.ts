@@ -259,14 +259,20 @@ export interface TrabajoImpresion {
 /**
  * Destino del Hub Central
  */
-export type DestinoHub = 'restaurante' | 'venta_crudo';
+export type DestinoConcentrador = 'restaurante' | 'venta_crudo';
+
+/** Alias de compatibilidad para el contrato previo. */
+export type DestinoHub = DestinoConcentrador;
 
 /**
  * Configuración del Hub guardada
  */
-export interface ConfiguracionHub {
+export interface ConfiguracionConcentrador {
   habilitado: boolean;
-  destino: DestinoHub | null;
+  destino: DestinoConcentrador | null;
   idDispositivo: string;
   ultimaActualizacion: number;
 }
+
+/** Alias de compatibilidad para el contrato previo. */
+export type ConfiguracionHub = ConfiguracionConcentrador;

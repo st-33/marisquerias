@@ -1,5 +1,5 @@
 import { set, ref, push } from 'firebase/database';
-import { SimpleSalesRepo } from '../../persistencia/SimpleSalesRepo';
+import { SimpleSalesRepo } from '../../persistencia/ventasSimples.repo';
 import { OfflineSalesSync } from '../../servicios/OfflineSalesSync';
 import { OfflineInventorySync } from '../../servicios/OfflineInventorySync';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';

@@ -5,16 +5,27 @@
  */
 
 export {
+  ServicioSincronizacion,
+  servicioSincronizacion,
   SynchronizationService,
   synchronizationService,
   type SyncConfig,
   type SynchronizableItem,
-} from './SynchronizationService';
+} from './ServicioSincronizacion';
 
 export {
+  useArregloSincronizado,
   useSynchronizedArray,
   type SynchronizedArrayResult,
   type UseSynchronizedArrayConfig,
-} from './useSynchronizedArray';
+  type ArregloSincronizadoResultado,
+  type UseArregloSincronizadoConfig,
+} from './useArregloSincronizado';
 
-export { syncMetrics, type SyncMetric, type SyncOperationType } from './SyncMetrics';
+export {
+  syncMetrics,
+  metricasSincronizacion,
+  MetricasSincronizacion,
+  type SyncMetric,
+  type SyncOperationType,
+} from './MetricasSincronizacion';

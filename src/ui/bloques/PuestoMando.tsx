@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
-import { ActionArea } from './ActionArea';
-import { OrderList } from './OrderList';
-import { TablesGrid } from './TablesGrid';
+import { AreaAccion } from './AreaAccion';
+import { ListaComandas } from './ListaComandas';
+import { CuadriculaMesas } from './CuadriculaMesas';
 import {
   etiquetaEstadoLogistico,
   pedidoRequiereLogistica,
@@ -208,13 +208,13 @@ export function PuestoMando(props: PuestoMandoProps) {
               <Text style={themedStyles.emptyText}>Cargando mesas…</Text>
             </View>
           ) : (
-            <TablesGrid
+            <CuadriculaMesas
               tables={mesas}
               selectedTable={mesaSeleccionada}
               mode={mesaSeleccionada ? 'table' : null}
               liveItems={itemsEnCurso}
               pendingCount={pendingCount}
-              onPressTable={async (id, isFree) => {
+              onPressTable={async (id: string, isFree: boolean) => {
                 await onSelectMesa(id);
                 if (isFree) {
                   onAddItem();
@@ -283,7 +283,7 @@ export function PuestoMando(props: PuestoMandoProps) {
             )}
 
             {mesaSeleccionada ? (
-              <OrderList
+              <ListaComandas
                 pending={itemsPendientes}
                 liveItems={itemsEnCurso}
                 getProduct={getProduct}
@@ -303,7 +303,7 @@ export function PuestoMando(props: PuestoMandoProps) {
             )}
           </View>
 
-          <ActionArea
+          <AreaAccion
             total={totalPedido}
             pendingCount={pendingCount}
             liveItemsCount={liveItemsCount}

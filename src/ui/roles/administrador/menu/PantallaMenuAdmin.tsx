@@ -32,7 +32,7 @@ import { getRtdb } from '../../../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 import {
-  useAdminFeatures,
+  useFuncionalidadesAdmin,
   useGestionMenu,
   usePuenteAccionesFlotantes,
 } from '../../../../capacidades';
@@ -119,7 +119,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const [formData, setFormData] = useState<FormState>(crearFormularioVacio());
   const [editingTab, setEditingTab] = useState<PestanaProducto>('basico');
   const [isSaving, setIsSaving] = useState(false);
-  const { isEnabled: featureEnabled } = useAdminFeatures();
+  const { isEnabled: featureEnabled } = useFuncionalidadesAdmin();
 
   const activeCat = useMemo(() => {
     if (selectedCat && categorias.some((c) => c.id === selectedCat)) {

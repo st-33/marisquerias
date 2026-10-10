@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../sistema/persistencia';
 import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repo';
 import type { Categoria } from '../../sistema/persistencia/menu.repo';
-import { SimpleSalesRepo } from '../../sistema/persistencia/SimpleSalesRepo';
+import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repo';
 import { getRtdb } from '../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
 import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallback';
@@ -18,7 +18,7 @@ import { DespachadorCola } from '../../sistema/impresion/fierros/cola/Despachado
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
 import { useConfiguracionNegocio } from '../../sistema/proveedores/ProveedorConfiguracionNegocio';
-import { usePosConfig } from '../mostrador/usePosConfig';
+import { useConfiguracionCaja as usePosConfig } from '../mostrador/useConfiguracionCaja';
 import { useCaracteristica } from '../../negocio/roles/GestorCaracteristicas';
 
 function stripUndefinedDeep<T>(input: T): T {

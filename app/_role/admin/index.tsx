@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
-import { useAdminFeatures } from '../../../src/capacidades/admin';
+import { useFuncionalidadesAdmin } from '../../../src/capacidades/admin';
 import type { FabItem } from '../../../src/sistema/tipos/contratos';
 
 export default function Admin() {
-  const { features, loading } = useAdminFeatures();
+  const { features, loading } = useFuncionalidadesAdmin();
 
   const navEntries = useMemo(() => {
     const entries: { key: string; label: string; icon: React.ReactNode; route: string }[] = [];
@@ -32,7 +32,7 @@ export default function Admin() {
         key: 'inventario',
         label: 'Inventario',
         icon: <Text style={{ color: 'white', fontSize: 20 }}>📦</Text>,
-        route: '/_role/admin/inventory',
+        route: '/_role/admin/inventario',
       });
     }
     if (has('admin_tables')) {
@@ -40,7 +40,7 @@ export default function Admin() {
         key: 'mesas',
         label: 'Mesas',
         icon: <Text style={{ color: 'white', fontSize: 20 }}>🪑</Text>,
-        route: '/_role/admin/tables',
+        route: '/_role/admin/mesas',
       });
     }
     if (has('admin_devices')) {
@@ -48,7 +48,7 @@ export default function Admin() {
         key: 'dispositivos',
         label: 'Dispositivos',
         icon: <Text style={{ color: 'white', fontSize: 20 }}>🖨️</Text>,
-        route: '/_role/admin/devices',
+        route: '/_role/admin/dispositivos',
       });
     }
     if (has('admin_repart')) {
@@ -56,7 +56,7 @@ export default function Admin() {
         key: 'repart',
         label: 'ADI Repart',
         icon: <Text style={{ color: 'white', fontSize: 20 }}>🚚</Text>,
-        route: '/_role/admin/repart',
+        route: '/_role/admin/reparto',
       });
     }
 

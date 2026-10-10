@@ -1,2 +1,2 @@
-export * from './usePosConfig';
+export * from './useConfiguracionCaja';
 export * from './useVentaCrudoAdmin';

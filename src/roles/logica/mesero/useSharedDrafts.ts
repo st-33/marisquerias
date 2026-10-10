@@ -1,7 +1,7 @@
 import type { Database } from 'firebase/database';
 import { useCallback, useMemo } from 'react';
 import { useSynchronizedArray } from '../../../sistema/sincronizacion';
-import { createLogger } from '../../../sistema/utilidades/logger';
+import { createLogger } from '../../../sistema/monitoreo';
 
 const log = createLogger('useSharedDrafts');
 

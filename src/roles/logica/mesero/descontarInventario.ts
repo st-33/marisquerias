@@ -10,7 +10,7 @@ import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repo';
 import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
-import { createLogger } from '../../../sistema/utilidades/logger';
+import { createLogger } from '../../../sistema/monitoreo';
 import {
   classifyInventoryError,
   type InventoryDeductionResult,

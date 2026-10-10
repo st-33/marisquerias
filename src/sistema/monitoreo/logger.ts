@@ -181,14 +181,34 @@ export const logger = new Logger();
  * ```
  */
 export function createModuleLogger(module: string) {
+  const cleanModule = module.replace(/^\[|\]$/g, '');
   return {
-    debug: (message: string, data?: any) => logger.debug(module, message, data),
-    info: (message: string, data?: any) => logger.info(module, message, data),
-    warn: (message: string, data?: any) => logger.warn(module, message, data),
-    error: (message: string, error?: Error | any, context?: Record<string, any>) =>
-      logger.error(module, message, error, context),
+    debug: (...args: any[]) => {
+      const msg = typeof args[0] === 'string' ? args[0] : '';
+      const data = args.length > 1 ? (args.length === 2 ? args[1] : args.slice(1)) : undefined;
+      logger.debug(cleanModule, msg, data);
+    },
+    info: (...args: any[]) => {
+      const msg = typeof args[0] === 'string' ? args[0] : '';
+      const data = args.length > 1 ? (args.length === 2 ? args[1] : args.slice(1)) : undefined;
+      logger.info(cleanModule, msg, data);
+    },
+    warn: (...args: any[]) => {
+      const msg = typeof args[0] === 'string' ? args[0] : '';
+      const data = args.length > 1 ? (args.length === 2 ? args[1] : args.slice(1)) : undefined;
+      logger.warn(cleanModule, msg, data);
+    },
+    error: (...args: any[]) => {
+      const msg = typeof args[0] === 'string' ? args[0] : '';
+      const err = args[1];
+      const ctx = args.length > 2 ? args[2] : undefined;
+      logger.error(cleanModule, msg, err, ctx);
+    },
     event: (eventName: string, params?: Record<string, any>) => logger.event(eventName, params),
     breadcrumb: (message: string, data?: Record<string, any>) =>
-      logger.breadcrumb(message, module, data),
+      logger.breadcrumb(message, cleanModule, data),
   };
 }
+
+export const createLogger = createModuleLogger;
+

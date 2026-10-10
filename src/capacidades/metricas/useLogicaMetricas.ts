@@ -15,7 +15,7 @@
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
 import { NegocioRepository } from '../../sistema/persistencia';
-import { useAdminFeatures, type NegocioFeatures } from '../admin/useAdminFeatures';
+import { useFuncionalidadesAdmin as useAdminFeatures, type NegocioFeatures } from '../admin/useFuncionalidadesAdmin';
 import { useMetricasVentas } from './useMetricasVentas';
 
 export type DateFilter = 'hoy' | 'ayer' | 'hace3dias' | 'semana' | 'mes' | 'todo';
@@ -61,7 +61,7 @@ export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegoc
   // Acción para activar o desactivar un flag del negocio
   const toggleFeature = async (feature: keyof NegocioFeatures, enabled: boolean) => {
     const negocioRepo = new NegocioRepository(db, rutaNegocio);
-    const featureKey = feature.replace('admin_', '');
+    const featureKey = String(feature).replace('admin_', '');
     await negocioRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
   };
 

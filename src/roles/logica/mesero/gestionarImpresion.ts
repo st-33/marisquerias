@@ -8,7 +8,7 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
-import { createLogger } from '../../../sistema/utilidades/logger';
+import { createLogger } from '../../../sistema/monitoreo';
 import { usePrintPolicies } from './usePrintPolicies';
 
 const log = createLogger('gestionarImpresion');

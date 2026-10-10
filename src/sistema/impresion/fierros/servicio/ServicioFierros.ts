@@ -15,7 +15,7 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import { AdaptadorBluetooth, adaptadorBluetooth } from '../adaptadores/AdaptadorBluetooth';
 import { ConstructorEscPos, formatearPrecio, truncarTexto } from '../adaptadores/AdaptadorEscPos';
-import type { IControladorFierros, OyenteEstado } from '../contratos/IControladorFierros';
+import type { ControladorFierros, OyenteEstado } from '../contratos/ControladorFierros';
 import type {
   ConfiguracionTicket,
   DatosComanda,
@@ -64,7 +64,7 @@ class MutexAsincrono {
 // SERVICIO FIERROS - SINGLETON
 // ═══════════════════════════════════════════════════════════════════════════
 
-class ServicioFierros implements IControladorFierros {
+class ServicioFierros implements ControladorFierros {
   private static instancia: ServicioFierros | null = null;
 
   private readonly mutex = new MutexAsincrono();
@@ -97,7 +97,7 @@ class ServicioFierros implements IControladorFierros {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PROPIEDADES REACTIVAS (IControladorFierros)
+  // PROPIEDADES REACTIVAS (ControladorFierros)
   // ═══════════════════════════════════════════════════════════════════════════
 
   get estaConectado(): boolean {
@@ -185,7 +185,7 @@ class ServicioFierros implements IControladorFierros {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CONEXIÓN (IControladorFierros)
+  // CONEXIÓN (ControladorFierros)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async escanearDispositivos(): Promise<DispositivoFierro[]> {
@@ -292,7 +292,7 @@ class ServicioFierros implements IControladorFierros {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // IMPRESIÓN (IControladorFierros)
+  // IMPRESIÓN (ControladorFierros)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async imprimirComanda(
@@ -498,7 +498,7 @@ class ServicioFierros implements IControladorFierros {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BÁSCULA (IControladorFierros)
+  // BÁSCULA (ControladorFierros)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async leerPeso(opciones?: OpcionesLecturaPeso): Promise<ResultadoPeso> {

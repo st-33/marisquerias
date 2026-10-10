@@ -1,3 +1,3 @@
-export * from './useAdminFeatures';
-export * from './menuSafety';
+export * from './useFuncionalidadesAdmin';
+export * from './seguridadMenu';
 export * from './operacion/usePuenteAccionesFlotantes';

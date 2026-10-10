@@ -7,7 +7,7 @@ import {
 import {
   estaCapacidadHabilitadaPorCentral,
 } from '../useCentralConfig';
-import { normalizarFeaturesAdmin } from '../../../capacidades/admin/useAdminFeatures';
+import { normalizarFeaturesAdmin } from '../../../capacidades/admin/useFuncionalidadesAdmin';
 
 jest.mock('react-native', () => ({
   Platform: { OS: 'ios', select: (o: any) => o.ios || o.default },

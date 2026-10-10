@@ -1,1 +1,1 @@
-export * from './useDevicesManagement';
+export * from './useGestionDispositivos';

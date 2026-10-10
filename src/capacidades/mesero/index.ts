@@ -1,2 +1,2 @@
-export * from './useCartPersistence';
-export * from './useTotalAutoHide';
+export * from './usePersistenciaCarrito';
+export * from './useOcultarTotal';

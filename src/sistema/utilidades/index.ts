@@ -1,6 +1,6 @@
 export * from './caracteristicas';
 export * from './healthcheck';
-export * from './logCleaner';
-export * from './logger';
+export * from './depuradorRegistros';
+export { createLogger, logger } from '../monitoreo';
 export * from './paths';
-export * from './syncDebugger';
+export * from './depuradorSincronizacion';

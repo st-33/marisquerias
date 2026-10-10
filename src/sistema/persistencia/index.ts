@@ -32,14 +32,24 @@ export type {
   TicketTemplatesPorRol,
 } from './tickets.repo';
 
-export { DraftsLocalRepo, inicializarSchemaDrafts } from './drafts.repo';
+export {
+  RepositorioBorradores,
+  BorradoresLocalRepo,
+  DraftsLocalRepo,
+  inicializarEsquemaBorradores,
+  inicializarSchemaDrafts,
+} from './borradores.repo';
 export type {
+  PartidaBorrador,
+  BorradorComanda,
+  EstadoBorrador,
+  OrigenBorrador,
   DraftItem,
   OrderDraft,
   DraftEstado,
   DraftOrigen,
   ComandoIdempotente,
-} from './drafts.repo';
+} from './borradores.repo';
 
 export { RepartoRepository } from './reparto.repo';
 export type {
@@ -54,8 +64,24 @@ export type {
   Ubicacion,
 } from './reparto.repo';
 
-export { DevicesRepository } from './devices.repo';
-export type { TicketConfig, HubConfig } from './devices.repo';
+export {
+  RepositorioDispositivos,
+  DispositivosRepository,
+  DevicesRepository,
+} from './dispositivos.repo';
+export type {
+  ConfiguracionTicket,
+  ConfiguracionHub,
+  TicketConfig,
+  HubConfig,
+} from './dispositivos.repo';
+
+export {
+  RepositorioVentasSimples,
+  VentasSimplesRepo,
+  SimpleSalesRepo,
+} from './ventasSimples.repo';
+export type { VentaMostrador, VentaSimple } from './ventasSimples.repo';
 
 export { NegocioRepository } from './negocio.repo';
 export type { Caracteristicas, Features } from './negocio.repo';

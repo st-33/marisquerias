@@ -26,7 +26,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import type { IControladorFierros } from '../contratos/IControladorFierros';
+import type { ControladorFierros } from '../contratos/ControladorFierros';
 import type {
   ConfiguracionTicket,
   DatosComanda,
@@ -78,7 +78,7 @@ interface ContextoFierrosValor extends EstadoFierros {
   tararBascula: () => Promise<ResultadoOperacion>;
 
   // Obtener servicio directamente (para casos avanzados)
-  obtenerServicio: () => IControladorFierros;
+  obtenerServicio: () => ControladorFierros;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -131,7 +131,7 @@ export const ProveedorFierros: React.FC<ProveedorFierrosProps> = ({ children }) 
       leerPeso: (opciones?: OpcionesLecturaPeso) => servicioRef.current.leerPeso(opciones),
       tararBascula: () => servicioRef.current.tararBascula(),
 
-      obtenerServicio: () => servicioRef.current as IControladorFierros,
+      obtenerServicio: () => servicioRef.current as ControladorFierros,
     }),
     []
   );

@@ -14,7 +14,7 @@ import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 import { etiquetaEstadoLogistico } from '../../logica/dominio/logistica';
 import type { OrdenCocina } from '../../sistema/motores/KitchenQueueEngine';
-import { AnimatedPressable } from './AnimatedPressable';
+import { PresionableAnimado } from './PresionableAnimado';
 import { Badge } from './Badge';
 
 type TarjetaComandaProps = {
@@ -324,22 +324,22 @@ export function TarjetaComanda({
             {/* Botones de acción por item */}
             <View style={staticStyles.itemActions}>
               {(item.estado === 'nuevo' || item.estado === 'en_cocina') && (
-                <AnimatedPressable
+                <PresionableAnimado
                   onPress={() => onStartItem(item.id)}
                   style={[staticStyles.btnStart]}
                 >
                   <Ionicons name="play" size={20} color="#ffffff" />
                   <Text style={staticStyles.btnText}>Comenzar</Text>
-                </AnimatedPressable>
+                </PresionableAnimado>
               )}
               {item.estado === 'en_preparacion' && (
-                <AnimatedPressable
+                <PresionableAnimado
                   onPress={() => onFinishItem(item.id)}
                   style={[staticStyles.btnFinish]}
                 >
                   <Ionicons name="checkmark" size={20} color="#ffffff" />
                   <Text style={staticStyles.btnTextFinish}>Listo</Text>
-                </AnimatedPressable>
+                </PresionableAnimado>
               )}
               {item.estado === 'listo' && (
                 <View style={staticStyles.badgeReady}>
@@ -354,10 +354,10 @@ export function TarjetaComanda({
 
       {/* Footer con botón de completar orden */}
       {order.itemsPendientes === 0 && order.itemsListos > 0 && (
-        <AnimatedPressable onPress={onFinishOrder} style={[staticStyles.btnCompleteOrder]}>
+        <PresionableAnimado onPress={onFinishOrder} style={[staticStyles.btnCompleteOrder]}>
           <Ionicons name="checkmark-done" size={18} color="#ffffff" />
           <Text style={staticStyles.btnCompleteOrderText}>Orden Completa</Text>
-        </AnimatedPressable>
+        </PresionableAnimado>
       )}
     </Animated.View>
   );

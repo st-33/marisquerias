@@ -15,15 +15,15 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useAdminFeatures } from '../../../../capacidades/admin';
-import { usePosConfig, useVentaCrudoAdmin } from '../../../../capacidades/mostrador';
+import { useFuncionalidadesAdmin } from '../../../../capacidades/admin';
+import { useConfiguracionCaja, useVentaCrudoAdmin } from '../../../../capacidades/mostrador';
 
 export function MostradorAdminScreen() {
   const router = useRouter();
 
   const { sales } = useVentaCrudoAdmin();
-  const { config, updateConfig } = usePosConfig();
-  const { features, loading: loadingFeatures } = useAdminFeatures();
+  const { config, updateConfig } = useConfiguracionCaja();
+  const { features, loading: loadingFeatures } = useFuncionalidadesAdmin();
   const mostradorHabilitado =
     features?.admin_mostrador === true && features?.module_venta_crudo === true;
 
