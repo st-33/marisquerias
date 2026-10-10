@@ -231,3 +231,13 @@ Commits: `716f5b7` (clases Repositorio), `3495876` (tipos SinConexion), `a437c06
 Commits: `a3c9c1a` (OyenteCentral), `a29606e` (MotorColaCocina), `a2390ed` (ServicioSincronizacion),
 `0d58e97` (SyncDebugger/SyncMetrics), `e894e33` (SoundBank/Offline*).
 
+### Hispianización de arranque de app y tipos de inventario:
+- `useBootstrapper.ts` → `useArranqueSistema.ts` (función `useArranqueSistema`, alias `useBootstrapper`).
+- `InventorySectionV2` → `SeccionInventarioV2`, `InventoryItemV2` → `ItemInventarioV2`,
+  `InventoryAreaV2` → `AreaInventarioV2`, `InventoryMovementV2` → `MovimientoInventarioV2`,
+  `InventorySectionId` → `SeccionInventarioId` (alias inglés conservado).
+- Barrile, `contratos-inventario.ts` y `store/slices/inventario.ts` migrados.
+
+**Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+Commits: `c3b3e00` (useArranqueSistema), `c5d8b0f` (InventarioV2).
+
