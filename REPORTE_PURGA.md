@@ -157,3 +157,25 @@
 - `48.- ACCION RADIAL FLOTANTE` (Lotes 4, 5 y 6)
 - `49.- SELECTOR DE ROL ELITE` (Lotes 4, 5 y 6)
 
+---
+
+## LOTE 7 — PRELUDIO (Consolidación de línea base verde)
+
+Antes de arrancar el Lote 7 (archivos 91 al 135), se detectó que la línea base
+del árbol de trabajo estaba **en rojo** (25 errores de TypeScript heredados de los
+renombrados en vuelo de los Lotes 4–6). Se restauró la barrera binaria a VERDE:
+
+- **Puentes faltantes creados** (retrocompatibilidad total):
+  - `src/sistema/impresion/legacy/policies.ts` → reexporta `politicasImpresion`.
+  - `src/sistema/impresion/fierros/estado/EstadoHub.ts` → reexporta `EstadoConcentrador`.
+  - `src/sistema/impresion/fierros/hub/GestorHub.tsx` → reexporta `GestorConcentrador`.
+- **Consumer migrado** a métodos canónicos de `RepositorioDispositivos`:
+  - `useGestionDispositivos.ts` y `GestorConcentrador.tsx` (`suscribirHubConfig` → `suscribirConfiguracionHub`, etc.).
+- **Barril alineado**: `src/sistema/sin_conexion/index.ts` ahora traduce las
+  exportaciones reales del adaptador SQLite a nombres canónicos en español
+  (`AdaptadorAlmacenamientoSQLite`, `*SinConexion`) preservando alias ingleses.
+- **Tipo corregido**: `OrderDraft` → `BorradorComanda` en `borradores.repo.ts`.
+
+**Barrera binaria**: `npx tsc --noEmit` (0 errores) y `npm test` (23/23 suites, 147 tests).
+Commit de sellado: `81bfc85 refactor(sistema): sellar linea base verde del Lote 7`.
+
