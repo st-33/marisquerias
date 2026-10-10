@@ -1,12 +1,12 @@
 import {
-  InventoryV2Repository,
-  type InventoryAreaV2,
-  type InventoryItemV2,
-  type InventorySectionId,
+  RepositorioInventario,
+  type AreaInventarioV2,
+  type ItemInventarioV2,
+  type SeccionInventarioId,
 } from './inventario.repositorio';
 
-export { InventoryV2Repository as RepositorioInventario };
+export { RepositorioInventario };
 
-export type AreaInventario = InventoryAreaV2;
-export type InsumoInventario = InventoryItemV2;
-export type IdSeccionInventario = InventorySectionId;
+export type AreaInventario = AreaInventarioV2;
+export type InsumoInventario = ItemInventarioV2;
+export type IdSeccionInventario = SeccionInventarioId;

@@ -2,9 +2,9 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref, update } from 'firebase/database';
 import type { StateCreator } from 'zustand';
 import type {
-  InventoryAreaV2,
-  InventoryItemV2,
-  InventorySectionV2,
+  AreaInventarioV2,
+  ItemInventarioV2,
+  SeccionInventarioV2,
 } from '../../persistencia/inventario.repositorio';
 import { OfflinePrintFallback } from '../../servicios/OfflinePrintFallback';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
@@ -12,9 +12,9 @@ import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';
 
 export interface ContratoInventoryV2 {
-  catalog: Record<string, InventoryItemV2>;
-  sections: Record<string, InventorySectionV2>;
-  areas: Record<string, InventoryAreaV2>;
+  catalog: Record<string, ItemInventarioV2>;
+  sections: Record<string, SeccionInventarioV2>;
+  areas: Record<string, AreaInventarioV2>;
   missingAssignments: Record<string, any>;
   inventoryListenersActivos: boolean;
   ultimaActualizacion: number | null;
@@ -37,25 +37,25 @@ export interface AccionesInventoryV2 {
   normalizarItemsSinContenedor: (
     db: Database,
     rutaNegocio: string,
-    areas: Record<string, InventoryAreaV2>
+    areas: Record<string, AreaInventarioV2>
   ) => Promise<void>;
 
   crearItem: (
     db: Database,
     rutaNegocio: string,
-    item: Omit<InventoryItemV2, 'id' | 'updatedAt'>
+    item: Omit<ItemInventarioV2, 'id' | 'updatedAt'>
   ) => Promise<string>;
 
   crearArea: (
     db: Database,
     rutaNegocio: string,
-    area: Omit<InventoryAreaV2, 'id' | 'updatedAt'>
+    area: Omit<AreaInventarioV2, 'id' | 'updatedAt'>
   ) => Promise<string>;
 
   crearContenedor: (
     db: Database,
     rutaNegocio: string,
-    contenedor: Omit<InventoryAreaV2, 'id' | 'updatedAt' | 'stock'> & {
+    contenedor: Omit<AreaInventarioV2, 'id' | 'updatedAt' | 'stock'> & {
       stock?: Record<string, number>;
     }
   ) => Promise<string>;
@@ -64,7 +64,7 @@ export interface AccionesInventoryV2 {
     db: Database;
     rutaNegocio: string;
     containerId: string;
-    item: Omit<InventoryItemV2, 'id' | 'updatedAt'>;
+    item: Omit<ItemInventarioV2, 'id' | 'updatedAt'>;
     initialQty?: number;
   }) => Promise<string>;
 
@@ -72,7 +72,7 @@ export interface AccionesInventoryV2 {
     db: Database;
     rutaNegocio: string;
     sectionId: 'alimentos' | 'losa_cristaleria' | 'otros';
-    item: Omit<InventoryItemV2, 'id' | 'updatedAt'>;
+    item: Omit<ItemInventarioV2, 'id' | 'updatedAt'>;
     initialQty?: number;
   }) => Promise<string>;
 
@@ -134,7 +134,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const catalogRef = ref(db, `${rutaNegocio}/inventario/catalog`);
     const catalogCb = onValue(catalogRef, (snap) => {
       const raw = snap.val() || {};
-      const next: Record<string, InventoryItemV2> = {};
+      const next: Record<string, ItemInventarioV2> = {};
       Object.entries(raw).forEach(([id, v]) => {
         if (v && typeof v === 'object') {
           next[id] = { id, ...(v as any) };
@@ -147,7 +147,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const sectionsRef = ref(db, `${rutaNegocio}/inventario/sections`);
     const sectionsCb = onValue(sectionsRef, (snap) => {
       const raw = snap.val() || {};
-      const next: Record<string, InventorySectionV2> = {};
+      const next: Record<string, SeccionInventarioV2> = {};
       Object.entries(raw).forEach(([id, v]) => {
         if (v && typeof v === 'object') {
           next[id] = { id, ...(v as any) };
@@ -160,7 +160,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const areasRef = ref(db, `${rutaNegocio}/inventario/areas`);
     const areasCb = onValue(areasRef, (snap) => {
       const raw = snap.val() || {};
-      const next: Record<string, InventoryAreaV2> = {};
+      const next: Record<string, AreaInventarioV2> = {};
       Object.entries(raw).forEach(([id, v]) => {
         if (v && typeof v === 'object') {
           next[id] = { id, ...(v as any) };

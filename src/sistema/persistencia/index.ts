@@ -94,8 +94,8 @@ export {
   InventoryV2Repository,
 } from './inventario.repositorio';
 export type {
-  InventoryAreaV2,
-  InventoryItemV2,
-  InventorySectionV2,
-  InventorySectionId,
+  AreaInventarioV2,
+  ItemInventarioV2,
+  SeccionInventarioV2,
+  SeccionInventarioId,
 } from './inventario.repositorio';

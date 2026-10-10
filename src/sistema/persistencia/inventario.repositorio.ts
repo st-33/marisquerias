@@ -22,9 +22,9 @@ import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 // --- Esquemas de Datos ---
 
-export type InventorySectionId = 'alimentos' | 'losa_cristaleria' | 'otros';
+export type SeccionInventarioId = 'alimentos' | 'losa_cristaleria' | 'otros';
 
-export const InventorySectionV2Schema = z.object({
+export const SeccionInventarioV2Schema = z.object({
   id: z.string(),
   nombre: z.string(),
   icon: z.string().optional(),
@@ -32,9 +32,9 @@ export const InventorySectionV2Schema = z.object({
   updatedAt: z.number(),
 });
 
-export type InventorySectionV2 = z.infer<typeof InventorySectionV2Schema>;
+export type SeccionInventarioV2 = z.infer<typeof SeccionInventarioV2Schema>;
 
-export const InventoryItemV2Schema = z.object({
+export const ItemInventarioV2Schema = z.object({
   id: z.string(),
   nombre: z.string(),
   sectionId: z.enum(['alimentos', 'losa_cristaleria', 'otros']).optional(),
@@ -46,9 +46,9 @@ export const InventoryItemV2Schema = z.object({
   updatedAt: z.number(),
 });
 
-export type InventoryItemV2 = z.infer<typeof InventoryItemV2Schema>;
+export type ItemInventarioV2 = z.infer<typeof ItemInventarioV2Schema>;
 
-export const InventoryAreaV2Schema = z.object({
+export const AreaInventarioV2Schema = z.object({
   id: z.string(),
   hubId: z.enum(['restaurante', 'venta_crudo']).default('restaurante'), // 🔥 Vinculación física
   sectionId: z.enum(['alimentos', 'losa_cristaleria', 'otros']).optional(),
@@ -60,9 +60,9 @@ export const InventoryAreaV2Schema = z.object({
   updatedAt: z.number(),
 });
 
-export type InventoryAreaV2 = z.infer<typeof InventoryAreaV2Schema>;
+export type AreaInventarioV2 = z.infer<typeof AreaInventarioV2Schema>;
 
-export const InventoryMovementV2Schema = z.object({
+export const MovimientoInventarioV2Schema = z.object({
   id: z.string(),
   tipo: z.enum(['entrada', 'salida', 'ajuste', 'transferencia', 'merma']),
   itemId: z.string(),
@@ -76,7 +76,7 @@ export const InventoryMovementV2Schema = z.object({
   permiteNegativo: z.boolean().optional(),
 });
 
-export type InventoryMovementV2 = z.infer<typeof InventoryMovementV2Schema>;
+export type MovimientoInventarioV2 = z.infer<typeof MovimientoInventarioV2Schema>;
 
 // --- Esquema de Ventas (Historial) ---
 
@@ -117,7 +117,7 @@ export class RepositorioInventario {
 
   // ==================== CATÁLOGO (Global por Negocio) ====================
 
-  async crearItem(item: Omit<InventoryItemV2, 'id' | 'updatedAt'>): Promise<string> {
+  async crearItem(item: Omit<ItemInventarioV2, 'id' | 'updatedAt'>): Promise<string> {
     const r = ref(this.db, `${this.baseRef}/catalog`);
     const newRef = push(r);
     const payload = sanitizeRtdbPayload({
@@ -128,12 +128,12 @@ export class RepositorioInventario {
     return newRef.key!;
   }
 
-  async obtenerCatalogo(): Promise<Record<string, InventoryItemV2>> {
+  async obtenerCatalogo(): Promise<Record<string, ItemInventarioV2>> {
     const snap = await get(ref(this.db, `${this.baseRef}/catalog`));
     return snap.val() || {};
   }
 
-  suscribirCatalogo(callback: (items: Record<string, InventoryItemV2>) => void): () => void {
+  suscribirCatalogo(callback: (items: Record<string, ItemInventarioV2>) => void): () => void {
     const r = ref(this.db, `${this.baseRef}/catalog`);
     const cb = onValue(r, (snap) => callback(snap.val() || {}));
     return () => off(r, 'value', cb);
@@ -141,7 +141,7 @@ export class RepositorioInventario {
 
   // ==================== ÁREAS ====================
 
-  async crearArea(area: Omit<InventoryAreaV2, 'id' | 'updatedAt'>): Promise<string> {
+  async crearArea(area: Omit<AreaInventarioV2, 'id' | 'updatedAt'>): Promise<string> {
     const r = ref(this.db, `${this.baseRef}/areas`);
     const newRef = push(r);
     const payload = {
@@ -152,12 +152,12 @@ export class RepositorioInventario {
     return newRef.key!;
   }
 
-  async obtenerAreas(): Promise<Record<string, InventoryAreaV2>> {
+  async obtenerAreas(): Promise<Record<string, AreaInventarioV2>> {
     const snap = await get(ref(this.db, `${this.baseRef}/areas`));
     return snap.val() || {};
   }
 
-  suscribirAreas(callback: (areas: Record<string, InventoryAreaV2>) => void): () => void {
+  suscribirAreas(callback: (areas: Record<string, AreaInventarioV2>) => void): () => void {
     const r = ref(this.db, `${this.baseRef}/areas`);
     const cb = onValue(r, (snap) => callback(snap.val() || {}));
     return () => off(r, 'value', cb);
@@ -261,7 +261,7 @@ export class RepositorioInventario {
     const areaRef = ref(this.db, `${this.baseRef}/areas/${areaId}`);
     const areaSnap = await get(areaRef);
     if (!areaSnap.exists()) throw new Error('Área de inventario no encontrada');
-    const areaData = areaSnap.val() as InventoryAreaV2;
+    const areaData = areaSnap.val() as AreaInventarioV2;
     const currentStock = areaData.stock || {};
 
     const updates: Record<string, any> = {};
@@ -401,7 +401,7 @@ export class RepositorioInventario {
     const areaSnap = await get(areaRef);
     if (!areaSnap.exists()) throw new Error('Área de inventario no encontrada');
 
-    const areaData = areaSnap.val() as InventoryAreaV2;
+    const areaData = areaSnap.val() as AreaInventarioV2;
     const currentStock = areaData.stock || {};
     const updates: Record<string, any> = {};
     const timestamp = Date.now();
@@ -461,3 +461,12 @@ export class RepositorioInventario {
   }
 }
 export { RepositorioInventario as InventoryV2Repository };
+
+// Aliases retrocompatibles (inglés)
+export type {
+  SeccionInventarioId as InventorySectionId,
+  SeccionInventarioV2 as InventorySectionV2,
+  ItemInventarioV2 as InventoryItemV2,
+  AreaInventarioV2 as InventoryAreaV2,
+  MovimientoInventarioV2 as InventoryMovementV2,
+};
