@@ -20,7 +20,7 @@ export interface SyncMetric {
   error?: string;
 }
 
-class SyncMetricsCollector {
+export class MetricasSincronizacion {
   private metrics: SyncMetric[] = [];
   private maxMetrics = 1000; // Limitar memoria
 
@@ -116,15 +116,17 @@ class SyncMetricsCollector {
   }
 }
 
-export const syncMetrics = new SyncMetricsCollector();
-export const metricasSincronizacion = syncMetrics;
-export const MetricasSincronizacion = SyncMetricsCollector;
+export const metricasSincronizacion = new MetricasSincronizacion();
+
+// Aliases retrocompatibles (inglés)
+export { MetricasSincronizacion as SyncMetricsCollector };
+export { metricasSincronizacion as syncMetrics };
 
 // Cleanup automático cada hora
 if (typeof setInterval !== 'undefined') {
   setInterval(
     () => {
-      syncMetrics.cleanup();
+      metricasSincronizacion.cleanup();
     },
     60 * 60 * 1000
   );

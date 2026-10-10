@@ -26,7 +26,7 @@ export type SyncEvent = {
   };
 };
 
-export class SyncDebugger {
+export class DepuradorSincronizacion {
   private events: SyncEvent[] = [];
   private deviceId = `device_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -135,6 +135,8 @@ export class SyncDebugger {
 }
 
 // Instancia global para debugging
-export const syncDebugger = new SyncDebugger();
-export const depuradorSincronizacion = syncDebugger;
-export const DepuradorSincronizacion = SyncDebugger;
+export const depuradorSincronizacion = new DepuradorSincronizacion();
+
+// Aliases retrocompatibles (inglés)
+export { DepuradorSincronizacion as SyncDebugger };
+export { depuradorSincronizacion as syncDebugger };

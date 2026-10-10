@@ -14,8 +14,8 @@
 
 import { Database, onValue, ref, runTransaction } from 'firebase/database';
 import { createLogger } from '../../sistema/monitoreo';
-import { syncDebugger, SyncDebugger } from '../../sistema/utilidades/depuradorSincronizacion';
-import { syncMetrics } from './MetricasSincronizacion';
+import { depuradorSincronizacion, DepuradorSincronizacion } from '../../sistema/utilidades/depuradorSincronizacion';
+import { metricasSincronizacion } from './MetricasSincronizacion';
 
 const log = createLogger('ServicioSincronizacion');
 
@@ -129,7 +129,7 @@ export class ServicioSincronizacion {
 
         // Validar integridad si está habilitado
         if (validateData) {
-          const validation = SyncDebugger.validateData(newItems);
+          const validation = DepuradorSincronizacion.validateData(newItems);
           if (!validation.valid) {
             log.error('❌ Datos inválidos recibidos:', validation.errors);
             onError?.(new Error(`Datos inválidos: ${validation.errors.join(', ')}`));
@@ -168,7 +168,7 @@ export class ServicioSincronizacion {
         }
 
         log.debug(`⚡ Items actualizados: ${newItems.length} items`);
-        syncDebugger.log({
+        depuradorSincronizacion.log({
           type: 'remote_snapshot',
           mesaId: path.split('/').pop() || 'unknown',
           items: newItems,
@@ -244,7 +244,7 @@ export class ServicioSincronizacion {
       const latency = Date.now() - startTime;
       const itemCount = (subscription?.currentItems.length || 0) + 1;
 
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'add',
         latency,
         success: true,
@@ -252,7 +252,7 @@ export class ServicioSincronizacion {
         path,
       });
 
-      syncDebugger.log({
+      depuradorSincronizacion.log({
         type: 'local_operation',
         mesaId: path.split('/').pop() || 'unknown',
         items: subscription?.currentItems || [],
@@ -264,7 +264,7 @@ export class ServicioSincronizacion {
       const latency = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'add',
         latency,
         success: false,
@@ -318,7 +318,7 @@ export class ServicioSincronizacion {
       });
 
       const latency = Date.now() - startTime;
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'update',
         latency,
         success: true,
@@ -331,7 +331,7 @@ export class ServicioSincronizacion {
       const latency = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'update',
         latency,
         success: false,
@@ -375,7 +375,7 @@ export class ServicioSincronizacion {
       });
 
       const latency = Date.now() - startTime;
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'remove',
         latency,
         success: true,
@@ -388,7 +388,7 @@ export class ServicioSincronizacion {
       const latency = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'remove',
         latency,
         success: false,
@@ -429,7 +429,7 @@ export class ServicioSincronizacion {
       });
 
       const latency = Date.now() - startTime;
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'clear',
         latency,
         success: true,
@@ -442,7 +442,7 @@ export class ServicioSincronizacion {
       const latency = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      syncMetrics.record({
+      metricasSincronizacion.record({
         operationType: 'clear',
         latency,
         success: false,
