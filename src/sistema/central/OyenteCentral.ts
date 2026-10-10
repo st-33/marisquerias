@@ -17,19 +17,19 @@ import type {
   CentralEstado,
 } from '../store/slices/central';
 
-export interface CentralListenerCallbacks {
+export interface OyenteCentralCallbacks {
   onConfiguracion?: (config: CentralConfiguracion | null) => void;
   onEstado?: (estado: CentralEstado | null) => void;
   onError?: (error: Error) => void;
 }
 
-export interface CentralListenerOptions {
+export interface OpcionesOyenteCentral {
   db: Database;
   negocio_id: string;
-  callbacks: CentralListenerCallbacks;
+  callbacks: OyenteCentralCallbacks;
 }
 
-export class CentralListener {
+export class OyenteCentral {
   private unsubConfig?: () => void;
   private unsubEstado?: () => void;
   private activo: boolean = false;
@@ -39,7 +39,7 @@ export class CentralListener {
     private readonly negocio_id: string
   ) {}
 
-  iniciar(callbacks: CentralListenerCallbacks): () => void {
+  iniciar(callbacks: OyenteCentralCallbacks): () => void {
     if (this.activo) {
       this.detener();
     }
@@ -130,10 +130,15 @@ export function suscribirCentralAlStore(
     setCentralError: (err: string | null) => void;
   }
 ): () => void {
-  const listener = new CentralListener(db, negocio_id);
+  const listener = new OyenteCentral(db, negocio_id);
   return listener.iniciar({
     onConfiguracion: (config) => store.setCentralConfiguracion(config),
     onEstado: (estado) => store.setCentralEstado(estado),
     onError: (err) => store.setCentralError(err.message),
   });
 }
+
+// Alias retrocompatibles (inglés) mientras los consumidores migran.
+export { OyenteCentral as CentralListener };
+export type { OyenteCentralCallbacks as CentralListenerCallbacks };
+export type { OpcionesOyenteCentral as CentralListenerOptions };

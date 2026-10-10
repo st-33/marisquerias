@@ -1,7 +1,7 @@
 import { off, onValue, ref } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import {
-  CentralListener,
+  OyenteCentral,
   suscribirCentralAlStore,
 } from '../OyenteCentral';
 import {
@@ -49,9 +49,9 @@ describe('Unidad Central — Listener y Contrato de Configuración/Estado', () =
     jest.clearAllMocks();
   });
 
-  describe('CentralListener', () => {
+  describe('OyenteCentral', () => {
     it('se suscribe a las rutas canónicas de configuración y estado en RTDB', () => {
-      const listener = new CentralListener(dbMock, negocioId);
+      const listener = new OyenteCentral(dbMock, negocioId);
       const callbacks = {
         onConfiguracion: jest.fn(),
         onEstado: jest.fn(),
@@ -75,7 +75,7 @@ describe('Unidad Central — Listener y Contrato de Configuración/Estado', () =
 
     it('FRONTERA: solo lee y escucha, NUNCA escribe en central/*', () => {
       const { set, update } = require('firebase/database');
-      const listener = new CentralListener(dbMock, negocioId);
+      const listener = new OyenteCentral(dbMock, negocioId);
       listener.iniciar({});
 
       expect(set).not.toHaveBeenCalled();
