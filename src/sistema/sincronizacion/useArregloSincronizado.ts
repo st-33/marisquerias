@@ -25,8 +25,7 @@
 import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  SynchronizationService,
-  synchronizationService,
+  servicioSincronizacion,
   type SynchronizableItem,
 } from './ServicioSincronizacion';
 import { createLogger } from '../../sistema/monitoreo';
@@ -124,7 +123,7 @@ export function useArregloSincronizado<T extends SynchronizableItem>(
 
     log.debug(`🔗 Iniciando suscripción: ${path}`);
 
-    const unsubscribe = synchronizationService.subscribe(
+    const unsubscribe = servicioSincronizacion.subscribe(
       db,
       {
         path,
@@ -173,14 +172,14 @@ export function useArregloSincronizado<T extends SynchronizableItem>(
 
       // Update optimista
       if (optimistic) {
-        const itemWithId = synchronizationService.ensureId(item);
+        const itemWithId = servicioSincronizacion.ensureId(item);
         const optimisticItems = [...optimisticItemsRef.current, itemWithId];
         optimisticItemsRef.current = optimisticItems;
         setItems(optimisticItems);
       }
 
       // Operación real
-      const success = await synchronizationService.addItem<T>(db, activePath, item);
+      const success = await servicioSincronizacion.addItem<T>(db, activePath, item);
 
       if (!success && optimistic) {
         // Rollback en caso de error
@@ -213,7 +212,7 @@ export function useArregloSincronizado<T extends SynchronizableItem>(
       }
 
       // Operación real
-      const success = await synchronizationService.updateItemById<T>(db, activePath, id, updates);
+      const success = await servicioSincronizacion.updateItemById<T>(db, activePath, id, updates);
 
       if (!success && optimistic) {
         // Rollback
@@ -244,7 +243,7 @@ export function useArregloSincronizado<T extends SynchronizableItem>(
       }
 
       // Operación real
-      const success = await synchronizationService.removeItemById(db, activePath, id);
+      const success = await servicioSincronizacion.removeItemById(db, activePath, id);
 
       if (!success && optimistic) {
         // Rollback
@@ -274,7 +273,7 @@ export function useArregloSincronizado<T extends SynchronizableItem>(
     }
 
     // Operación real
-    const success = await synchronizationService.clearItems(db, activePath);
+    const success = await servicioSincronizacion.clearItems(db, activePath);
 
     if (!success && optimistic) {
       // Rollback

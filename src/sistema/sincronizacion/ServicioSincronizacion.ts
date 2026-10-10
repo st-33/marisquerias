@@ -17,7 +17,7 @@ import { createLogger } from '../../sistema/monitoreo';
 import { syncDebugger, SyncDebugger } from '../../sistema/utilidades/depuradorSincronizacion';
 import { syncMetrics } from './MetricasSincronizacion';
 
-const log = createLogger('SynchronizationService');
+const log = createLogger('ServicioSincronizacion');
 
 /**
  * Item sincronizable con ID único obligatorio
@@ -64,7 +64,7 @@ interface ActiveSubscription {
 /**
  * Servicio centralizado de sincronización
  */
-export class SynchronizationService {
+export class ServicioSincronizacion {
   private subscriptions = new Map<string, ActiveSubscription>();
   private idGenerator: () => string;
   private idCounter = 0;
@@ -503,6 +503,8 @@ export class SynchronizationService {
 }
 
 // Instancia singleton del servicio
-export const synchronizationService = new SynchronizationService();
-export const servicioSincronizacion = synchronizationService;
-export const ServicioSincronizacion = SynchronizationService;
+export const servicioSincronizacion = new ServicioSincronizacion();
+
+// Aliases retrocompatibles (inglés)
+export { ServicioSincronizacion as SynchronizationService };
+export { servicioSincronizacion as synchronizationService };
