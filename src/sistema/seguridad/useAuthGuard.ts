@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import { RUTAS } from '@compartido/rutas';
 import { logger } from '../monitoreo';
-import { deviceBinding } from './deviceBinding';
+import { deviceBinding } from './vinculacionDispositivo';
 
 /**
  * 🛡️ GUARDIA DE AUTENTICACIÓN (Auth Guard) - Hardened (Nivel Militar)

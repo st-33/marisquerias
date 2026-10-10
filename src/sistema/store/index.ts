@@ -15,7 +15,7 @@ import {
   registerNegocioStateReset,
   resetNegocioLifecycle,
   switchNegocioLifecycle,
-} from '../ciclo_de_vida/NegocioLifecycleController';
+} from '../ciclo_de_vida/ControladorCicloVidaNegocio';
 import { createDataSourcesSlice, type DataSourcesSlice } from './slices/dataSources';
 import { createHardwareSlice, type HardwareSlice } from './slices/hardware';
 import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventario';

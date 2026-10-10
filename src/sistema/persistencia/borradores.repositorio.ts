@@ -8,7 +8,7 @@
  * - Aislado por negocioId + deviceId. Nunca cruza negocios.
  */
 
-import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { logger } from '../monitoreo';
 
 // ─────────────────────────────────────────────────────────────────────────────

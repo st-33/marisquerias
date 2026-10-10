@@ -2,7 +2,7 @@ import { set, ref, push } from 'firebase/database';
 import { SimpleSalesRepo } from '../../persistencia/ventasSimples.repositorio';
 import { OfflineSalesSync } from '../../servicios/SincronizacionVentasOffline';
 import { OfflineInventorySync } from '../../servicios/SincronizacionInventarioOffline';
-import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import type { Database } from 'firebase/database';
 
 // Mock netinfo
@@ -39,7 +39,7 @@ jest.mock('../../persistencia/registroVentas.repositorio', () => ({
 }));
 
 // Mock SQLiteStorageAdapter
-jest.mock('../../offline/storage/SQLiteStorageAdapter', () => ({
+jest.mock('../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite', () => ({
   SQLiteStorageAdapter: {
     getVentasPendientes: jest.fn().mockResolvedValue([]),
     markVentaSynced: jest.fn().mockResolvedValue(undefined),

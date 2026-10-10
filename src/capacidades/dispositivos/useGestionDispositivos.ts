@@ -18,7 +18,7 @@ import {
   DEFAULT_PRINT_POLICIES,
   type PrintPolicies,
   type PrinterRef,
-} from '../../sistema/impresion/legacy/policies';
+} from '../../sistema/impresion/legacy/politicasImpresion';
 
 export type UseGestionDispositivosProps = {
   db?: Database;

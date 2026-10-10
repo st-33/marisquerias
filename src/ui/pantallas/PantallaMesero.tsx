@@ -5,7 +5,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, StatusBar, View } from 'react-native';
-import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionAvisoEmergente';
+import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionToast';
 import { getRtdb } from '../../sistema/firebase';
 import { useModoInmersivo as useImmersiveMode } from '../../sistema/navegacion/ModoInmersivo';
 import { useStore } from '../../sistema/store';

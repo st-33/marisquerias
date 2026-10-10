@@ -12,7 +12,7 @@ import { InventoryV2Repository } from '../../sistema/persistencia/inventario.rep
 import type { Categoria } from '../../sistema/persistencia/menu.repositorio';
 import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repositorio';
 import { getRtdb } from '../../sistema/firebase';
-import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../../sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';

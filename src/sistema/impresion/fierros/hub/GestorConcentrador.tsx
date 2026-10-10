@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getRtdb } from '../../../firebase';
 import { DevicesRepository, type HubConfig } from '../../../persistencia/dispositivos.repositorio';
 import { DespachadorCola } from '../cola/DespachadorCola';
-import { useEstadoHub } from '../estado/EstadoHub';
+import { useEstadoHub } from '../estado/EstadoConcentrador';
 
 interface PropiedadesGestorHub {
   /** Path del negocio (ej: "negocios/miNegocio") */

@@ -14,7 +14,7 @@ import {
   useVentas,
   useStore,
 } from '../../sistema/store';
-import { SQLiteStorageAdapter, type HistorialVenta } from '../../sistema/offline';
+import { SQLiteStorageAdapter, type HistorialVenta } from '../../sistema/sin_conexion';
 import { acumularVendedorSeguro, type ResumenVendedor } from './metricasVendedores';
 
 /**

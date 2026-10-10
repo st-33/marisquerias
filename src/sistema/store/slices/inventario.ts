@@ -7,7 +7,7 @@ import type {
   SeccionInventarioV2,
 } from '../../persistencia/inventario.repositorio';
 import { OfflinePrintFallback } from '../../servicios/RespaldoImpresionOffline';
-import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';
 

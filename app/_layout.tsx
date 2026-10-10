@@ -13,7 +13,7 @@ import {
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
 import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
-import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorHub';
+import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorConcentrador';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AccionRadialFlotante } from '../src/ui/bloques/AccionRadialFlotante';
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';

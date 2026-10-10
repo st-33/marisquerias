@@ -29,7 +29,7 @@ export function useAuth() {
         const { dispositivo } = installRes;
 
         // 2.5 Registrar dispositivo de forma persistente en el sistema de seguridad
-        const { deviceBinding } = await import('./deviceBinding');
+        const { deviceBinding } = await import('./vinculacionDispositivo');
         await deviceBinding.registerDevice(dispositivo.rutaNegocio);
 
         // 3. Guardar sesión con rol inicial asignado

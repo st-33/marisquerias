@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ref, set, get, update, serverTimestamp } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { ensureNegocioBootstrap } from '../../ciclo_de_vida/ensureNegocio';
+import { ensureNegocioBootstrap } from '../../ciclo_de_vida/asegurarNegocio';
 import { resolverDeviceIdADI } from '../vinculacion/generar-device-id-adi';
 import { resolverAccessCode } from '../vinculacion/resolver-access-code';
 import { resolverConfiguracionInicial } from '../runtime/resolver-configuracion-inicial';

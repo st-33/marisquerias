@@ -45,7 +45,7 @@ jest.mock('../../monitoreo', () => ({
   setUser: jest.fn(),
 }));
 
-jest.mock('../../ciclo_de_vida/ensureNegocio', () => ({
+jest.mock('../../ciclo_de_vida/asegurarNegocio', () => ({
   ensureNegocioBootstrap: jest.fn().mockResolvedValue(undefined),
 }));
 

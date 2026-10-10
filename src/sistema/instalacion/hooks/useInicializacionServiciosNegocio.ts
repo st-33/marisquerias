@@ -4,7 +4,7 @@ import {
   isCurrentNegocioLifecycle,
   registerNegocioCleanup,
   switchNegocioLifecycle,
-} from '../../ciclo_de_vida/NegocioLifecycleController';
+} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 import type { EstadoInstalacion } from '../../store/slices/sesion';
 import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 
@@ -49,11 +49,11 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         const db = getRtdb();
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
-        const { ensureNegocioBootstrap } = await import('../../ciclo_de_vida/ensureNegocio');
+        const { ensureNegocioBootstrap } = await import('../../ciclo_de_vida/asegurarNegocio');
         await ensureNegocioBootstrap(db, rutaNegocio);
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
-        const { SQLiteStorageAdapter } = await import('../../offline/storage/SQLiteStorageAdapter');
+        const { SQLiteStorageAdapter } = await import('../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite');
         await SQLiteStorageAdapter.initialize();
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
@@ -64,7 +64,7 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         OfflineInventorySync.initialize(db, rutaNegocio);
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
-        const { deviceBinding } = await import('../../seguridad/deviceBinding');
+        const { deviceBinding } = await import('../../seguridad/vinculacionDispositivo');
         const deviceId = await deviceBinding.getStoredDeviceId();
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 

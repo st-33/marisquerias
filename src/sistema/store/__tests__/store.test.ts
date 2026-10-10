@@ -7,7 +7,7 @@ import {
   getActiveRutaNegocio,
   registerNegocioCleanup,
   switchNegocioLifecycle,
-} from '../../ciclo_de_vida/NegocioLifecycleController';
+} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 
 jest.mock(
   'react-native',

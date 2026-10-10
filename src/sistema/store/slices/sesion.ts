@@ -11,7 +11,7 @@ import {
   resetNegocioLifecycle,
   switchNegocioLifecycle,
   negocioStorageKey,
-} from '../../ciclo_de_vida/NegocioLifecycleController';
+} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 
 export type EstadoInstalacion =
   | 'HIDRATANDO'

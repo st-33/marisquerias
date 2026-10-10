@@ -1,6 +1,6 @@
 import { get, ref, set, update } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { DEFAULT_PRINT_POLICIES } from '../impresion/legacy/policies';
+import { DEFAULT_PRINT_POLICIES } from '../impresion/legacy/politicasImpresion';
 import { validar_ruta_negocio, descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 import { logger } from '../monitoreo';
 

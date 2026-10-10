@@ -1,7 +1,7 @@
 import type { Database } from 'firebase/database';
 import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repositorio';
 import type { Pedido } from '../pedidos.repositorio';
-import { SQLiteStorageAdapter } from '../../offline';
+import { SQLiteStorageAdapter } from '../../sin_conexion';
 
 describe('RegistroVentasRepository — Persistencia en SQLite', () => {
   const dbMock = {} as unknown as Database;

@@ -23,7 +23,7 @@ export type {
   // Contratos
   IControladorFierros,
   OyenteEstado,
-} from './contratos/IControladorFierros';
+} from './contratos/ControladorFierros';
 
 export type {
   CanalImpresion,
@@ -79,13 +79,13 @@ export {
   useConfiguracionHub,
   useEstadoHub,
   useHubDebeEstarActivo,
-} from './estado/EstadoHub';
+} from './estado/EstadoConcentrador';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HUB (Componente invisible)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export { GestorHub, GestorHubGlobal } from './hub/GestorHub';
+export { GestorHub, GestorHubGlobal } from './hub/GestorConcentrador';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SERVICIO SINGLETON (uso avanzado)

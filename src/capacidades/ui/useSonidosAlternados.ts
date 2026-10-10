@@ -6,7 +6,7 @@
 
 import { useCallback, useRef } from 'react';
 import { Platform, Vibration } from 'react-native';
-import { SoundBank } from '../../sistema/audio/soundBank';
+import { SoundBank } from '../../sistema/audio/bancoSonidos';
 
 export interface UseSonidosAlternadosOptions {
   enableVibration?: boolean;

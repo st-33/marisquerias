@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMostradorPro } from './useMostradorPro';
-import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../../sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 

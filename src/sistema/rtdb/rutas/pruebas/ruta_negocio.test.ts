@@ -10,7 +10,7 @@ import {
   resolver_nombre_negocio,
   resolverNombreNegocio,
 } from '../ruta_negocio';
-import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/ensureNegocio';
+import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/asegurarNegocio';
 import { get, set } from 'firebase/database';
 import type { Database } from 'firebase/database';
 

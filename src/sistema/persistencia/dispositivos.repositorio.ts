@@ -6,7 +6,7 @@
 
 import type { Database } from 'firebase/database';
 import { off, onValue, ref, set, update } from 'firebase/database';
-import type { PrintPolicies, PrinterRef } from '../impresion/legacy/policies';
+import type { PrintPolicies, PrinterRef } from '../impresion/legacy/politicasImpresion';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 /**

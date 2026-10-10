@@ -2,7 +2,7 @@ import NetInfo from '@react-native-community/netinfo';
 import type { Database } from 'firebase/database';
 import { SimpleSalesRepo } from '../persistencia/ventasSimples.repositorio';
 import { logger } from '../monitoreo';
-import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
+import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import {
   isCurrentNegocioLifecycle,
   switchNegocioLifecycle,

@@ -17,7 +17,7 @@
  *
  * USO:
  * ```typescript
- * import { deviceBinding } from '@/core/security/deviceBinding';
+ * import { deviceBinding } from '@/core/security/vinculacionDispositivo';
  *
  * // Verificar si dispositivo ya está registrado
  * const isRegistered = await deviceBinding.isDeviceRegistered();
