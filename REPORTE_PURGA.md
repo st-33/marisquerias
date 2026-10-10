@@ -291,3 +291,7 @@ Se ejecutó la purga definitiva de los últimos archivos puente (exportaciones v
 
 **Barrera binaria comprobada de forma continua**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 Commits: `5806f12` (lote 1 de puentes en compartido, dominio y servicios), `861b70b` (lote 2 de puentes en sistema y compartido).
+
+### Purga de Soberanía Estructural RTDB (Fase 4 - Exterminio)
+- **Eliminación de Escrituras Estructurales**: Se refactorizó por completo el archivo `src/sistema/ciclo_de_vida/asegurarNegocio.ts` para eliminar la creación por defecto de la estructura base (políticas de impresión, mesas, configuraciones de reparto y características). El sistema ahora únicamente lee el nodo `caracteristicas` y arroja una excepción si la Torre de Control no ha aprovisionado el negocio, respetando la Ley de Soberanía Estructural RTDB.
+- **Modificaciones Complementarias**: Se reescribieron los tests en `ruta_negocio.test.ts` para validar exclusivamente el comportamiento de lectura/excepción sin invocar mocks de escritura (`set` / `update`). Las escrituras transaccionales (tickets, pedidos, etc.) permanecen intactas en repositorios operativos.

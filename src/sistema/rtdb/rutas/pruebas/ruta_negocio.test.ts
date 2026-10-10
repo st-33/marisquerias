@@ -11,7 +11,7 @@ import {
   resolverNombreNegocio,
 } from '../ruta_negocio';
 import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/asegurarNegocio';
-import { get, set } from 'firebase/database';
+import { get, set, update } from 'firebase/database';
 import type { Database } from 'firebase/database';
 
 jest.mock('firebase/database', () => ({
@@ -188,109 +188,26 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
   });
 
   describe('ensureNegocioBootstrap', () => {
-    it('inicializa mesas vacías y deshabilita mesero/cocina para categorías que no son alimentos preparados', async () => {
-      const rutaNegocio = 'panaderias/el-trigal';
+    it('arroja error si las características no existen (estructura no inicializada por Torre de Control)', async () => {
+      const rutaNegocio = 'marisquerias/el-arrecife';
+      (get as jest.Mock).mockResolvedValueOnce({ exists: () => false });
 
-      const polSnap = { exists: () => true };
-      const mesasSnap = { exists: () => false };
-      const repartUmbSnap = { exists: () => true };
-      const repartHorSnap = { exists: () => true };
-      const pathsSnap = { exists: () => true };
-      const carSnap = { exists: () => false };
-
-      (get as jest.Mock)
-        .mockResolvedValueOnce(polSnap)
-        .mockResolvedValueOnce(mesasSnap)
-        .mockResolvedValueOnce(repartUmbSnap)
-        .mockResolvedValueOnce(repartHorSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(carSnap)
-        .mockResolvedValueOnce({ exists: () => false });
-
-      await ensureNegocioBootstrap(dbMock, rutaNegocio);
-
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ path: `${rutaNegocio}/mesas` }),
-        {}
+      await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).rejects.toThrow(
+        `Violación de Estado: La estructura base del negocio en '${rutaNegocio}' no ha sido aprovisionada por la Torre de Control.`
       );
-
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ path: `${rutaNegocio}/caracteristicas` }),
-        {
-          roles: {
-            mesero: false,
-            cocina: false,
-            admin: {
-              dashboard: true,
-              menu: true,
-              inventario: true,
-              mesas: false,
-              dispositivos: true,
-              repart: true,
-            },
-          },
-          delivery: true,
-          inventory_auto_discount: true,
-        }
-      );
+      
+      expect(set).not.toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
     });
 
-    it('inicializa mesas y habilita mesero/cocina para marisquerias (2 segmentos)', async () => {
+    it('pasa silenciosamente si las características existen', async () => {
       const rutaNegocio = 'marisquerias/el-arrecife';
+      (get as jest.Mock).mockResolvedValueOnce({ exists: () => true });
 
-      const polSnap = { exists: () => true };
-      const mesasSnap = { exists: () => false };
-      const mesasLegacySnap = { exists: () => false };
-      const repartUmbSnap = { exists: () => true };
-      const repartHorSnap = { exists: () => true };
-      const pathsSnap = { exists: () => true };
-      const carSnap = { exists: () => false };
-
-      (get as jest.Mock)
-        .mockResolvedValueOnce(polSnap)
-        .mockResolvedValueOnce(mesasSnap)
-        .mockResolvedValueOnce(mesasLegacySnap)
-        .mockResolvedValueOnce(repartUmbSnap)
-        .mockResolvedValueOnce(repartHorSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(pathsSnap)
-        .mockResolvedValueOnce(carSnap)
-        .mockResolvedValueOnce({ exists: () => false });
-
-      await ensureNegocioBootstrap(dbMock, rutaNegocio);
-
-      expect(set).toHaveBeenCalledWith(expect.objectContaining({ path: `${rutaNegocio}/mesas` }), {
-        '1': { estado: 'libre', updatedAt: expect.any(Number) },
-        '2': { estado: 'libre', updatedAt: expect.any(Number) },
-        '3': { estado: 'libre', updatedAt: expect.any(Number) },
-      });
-
-      expect(set).toHaveBeenCalledWith(
-        expect.objectContaining({ path: `${rutaNegocio}/caracteristicas` }),
-        {
-          roles: {
-            mesero: true,
-            cocina: true,
-            admin: {
-              dashboard: true,
-              menu: true,
-              inventario: true,
-              mesas: true,
-              dispositivos: true,
-              repart: false,
-            },
-          },
-          delivery: false,
-          inventory_auto_discount: false,
-        }
-      );
+      await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).resolves.toBeUndefined();
+      
+      expect(set).not.toHaveBeenCalled();
+      expect(update).not.toHaveBeenCalled();
     });
   });
 });

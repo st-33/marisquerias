@@ -64,6 +64,8 @@
 - Alcance: Ecosistema
 - Fecha: 2026-10-08
 - Obligatorio: La Torre de Control es la unica entidad autorizada para escribir en la RTDB de gobierno (Unidad Central).
+- Prohibido: El Aplicable tiene estrictamente prohibido escribir, inicializar o dictar la estructura, esquemas o plantillas de los nodos en la RTDB. Esa es jurisdicción exclusiva de la Torre de Control.
+- Obligatorio: El Aplicable solo puede leer plantillas y escribir o modificar datos puramente operativos y transaccionales sobre las rutas que la Torre de Control ya le estructuró.
 - Obligatorio: La verificacion de recepcion integra debe completarse antes de autorizar la purga de la jornada operativa.
 - Prohibido: Ejecutar transferencia y purga de forma simultanea.
 - Prohibido: La aplicacion del giro comercial escribe directamente en la RTDB de gobierno (Unidad Central).
