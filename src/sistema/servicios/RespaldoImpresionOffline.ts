@@ -37,7 +37,7 @@ export type PrintResult = {
 // SERVICIO
 // ═══════════════════════════════════════════════════════════════════════════
 
-class OfflinePrintFallbackClass {
+class RespaldoImpresionOffline {
   private isOnline = true;
   private isBluetoothConnected = false;
   private unsubscribeNetInfo: (() => void) | null = null;
@@ -276,6 +276,9 @@ class OfflinePrintFallbackClass {
 }
 
 // Singleton
-export const OfflinePrintFallback = new OfflinePrintFallbackClass();
-export const RespaldoImpresionOffline = OfflinePrintFallback;
+export const respaldoImpresionOffline = new RespaldoImpresionOffline();
+
+// Aliases retrocompatibles (inglés)
+export { RespaldoImpresionOffline as OfflinePrintFallbackClass };
+export { respaldoImpresionOffline as OfflinePrintFallback };
 

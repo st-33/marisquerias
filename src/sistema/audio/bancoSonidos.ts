@@ -6,7 +6,7 @@ type LoadedSound = {
   player: AudioPlayer;
 };
 
-class SoundBankClass {
+class BancoSonidos {
   private cache = new Map<SoundKey, LoadedSound>();
   private initializing = new Map<SoundKey, Promise<LoadedSound>>();
   private audioConfigured = false;
@@ -171,6 +171,9 @@ class SoundBankClass {
   }
 }
 
-export const SoundBank = new SoundBankClass();
-export const BancoSonidos = SoundBank;
+export const bancoSonidos = new BancoSonidos();
+
+// Aliases retrocompatibles (inglés)
+export { BancoSonidos as SoundBankClass };
+export { bancoSonidos as SoundBank };
 

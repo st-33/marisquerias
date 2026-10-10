@@ -10,7 +10,7 @@ import {
 
 import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
-class OfflineSalesSyncClass {
+class SincronizacionVentasOffline {
   private isRunning = false;
   private unsubscribeNetInfo: (() => void) | null = null;
   private salesRepo: SimpleSalesRepo | null = null;
@@ -122,6 +122,9 @@ class OfflineSalesSyncClass {
   }
 }
 
-export const OfflineSalesSync = new OfflineSalesSyncClass();
-export const SincronizacionVentasOffline = OfflineSalesSync;
+export const sincronizacionVentasOffline = new SincronizacionVentasOffline();
+
+// Aliases retrocompatibles (inglés)
+export { SincronizacionVentasOffline as OfflineSalesSyncClass };
+export { sincronizacionVentasOffline as OfflineSalesSync };
 
