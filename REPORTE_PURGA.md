@@ -269,3 +269,25 @@ Commits: `c3b3e00` (useArranqueSistema), `c5d8b0f` (InventarioV2).
 
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 
+
+---
+
+## FASE 1 COMPLETADA: ERRADICACIÓN DE LA COLA LARGA (Lote Final de Puentes)
+
+Se ejecutó la purga definitiva de los últimos archivos puente (exportaciones vacías y re-exportaciones de retrocompatibilidad) en el núcleo de la aplicación (`src/compartido/`, `src/logica/dominio/` y `src/sistema/`). 
+
+### Detalles de la Purga y Erradicación:
+- **41 archivos eliminados con `git rm`**.
+- Se actualizaron más de 60 referencias en importaciones cruzadas y relativas para apuntar directamente a los nombres canónicos en español.
+- **Archivos eliminados incluyen**: `ThemeContext.tsx`, `useItemStatusListener.ts`, `OfflineSalesSync.ts`, `TicketFormatter.ts`, `status.ts`, `normalizers.ts`, `sounds.ts`, `theme.ts`, `GestureHandler.ts`, `ImmersiveMode.ts`, `KitchenQueueEngine.ts`, `audit.ts`, `sentry.mock.ts`, `useBootstrapper.ts`, `soundNotifications.ts`, `soundBank.ts`, `NegocioLifecycleController.ts`, `useAppStateSync.ts`, `ensureNegocio.ts`, `SimpleSalesRepo.ts`, `devices.repo.ts`, `drafts.repo.ts`, `CentralListener.ts`, `deviceBinding.ts`, `offline/index.ts`, `SQLiteStorageAdapter/index.*`, `policies.ts`, `EstadoHub.ts`, `IControladorFierros.ts`, `GestorHub.tsx` (y varios más de esta misma índole).
+
+**Excepción Estratégica Conservada**: 
+- `src/sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite/index.ts` fue conservado al identificar que cumple una función activa de resolución del empaquetador Metro (`index.native` vs `index.web`), no siendo un cascarón muerto.
+
+**Impacto Arquitectónico**:
+- Desacoplamiento total del spanglish residual.
+- Reducción del árbol de trabajo eliminando el "ruido de retrocompatibilidad".
+- Importaciones 100% directas sobre la nomenclatura hispanizada de los dominios (ej. `AdaptadorAlmacenamientoSQLite`, `RespaldoImpresionOffline`, `MotorColaCocina`, `ContextoTema`).
+
+**Barrera binaria comprobada de forma continua**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+Commits: `5806f12` (lote 1 de puentes en compartido, dominio y servicios), `861b70b` (lote 2 de puentes en sistema y compartido).
