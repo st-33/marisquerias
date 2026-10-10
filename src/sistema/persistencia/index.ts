@@ -6,10 +6,10 @@
  * Todos deben pasar por estos repositorios.
  */
 
-export { PedidosRepository } from './pedidos.repositorio';
+export { RepositorioPedidos, PedidosRepository } from './pedidos.repositorio';
 export type { Pedido, PedidoItem } from './pedidos.repositorio';
 
-export { RegistroVentasRepository } from './registroVentas.repositorio';
+export { RepositorioRegistroVentas, RegistroVentasRepository } from './registroVentas.repositorio';
 export type {
   CanalRegistroVenta,
   EntradaRegistroVenta,
@@ -21,10 +21,10 @@ export type {
 
 export * from './mesas.repositorio';
 
-export { getVariantOptionLabel, MenuRepository } from './menu.repositorio';
+export { getVariantOptionLabel, RepositorioMenu, MenuRepository } from './menu.repositorio';
 export type { Categoria, Producto, VariantGroup, VariantOption, VariantRule } from './menu.repositorio';
 
-export { TicketTemplatesRepository } from './tickets.repositorio';
+export { RepositorioPlantillasTicket, TicketTemplatesRepository } from './tickets.repositorio';
 export type {
   TicketTemplate,
   TicketTemplateAcciones,
@@ -51,7 +51,7 @@ export type {
   ComandoIdempotente,
 } from './borradores.repositorio';
 
-export { RepartoRepository } from './reparto.repositorio';
+export { RepositorioReparto, RepartoRepository } from './reparto.repositorio';
 export type {
   EstadoMision,
   ItemMision,
@@ -83,14 +83,14 @@ export {
 } from './ventasSimples.repositorio';
 export type { VentaMostrador, VentaSimple } from './ventasSimples.repositorio';
 
-export { NegocioRepository } from './negocio.repositorio';
+export { RepositorioNegocio, NegocioRepository } from './negocio.repositorio';
 export type { Caracteristicas, Features } from './negocio.repositorio';
 
-export { RepartoAjustesRepository } from './reparto-ajustes.repositorio';
+export { RepositorioAjustesReparto, RepartoAjustesRepository } from './reparto-ajustes.repositorio';
 export type { AjustesReparto } from './reparto-ajustes.repositorio';
 
 export {
-  InventoryV2Repository as RepositorioInventario,
+  RepositorioInventario,
   InventoryV2Repository,
 } from './inventario.repositorio';
 export type {

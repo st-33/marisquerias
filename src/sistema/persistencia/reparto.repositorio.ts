@@ -197,7 +197,7 @@ export type Mision = MisionDelivery | MisionReabastecimiento;
 // REPOSITORIO
 // ═══════════════════════════════════════════════════════════════════════════
 
-export class RepartoRepository {
+export class RepositorioReparto {
   private db: Database;
 
   constructor() {
@@ -447,3 +447,4 @@ export class RepartoRepository {
     return Math.ceil((distanciaKm / velocidadPromedio) * 60);
   }
 }
+export { RepositorioReparto as RepartoRepository };

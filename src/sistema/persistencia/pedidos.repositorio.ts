@@ -80,7 +80,7 @@ export type Pedido = {
   _seqItems?: number; // Secuencia interna para IDs de items
 };
 
-export class PedidosRepository {
+export class RepositorioPedidos {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -589,3 +589,4 @@ export class PedidosRepository {
     await remove(ref(this.db, `${this.getBasePath()}/${pedidoId}`));
   }
 }
+export { RepositorioPedidos as PedidosRepository };

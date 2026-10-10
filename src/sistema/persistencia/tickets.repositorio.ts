@@ -37,7 +37,7 @@ export type TicketTemplate = {
 
 export type TicketTemplatesPorRol = Record<string, TicketTemplate>;
 
-export class TicketTemplatesRepository {
+export class RepositorioPlantillasTicket {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -79,3 +79,4 @@ export class TicketTemplatesRepository {
     );
   }
 }
+export { RepositorioPlantillasTicket as TicketTemplatesRepository };

@@ -30,7 +30,7 @@ export type MesaLayoutInput = {
   shape?: 'square' | 'round';
 };
 
-export class MesasRepository {
+export class RepositorioMesas {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -243,3 +243,4 @@ export class MesasRepository {
     await update(baseRef, payload);
   }
 }
+export { RepositorioMesas as MesasRepository };

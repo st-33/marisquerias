@@ -70,7 +70,7 @@ function resumirItems(pedido: Pedido): ResumenItemVenta[] {
   }));
 }
 
-export class RegistroVentasRepository {
+export class RepositorioRegistroVentas {
   private readonly negocioId: string;
 
   constructor(
@@ -199,3 +199,4 @@ export class RegistroVentasRepository {
     };
   }
 }
+export { RepositorioRegistroVentas as RegistroVentasRepository };

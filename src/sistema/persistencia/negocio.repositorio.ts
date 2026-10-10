@@ -45,7 +45,7 @@ export type Caracteristicas = {
 
 export type Features = Record<string, boolean>;
 
-export class NegocioRepository {
+export class RepositorioNegocio {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -166,3 +166,4 @@ export class NegocioRepository {
     await update(r, sanitizeRtdbPayload(admin));
   }
 }
+export { RepositorioNegocio as NegocioRepository };

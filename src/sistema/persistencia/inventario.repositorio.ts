@@ -104,7 +104,7 @@ export type VentaV2 = z.infer<typeof VentaV2Schema>;
 
 // --- Repositorio ---
 
-export class InventoryV2Repository {
+export class RepositorioInventario {
   private baseRef: string;
 
   constructor(
@@ -460,3 +460,4 @@ export class InventoryV2Repository {
     return () => off(movementsRef, 'value', cb as any);
   }
 }
+export { RepositorioInventario as InventoryV2Repository };

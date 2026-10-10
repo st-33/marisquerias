@@ -116,7 +116,7 @@ export type VariantRule = {
   whenOpt: string;
 };
 
-export class MenuRepository {
+export class RepositorioMenu {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -582,3 +582,4 @@ export class MenuRepository {
     }
   }
 }
+export { RepositorioMenu as MenuRepository };

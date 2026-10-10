@@ -25,7 +25,7 @@ export type AjustesReparto = {
   };
 };
 
-export class RepartoAjustesRepository {
+export class RepositorioAjustesReparto {
   constructor(
     private db: Database,
     private rutaNegocio: string
@@ -98,3 +98,4 @@ export class RepartoAjustesRepository {
     await update(r, { habilitado });
   }
 }
+export { RepositorioAjustesReparto as RepartoAjustesRepository };
