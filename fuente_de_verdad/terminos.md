@@ -992,5 +992,17 @@ Todo termino aqui asentado declara obligatoriamente su campo de alcance (`Alcanc
 - Fecha: 2026-10-10
 - Definicion: Estrategia de degradacion elegante que redirige trabajos de impresion a colas locales de SQLite o Bluetooth directo cuando la conexion con la nube es nula.
 
+## 165.- ADAPTADOR DE ALMACENAMIENTO SQLITE
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Nucleo de persistencia local sin conexion que abstrae SQLite mediante una implementacion nativa y una alternativa web no-op, exponiendo los tipos sin conexion (VentaSinConexion, TrabajoImpresionSinConexion, MovimientoInventarioSinConexion, ProductoSinConexion, CategoriaSinConexion, MesaSinConexion y PedidoSinConexion) como colas y datos estructurados locales.
+
+## 166.- REPOSITORIO DE CAPA DE PERSISTENCIA
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Familia de repositorios hispanizados (RepositorioPedidos, RepositorioMenu, RepositorioNegocio, RepositorioDispositivos, etc.) que materializan la regla de oro de no llamar a Firebase directamente desde componentes ni hooks de negocio, centralizando las rutas RTDB y las operaciones de lectura y escritura de cada entidad.
+
 
 
