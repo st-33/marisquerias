@@ -197,3 +197,22 @@ Commit de sellado: `81bfc85 refactor(sistema): sellar linea base verde del Lote 
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repositorio`).
 
+### Mutación profunda de identificadores (clases y tipos del dominio de persistencia):
+- **9 clases `*Repository`** rebautizadas a `*Repositorio` con alias inglés conservado:
+  - `MenuRepository`→`RepositorioMenu`, `MesasRepository`→`RepositorioMesas`,
+    `NegocioRepository`→`RepositorioNegocio`, `PedidosRepository`→`RepositorioPedidos`,
+    `RegistroVentasRepository`→`RepositorioRegistroVentas`,
+    `RepartoAjustesRepository`→`RepositorioAjustesReparto`, `RepartoRepository`→`RepositorioReparto`,
+    `TicketTemplatesRepository`→`RepositorioPlantillasTicket`, `InventoryV2Repository`→`RepositorioInventario`.
+- **Tipos SQLite `Offline*`** rebautizados a `*SinConexion` en el adaptador
+  (`VentaSinConexion`, `TrabajoImpresionSinConexion`, `MovimientoInventarioSinConexion`,
+  `ProductoSinConexion`, `CategoriaSinConexion`, `MesaSinConexion`, `PedidoSinConexion`),
+  con alias inglés `Offline*` preservados en el barril `sin_conexion`.
+
+**Alimentación a la Fuente de Verdad**:
+- `165.- ADAPTADOR DE ALMACENAMIENTO SQLITE`.
+- `166.- REPOSITORIO DE CAPA DE PERSISTENCIA`.
+
+**Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+Commits: `716f5b7` (clases Repositorio), `3495876` (tipos SinConexion), `a437c06` (Fuente).
+
