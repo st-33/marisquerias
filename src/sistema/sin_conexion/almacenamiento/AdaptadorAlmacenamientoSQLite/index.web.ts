@@ -10,7 +10,7 @@ import { logger } from '../../../monitoreo';
 // TIPOS (compartidos con nativo)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export interface OfflineVenta {
+export interface VentaSinConexion {
   id: string;
   canal: 'venta_crudo' | 'restaurante';
   data: string;
@@ -19,7 +19,7 @@ export interface OfflineVenta {
   syncedAt: number | null;
 }
 
-export interface OfflinePrintJob {
+export interface TrabajoImpresionSinConexion {
   id: string;
   ticketData: string;
   target: 'hub' | 'bluetooth';
@@ -28,7 +28,7 @@ export interface OfflinePrintJob {
   attempts: number;
 }
 
-export interface OfflineInventoryMovement {
+export interface MovimientoInventarioSinConexion {
   id: string;
   rutaNegocio: string;
   containerId: string;
@@ -42,25 +42,25 @@ export interface OfflineInventoryMovement {
   attempts: number;
 }
 
-export interface OfflineProducto {
+export interface ProductoSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflineCategoria {
+export interface CategoriaSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflineMesa {
+export interface MesaSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflinePedido {
+export interface PedidoSinConexion {
   id: string;
   data: string;
   updatedAt: number;
@@ -117,7 +117,7 @@ class SQLiteStorageAdapterWebClass {
     _canal: 'venta_crudo' | 'restaurante',
     _data: object
   ): Promise<void> {}
-  async getVentasPendientes(): Promise<OfflineVenta[]> {
+  async getVentasPendientes(): Promise<VentaSinConexion[]> {
     return [];
   }
   async markVentaSynced(_id: string): Promise<void> {}
@@ -129,7 +129,7 @@ class SQLiteStorageAdapterWebClass {
     _ticketData: object,
     _target: 'hub' | 'bluetooth'
   ): Promise<void> {}
-  async getPendingPrintJobs(): Promise<OfflinePrintJob[]> {
+  async getPendingPrintJobs(): Promise<TrabajoImpresionSinConexion[]> {
     return [];
   }
   async markPrintJobCompleted(_id: string): Promise<void> {}
@@ -147,7 +147,7 @@ class SQLiteStorageAdapterWebClass {
     razon?: string;
     allowNegative: boolean;
   }): Promise<void> {}
-  async getPendingInventoryMovements(): Promise<OfflineInventoryMovement[]> {
+  async getPendingInventoryMovements(): Promise<MovimientoInventarioSinConexion[]> {
     return [];
   }
   async markInventoryMovementSynced(_id: string): Promise<void> {}

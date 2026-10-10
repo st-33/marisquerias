@@ -16,7 +16,7 @@ import { logger } from '../../../monitoreo';
 // TIPOS PARA OFFLINE POS
 // ═══════════════════════════════════════════════════════════════════════════
 
-export interface OfflineVenta {
+export interface VentaSinConexion {
   id: string;
   canal: 'venta_crudo' | 'restaurante';
   data: string;
@@ -25,7 +25,7 @@ export interface OfflineVenta {
   syncedAt: number | null;
 }
 
-export interface OfflinePrintJob {
+export interface TrabajoImpresionSinConexion {
   id: string;
   ticketData: string;
   target: 'hub' | 'bluetooth';
@@ -34,7 +34,7 @@ export interface OfflinePrintJob {
   attempts: number;
 }
 
-export interface OfflineInventoryMovement {
+export interface MovimientoInventarioSinConexion {
   id: string;
   rutaNegocio: string;
   containerId: string;
@@ -48,25 +48,25 @@ export interface OfflineInventoryMovement {
   attempts: number;
 }
 
-export interface OfflineProducto {
+export interface ProductoSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflineCategoria {
+export interface CategoriaSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflineMesa {
+export interface MesaSinConexion {
   id: string;
   data: string;
   updatedAt: number;
 }
 
-export interface OfflinePedido {
+export interface PedidoSinConexion {
   id: string;
   data: string;
   updatedAt: number;
@@ -237,7 +237,7 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM menu_productos')) as OfflineProducto[];
+    const rows = (await this.db.getAllAsync('SELECT * FROM menu_productos')) as ProductoSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {
@@ -270,7 +270,7 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM menu_categorias')) as OfflineCategoria[];
+    const rows = (await this.db.getAllAsync('SELECT * FROM menu_categorias')) as CategoriaSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {
@@ -307,7 +307,7 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM mesas')) as OfflineMesa[];
+    const rows = (await this.db.getAllAsync('SELECT * FROM mesas')) as MesaSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {
@@ -340,7 +340,7 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM pedidos')) as OfflinePedido[];
+    const rows = (await this.db.getAllAsync('SELECT * FROM pedidos')) as PedidoSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {
@@ -372,13 +372,13 @@ class SQLiteStorageAdapterClass {
     logger.info('SQLITE_STORAGE', `Created offline venta ${id} for ${canal}`);
   }
 
-  async getVentasPendientes(): Promise<OfflineVenta[]> {
+  async getVentasPendientes(): Promise<VentaSinConexion[]> {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return [];
 
     return (await this.db.getAllAsync(
       "SELECT * FROM ventas_offline WHERE syncStatus = 'pending' ORDER BY createdAt ASC"
-    )) as OfflineVenta[];
+    )) as VentaSinConexion[];
   }
 
   async markVentaSynced(id: string): Promise<void> {
@@ -418,13 +418,13 @@ class SQLiteStorageAdapterClass {
     logger.info('SQLITE_STORAGE', `Enqueued print job ${id} for ${target}`);
   }
 
-  async getPendingPrintJobs(): Promise<OfflinePrintJob[]> {
+  async getPendingPrintJobs(): Promise<TrabajoImpresionSinConexion[]> {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return [];
 
     return (await this.db.getAllAsync(
       "SELECT * FROM print_queue WHERE status = 'pending' ORDER BY createdAt ASC"
-    )) as OfflinePrintJob[];
+    )) as TrabajoImpresionSinConexion[];
   }
 
   async markPrintJobCompleted(id: string): Promise<void> {
@@ -487,13 +487,13 @@ class SQLiteStorageAdapterClass {
     );
   }
 
-  async getPendingInventoryMovements(): Promise<OfflineInventoryMovement[]> {
+  async getPendingInventoryMovements(): Promise<MovimientoInventarioSinConexion[]> {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return [];
 
     return (await this.db.getAllAsync(
       "SELECT * FROM inventory_queue WHERE status = 'pending' ORDER BY createdAt ASC"
-    )) as OfflineInventoryMovement[];
+    )) as MovimientoInventarioSinConexion[];
   }
 
   async markInventoryMovementSynced(id: string): Promise<void> {
