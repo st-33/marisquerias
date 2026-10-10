@@ -26,30 +26,36 @@ Este archivo es el indice de orquestacion del aplicable Marisquerias: sistema de
 - **Frontera unidireccional**: Marisquerias solo LEE y ESCUCHA a Unidad Central; nunca escribe en `central/*`.
 - **Cero bloqueos sincronos**: si Unidad Central no responde, la operacion local continua.
 
-## 4. SECUENCIA DE DEPENDENCIAS
+## 4. SECUENCIA DE DEPENDENCIAS (ESTRUCTURA FRACTAL)
 
-### Manual de Construccion
+### Manual de Construccion (10 subsistemas)
 
-| Fase | Nombre | Depende de |
-| --- | --- | --- |
-| FASE 01 | Arranque y arquitectura base | — |
-| FASE 02 | Roles operativos y control de acceso | FASE 01 |
-| FASE 03 | Comandas y elaboracion | FASE 02 |
-| FASE 04 | Menu y productos | FASE 02 |
-| FASE 05 | Inventario y despacho por peso | FASE 04 |
-| FASE 06 | Impresion y tickets | FASE 03 |
-| FASE 07 | Reparto y logistica | FASE 02 |
-| FASE 08 | Metricas y cierre de jornada | FASE 03, FASE 05 |
+| Subsistema | Depende de |
+| --- | --- |
+| 01_arranque_y_motor | — |
+| 02_roles_y_permisos | 01 |
+| 03_comandas_y_salon (incluye kds/) | 02 |
+| 04_menu_y_variantes | 02 |
+| 05_inventario_bascula_despacho (incluye bascula/) | 04 |
+| 06_impresion_escpos (incluye esc_pos/) | 03 |
+| 07_mostrador_venta_crudo | 05 |
+| 08_reparto_y_logistica | 02 |
+| 09_metricas_y_cierres | 03, 05 |
+| 10_persistencia_local (incluye sqlite/) | transversal |
 
-### Manual de Diseno
+### Manual de Diseno (5 subsistemas)
 
-| Fase | Nombre | Depende de |
-| --- | --- | --- |
-| FASE 01 | Fundamentos de marca | — |
-| FASE 02 | Primitivos y bloques | FASE 01 |
-| FASE 03 | Pantallas por rol | FASE 02 |
-| FASE 04 | Estados visuales y retroalimentacion | FASE 02 |
-| FASE 05 | Superposiciones, navegacion y responsive | FASE 02, FASE 03 |
+| Subsistema | Depende de |
+| --- | --- |
+| 01_fundamentos_de_marca | — |
+| 02_primitivos_y_bloques | 01 |
+| 03_pantallas_por_rol | 02 |
+| 04_estados_y_retroalimentacion | 02 |
+| 05_superposiciones_y_navegacion | 02, 03 |
+
+### Doble nivel por subsistema
+
+Cada subsistema separa `01_conceptos_y_reglas.md` (lenguaje comun) y `02_contratos_y_tipos.md` (OpenSpec/TypeScript), mas `03_ensamblaje_y_pasos.md`.
 
 ## 5. GOBIERNO Y LIMITES
 

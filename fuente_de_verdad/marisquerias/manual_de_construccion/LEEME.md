@@ -3,20 +3,26 @@
 - Alcance: Aplicable: marisquerias
 - Fecha: 2026-10-09
 - Categoria padre: Marisquerias
-- Proposito: Declarar el objetivo de materializacion del sistema de punto de venta y toma de comandas para el giro de marisqueria, documentando la arquitectura real del aplicable y las fases de su construccion fisica y digital.
+- Proposito: Declarar el objetivo de materializacion del sistema de punto de venta y toma de comandas para el giro de marisqueria. El manual esta desplegado en estructura fractal: cada subsistema se fragmenta en lenguaje comun, contratos tecnicos y ensamblaje.
 - Autoridad de redaccion: Mariscal del Proyecto
 - Regla de gobierno: Se rige por las leyes, terminos y formulas de la Fuente de Verdad principal sin contradecirlas.
 
-## INDICE DE FASES
+## ESTRUCTURA FRACTAL (SUBSISTEMAS)
 
-1. **FASE 01 — ARRANQUE Y ARQUITECTURA BASE**: motor de arranque, composicion de pantallas, resolucion de rutas y configuracion de Expo/React Native.
-2. **FASE 02 — ROLES OPERATIVOS Y CONTROL DE ACCESO**: roles operativos (mesero, cocina, mostrador, administrador, repartidor), acceso y guardas de sesion.
-3. **FASE 03 — COMANDAS Y ELABORACION**: comanda, partida, mesa, envio a cocina y cadena de estados de preparacion.
-4. **FASE 04 — MENU Y PRODUCTOS**: producto, variante, receta, categoria de menu y su gestion administrativa.
-5. **FASE 05 — INVENTARIO Y DESPACHO POR PESO**: inventario, existencia, merma, bascula y despacho por peso.
-6. **FASE 06 — IMPRESION Y TICKETS**: impresora termica, ticket de cocina y de venta, cola de impresion.
-7. **FASE 07 — REPARTO Y LOGISTICA**: reparto a domicilio, despacho y sincronizacion logisticamente aislada.
-8. **FASE 08 — METRICAS Y CIERRE DE JORNADA**: registro de ventas del dia, metricas y cierre de jornada operativa.
+Cada subsistema aloja tres niveles: `01_conceptos_y_reglas.md`, `02_contratos_y_tipos.md` y `03_ensamblaje_y_pasos.md`. Los subsistemas con hardware o persistencia agregan subcarpetas con protocolos (bascula, esc_pos, sqlite, kds).
+
+## INDICE DE SUBSISTEMAS
+
+1. **01_arranque_y_motor** — motor de arranque, composicion de pantallas y nucleo de transiciones.
+2. **02_roles_y_permisos** — roles operativos, vinculacion de dispositivo y capacidades gobernadas.
+3. **03_comandas_y_salon** — comanda, partida, mesa y cadena de preparacion. Incluye `kds/`.
+4. **04_menu_y_variantes** — producto, variante, receta y categoria de menu.
+5. **05_inventario_bascula_despacho** — inventario, merma, bascula y despacho por peso. Incluye `bascula/`.
+6. **06_impresion_escpos** — impresora termica, spool y tickets. Incluye `esc_pos/`.
+7. **07_mostrador_venta_crudo** — mostrador pro y venta de marisco en crudo por peso.
+8. **08_reparto_y_logistica** — reparto a domicilio y motor logistico.
+9. **09_metricas_y_cierres** — ventas del dia, metricas y cierre de jornada.
+10. **10_persistencia_local** — SQLite offline y colas de sincronizacion. Incluye `sqlite/`.
 
 ## REGLA DE SANEAMIENTO
 

@@ -3,17 +3,21 @@
 - Alcance: Aplicable: marisquerias
 - Fecha: 2026-10-09
 - Categoria padre: Marisquerias
-- Proposito: Declarar el objetivo de materializacion de la capa visual e interactiva del sistema de punto de venta para marisqueria, documentando los fundamentos y componentes visuales reales del aplicable.
+- Proposito: Declarar el objetivo de materializacion de la capa visual e interactiva del sistema de punto de venta para marisqueria. Desplegado en estructura fractal: cada subsistema separa lenguaje comun, contratos tecnicos y ensamblaje.
 - Autoridad de redaccion: Mariscal del Proyecto
 - Regla de gobierno: Se rige por las leyes, terminos y formulas de la Fuente de Verdad principal sin contradecirlas.
 
-## INDICE DE FASES
+## ESTRUCTURA FRACTAL (SUBSISTEMAS)
 
-1. **FASE 01 — FUNDAMENTOS DE MARCA**: atmosfera, paleta semantica, tipografia y jerarquia visual.
-2. **FASE 02 — PRIMITIVOS Y BLOQUES**: primitivos, bloques y componentes reutilizables de la interfaz.
-3. **FASE 03 — PANTALLAS POR ROL**: pantallas de mesero, cocina, mostrador, administrador y reparto.
-4. **FASE 04 — ESTADOS VISUALES Y RETROALIMENTACION**: estados visuales, mensajes, notificaciones y validacion visual.
-5. **FASE 05 — SUPERPOSICIONES Y NAVEGACION VISUAL**: superposiciones, transiciones y navegacion.
+Cada subsistema aloja tres niveles: `01_conceptos_y_reglas.md`, `02_contratos_y_tipos.md` y `03_ensamblaje_y_pasos.md`.
+
+## INDICE DE SUBSISTEMAS
+
+1. **01_fundamentos_de_marca** — paleta semantica, tipografia, espaciado y jerarquia visual.
+2. **02_primitivos_y_bloques** — primitivos, bloques y componentes reutilizables.
+3. **03_pantallas_por_rol** — pantallas de administrador, mostrador, mesero, cocina y reparto.
+4. **04_estados_y_retroalimentacion** — estados visuales, mensajes y retroalimentacion.
+5. **05_superposiciones_y_navegacion** — superposiciones, transiciones, accesibilidad y responsive.
 
 ## ORIGEN DE VERDAD
 
