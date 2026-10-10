@@ -1,2 +1,2 @@
-export * from './CentralListener';
+export * from './OyenteCentral';
 export * from './useCentralConfig';

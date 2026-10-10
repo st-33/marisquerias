@@ -37,7 +37,7 @@ import { ESTADO_INICIAL_OPERACION } from './slices/operacion';
 import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventario';
 
 import { createCentralSlice, type CentralSlice, ESTADO_INICIAL_CENTRAL } from './slices/central';
-import { suscribirCentralAlStore } from '../central/CentralListener';
+import { suscribirCentralAlStore } from '../central/OyenteCentral';
 
 // Import local para uso interno en selectores
 import type { ItemBase, PedidoBase } from './slices/operacion';

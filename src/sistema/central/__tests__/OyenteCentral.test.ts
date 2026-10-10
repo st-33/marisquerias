@@ -3,7 +3,7 @@ import type { Database } from 'firebase/database';
 import {
   CentralListener,
   suscribirCentralAlStore,
-} from '../CentralListener';
+} from '../OyenteCentral';
 import {
   estaCapacidadHabilitadaPorCentral,
 } from '../useCentralConfig';

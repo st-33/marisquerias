@@ -10,7 +10,7 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from 'react-native-svg';
-import { useAppTheme } from '../../../../../compartido/temas/ThemeContext';
+import { useAppTheme } from '../../../../../compartido/temas/ContextoTema';
 
 interface EventoVenta {
   timestamp: number;

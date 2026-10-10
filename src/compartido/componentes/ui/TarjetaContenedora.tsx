@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import { useAppTheme } from '../../temas/ThemeContext';
+import { useAppTheme } from '../../temas/ContextoTema';
 
 export interface TarjetaContenedoraProps {
   children: React.ReactNode;

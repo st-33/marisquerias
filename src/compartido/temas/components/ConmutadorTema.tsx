@@ -5,7 +5,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useAppTheme } from '../ThemeContext';
+import { useAppTheme } from '../ContextoTema';
 
 export interface ConmutadorTemaProps {
   position?: 'bottom-left' | 'bottom-right';

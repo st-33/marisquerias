@@ -12,8 +12,8 @@ export {
   theme,
   useAppTheme,
   useTheme,
-} from './ThemeContext';
+} from './ContextoTema';
 
-export type { AppTheme, ThemeColors, ThemeType } from './ThemeContext';
+export type { AppTheme, ThemeColors, ThemeType } from './ContextoTema';
 
 export { ConmutadorTema, ThemeToggle } from './components/ConmutadorTema';

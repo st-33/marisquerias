@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ThemeProvider, type ThemeContextValue, useAppTheme } from '../ThemeContext';
+import { ThemeProvider, type ThemeContextValue, useAppTheme } from '../ContextoTema';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 

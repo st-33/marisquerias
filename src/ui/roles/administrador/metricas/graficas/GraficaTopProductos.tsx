@@ -14,7 +14,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { useAppTheme } from '../../../../../compartido/temas/ThemeContext';
+import { useAppTheme } from '../../../../../compartido/temas/ContextoTema';
 
 type DatosProducto = {
   id: string;
