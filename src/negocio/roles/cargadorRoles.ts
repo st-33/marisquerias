@@ -6,7 +6,7 @@
 
 import { useCallback, useState } from 'react';
 import type { Database } from 'firebase/database';
-import { NegocioRepository } from '../../sistema/persistencia/negocio.repo';
+import { NegocioRepository } from '../../sistema/persistencia/negocio.repositorio';
 import {
   normalizarCaracteristicas,
   type CaracteristicasPlanas,

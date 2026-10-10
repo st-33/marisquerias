@@ -9,7 +9,7 @@ import { getRtdb } from '../../sistema/firebase';
 import {
   RepartoAjustesRepository,
   type AjustesReparto,
-} from '../../sistema/persistencia/reparto-ajustes.repo';
+} from '../../sistema/persistencia/reparto-ajustes.repositorio';
 import { validarHorariosReparto, validarUmbralesReparto } from './validarAjustes';
 
 type PropsGestionReparto = {

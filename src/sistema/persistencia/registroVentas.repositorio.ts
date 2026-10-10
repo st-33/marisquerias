@@ -2,7 +2,7 @@ import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio } from '../rtdb/guards';
 import { descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 import { SQLiteStorageAdapter, type HistorialVenta } from '../offline';
-import type { Pedido } from './pedidos.repo';
+import type { Pedido } from './pedidos.repositorio';
 
 export type OrigenRegistroVenta = 'pedido' | 'mostrador';
 export type CanalRegistroVenta = 'restaurante' | 'mostrador';

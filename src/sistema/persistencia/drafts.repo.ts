@@ -1,1 +1,1 @@
-export * from './borradores.repo';
+export * from './borradores.repositorio';

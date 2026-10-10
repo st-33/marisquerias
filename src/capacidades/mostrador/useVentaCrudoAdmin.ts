@@ -11,7 +11,7 @@ import { getRtdb } from '../../sistema/firebase';
 import {
   RegistroVentasRepository,
   type RegistroVenta,
-} from '../../sistema/persistencia/registroVentas.repo';
+} from '../../sistema/persistencia/registroVentas.repositorio';
 
 type UseVentaCrudoAdminProps = {
   db?: Database;

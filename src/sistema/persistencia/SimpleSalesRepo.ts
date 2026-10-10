@@ -1,1 +1,1 @@
-export * from './ventasSimples.repo';
+export * from './ventasSimples.repositorio';

@@ -1,4 +1,4 @@
-import type { Pedido, PedidoItem } from '../../sistema/persistencia/pedidos.repo';
+import type { Pedido, PedidoItem } from '../../sistema/persistencia/pedidos.repositorio';
 import {
   pedidoRequiereLogistica,
   type EstadoLogistico,
@@ -20,8 +20,8 @@ import type {
   Mision,
   MisionDelivery,
   PrioridadMision,
-} from '../../sistema/persistencia/reparto.repo';
-import { RepartoRepository } from '../../sistema/persistencia/reparto.repo';
+} from '../../sistema/persistencia/reparto.repositorio';
+import { RepartoRepository } from '../../sistema/persistencia/reparto.repositorio';
 
 export interface SolicitudLogisticaPedido {
   pedidoId: string;

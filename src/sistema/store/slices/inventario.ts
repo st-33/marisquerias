@@ -5,7 +5,7 @@ import type {
   InventoryAreaV2,
   InventoryItemV2,
   InventorySectionV2,
-} from '../../persistencia/inventario.repo';
+} from '../../persistencia/inventario.repositorio';
 import { OfflinePrintFallback } from '../../servicios/OfflinePrintFallback';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
 import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';

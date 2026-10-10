@@ -12,7 +12,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useRef, useState } from 'react';
 import { getRtdb } from '../../../firebase';
-import { DevicesRepository, type HubConfig } from '../../../persistencia/dispositivos.repo';
+import { DevicesRepository, type HubConfig } from '../../../persistencia/dispositivos.repositorio';
 import { DespachadorCola } from '../cola/DespachadorCola';
 import { useEstadoHub } from '../estado/EstadoHub';
 

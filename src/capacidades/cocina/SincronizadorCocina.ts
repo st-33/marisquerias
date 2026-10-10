@@ -4,7 +4,7 @@
  */
 
 import { getRtdb } from '../../sistema/firebase';
-import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repo';
+import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repositorio';
 import { useInventoryV2Store, useOperacionStore, useStore } from '../../sistema/store';
 
 export type DescuentoResult = {

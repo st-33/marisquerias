@@ -1,5 +1,5 @@
 import { set, ref, push } from 'firebase/database';
-import { SimpleSalesRepo } from '../../persistencia/ventasSimples.repo';
+import { SimpleSalesRepo } from '../../persistencia/ventasSimples.repositorio';
 import { OfflineSalesSync } from '../../servicios/OfflineSalesSync';
 import { OfflineInventorySync } from '../../servicios/OfflineInventorySync';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
@@ -32,7 +32,7 @@ jest.mock('firebase/database', () => {
 });
 
 const mockRegistrarMostrador = jest.fn().mockResolvedValue({ id: 'MOCK-VENTA' });
-jest.mock('../../persistencia/registroVentas.repo', () => ({
+jest.mock('../../persistencia/registroVentas.repositorio', () => ({
   RegistroVentasRepository: jest.fn().mockImplementation(() => ({
     registrarMostrador: mockRegistrarMostrador,
   })),

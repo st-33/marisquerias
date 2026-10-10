@@ -1,4 +1,4 @@
-import type { AjustesReparto } from '../../sistema/persistencia/reparto-ajustes.repo';
+import type { AjustesReparto } from '../../sistema/persistencia/reparto-ajustes.repositorio';
 
 const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 

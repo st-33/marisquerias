@@ -6,10 +6,10 @@
  * Todos deben pasar por estos repositorios.
  */
 
-export { PedidosRepository } from './pedidos.repo';
-export type { Pedido, PedidoItem } from './pedidos.repo';
+export { PedidosRepository } from './pedidos.repositorio';
+export type { Pedido, PedidoItem } from './pedidos.repositorio';
 
-export { RegistroVentasRepository } from './registroVentas.repo';
+export { RegistroVentasRepository } from './registroVentas.repositorio';
 export type {
   CanalRegistroVenta,
   EntradaRegistroVenta,
@@ -17,20 +17,20 @@ export type {
   OrigenRegistroVenta,
   RegistroVenta,
   ResumenItemVenta,
-} from './registroVentas.repo';
+} from './registroVentas.repositorio';
 
-export * from './mesas.repo';
+export * from './mesas.repositorio';
 
-export { getVariantOptionLabel, MenuRepository } from './menu.repo';
-export type { Categoria, Producto, VariantGroup, VariantOption, VariantRule } from './menu.repo';
+export { getVariantOptionLabel, MenuRepository } from './menu.repositorio';
+export type { Categoria, Producto, VariantGroup, VariantOption, VariantRule } from './menu.repositorio';
 
-export { TicketTemplatesRepository } from './tickets.repo';
+export { TicketTemplatesRepository } from './tickets.repositorio';
 export type {
   TicketTemplate,
   TicketTemplateAcciones,
   TicketTemplateElemento,
   TicketTemplatesPorRol,
-} from './tickets.repo';
+} from './tickets.repositorio';
 
 export {
   RepositorioBorradores,
@@ -38,7 +38,7 @@ export {
   DraftsLocalRepo,
   inicializarEsquemaBorradores,
   inicializarSchemaDrafts,
-} from './borradores.repo';
+} from './borradores.repositorio';
 export type {
   PartidaBorrador,
   BorradorComanda,
@@ -49,9 +49,9 @@ export type {
   DraftEstado,
   DraftOrigen,
   ComandoIdempotente,
-} from './borradores.repo';
+} from './borradores.repositorio';
 
-export { RepartoRepository } from './reparto.repo';
+export { RepartoRepository } from './reparto.repositorio';
 export type {
   EstadoMision,
   ItemMision,
@@ -62,40 +62,40 @@ export type {
   Repartidor,
   TipoMision,
   Ubicacion,
-} from './reparto.repo';
+} from './reparto.repositorio';
 
 export {
   RepositorioDispositivos,
   DispositivosRepository,
   DevicesRepository,
-} from './dispositivos.repo';
+} from './dispositivos.repositorio';
 export type {
   ConfiguracionTicket,
   ConfiguracionHub,
   TicketConfig,
   HubConfig,
-} from './dispositivos.repo';
+} from './dispositivos.repositorio';
 
 export {
   RepositorioVentasSimples,
   VentasSimplesRepo,
   SimpleSalesRepo,
-} from './ventasSimples.repo';
-export type { VentaMostrador, VentaSimple } from './ventasSimples.repo';
+} from './ventasSimples.repositorio';
+export type { VentaMostrador, VentaSimple } from './ventasSimples.repositorio';
 
-export { NegocioRepository } from './negocio.repo';
-export type { Caracteristicas, Features } from './negocio.repo';
+export { NegocioRepository } from './negocio.repositorio';
+export type { Caracteristicas, Features } from './negocio.repositorio';
 
-export { RepartoAjustesRepository } from './reparto-ajustes.repo';
-export type { AjustesReparto } from './reparto-ajustes.repo';
+export { RepartoAjustesRepository } from './reparto-ajustes.repositorio';
+export type { AjustesReparto } from './reparto-ajustes.repositorio';
 
 export {
   InventoryV2Repository as RepositorioInventario,
   InventoryV2Repository,
-} from './inventario.repo';
+} from './inventario.repositorio';
 export type {
   InventoryAreaV2,
   InventoryItemV2,
   InventorySectionV2,
   InventorySectionId,
-} from './inventario.repo';
+} from './inventario.repositorio';

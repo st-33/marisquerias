@@ -55,14 +55,14 @@ jest.mock('../../sistema/persistencia', () => ({
 }));
 
 const mockRegistrarVenta = jest.fn().mockResolvedValue('MOCK-VENTA-123');
-jest.mock('../../sistema/persistencia/ventasSimples.repo', () => ({
+jest.mock('../../sistema/persistencia/ventasSimples.repositorio', () => ({
   SimpleSalesRepo: jest.fn().mockImplementation(() => ({
     registrarVenta: mockRegistrarVenta,
   })),
 }));
 
 const mockRegistrarVentaMultiple = jest.fn().mockResolvedValue('MOCK-VENTA-MULTIPLE-123');
-jest.mock('../../sistema/persistencia/inventario.repo', () => ({
+jest.mock('../../sistema/persistencia/inventario.repositorio', () => ({
   InventoryV2Repository: jest.fn().mockImplementation(() => ({
     obtenerAreas: jest.fn().mockResolvedValue({
       'area-venta-crudo-1': { hubId: 'venta_crudo', nombre: 'Mostrador' },

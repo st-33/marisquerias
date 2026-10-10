@@ -11,7 +11,7 @@ import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidRutaNegocio } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
-import { RegistroVentasRepository } from './registroVentas.repo';
+import { RegistroVentasRepository } from './registroVentas.repositorio';
 import type {
   ClientePedido,
   LogisticaPedido,

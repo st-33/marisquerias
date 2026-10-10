@@ -3,7 +3,7 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
-import { NegocioRepository, type Caracteristicas } from '../../sistema/persistencia/negocio.repo';
+import { NegocioRepository, type Caracteristicas } from '../../sistema/persistencia/negocio.repositorio';
 import { estaFeatureAdminHabilitada } from './seguridadMenu';
 import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
 import type { CentralConfiguracion, CentralEstado } from '../../sistema/store/slices/central';

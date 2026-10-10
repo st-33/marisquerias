@@ -12,7 +12,7 @@ import type { Database } from 'firebase/database';
 import { ref, update } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PedidosRepository, type PedidoItem } from '../../../sistema/persistencia';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
 import { useSincronizacionEstadoApp as useAppStateSync } from '../../../sistema/ciclo_de_vida/useSincronizacionEstadoApp';
 import { canonicalizeString } from '../../../logica/dominio/partidaCanonica';
 import { normalizePedido } from '../../../logica/dominio/normalizadores';

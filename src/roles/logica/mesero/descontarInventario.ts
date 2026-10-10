@@ -5,8 +5,8 @@
  */
 
 import { useRef, useCallback } from 'react';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
-import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
+import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repositorio';
 import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
 import { useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';

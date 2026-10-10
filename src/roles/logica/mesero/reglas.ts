@@ -1,4 +1,4 @@
-import type { VariantGroup, VariantRule } from '../../../sistema/persistencia/menu.repo';
+import type { VariantGroup, VariantRule } from '../../../sistema/persistencia/menu.repositorio';
 
 export function computeVariantDeltaAndLabels(
   groups: Record<string, VariantGroup>,

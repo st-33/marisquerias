@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
 import type { Database } from 'firebase/database';
-import { SimpleSalesRepo } from '../persistencia/ventasSimples.repo';
+import { SimpleSalesRepo } from '../persistencia/ventasSimples.repositorio';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../offline/storage/SQLiteStorageAdapter';
 import {

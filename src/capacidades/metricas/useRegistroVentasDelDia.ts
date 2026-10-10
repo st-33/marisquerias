@@ -3,7 +3,7 @@ import type { Database } from 'firebase/database';
 import {
   RegistroVentasRepository,
   type RegistroVenta,
-} from '../../sistema/persistencia/registroVentas.repo';
+} from '../../sistema/persistencia/registroVentas.repositorio';
 import { usePedidos, useVentas } from '../../sistema/store';
 import { ensureNumberTimestamp, normalizePedido } from '../../logica/dominio/normalizers';
 

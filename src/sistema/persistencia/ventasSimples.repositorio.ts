@@ -1,6 +1,6 @@
 import { ref, push, type Database } from 'firebase/database';
 
-import { RegistroVentasRepository } from './registroVentas.repo';
+import { RegistroVentasRepository } from './registroVentas.repositorio';
 import { assertValidRutaNegocio } from '../rtdb/guards';
 
 export interface VentaMostrador {

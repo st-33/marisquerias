@@ -1,4 +1,4 @@
-import type { Pedido } from '../../../sistema/persistencia/pedidos.repo';
+import type { Pedido } from '../../../sistema/persistencia/pedidos.repositorio';
 import { IntegracionLogisticaPedido, type MotorLogistico } from '../IntegracionLogisticaPedido';
 import type { ResultadoProcesamiento, SenalEntrada } from '../../../motor';
 

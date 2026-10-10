@@ -12,7 +12,7 @@ import {
   DevicesRepository,
   type TicketConfig,
   type HubConfig,
-} from '../../sistema/persistencia/dispositivos.repo';
+} from '../../sistema/persistencia/dispositivos.repositorio';
 import {
   mergeWithDefaultPolicies,
   DEFAULT_PRINT_POLICIES,

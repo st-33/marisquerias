@@ -8,9 +8,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../sistema/persistencia';
-import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repo';
-import type { Categoria } from '../../sistema/persistencia/menu.repo';
-import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repo';
+import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repositorio';
+import type { Categoria } from '../../sistema/persistencia/menu.repositorio';
+import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repositorio';
 import { getRtdb } from '../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
 import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallback';

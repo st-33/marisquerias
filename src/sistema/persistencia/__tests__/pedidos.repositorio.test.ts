@@ -1,6 +1,6 @@
 import type { Database } from 'firebase/database';
 import { get, remove, ref, runTransaction, update } from 'firebase/database';
-import { PedidosRepository } from '../pedidos.repo';
+import { PedidosRepository } from '../pedidos.repositorio';
 
 jest.mock('firebase/database', () => ({
   get: jest.fn(),

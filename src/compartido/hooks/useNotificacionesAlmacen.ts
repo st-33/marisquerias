@@ -8,7 +8,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useMesas, usePedidos } from '../../sistema/store';
-import type { Mesa } from '../../sistema/persistencia/mesas.repo';
+import type { Mesa } from '../../sistema/persistencia/mesas.repositorio';
 
 export type RetornoNotificacionAlmacen = (data: {
   mesaId: string;

@@ -10,7 +10,7 @@
 import { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
-import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repo';
+import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
 import { useAppStateSync } from '../../../sistema/ciclo_de_vida/useAppStateSync';
 import {
   useItemsPedido,

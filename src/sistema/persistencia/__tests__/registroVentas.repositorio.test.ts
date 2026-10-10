@@ -1,6 +1,6 @@
 import type { Database } from 'firebase/database';
-import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repo';
-import type { Pedido } from '../pedidos.repo';
+import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repositorio';
+import type { Pedido } from '../pedidos.repositorio';
 import { SQLiteStorageAdapter } from '../../offline';
 
 describe('RegistroVentasRepository — Persistencia en SQLite', () => {

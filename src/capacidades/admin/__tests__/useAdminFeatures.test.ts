@@ -14,7 +14,7 @@ jest.mock('../../../sistema/store', () => ({
 jest.mock('../../../sistema/firebase', () => ({
   getRtdb: jest.fn(),
 }));
-jest.mock('../../../sistema/persistencia/negocio.repo', () => ({
+jest.mock('../../../sistema/persistencia/negocio.repositorio', () => ({
   NegocioRepository: jest.fn(),
 }));
 
