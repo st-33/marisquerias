@@ -1,6 +1,6 @@
 import { AudioPlayer, AudioStatus, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Platform } from 'react-native';
-import { SOUND_MAP, SoundKey } from '@compartido/sounds';
+import { SOUND_MAP, SoundKey } from '@compartido/sonidos';
 
 type LoadedSound = {
   player: AudioPlayer;

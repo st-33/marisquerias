@@ -5,7 +5,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 
 type ModalNuevaCategoriaProps = {
   nombre: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMostradorPro } from './useMostradorPro';
 import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
-import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallback';
+import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 
 // Mock react

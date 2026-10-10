@@ -6,7 +6,7 @@
 
 import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
-import { ensureNumberTimestamp } from '../../logica/dominio/normalizers';
+import { ensureNumberTimestamp } from '../../logica/dominio/normalizadores';
 import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidRutaNegocio } from '../rtdb/guards';

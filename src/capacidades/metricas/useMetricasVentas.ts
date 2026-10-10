@@ -4,7 +4,7 @@ import {
   ensureNumberTimestamp,
   normalizeMesa,
   normalizePedido,
-} from '../../logica/dominio/normalizers';
+} from '../../logica/dominio/normalizadores';
 import { logger } from '../../sistema/monitoreo/logger';
 import {
   useInventoryCatalog,

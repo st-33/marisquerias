@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { SPACING } from '../../compartido/constantes/theme';
-import { useThemedColors } from '../../compartido/hooks/useThemedColors';
+import { SPACING } from '../../compartido/constantes/tema';
+import { useThemedColors } from '../../compartido/hooks/useColoresTema';
 
 import { OrderItem, PendingItem } from '../../roles/logica/mesero/useLogicaMesero';
 import type { Product } from '../../roles/logica/mesero/useSelectorProductos';

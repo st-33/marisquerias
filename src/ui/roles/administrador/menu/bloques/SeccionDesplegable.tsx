@@ -6,7 +6,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 
 type SeccionDesplegableProps = {
   title: string;

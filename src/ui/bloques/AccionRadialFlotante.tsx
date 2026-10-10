@@ -11,7 +11,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { useThemedColors } from '../../compartido/hooks/useThemedColors';
+import { useThemedColors } from '../../compartido/hooks/useColoresTema';
 import type { FabConfig, FabItem } from '../../sistema/tipos/contratos';
 import { ejecutarAccionFab } from './accionFlotante';
 

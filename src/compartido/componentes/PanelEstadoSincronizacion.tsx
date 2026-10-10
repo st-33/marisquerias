@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '../constantes/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '../constantes/tema';
 
 export type SyncEvent = {
   type: 'local_operation' | 'remote_snapshot' | 'eco_local_aplicado';

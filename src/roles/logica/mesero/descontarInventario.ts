@@ -7,7 +7,7 @@
 import { useRef, useCallback } from 'react';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
 import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repositorio';
-import { canonicalizeString } from '../../../logica/dominio/itemCanonical';
+import { canonicalizeString } from '../../../logica/dominio/partidaCanonica';
 import { useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
 import { createLogger } from '../../../sistema/monitoreo';

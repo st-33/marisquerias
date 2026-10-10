@@ -6,7 +6,7 @@ import type {
   ItemInventarioV2,
   SeccionInventarioV2,
 } from '../../persistencia/inventario.repositorio';
-import { OfflinePrintFallback } from '../../servicios/OfflinePrintFallback';
+import { OfflinePrintFallback } from '../../servicios/RespaldoImpresionOffline';
 import { SQLiteStorageAdapter } from '../../offline/storage/SQLiteStorageAdapter';
 import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';

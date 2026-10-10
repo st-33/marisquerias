@@ -1,6 +1,6 @@
 import { SoundBank } from './bancoSonidos';
 
-import type { SoundKey } from '@compartido/sounds';
+import type { SoundKey } from '@compartido/sonidos';
 
 export type SoundEvent = 'orderToKitchen' | 'orderReady' | 'sessionExit' | 'buttonClick';
 

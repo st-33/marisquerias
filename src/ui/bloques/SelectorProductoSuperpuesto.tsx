@@ -13,9 +13,9 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
-import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
-import { formatMoney } from '../../compartido/utils/formatters';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
+import { formatMoney } from '../../compartido/utils/formateadores';
 
 type Category = { id: string; nombre?: string };
 type Product = { id: string; nombre?: string; precio?: number };

@@ -13,7 +13,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 import { styles } from './estilos';
 import { useInventario } from '../../../../../capacidades/inventario';
 import { usePuenteAccionesFlotantes } from '../../../../../capacidades/admin';

@@ -3,7 +3,7 @@
  */
 
 import { StyleSheet } from 'react-native';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 
 export const styles = StyleSheet.create({
   container: {

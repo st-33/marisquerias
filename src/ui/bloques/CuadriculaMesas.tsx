@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { InsigniaMesa as TableBadge, type TableIndicator } from '../../compartido/componentes/ui/InsigniaMesa';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
-import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
+import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 import { OrderItem } from '../../roles/logica/mesero/useLogicaMesero';
 
 export type TableState = 'libre' | 'ocupada' | 'cuenta';

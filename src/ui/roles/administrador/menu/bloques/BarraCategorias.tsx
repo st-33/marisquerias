@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { Categoria } from '../../../../../sistema/persistencia';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 
 export type BarraCategoriasProps = {
   categorias: Categoria[];

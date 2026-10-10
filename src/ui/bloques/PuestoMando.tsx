@@ -7,8 +7,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
-import { useThemedColors } from '../../compartido/hooks/useThemedColors';
+import { SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { useThemedColors } from '../../compartido/hooks/useColoresTema';
 import { AreaAccion } from './AreaAccion';
 import { ListaComandas } from './ListaComandas';
 import { CuadriculaMesas } from './CuadriculaMesas';

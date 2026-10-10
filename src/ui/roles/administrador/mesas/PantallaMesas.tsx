@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './estilos';
-import { useToast } from '../../../../compartido/componentes/ui/Toast';
+import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { TarjetaResumen } from './componentes/TarjetaResumen';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';

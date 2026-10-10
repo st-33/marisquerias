@@ -13,7 +13,7 @@ import type { Categoria } from '../../sistema/persistencia/menu.repositorio';
 import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repositorio';
 import { getRtdb } from '../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../sistema/offline/storage/SQLiteStorageAdapter';
-import { OfflinePrintFallback } from '../../sistema/servicios/OfflinePrintFallback';
+import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';

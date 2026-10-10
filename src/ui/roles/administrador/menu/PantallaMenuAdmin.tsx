@@ -25,8 +25,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { BarraCategorias } from './bloques/BarraCategorias';
-import { useToast } from '../../../../compartido/componentes/ui/Toast';
-import { theme } from '@compartido/theme';
+import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
+import { theme } from '@compartido/tema';
 import type { Producto } from '../../../../sistema/persistencia';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';

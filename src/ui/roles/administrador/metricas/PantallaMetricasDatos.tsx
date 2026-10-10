@@ -21,8 +21,8 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-n
 import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
-import { useNotifications } from '../../../../compartido/hooks/useNotifications';
-import { useStoreNotifications } from '../../../../compartido/hooks/useStoreNotifications';
+import { useNotifications } from '../../../../compartido/hooks/useNotificaciones';
+import { useStoreNotifications } from '../../../../compartido/hooks/useNotificacionesAlmacen';
 import { logger } from '../../../../sistema/monitoreo';
 import { DisenoAdministrador as AdminLayout } from '../../../../compartido/componentes/layouts/DisenoAdministrador';
 import { usePuenteAccionesFlotantes } from '../../../../capacidades/admin';

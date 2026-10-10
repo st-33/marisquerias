@@ -16,15 +16,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getVariantOptionLabel, type Producto } from '../../sistema/persistencia';
-import { theme } from '@compartido/theme';
-import { formatMoney } from '../../compartido/utils/formatters';
+import { theme } from '@compartido/tema';
+import { formatMoney } from '../../compartido/utils/formateadores';
 import {
   computeVariantDeltaAndLabels,
   evaluateRules,
   getOrderedVisibleGroups,
 } from '../../roles/logica/mesero/reglas';
 import { useSonidosAlternados } from '../../capacidades/ui/useSonidosAlternados';
-import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
+import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);

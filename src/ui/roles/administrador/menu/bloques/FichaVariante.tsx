@@ -5,7 +5,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@compartido/theme';
+import { theme } from '@compartido/tema';
 
 type FichaVarianteProps = {
   titulo: string;
