@@ -18,7 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import FabRadial from '../src/ui/bloques/FabRadial';
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
-import { useBootstrapper } from '../src/sistema/estado/useBootstrapper';
+import { useArranqueSistema } from '../src/sistema/estado/useArranqueSistema';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
@@ -50,7 +50,7 @@ const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
 };
 
 export default function RootLayout() {
-  const isReady = useBootstrapper();
+  const isReady = useArranqueSistema();
   const pathname = usePathname();
   const router = useRouter();
 
