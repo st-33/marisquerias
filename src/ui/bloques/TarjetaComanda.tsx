@@ -13,7 +13,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 import { etiquetaEstadoLogistico } from '../../logica/dominio/logistica';
-import type { OrdenCocina } from '../../sistema/motores/KitchenQueueEngine';
+import type { OrdenCocina } from '../../sistema/motores/MotorColaCocina';
 import { PresionableAnimado } from './PresionableAnimado';
 import { Badge } from './Badge';
 

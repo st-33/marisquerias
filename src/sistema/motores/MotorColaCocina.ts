@@ -52,7 +52,7 @@ export type EstadisticasCocina = {
   itemsListos: number;
 };
 
-export class KitchenQueueEngine {
+export class MotorColaCocina {
   private ordenes: Map<string, OrdenCocina> = new Map();
   private subscribers: Set<(ordenes: OrdenCocina[]) => void> = new Set();
   private urgentThresholdMs: number;
@@ -139,7 +139,7 @@ export class KitchenQueueEngine {
     }
 
     // TODO: Emitir evento LAN/Update local DB (esto será interceptado por el host LAN)
-    console.log(`[KitchenQueueEngine] Item started: ${itemId}`);
+    console.log(`[MotorColaCocina] Item started: ${itemId}`);
 
     this.notify();
   }
@@ -162,7 +162,7 @@ export class KitchenQueueEngine {
       orden.estatus = 'listo';
     }
 
-    console.log(`[KitchenQueueEngine] Item finished: ${itemId}`);
+    console.log(`[MotorColaCocina] Item finished: ${itemId}`);
 
     this.notify();
   }
@@ -181,16 +181,16 @@ export class KitchenQueueEngine {
     });
     orden.estatus = 'listo';
 
-    console.log(`[KitchenQueueEngine] Order finished: ${ordenId}`);
+    console.log(`[MotorColaCocina] Order finished: ${ordenId}`);
 
     this.notify();
   }
 }
 
-export const kitchenEngine = new KitchenQueueEngine();
+export const motorColaCocina = new MotorColaCocina();
 
-// Aliases canónicos en español
-export const MotorColaCocina = KitchenQueueEngine;
-export const motorColaCocina = kitchenEngine;
+// Aliases retrocompatibles (inglés)
+export { MotorColaCocina as KitchenQueueEngine };
+export { motorColaCocina as kitchenEngine };
 
 
