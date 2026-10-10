@@ -27,9 +27,9 @@ import { IntegracionLogisticaPedido } from '../../../capacidades/logistica';
 import { logisticaHabilitada as evaluarLogisticaHabilitada } from '../../../logica/dominio/logistica';
 import { useGestionarImpresion } from './gestionarImpresion';
 import { useProcesarPedido } from './procesarPedido';
-import { useSharedDrafts } from './useSharedDrafts';
+import { useBorradoresCompartidos } from './useBorradoresCompartidos';
 
-const log = createLogger('useMeseroLogic');
+const log = createLogger('useLogicaMesero');
 
 export type PendingItem = {
   id?: string;
@@ -58,7 +58,7 @@ export type OrderItem = {
   productId?: string;
 };
 
-type UseMeseroLogicProps = {
+type UseLogicaMeseroProps = {
   db: Database;
   rutaNegocio: string;
   accessCode: string;
@@ -67,8 +67,9 @@ type UseMeseroLogicProps = {
   onFreeMesa?: (mesaId: string) => void;
   ensureConnection?: () => boolean | Promise<boolean>;
 };
+export type UseMeseroLogicProps = UseLogicaMeseroProps;
 
-export function useMeseroLogic({
+export function useLogicaMesero({
   db,
   rutaNegocio,
   accessCode,
@@ -117,7 +118,7 @@ export function useMeseroLogic({
     decrementItem: decrementDraftItem,
     clear: clearDrafts,
     isOnline,
-  } = useSharedDrafts({
+  } = useBorradoresCompartidos({
     db,
     rutaNegocio,
     mesaId: selectedTable,
@@ -496,3 +497,6 @@ export function useMeseroLogic({
     freeTable,
   };
 }
+
+// Retrocompatibilidad
+export const useMeseroLogic = useLogicaMesero;

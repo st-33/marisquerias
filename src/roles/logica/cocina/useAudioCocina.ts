@@ -11,13 +11,13 @@ import type { OrdenCocina } from './useLogicaCocina';
  * Encapsula toda la lógica de notificaciones sonoras del KDS.
  * Sigue el principio de separación: La lógica decide, este hook suena.
  */
-export function useCocinaAudio(ordenes: OrdenCocina[]) {
+export function useAudioCocina(ordenes: OrdenCocina[]) {
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
 
   // 1. Preload del sonido al montar y stop al desmontar
   useEffect(() => {
-    console.log('[useCocinaAudio] 🔄 Iniciando preload de audio...');
+    console.log('[useAudioCocina] 🔄 Iniciando preload de audio...');
     preloadSoundEvent('orderToKitchen')
       .then(() => {
         console.log('[useCocinaAudio] ✅ Preload SUCCESS');
@@ -65,5 +65,5 @@ export function useCocinaAudio(ordenes: OrdenCocina[]) {
   }, [ordenes]);
 }
 
-// Aliases canónicos en español
-export const useAudioCocina = useCocinaAudio;
+// Retrocompatibilidad
+export const useCocinaAudio = useAudioCocina;

@@ -1,7 +1,6 @@
 export * from './bloques/AreaAccion';
 export * from './bloques/PresionableAnimado';
 export * from './bloques/Insignia';
-export * from './bloques/Badge';
 export * from './bloques/ModalImpresoraBluetooth';
 export * from './bloques/SelloMarca';
 export { default as AccionRadialFlotante, default as FabRadial } from './bloques/AccionRadialFlotante';
@@ -21,7 +20,6 @@ export type {
   PuestoMandoProps,
 } from './bloques/PuestoMando';
 export * from './bloques/SelectorRolElite';
-export * from './bloques/RoleSelectorElite';
 export * from './bloques/CapaEstampa';
 export { CuadriculaMesas, TablesGrid } from './bloques/CuadriculaMesas';
 export type { Table as TablesGridTable, MesaCuadricula } from './bloques/CuadriculaMesas';

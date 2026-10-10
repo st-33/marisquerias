@@ -6,9 +6,9 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useStore } from '../../sistema/store';
-import { RoleSelectorElite } from '..';
+import { SelectorRolElite } from '../bloques/SelectorRolElite';
 
-export function RolesScreen() {
+export function PantallaRoles() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const negocioId = useStore((s) => s.sesion.negocioId);
 
@@ -27,10 +27,8 @@ export function RolesScreen() {
     );
   }
 
-  return <RoleSelectorElite />;
+  return <SelectorRolElite />;
 }
 
-export default RolesScreen;
-
-// Aliases canónicos en español
-export const PantallaRoles = RolesScreen;
+export default PantallaRoles;
+export const RolesScreen = PantallaRoles;

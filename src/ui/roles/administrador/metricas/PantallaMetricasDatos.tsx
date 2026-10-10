@@ -32,7 +32,7 @@ import {
   usePrediccionStock,
   useRegistroVentasDelDia,
 } from '../../../../capacidades/metricas';
-import { AtmosphereLayer } from '../../../../ui/primitivos/AtmosphereLayer';
+import { CapaAtmosfera } from '../../../../ui/primitivos/CapaAtmosfera';
 import { resolver_nombre_negocio } from '../../../../sistema/rtdb/rutas/ruta_negocio';
 import { RegistroVentasDia } from './RegistroVentasDia';
 import { FiltroPeriodo } from './componentes/FiltroPeriodo';
@@ -208,7 +208,7 @@ export function PantallaMetricasDatos() {
   return (
     <AdminLayout>
       <View style={styles.root}>
-        <AtmosphereLayer variant="command" />
+        <CapaAtmosfera variant="command" />
         <View style={styles.contentLayer}>
           <View style={[styles.header, isMobile && styles.headerMobile]}>
             <View style={styles.headerLeft}>

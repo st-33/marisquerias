@@ -15,7 +15,7 @@ import { useThemedColors } from '../../compartido/hooks/useThemedColors';
 import { etiquetaEstadoLogistico } from '../../logica/dominio/logistica';
 import type { OrdenCocina } from '../../sistema/motores/MotorColaCocina';
 import { PresionableAnimado } from './PresionableAnimado';
-import { Badge } from './Badge';
+import { Insignia } from './Insignia';
 
 type TarjetaComandaProps = {
   order: OrdenCocina;
@@ -267,7 +267,7 @@ export function TarjetaComanda({
           baseTimestamp={order.sentToKitchenAt || order.createdAt}
           isUrgent={order.esUrgente}
         />
-        {order.esUrgente && <Badge label="URGENTE" backgroundColor="#dc2626" />}
+        {order.esUrgente && <Insignia label="URGENTE" backgroundColor="#dc2626" />}
       </View>
 
       {/* Items */}

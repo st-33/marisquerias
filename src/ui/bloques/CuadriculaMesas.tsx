@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { InsigniaMesa as TableBadge, type TableIndicator } from '../../compartido/componentes/ui/InsigniaMesa';
 import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/theme';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
-import { OrderItem } from '../../roles/logica/mesero/useMeseroLogic';
+import { OrderItem } from '../../roles/logica/mesero/useLogicaMesero';
 
 export type TableState = 'libre' | 'ocupada' | 'cuenta';
 export type EstadoMesa = TableState;

@@ -27,7 +27,7 @@ export interface RolInfo {
   ruta: string;
 }
 
-export function useRoleSelectorLogic() {
+export function useLogicaSelectorRoles() {
   const db = getRtdb();
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const clearSession = useStore((s) => s.clearSession);
@@ -127,5 +127,5 @@ export function useRoleSelectorLogic() {
   };
 }
 
-// Aliases canónicos en español
-export const useLogicaSelectorRoles = useRoleSelectorLogic;
+// Retrocompatibilidad
+export const useRoleSelectorLogic = useLogicaSelectorRoles;

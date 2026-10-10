@@ -1004,5 +1004,14 @@ Todo termino aqui asentado declara obligatoriamente su campo de alcance (`Alcanc
 - Fecha: 2026-10-10
 - Definicion: Familia de repositorios hispanizados (RepositorioPedidos, RepositorioMenu, RepositorioNegocio, RepositorioDispositivos, etc.) que materializan la regla de oro de no llamar a Firebase directamente desde componentes ni hooks de negocio, centralizando las rutas RTDB y las operaciones de lectura y escritura de cada entidad.
 
+## 167.- BORRADORES COMPARTIDOS DE COMANDA
 
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Mecanismo de sincronizacion reactiva y optimista entre terminales de meseros para partidas previas al envio a cocina, persistidas bajo mesas_pendientes en RTDB sin bloquear el estado central.
 
+## 168.- ORQUESTADOR DE LOGICA DE MESERO
+
+- Alcance: Categoria: Marisquerias
+- Fecha: 2026-10-10
+- Definicion: Cerebro operacional desacoplado (useLogicaMesero) que gobierna la captura de comandas, validacion de inventario, impresion de tickets y ciclo de vida de mesas sin atarse a componentes visuales.

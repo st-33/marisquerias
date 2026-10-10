@@ -22,7 +22,7 @@ import {
   computeVariantDeltaAndLabels,
   evaluateRules,
   getOrderedVisibleGroups,
-} from '../../roles/logica/mesero/rules';
+} from '../../roles/logica/mesero/reglas';
 import { useSonidosAlternados } from '../../capacidades/ui/useSonidosAlternados';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useThemedColors';
 

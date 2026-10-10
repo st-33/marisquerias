@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { PedidosRepository, MesasRepository } from '../../../sistema/persistencia';
-import { PendingItem } from './useMeseroLogic';
+import { PendingItem } from './useLogicaMesero';
 import { createLogger } from '../../../sistema/monitoreo';
 
 const log = createLogger('procesarPedido');

@@ -17,12 +17,13 @@ export type PrintPolicies = {
   autoImprimirComandaAlEnviar?: boolean;
 };
 
-type UsePrintPoliciesProps = {
+type UsePoliticasImpresionProps = {
   db: Database;
   rutaNegocio: string;
 };
+export type UsePrintPoliciesProps = UsePoliticasImpresionProps;
 
-export function usePrintPolicies({ db, rutaNegocio }: UsePrintPoliciesProps) {
+export function usePoliticasImpresion({ db, rutaNegocio }: UsePoliticasImpresionProps) {
   const [policies, setPolicies] = useState<PrintPolicies>({});
 
   useEffect(() => {
@@ -40,6 +41,6 @@ export function usePrintPolicies({ db, rutaNegocio }: UsePrintPoliciesProps) {
   };
 }
 
-// Aliases canónicos en español
-export const usePoliticasImpresion = usePrintPolicies;
+// Retrocompatibilidad
+export const usePrintPolicies = usePoliticasImpresion;
 export type PoliticasImpresion = PrintPolicies;

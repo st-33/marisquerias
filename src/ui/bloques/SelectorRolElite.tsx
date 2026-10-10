@@ -15,18 +15,18 @@ import {
   View,
 } from 'react-native';
 import { ThemeToggle, useAppTheme } from '../../compartido/temas';
-import { useRoleSelectorLogic } from '../../roles/logica/selector/useRoleSelectorLogic';
+import { useLogicaSelectorRoles } from '../../roles/logica/selector/useLogicaSelectorRoles';
 import { SelloMarca } from './SelloMarca';
 import { FondoLiquido } from './FondoLiquido';
 import { BotonOrbe } from './BotonOrbe';
 import { CapaEstampa } from './CapaEstampa';
 
-export function RoleSelectorElite() {
+export function SelectorRolElite() {
   const { colors, theme, isElite } = useAppTheme();
   const { height: screenHeight } = useWindowDimensions();
 
   const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
-    useRoleSelectorLogic();
+    useLogicaSelectorRoles();
 
   // Estilos dinámicos basados en tema
   const dynamicStyles = useMemo(
@@ -189,6 +189,5 @@ export function RoleSelectorElite() {
   );
 }
 
-// Aliases canónicos en español
-export const SelectorRolElite = RoleSelectorElite;
-export default RoleSelectorElite;
+export const RoleSelectorElite = SelectorRolElite;
+export default SelectorRolElite;

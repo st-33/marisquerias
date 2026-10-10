@@ -16,7 +16,7 @@ import { logger } from '../../sistema/monitoreo';
 
 import { useOcultarTotal } from '../../capacidades/mesero/useOcultarTotal';
 import { BluetoothPrinterModal, ProductPickerOverlay, PuestoMando, ModalVariantes } from '..';
-import { useMeseroLogic, useProductSelector, useVariantSelector } from '../../roles/logica/mesero';
+import { useLogicaMesero, useSelectorProductos, useSelectorVariantes } from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
@@ -103,7 +103,7 @@ function MeseroScreenContent() {
     logisticaHabilitada,
     solicitandoEntrega,
     solicitarEntrega,
-  } = useMeseroLogic({
+  } = useLogicaMesero({
     db,
     rutaNegocio,
     accessCode: access_code,
@@ -133,7 +133,7 @@ function MeseroScreenContent() {
     selectCategory,
     getProduct,
     getProductAsync,
-  } = useProductSelector();
+  } = useSelectorProductos();
 
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [showVariantsModal, setShowVariantsModal] = useState(false);
@@ -145,7 +145,7 @@ function MeseroScreenContent() {
     toggleOption,
     confirmSelection,
     cancelSelection,
-  } = useVariantSelector({ getProduct, getProductAsync });
+  } = useSelectorVariantes({ getProduct, getProductAsync });
 
   const handleSend = useCallback(async () => {
     const result = await sendOrderWithValidation(activeSubpedidoId);
@@ -317,12 +317,10 @@ function MeseroScreenContent() {
   );
 }
 
-export function MeseroScreen() {
+export function PantallaMesero() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   return <MeseroScreenContent key={rutaNegocio || 'no-negocio'} />;
 }
 
-export default MeseroScreen;
-
-// Aliases canónicos en español
-export const PantallaMesero = MeseroScreen;
+export default PantallaMesero;
+export const MeseroScreen = PantallaMesero;

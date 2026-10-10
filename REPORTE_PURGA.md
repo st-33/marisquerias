@@ -241,3 +241,31 @@ Commits: `a3c9c1a` (OyenteCentral), `a29606e` (MotorColaCocina), `a2390ed` (Serv
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 Commits: `c3b3e00` (useArranqueSistema), `c5d8b0f` (InventarioV2).
 
+### Consolidación Canónica y Purga de Cascarones (Mesero, Cocina, Selector y UI):
+- **Purga y migración directa de 16 archivos puente/cascarón eliminados con `git rm`**:
+  - `src/roles/logica/mesero/rules.ts` ➔ Consumidores migrados a `reglas.ts`.
+  - `src/roles/logica/mesero/inventoryErrors.ts` ➔ Consumidores migrados a `erroresInventario.ts`.
+  - `src/roles/logica/mesero/usePrintPolicies.ts` ➔ Consumidores migrados a `usePoliticasImpresion.ts`.
+  - `src/roles/logica/mesero/useProductSelector.ts` ➔ Consumidores migrados a `useSelectorProductos.ts`.
+  - `src/roles/logica/mesero/useVariantSelector.ts` ➔ Consumidores migrados a `useSelectorVariantes.ts`.
+  - `src/roles/logica/selector/useRoleSelectorLogic.ts` ➔ Consumidores migrados a `useLogicaSelectorRoles.ts`.
+  - `src/roles/logica/cocina/useCocinaAudio.ts` ➔ Consumidores migrados a `useAudioCocina.ts`.
+  - `src/roles/logica/cocina/useCocinaLogic.ts` ➔ Consumidores migrados a `useLogicaCocina.ts`.
+  - `src/ui/pantallas/RolesScreen.tsx` ➔ Consumidores migrados a `PantallaRoles.tsx`.
+  - `src/ui/pantallas/CocinaScreen.tsx` ➔ Consumidores migrados a `PantallaCocina.tsx`.
+  - `src/ui/pantallas/MeseroScreen.tsx` ➔ Consumidores migrados a `PantallaMesero.tsx`.
+  - `src/ui/bloques/Badge.tsx` ➔ Consumidores migrados a `Insignia.tsx`.
+  - `src/ui/bloques/RoleSelectorElite.tsx` ➔ Consumidores migrados a `SelectorRolElite.tsx`.
+  - `src/ui/bloques/FabRadial.tsx` ➔ Consumidores migrados a `AccionRadialFlotante.tsx`.
+  - `src/ui/bloques/fabAction.ts` ➔ Purgado.
+  - `src/ui/primitivos/AtmosphereLayer.tsx` ➔ Consumidores migrados a `CapaAtmosfera.tsx`.
+- **Hispanización canónica de orquestadores centrales**:
+  - `useMeseroLogic.ts` ➔ `useLogicaMesero.ts` (`export function useLogicaMesero`).
+  - `useSharedDrafts.ts` ➔ `useBorradoresCompartidos.ts` (`export function useBorradoresCompartidos`).
+  - `useCocinaLogic.ts` ➔ `useLogicaCocina.ts` (`export function useLogicaCocina`).
+  - `useCocinaAudio.ts` ➔ `useAudioCocina.ts` (`export function useAudioCocina`).
+  - `useRoleSelectorLogic.ts` ➔ `useLogicaSelectorRoles.ts` (`export function useLogicaSelectorRoles`).
+- **Fuente de verdad**: Términos 167 (`BORRADORES COMPARTIDOS DE COMANDA`) y 168 (`ORQUESTADOR DE LOGICA DE MESERO`) registrados.
+
+**Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
+

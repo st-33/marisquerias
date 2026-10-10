@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { computeVariantDeltaAndLabels } from './reglas';
-import type { PendingItem } from './useMeseroLogic';
+import type { PendingItem } from './useLogicaMesero';
 import type { Product } from './useSelectorProductos';
 
 type VariantSelections = Record<string, string[]>;
@@ -41,7 +41,7 @@ const buildPendingItem = (
   };
 };
 
-export function useVariantSelector({ getProduct, getProductAsync }: UseVariantSelectorProps) {
+export function useSelectorVariantes({ getProduct, getProductAsync }: UseVariantSelectorProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [variantSelections, setVariantSelections] = useState<VariantSelections>({});
 
@@ -159,5 +159,5 @@ export function useVariantSelector({ getProduct, getProductAsync }: UseVariantSe
   };
 }
 
-// Aliases canónicos en español
-export const useSelectorVariantes = useVariantSelector;
+// Retrocompatibilidad
+export const useVariantSelector = useSelectorVariantes;

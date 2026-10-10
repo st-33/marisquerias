@@ -1,4 +1,4 @@
-import { classifyInventoryError } from '../inventoryErrors';
+import { classifyInventoryError } from '../erroresInventario';
 
 describe('classifyInventoryError', () => {
   it('clasifica el stock insuficiente como error operativo explícito', () => {

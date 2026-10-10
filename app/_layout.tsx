@@ -15,7 +15,7 @@ import { logger } from '../src/sistema/monitoreo';
 import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorHub';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import FabRadial from '../src/ui/bloques/FabRadial';
+import { AccionRadialFlotante } from '../src/ui/bloques/AccionRadialFlotante';
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useArranqueSistema } from '../src/sistema/estado/useArranqueSistema';
@@ -249,7 +249,7 @@ function GlobalFabSlot() {
   }
 
   return (
-    <FabRadial
+    <AccionRadialFlotante
       key={`${pathname}:${displayConfig.initialKey ?? ''}`}
       items={displayConfig.items}
       initialKey={displayConfig.initialKey}

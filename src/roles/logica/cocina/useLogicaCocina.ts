@@ -20,7 +20,7 @@ import { createModuleLogger } from '../../../sistema/monitoreo';
 // 🔌 DOGMA V2: Leer datos del store centralizado
 import { useCategorias, usePedidos, useProductos, useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
-import { useAudioCocina as useCocinaAudio } from './useAudioCocina';
+import { useAudioCocina } from './useAudioCocina';
 import type { LogisticaPedido } from '../../../logica/dominio/logistica';
 
 
@@ -225,7 +225,7 @@ type UseCocinaLogicProps = {
   autoDescuentoInventario?: boolean; // Si TRUE, descuenta inventario automáticamente
 };
 
-export function useCocinaLogic({
+export function useLogicaCocina({
   db,
   rutaNegocio,
   urgentThresholdMinutes = 15,
@@ -343,7 +343,7 @@ export function useCocinaLogic({
   }, [pedidosDelStore, calculateOrdenesDebounced]);
 
   // 🔔 EFECTOS DE AUDIO (Encapsulados)
-  useCocinaAudio(ordenes);
+  useAudioCocina(ordenes);
 
   // 🧹 AUTO-CORRECCIÓN: Cerrar órdenes completadas
   // Detecta casos donde todos los items están listos pero el estatus no se actualizó
@@ -697,5 +697,5 @@ export function useCocinaLogic({
   };
 }
 
-// Tipos ya están exportados arriba, no necesitan re-export
-export const useLogicaCocina = useCocinaLogic;
+// Retrocompatibilidad
+export const useCocinaLogic = useLogicaCocina;

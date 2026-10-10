@@ -11,7 +11,7 @@ import { getRtdb } from '../../sistema/firebase';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
-import { useLogicaCocina as useCocinaLogic } from '../../roles/logica/cocina';
+import { useLogicaCocina } from '../../roles/logica/cocina';
 import { logger } from '../../sistema/monitoreo';
 
 const styles = StyleSheet.create({
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function CocinaScreen() {
+export function PantallaCocina() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
@@ -122,7 +122,7 @@ export function CocinaScreen() {
   });
 
   // 🧠 CEREBRO: Hook de lógica pura (usa repositorios)
-  const { orders, stats, loading, actions } = useCocinaLogic({
+  const { orders, stats, loading, actions } = useLogicaCocina({
     db,
     rutaNegocio,
     urgentThresholdMinutes: 15, // Alerta roja después de 15 minutos
@@ -191,8 +191,5 @@ export function CocinaScreen() {
     </View>
   );
 }
-
-export default CocinaScreen;
-
-// Aliases canónicos en español
-export const PantallaCocina = CocinaScreen;
+export default PantallaCocina;
+export const CocinaScreen = PantallaCocina;

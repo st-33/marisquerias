@@ -15,11 +15,11 @@ import {
   classifyInventoryError,
   type InventoryDeductionResult,
   type InventoryErrorCode,
-} from './inventoryErrors';
+} from './erroresInventario';
 
 const log = createLogger('descontarInventario');
 
-export { classifyInventoryError } from './inventoryErrors';
+export { classifyInventoryError } from './erroresInventario';
 
 type DescontarInventarioProps = {
   inventarioV2Repo: InventoryV2Repository;

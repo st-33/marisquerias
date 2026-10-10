@@ -12,10 +12,11 @@ import { useCategorias, useProductos } from '../../../sistema/store';
 import type { Product } from '../../../sistema/tipos/pos';
 export type { Product };
 
-type UseProductSelectorProps = Record<string, never>;
+type UseSelectorProductosProps = Record<string, never>;
+export type UseProductSelectorProps = UseSelectorProductosProps;
 
-export function useProductSelector(
-  _props: UseProductSelectorProps = {} as UseProductSelectorProps
+export function useSelectorProductos(
+  _props: UseSelectorProductosProps = {} as UseSelectorProductosProps
 ) {
   const [selectedCategoryState, setSelectedCategory] = useState<string | null>(null);
 
@@ -105,6 +106,6 @@ export function useProductSelector(
   };
 }
 
-// Aliases canónicos en español
-export const useSelectorProductos = useProductSelector;
+// Retrocompatibilidad
+export const useProductSelector = useSelectorProductos;
 export type Producto = Product;

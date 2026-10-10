@@ -1,6 +1,6 @@
-import { RolesScreen } from '../ui/pantallas/RolesScreen';
-import { CocinaScreen } from '../ui/pantallas/CocinaScreen';
-import { MeseroScreen } from '../ui/pantallas/MeseroScreen';
+import { PantallaRoles } from '../ui/pantallas/PantallaRoles';
+import { PantallaCocina } from '../ui/pantallas/PantallaCocina';
+import { PantallaMesero } from '../ui/pantallas/PantallaMesero';
 import { PantallaMetricasDatos } from '../ui/roles/administrador/metricas/PantallaMetricasDatos';
 import { PantallaMenuAdmin } from '../ui/roles/administrador/menu/PantallaMenuAdmin';
 import { PantallaMesas } from '../ui/roles/administrador/mesas/PantallaMesas';
@@ -15,13 +15,13 @@ import { MostradorAdminScreen } from '../ui/roles/administrador/mostrador/Mostra
  */
 export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<any> }> = {
   selector_roles: {
-    Screen: RolesScreen,
+    Screen: PantallaRoles,
   },
   cocina: {
-    Screen: CocinaScreen,
+    Screen: PantallaCocina,
   },
   mesero: {
-    Screen: MeseroScreen,
+    Screen: PantallaMesero,
   },
   mostrador: {
     Screen: MostradorPro,

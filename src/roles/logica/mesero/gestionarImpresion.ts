@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
 import { createLogger } from '../../../sistema/monitoreo';
-import { usePrintPolicies } from './usePrintPolicies';
+import { usePoliticasImpresion } from './usePoliticasImpresion';
 
 const log = createLogger('gestionarImpresion');
 
@@ -54,7 +54,7 @@ export function useGestionarImpresion({
   onPrintBill,
   pedidoActivo,
 }: GestionarImpresionProps) {
-  const printPolicies = usePrintPolicies({ db, rutaNegocio });
+  const printPolicies = usePoliticasImpresion({ db, rutaNegocio });
   const printPoliciesRef = useRef(printPolicies);
 
   useEffect(() => {

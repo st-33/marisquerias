@@ -24,18 +24,19 @@ export type DraftItem = {
 
 type DraftItemSync = DraftItem & { id: string };
 
-type UseSharedDraftsProps = {
+type UseBorradoresCompartidosProps = {
   db: Database;
   rutaNegocio: string;
   mesaId: string | null;
   negocioId: string;
 };
+export type UseSharedDraftsProps = UseBorradoresCompartidosProps;
 
 function sanitizeDraft<T>(item: T): T {
   return JSON.parse(JSON.stringify(item));
 }
 
-export function useSharedDrafts({ db, rutaNegocio, mesaId }: UseSharedDraftsProps) {
+export function useBorradoresCompartidos({ db, rutaNegocio, mesaId }: UseBorradoresCompartidosProps) {
   const sanitizedMesaId = useMemo(() => {
     if (!mesaId) return null;
     const trimmed = String(mesaId).trim();
@@ -197,3 +198,6 @@ export function useSharedDrafts({ db, rutaNegocio, mesaId }: UseSharedDraftsProp
     totalAmount,
   };
 }
+
+// Retrocompatibilidad
+export const useSharedDrafts = useBorradoresCompartidos;
