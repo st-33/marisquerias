@@ -3,29 +3,103 @@
     ".read": false,
     ".write": false,
 
-    "access_codes": {
-      "$code": {
-        ".read": true,
-        ".write": false
+    "codigo_acceso": {
+      "$codigo": {
+        ".read": "auth != null",
+        ".write": false,
+        ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_\\-]+(\\/[A-Za-z0-9_\\-]+)+$/)"
       }
     },
 
     "2 alimentos_y_bebidas": {
       "marisquerias": {
         "$negocioId": {
-          ".read": true,
-          ".write": true,
+          ".read": "auth != null",
+          ".write": "auth != null",
 
           "dispositivos": {
             "$deviceId": {
-              ".validate": "data.exists()",
-              "rol": { ".validate": "newData.val() === data.val()" },
-              "isAdmin": { ".validate": "newData.val() === data.val()" }
+              ".validate": "newData.hasChildren(['rol', 'deviceIdADI']) || data.exists()",
+              "rol": {
+                ".validate": "newData.isString() && (newData.val() == 'mesero' || newData.val() == 'cocina' || newData.val() == 'mostrador' || newData.val() == 'admin')"
+              },
+              "isAdmin": {
+                ".validate": "newData.isBoolean()"
+              }
+            }
+          },
+
+          "mesas": {
+            "$mesaId": {
+              "estado": {
+                ".validate": "newData.isString() && (newData.val() == 'libre' || newData.val() == 'ocupada' || newData.val() == 'cuenta')"
+              }
             }
           },
 
           "pedidos": {
-            ".indexOn": ["estatus", "mesaId", "cuentaSolicitada", "cerrado"]
+            ".indexOn": ["estatus", "mesaId", "cuentaSolicitada", "cerrado"],
+            "$pedidoId": {
+              "estatus": {
+                ".validate": "newData.isString() && (newData.val() == 'creado' || newData.val() == 'enviado_cocina' || newData.val() == 'en_preparacion' || newData.val() == 'listo_para_entregar' || newData.val() == 'entregado' || newData.val() == 'cerrado')"
+              },
+              "tipo": {
+                ".validate": "newData.isString() && (newData.val() == 'mesa' || newData.val() == 'para_llevar' || newData.val() == 'delivery')"
+              },
+              "items": {
+                "$itemId": {
+                  "estado": {
+                    ".validate": "newData.isString() && (newData.val() == 'nuevo' || newData.val() == 'en_preparacion' || newData.val() == 'listo' || newData.val() == 'entregado')"
+                  },
+                  "cantidad": {
+                    ".validate": "newData.isNumber() && newData.val() > 0"
+                  }
+                }
+              }
+            }
+          },
+
+          "spool": {
+            "jobs": {
+              "$jobId": {
+                "state": {
+                  ".validate": "newData.isString() && (newData.val() == 'pendiente_aprobacion' || newData.val() == 'pendiente_impresion' || newData.val() == 'impresion_enviada' || newData.val() == 'exito' || newData.val() == 'fallo')"
+                },
+                "purpose": {
+                  ".validate": "newData.isString() && (newData.val() == 'comanda' || newData.val() == 'cuenta' || newData.val() == 'venta_crudo')"
+                },
+                "orderId": {
+                  ".validate": "newData.isString()"
+                }
+              }
+            }
+          },
+
+          "inventario": {
+            "$containerId": {
+              "items": {
+                "$itemId": {
+                  "cantidad": {
+                    ".validate": "newData.isNumber()"
+                  }
+                }
+              }
+            }
+          },
+
+          "ventas": {
+            "$ventaId": {
+              ".validate": "newData.hasChild('total')",
+              "total": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              }
+            }
+          },
+
+          "tickets": {
+            "$ticketId": {
+              ".validate": "newData.hasChildren()"
+            }
           }
         }
       }
