@@ -4,7 +4,6 @@
  * Este stub silencia el módulo en tests sin romper imports.
  */
 const noop = () => {};
-const noopPromise = () => Promise.resolve();
 
 module.exports = {
   init: noop,

@@ -11,9 +11,8 @@
 import type { Database } from 'firebase/database';
 import { off, onValue, ref } from 'firebase/database';
 import { useEffect, useState, useMemo } from 'react';
-import { RUTAS } from '../../compartido/rutas';
+import { RUTAS } from '@/sistema/rtdb/rutas/ruta_negocio';
 import { useStore } from '../../sistema/store';
-import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
 
 export type RolConfig = {
   habilitado: boolean;
@@ -47,8 +46,6 @@ type PropsEmpaquetadorRoles = {
 };
 
 export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles) {
-  const centralConfig = useStore((s) => s.central?.configuracion);
-  const centralEstado = useStore((s) => s.central?.estado);
   const [config, setConfig] = useState<ConfiguracionNegocio | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,40 +76,58 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
 
     console.log('[RolePacker] 🔍 Iniciando carga de roles desde:', rutaNegocio);
 
+    const capacidadesRef = ref(db, `${rutaNegocio}/capacidades`);
+    const rolesRef = ref(db, `${rutaNegocio}/roles`);
     const configRef = ref(db, `${rutaNegocio}/caracteristicas`);
 
-    const callback = onValue(
+    let ultimasCapacidades: Record<string, any> = {};
+    let ultimosRoles: Record<string, any> = {};
+
+    const sincronizarYProcesar = () => {
+      const merged = {
+        roles: ultimosRoles,
+        capacidades: ultimasCapacidades,
+        ...ultimasCapacidades,
+      };
+      procesarDatos(merged);
+    };
+
+    const cbRoles = onValue(rolesRef, (snapshot) => {
+      try {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          ultimosRoles = val.roles ? val.roles : val;
+          sincronizarYProcesar();
+        }
+      } catch (err: any) {
+        console.error('[RolePacker] ❌ Error procesando roles:', err);
+      }
+    });
+
+    const cbCapacidades = onValue(capacidadesRef, (snapshot) => {
+      try {
+        const val = snapshot.val();
+        if (val && typeof val === 'object') {
+          ultimasCapacidades = val.capacidades ? val.capacidades : val;
+          sincronizarYProcesar();
+        }
+      } catch (err: any) {
+        console.error('[RolePacker] ❌ Error procesando capacidades:', err);
+      }
+    });
+
+    const cbConfig = onValue(
       configRef,
       (snapshot) => {
         try {
-          console.log('[RolePacker] ✅ Snapshot recibido de caracteristicas');
-          const data = snapshot.val() || {};
-
-          // 🔥 CORRECCIÓN: Verificar si hay datos válidos
-          if (!data || typeof data !== 'object') {
-            console.warn('[RolePacker] ⚠️ Datos inválidos en caracteristicas:', data);
-            // Intentar cargar desde ruta alternativa
-            const featuresRef = ref(db, `${rutaNegocio}/features`);
-            onValue(
-              featuresRef,
-              (featSnap) => {
-                const featData = featSnap.val() || {};
-                if (!featData || typeof featData !== 'object') {
-                  console.error('[RolePacker] ❌ No se encontraron datos en features');
-                  setError('No se encontraron datos de configuración');
-                  setLoading(false);
-                  return;
-                }
-
-                console.log('[RolePacker] ✅ Usando datos de features como fallback');
-                procesarDatos(featData);
-              },
-              { onlyOnce: true }
-            );
-            return;
+          const data = snapshot.val();
+          if (data && typeof data === 'object') {
+            if (data.roles) ultimosRoles = { ...data.roles, ...ultimosRoles };
+            if (data.capacidades) {
+              ultimasCapacidades = { ...data.capacidades, ...ultimasCapacidades };
+            }
+            procesarDatos(data);
           }
-
-          procesarDatos(data);
         } catch (err: any) {
           console.error('[RolePacker] ❌ Error procesando configuración:', err);
           setError(`Error al cargar configuración: ${err.message || 'Desconocido'}`);
@@ -194,18 +209,8 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
       const isVCrudoFeature = (v: any) => v === true || v === 'true' || v === 1 || v === '1';
       const forceVentaCrudo =
         isVCrudoFeature(data.module_venta_crudo) ||
-        isVCrudoFeature(data.features?.module_venta_crudo);
-
-      const centralPermiteMostrador = estaCapacidadHabilitadaPorCentral(
-        centralConfig,
-        centralEstado,
-        'mostrador'
-      );
-      const centralPermiteReparto = estaCapacidadHabilitadaPorCentral(
-        centralConfig,
-        centralEstado,
-        'reparto'
-      );
+        isVCrudoFeature(data.features?.module_venta_crudo) ||
+        isVCrudoFeature(data.capacidades?.mostrador_y_pos);
 
       roles.mostrador = extraherRol(
         'mostrador',
@@ -215,21 +220,43 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
         RUTAS.ROLES.VENTA_CRUDO,
         forceVentaCrudo
       );
-      if (roles.mostrador && !centralPermiteMostrador) {
-        roles.mostrador.habilitado = false;
-      }
 
       // 4. ADMIN
       roles.admin = extraherRol('admin', null, 'Admin', 'settings', RUTAS.ROLES.ADMIN);
       if (roles.admin && typeof rolesData.admin === 'object') {
         roles.admin.modulos = {
           dashboard: rolesData.admin.dashboard !== false,
-          menu: rolesData.admin.menu !== false,
-          inventario: rolesData.admin.inventario !== false,
-          mesas: rolesData.admin.mesas !== false,
-          dispositivos: rolesData.admin.dispositivos !== false,
-          repart: rolesData.admin.repart !== false && centralPermiteReparto,
-          mostrador: rolesData.admin.mostrador !== false && centralPermiteMostrador,
+          menu: (rolesData.admin.menu ?? data.capacidades?.menu) !== false,
+          control_mesas:
+            (rolesData.admin.control_mesas ??
+              rolesData.admin.mesas ??
+              data.capacidades?.control_mesas) !== false,
+          comanda_cocina:
+            (rolesData.admin.comanda_cocina ??
+              rolesData.admin.cocina ??
+              data.capacidades?.comanda_cocina) !== false,
+          mostrador_y_pos:
+            (rolesData.admin.mostrador_y_pos ??
+              rolesData.admin.mostrador ??
+              data.capacidades?.mostrador_y_pos) !== false,
+          inventario: (rolesData.admin.inventario ?? data.capacidades?.inventario) !== false,
+          aparatos_conectados:
+            (rolesData.admin.aparatos_conectados ??
+              rolesData.admin.dispositivos ??
+              data.capacidades?.aparatos_conectados) !== false,
+          reparto_logistica:
+            (rolesData.admin.reparto_logistica ??
+              rolesData.admin.repart ??
+              data.capacidades?.reparto_logistica) !== false,
+          metricas_y_cierres:
+            (rolesData.admin.metricas_y_cierres ??
+              rolesData.admin.metricas ??
+              rolesData.admin.dashboard ??
+              data.capacidades?.metricas_y_cierres) !== false,
+          tickets_impresion:
+            (rolesData.admin.tickets_impresion ??
+              rolesData.admin.tickets ??
+              data.capacidades?.tickets_impresion) !== false,
         };
       }
 
@@ -250,9 +277,6 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
         'bicycle',
         RUTAS.ROLES.REPARTIDOR
       );
-      if (roles.repart && !centralPermiteReparto) {
-        roles.repart.habilitado = false;
-      }
 
       // Normalizar features globales
       const features: Record<string, boolean> = {};
@@ -284,9 +308,11 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
 
     return () => {
       console.log('[RolePacker] 🔌 Desuscribiendo de configuración');
-      off(configRef, 'value', callback as any);
+      off(capacidadesRef, 'value', cbCapacidades as any);
+      off(rolesRef, 'value', cbRoles as any);
+      off(configRef, 'value', cbConfig as any);
     };
-  }, [db, rutaNegocio, centralConfig, centralEstado]);
+  }, [db, rutaNegocio]);
 
   /**
    * Obtener roles habilitados

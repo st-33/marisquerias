@@ -12,7 +12,11 @@ export type FabItem = {
 
 export type ItemAccionFlotante = FabItem;
 
-export function useAccionRadialFlotante(itemsInput: FabItem[], initialActiveKey: string, visibleCount = 4) {
+export function useAccionRadialFlotante(
+  itemsInput: FabItem[],
+  initialActiveKey: string,
+  visibleCount = 4
+) {
   const items = useMemo(() => itemsInput.filter((i) => i.enabled !== false), [itemsInput]);
   const firstKey = items[0]?.key;
   const safeInitialKey = useMemo(() => {
@@ -89,4 +93,3 @@ export function useAccionRadialFlotante(itemsInput: FabItem[], initialActiveKey:
 }
 
 export const useFabRadial = useAccionRadialFlotante;
-

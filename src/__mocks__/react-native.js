@@ -14,7 +14,9 @@ module.exports = {
   },
   NativeModules: {
     RNCNetInfo: {
-      getCurrentState: jest.fn ? jest.fn().mockResolvedValue({ isConnected: true }) : () => Promise.resolve({ isConnected: true }),
+      getCurrentState: jest.fn
+        ? jest.fn().mockResolvedValue({ isConnected: true })
+        : () => Promise.resolve({ isConnected: true }),
       addListener: () => {},
       removeListeners: () => {},
     },

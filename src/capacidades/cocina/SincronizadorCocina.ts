@@ -68,7 +68,12 @@ export class SincronizadorCocina {
       let areas = useInventoryV2Store.getState()?.areas;
 
       // Si el catálogo o las áreas están vacíos (store no inicializado), activar contingencia
-      if (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) {
+      if (
+        !catalog ||
+        Object.keys(catalog).length === 0 ||
+        !areas ||
+        Object.keys(areas).length === 0
+      ) {
         // Contingencia 1: Reintentos breves para esperar hidratación de listeners
         const MAX_INTENTOS = 3;
         const DELAY_MS = 250;
@@ -85,7 +90,10 @@ export class SincronizadorCocina {
 
         // Contingencia 2: Si el store persiste vacío, consultar directamente al repositorio de persistencia
         if (
-          (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) &&
+          (!catalog ||
+            Object.keys(catalog).length === 0 ||
+            !areas ||
+            Object.keys(areas).length === 0) &&
           rutaNegocio
         ) {
           try {
@@ -104,14 +112,22 @@ export class SincronizadorCocina {
               areas = areasRemotas;
             }
           } catch (repoErr) {
-            console.warn('[SincronizadorCocina] Contingencia directa con repositorio falló:', repoErr);
+            console.warn(
+              '[SincronizadorCocina] Contingencia directa con repositorio falló:',
+              repoErr
+            );
           }
         }
       }
 
       // Si tras la contingencia el inventario sigue sin estar disponible:
       // NO hacemos return ciego ni evaluamos stock contra colecciones vacías (evita falso "sin stock").
-      if (!catalog || Object.keys(catalog).length === 0 || !areas || Object.keys(areas).length === 0) {
+      if (
+        !catalog ||
+        Object.keys(catalog).length === 0 ||
+        !areas ||
+        Object.keys(areas).length === 0
+      ) {
         throw new Error(
           `[SincronizadorCocina] Store de inventario no inicializado (catálogo o áreas vacíos). Descuento pospuesto para ${productoId} para prevenir falso sin stock.`
         );

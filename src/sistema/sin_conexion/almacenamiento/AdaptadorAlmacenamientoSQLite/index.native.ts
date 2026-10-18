@@ -237,7 +237,9 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM menu_productos')) as ProductoSinConexion[];
+    const rows = (await this.db.getAllAsync(
+      'SELECT * FROM menu_productos'
+    )) as ProductoSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {
@@ -270,7 +272,9 @@ class SQLiteStorageAdapterClass {
     this.ensureInitialized();
     if (this.isWeb || !this.db) return {};
 
-    const rows = (await this.db.getAllAsync('SELECT * FROM menu_categorias')) as CategoriaSinConexion[];
+    const rows = (await this.db.getAllAsync(
+      'SELECT * FROM menu_categorias'
+    )) as CategoriaSinConexion[];
     const result: Record<string, object> = {};
     for (const row of rows) {
       try {

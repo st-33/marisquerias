@@ -80,9 +80,8 @@ export default function AdminDeviceSettings() {
           if (dispositivoActivo?.direccion) {
             nextDeviceId = `hub_${dispositivoActivo.direccion}`;
           } else {
-            const { resolverDeviceIdADI } = await import(
-              '../../../src/sistema/instalacion/vinculacion/generar-device-id-adi'
-            );
+            const { resolverDeviceIdADI } =
+              await import('../../../src/sistema/instalacion/vinculacion/generar-device-id-adi');
             nextDeviceId = await resolverDeviceIdADI();
           }
           await AsyncStorage.setItem('adi_hub_device_id', nextDeviceId);
@@ -468,7 +467,6 @@ export default function AdminDeviceSettings() {
                     <Text style={[styles.deviceAddress, { color: '#f59e0b' }]}>ID Lógico: #1</Text>
                   </View>
                 </View>
-                {/* TODO: Add desconectar scale method if available */}
               </View>
             ) : (
               <View style={styles.emptyState}>

@@ -379,7 +379,7 @@ describe('Módulo de Instalación y Device Binding - Hardened', () => {
         expect(result.dispositivo.estado).toBe('activo');
         expect(result.dispositivo.nivelOperativo).toBe('operador');
         expect(update).toHaveBeenCalledWith(
-          expect.objectContaining({ path: 'codigo_acceso/PUEBLA-01' }),
+          expect.objectContaining({ path: 'codigo_de_acceso/PUEBLA-01' }),
           expect.objectContaining({ usosActuales: 5 })
         );
       }

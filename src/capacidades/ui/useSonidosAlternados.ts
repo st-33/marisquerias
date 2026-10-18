@@ -49,4 +49,3 @@ export function useSonidosAlternados(options: UseSonidosAlternadosOptions = {}) 
 }
 
 export const useAlternatingSounds = useSonidosAlternados;
-

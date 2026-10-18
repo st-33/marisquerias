@@ -4,7 +4,7 @@
  * Solo se muestra en rol mesero
  */
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, Animated, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -60,7 +60,7 @@ export function NotificacionToast({
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onDismiss]);
+  }, [duration, onDismiss, fadeAnim, translateY]);
 
   return (
     <Animated.View

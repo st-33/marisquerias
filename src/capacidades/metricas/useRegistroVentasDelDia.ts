@@ -4,6 +4,7 @@ import {
   RegistroVentasRepository,
   type RegistroVenta,
 } from '../../sistema/persistencia/registroVentas.repositorio';
+import { PedidosRepository } from '../../sistema/persistencia/pedidos.repositorio';
 import { usePedidos, useVentas } from '../../sistema/store';
 import { ensureNumberTimestamp, normalizePedido } from '../../logica/dominio/normalizadores';
 
@@ -167,5 +168,29 @@ export function useRegistroVentasDelDia({
       numero: reg.numero > 0 ? reg.numero : index + 1,
     }));
 
-  return { registros, loading, error, recargar };
+  // 4. Función explícita de cierre y purga de jornada operativa
+  const purgarJornadaOperativa = useCallback(async () => {
+    try {
+      setLoading(true);
+      const pedidosRepo = new PedidosRepository(db, rutaNegocio);
+      const resultado = await pedidosRepo.purgarJornadaOperativa();
+      recargar();
+      return { success: true, ...resultado };
+    } catch (e: any) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  }, [db, rutaNegocio, recargar]);
+
+  return {
+    registros,
+    loading,
+    error,
+    recargar,
+    purgarJornadaOperativa,
+    cerrarJornadaOperativa: purgarJornadaOperativa,
+  };
 }

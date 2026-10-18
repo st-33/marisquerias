@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getVariantOptionLabel, type Producto } from '../../sistema/persistencia';
-import { theme } from '@compartido/tema';
+import { theme } from '@/compartido/temas';
 import { formatMoney } from '../../compartido/utils/formateadores';
 import {
   computeVariantDeltaAndLabels,
@@ -867,5 +867,3 @@ const arePropsEqual = (prev: VariantsModalProps, next: VariantsModalProps) => {
 
 export const ModalVariantes = React.memo(VariantsModalComponent, arePropsEqual);
 export const VariantsModal = ModalVariantes;
-
-

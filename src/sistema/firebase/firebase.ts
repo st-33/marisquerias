@@ -53,6 +53,7 @@ export function getRtdb(source?: string): Database {
   // Si no hay source, usar la URL por defecto (operacionUrl)
   if (!source) {
     // 🔥 FIX: Import dinámico para evitar ciclo
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useStore } = require('../store');
     const dataSources = useStore.getState().dataSources;
     const url = dataSources.operacionUrl;
@@ -68,6 +69,7 @@ export function getRtdb(source?: string): Database {
   // Si es un alias conocido, usar la URL del store
   if (source === 'reparto' || source === 'perfiles') {
     // 🔥 FIX: Import dinámico para evitar ciclo
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useStore } = require('../store');
     const dataSources = useStore.getState().dataSources;
     const url = source === 'reparto' ? dataSources.repartoUrl : dataSources.perfilesUrl;

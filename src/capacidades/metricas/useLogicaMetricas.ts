@@ -15,7 +15,10 @@
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
 import { NegocioRepository } from '../../sistema/persistencia';
-import { useFuncionalidadesAdmin as useAdminFeatures, type NegocioFeatures } from '../admin/useFuncionalidadesAdmin';
+import {
+  useFuncionalidadesAdmin as useAdminFeatures,
+  type NegocioFeatures,
+} from '../admin/useFuncionalidadesAdmin';
 import { useMetricasVentas } from './useMetricasVentas';
 
 export type DateFilter = 'hoy' | 'ayer' | 'hace3dias' | 'semana' | 'mes' | 'todo';

@@ -55,4 +55,3 @@ export function useAppStateSync(onBecomeActive?: () => void) {
 
 // Aliases canónicos en español
 export const useSincronizacionEstadoApp = useAppStateSync;
-

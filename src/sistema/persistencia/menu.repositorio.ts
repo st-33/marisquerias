@@ -73,6 +73,8 @@ export type Producto = {
   // Propiedades para módulo POS/Caja Rápida
   codigoBarras?: string;
   unidad?: 'kg' | 'g' | 'l' | 'ml' | 'pza' | 'caja';
+  /** Estación KDS asignada (ej. 'barra', 'cafeteria', 'parrilla', 'empaque') */
+  estacion_preparacion?: string;
 };
 
 export type VariantGroup = {

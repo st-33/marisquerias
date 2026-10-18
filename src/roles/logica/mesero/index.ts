@@ -6,7 +6,7 @@ export * from './useSelectorVariantes';
 export * from './useLogicaMesero';
 export * from './useBorradoresCompartidos';
 
-export * from './descontarInventario';
+export { useDescontarInventario } from './descontarInventario';
 export * from './gestionarImpresion';
 export * from './gestionarMesas';
 export * from './procesarPedido';

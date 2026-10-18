@@ -28,10 +28,7 @@ export type IdentidadNegocio = {
  * de categoría (ej: "marisqueria-puerto-libres" -> "puerto_libres") y normalizando
  * a snake_case en minúsculas.
  */
-export function extraer_negocio_id_canonico(
-  rutaONegocioId: string,
-  categoriaId?: string
-): string {
+export function extraer_negocio_id_canonico(rutaONegocioId: string, categoriaId?: string): string {
   if (!rutaONegocioId || typeof rutaONegocioId !== 'string') return '';
   const parts = rutaONegocioId.split('/').filter(Boolean);
   let segment = parts[parts.length - 1] || '';
@@ -187,3 +184,90 @@ export function resolver_nombre_negocio({
 }
 
 export const resolverNombreNegocio = resolver_nombre_negocio;
+
+/**
+ * 🗄️ LOS 9 CAJONES CANÓNICOS DE DB-RTDB-UNIDAD
+ *
+ * 1. menu
+ * 2. inventario
+ * 3. mesas
+ * 4. mesas_pendientes
+ * 5. pedidos
+ * 6. ventas
+ * 7. reparto_ajustes
+ * 8. tickets
+ * 9. dispositivos
+ */
+export type CajonOperativo =
+  | 'menu'
+  | 'inventario'
+  | 'mesas'
+  | 'mesas_pendientes'
+  | 'pedidos'
+  | 'ventas'
+  | 'reparto_ajustes'
+  | 'tickets'
+  | 'dispositivos';
+
+export const CAJONES_CANONICOS: readonly CajonOperativo[] = [
+  'menu',
+  'inventario',
+  'mesas',
+  'mesas_pendientes',
+  'pedidos',
+  'ventas',
+  'reparto_ajustes',
+  'tickets',
+  'dispositivos',
+] as const;
+
+export function resolver_ruta_cajon(
+  rutaNegocio: string,
+  cajon: CajonOperativo,
+  subruta?: string
+): string {
+  const base = `${rutaNegocio}/${cajon}`;
+  return subruta ? `${base}/${subruta}` : base;
+}
+
+export const resolverRutaCajon = resolver_ruta_cajon;
+
+export const rutaMenu = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'menu', sub);
+export const rutaInventario = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'inventario', sub);
+export const rutaMesas = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'mesas', sub);
+export const rutaMesasPendientes = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'mesas_pendientes', sub);
+export const rutaPedidos = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'pedidos', sub);
+export const rutaVentas = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'ventas', sub);
+export const rutaRepartoAjustes = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'reparto_ajustes', sub);
+export const rutaTickets = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'tickets', sub);
+export const rutaDispositivos = (rutaNegocio: string, sub?: string) =>
+  resolver_ruta_cajon(rutaNegocio, 'dispositivos', sub);
+
+export const RUTAS = {
+  AUTH: {
+    LOGIN: '/(auth)/access',
+    RECOVERY: '/(auth)/recovery',
+  },
+  ROLES: {
+    SELECTOR: '/_role/roles',
+    MESERO: '/_role/mesero',
+    COCINA: '/_role/cocina',
+    ADMIN: '/_role/admin',
+    VENTA_CRUDO: '/_role/venta-crudo',
+    INVENTARIO: '/_role/inventory',
+    REPARTIDOR: '/_role/repart',
+    ADMIN_DASHBOARD: '/_role/admin',
+  },
+  PRINTER: '/printer',
+  INICIO: '/index',
+} as const;
+
+export type RutaApp = (typeof RUTAS)[keyof typeof RUTAS][keyof (typeof RUTAS)[keyof typeof RUTAS]];

@@ -51,7 +51,7 @@ function BarraProgresoAnimada({
       retraso,
       withTiming(porcentaje, { duration: 600, easing: Easing.out(Easing.cubic) })
     );
-  }, [porcentaje, retraso]);
+  }, [ancho, porcentaje, retraso]);
 
   const estiloAnimado = useAnimatedStyle(() => ({
     width: `${ancho.value}%`,
@@ -103,10 +103,7 @@ export function GraficaTopProductos({ data, title }: GraficaTopProductosProps) {
           const esSeleccionado = seleccionadoId === product.id;
 
           return (
-            <Animated.View
-              entering={FadeInRight.delay(index * 60).duration(280)}
-              key={product.id}
-            >
+            <Animated.View entering={FadeInRight.delay(index * 60).duration(280)} key={product.id}>
               <Pressable
                 onPress={() => setSeleccionadoId(esSeleccionado ? null : product.id)}
                 style={[

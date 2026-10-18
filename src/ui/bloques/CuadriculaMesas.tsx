@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { InsigniaMesa as TableBadge, type TableIndicator } from '../../compartido/componentes/ui/InsigniaMesa';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import {
+  InsigniaMesa as TableBadge,
+  type TableIndicator,
+} from '../../compartido/componentes/ui/InsigniaMesa';
+import { RADIUS, SPACING, TYPOGRAPHY } from '@/compartido/temas';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 import { OrderItem } from '../../roles/logica/mesero/useLogicaMesero';
 

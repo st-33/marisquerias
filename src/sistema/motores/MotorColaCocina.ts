@@ -9,7 +9,6 @@
  * - Centraliza toda la lógica de ordenamiento, priorización y marcado de órdenes.
  */
 
-import { ComandoPOS } from '../../sistema/tipos/pos';
 import type { LogisticaPedido } from '../../logica/dominio/logistica';
 
 export type ItemCocina = {
@@ -138,7 +137,6 @@ export class MotorColaCocina {
       orden.estatus = 'en_preparacion';
     }
 
-    // TODO: Emitir evento LAN/Update local DB (esto será interceptado por el host LAN)
     console.log(`[MotorColaCocina] Item started: ${itemId}`);
 
     this.notify();
@@ -192,5 +190,3 @@ export const motorColaCocina = new MotorColaCocina();
 // Aliases retrocompatibles (inglés)
 export { MotorColaCocina as KitchenQueueEngine };
 export { motorColaCocina as kitchenEngine };
-
-

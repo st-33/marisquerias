@@ -20,9 +20,7 @@ export function classifyInventoryError(error: unknown): {
   return { code, message };
 }
 
-
 // Aliases canónicos en español
 export type CodigoErrorInventario = InventoryErrorCode;
 export type ResultadoDeduccionInventario = InventoryDeductionResult;
 export const clasificarErrorInventario = classifyInventoryError;
-

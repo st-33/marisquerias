@@ -6,7 +6,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { theme } from '@compartido/tema';
+import { theme } from '@/compartido/temas';
 import EditorReceta from '../editores/EditorReceta';
 import EditorVariantes from '../editores/EditorVariantes';
 import type { FormState } from '../logica/formularioProducto';

@@ -79,4 +79,3 @@ export function useColapsoAreaAccion({ itemCount, threshold = 5 }: UseColapsoAre
 }
 
 export const useActionAreaCollapse = useColapsoAreaAccion;
-

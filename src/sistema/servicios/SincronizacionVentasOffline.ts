@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
 import type { Database } from 'firebase/database';
-import { SimpleSalesRepo } from '../persistencia/ventasSimples.repositorio';
+import { RegistroVentasRepository } from '../persistencia/registroVentas.repositorio';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import {
@@ -13,7 +13,7 @@ import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 class SincronizacionVentasOffline {
   private isRunning = false;
   private unsubscribeNetInfo: (() => void) | null = null;
-  private salesRepo: SimpleSalesRepo | null = null;
+  private salesRepo: RegistroVentasRepository | null = null;
   private rutaNegocio: string | null = null;
   private lifecycleGeneration = 0;
 
@@ -32,7 +32,7 @@ class SincronizacionVentasOffline {
 
     this.rutaNegocio = rutaNegocio;
     this.lifecycleGeneration = switchNegocioLifecycle(rutaNegocio);
-    this.salesRepo = new SimpleSalesRepo(db, rutaNegocio);
+    this.salesRepo = new RegistroVentasRepository(db, rutaNegocio);
 
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
       if (state.isConnected && !this.isRunning && this.isCurrent()) {
@@ -127,4 +127,3 @@ export const sincronizacionVentasOffline = new SincronizacionVentasOffline();
 // Aliases retrocompatibles (inglés)
 export { SincronizacionVentasOffline as OfflineSalesSyncClass };
 export { sincronizacionVentasOffline as OfflineSalesSync };
-

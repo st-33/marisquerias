@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { SPACING, TYPOGRAPHY } from '@/compartido/temas';
 import { useThemedColors } from '../../compartido/hooks/useColoresTema';
 import { AreaAccion } from './AreaAccion';
 import { ListaComandas } from './ListaComandas';
@@ -315,6 +315,7 @@ export function PuestoMando(props: PuestoMandoProps) {
             canMarkPaid={canMarkPaid}
             isCollapsed={!isTotalVisibleState}
             isSending={isSending}
+            isPrinting={isPrinting}
             canSend={canSend}
             permissionToPrint={permissionToPrint}
             onAdd={onAddItem}

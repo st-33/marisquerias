@@ -5,7 +5,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@compartido/tema';
+import { theme } from '@/compartido/temas';
 import type { Producto } from '../../../../../sistema/persistencia';
 import { TarjetaProducto } from '../bloques/TarjetaProducto';
 

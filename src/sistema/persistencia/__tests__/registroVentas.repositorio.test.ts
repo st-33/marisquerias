@@ -1,5 +1,5 @@
 import type { Database } from 'firebase/database';
-import { RegistroVentasRepository, type RegistroVenta } from '../registroVentas.repositorio';
+import { RegistroVentasRepository } from '../registroVentas.repositorio';
 import type { Pedido } from '../pedidos.repositorio';
 import { SQLiteStorageAdapter } from '../../sin_conexion';
 

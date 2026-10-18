@@ -3,6 +3,8 @@ import type { ContratoNegocio } from '../../../sistema/tipos/contratos';
 import { setFeature as setFeatureHelper } from '../../../sistema/tipos/contratos';
 import { storage, getNegocioStorageKey } from './sesion';
 
+import type { EstadoEncendido } from '../../instalacion/npb';
+
 type SessionContext = { sesion: { rutaNegocio: string | null } };
 
 export const ESTADO_INICIAL_NEGOCIO: ContratoNegocio = {
@@ -29,12 +31,21 @@ export interface AccionesNegocio {
   setFeature: (path: string, enabled: boolean, config?: Record<string, any>) => void;
   setConfiguracion: (config: ContratoNegocio['configuracion']) => void;
   updateConfiguracion: (updates: Partial<ContratoNegocio['configuracion']>) => void;
+  setEstadoEncendido: (estado: EstadoEncendido | null) => void;
 }
 
-export type NegocioSlice = { negocio: ContratoNegocio } & AccionesNegocio;
+export type NegocioSlice = {
+  negocio: ContratoNegocio;
+  estadoEncendido: EstadoEncendido | null;
+} & AccionesNegocio;
 
 export const createNegocioSlice: StateCreator<NegocioSlice, [], [], NegocioSlice> = (set, get) => ({
   negocio: ESTADO_INICIAL_NEGOCIO,
+  estadoEncendido: null,
+
+  setEstadoEncendido(estadoEncendido) {
+    set({ estadoEncendido });
+  },
 
   setFeatures(features) {
     const rutaNegocio = getRutaNegocio(get);

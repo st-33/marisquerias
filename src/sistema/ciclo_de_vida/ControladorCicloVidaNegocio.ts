@@ -135,4 +135,3 @@ export const registrarLimpiezaNegocio = registerNegocioCleanup;
 export const esCicloVidaNegocioActual = isCurrentNegocioLifecycle;
 export const obtenerRutaNegocioActiva = getActiveRutaNegocio;
 export const claveAlmacenamientoNegocio = negocioStorageKey;
-

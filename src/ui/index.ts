@@ -3,7 +3,10 @@ export * from './bloques/PresionableAnimado';
 export * from './bloques/Insignia';
 export * from './bloques/ModalImpresoraBluetooth';
 export * from './bloques/SelloMarca';
-export { default as AccionRadialFlotante, default as FabRadial } from './bloques/AccionRadialFlotante';
+export {
+  default as AccionRadialFlotante,
+  default as FabRadial,
+} from './bloques/AccionRadialFlotante';
 export * from './bloques/FondoLiquido';
 export * from './bloques/MostradorPro';
 export * from './bloques/BotonOrbe';
@@ -25,3 +28,5 @@ export { CuadriculaMesas, TablesGrid } from './bloques/CuadriculaMesas';
 export type { Table as TablesGridTable, MesaCuadricula } from './bloques/CuadriculaMesas';
 export * from './bloques/TarjetaComanda';
 export * from './bloques/ModalVariantes';
+export * from './bloques/ErrorArranque';
+export * from './pantallas/PantallaVinculacion';

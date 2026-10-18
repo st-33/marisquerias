@@ -3,10 +3,11 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore, type AppStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
-import { NegocioRepository, type Caracteristicas } from '../../sistema/persistencia/negocio.repositorio';
+import {
+  NegocioRepository,
+  type Caracteristicas,
+} from '../../sistema/persistencia/negocio.repositorio';
 import { estaFeatureAdminHabilitada } from './seguridadMenu';
-import { estaCapacidadHabilitadaPorCentral } from '../../sistema/central/useCentralConfig';
-import type { CentralConfiguracion, CentralEstado } from '../../sistema/store/slices/central';
 
 /**
  * Contrato de feature flags administrativos del negocio.
@@ -15,6 +16,18 @@ import type { CentralConfiguracion, CentralEstado } from '../../sistema/store/sl
  * entre `capacidades/admin` y `capacidades/metricas`.
  */
 export type NegocioFeatures = {
+  // 8 Capacidades Canónicas del Giro
+  menu?: boolean;
+  control_mesas?: boolean;
+  comanda_cocina?: boolean;
+  mostrador_y_pos?: boolean;
+  inventario?: boolean;
+  aparatos_conectados?: boolean;
+  reparto_logistica?: boolean;
+  metricas_y_cierres?: boolean;
+  tickets_impresion?: boolean;
+
+  // Módulos y flags administrativos
   admin?: boolean;
   admin_dashboard?: boolean;
   admin_menu?: boolean;
@@ -23,11 +36,11 @@ export type NegocioFeatures = {
   admin_devices?: boolean;
   admin_repart?: boolean;
   admin_mostrador?: boolean;
+  admin_tickets?: boolean;
   admin_menu_add_category?: boolean;
-  // 🔥 NUEVOS FLAGS CRÍTICOS
-  module_venta_crudo?: boolean; // Si false, oculta todo lo relacionado a Venta y Crudo
-  fastbutton_venta_crudo?: boolean; // Acceso desde el menú radial
-  menu_editor_venta_crudo?: boolean; // Opciones en el editor de menú
+  module_venta_crudo?: boolean;
+  fastbutton_venta_crudo?: boolean;
+  menu_editor_venta_crudo?: boolean;
 };
 
 type UseAdminFeaturesProps = {
@@ -38,42 +51,73 @@ type UseAdminFeaturesProps = {
 /**
  * Normaliza la configuración administrativa de `caracteristicas`.
  * El flag padre `roles.admin` tiene precedencia sobre todos sus módulos hijos.
- * Si Central desactiva una capacidad estructural (ej: reparto: false o mostrador: false),
- * la UI oculta los módulos correspondientes automáticamente.
+ * Reconoce las 9 capacidades canónicas del Ecosistema gobernando sus módulos respectivos.
  */
-export function normalizarFeaturesAdmin(
-  data: Caracteristicas,
-  centralConfig?: CentralConfiguracion | null,
-  centralEstado?: CentralEstado | null
-): NegocioFeatures {
+export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures {
   const admin = data?.roles?.admin;
   const adminRoleEnabled = admin !== false;
-  const adminConfig = typeof admin === 'object' && admin !== null ? admin : undefined;
+  const adminConfig =
+    typeof admin === 'object' && admin !== null ? (admin as Record<string, any>) : undefined;
 
+  const caps = (data as any)?.capacidades || {};
+
+  const menuHabilitado = adminRoleEnabled && (caps.menu ?? adminConfig?.menu) !== false;
+  const controlMesasHabilitado =
+    adminRoleEnabled &&
+    (caps.control_mesas ?? adminConfig?.control_mesas ?? adminConfig?.mesas) !== false;
+  const comandaCocinaHabilitada =
+    adminRoleEnabled &&
+    (caps.comanda_cocina ?? adminConfig?.comanda_cocina ?? (data?.roles as any)?.cocina) !== false;
   const moduleVentaCrudo = (data?.module_venta_crudo ?? adminConfig?.module_venta_crudo) === true;
-
-  const repartoPermitidoPorCentral = estaCapacidadHabilitadaPorCentral(
-    centralConfig,
-    centralEstado,
-    'reparto'
-  );
-  const mostradorPermitidoPorCentral = estaCapacidadHabilitadaPorCentral(
-    centralConfig,
-    centralEstado,
-    'mostrador'
-  );
+  const mostradorYPosHabilitado =
+    adminRoleEnabled &&
+    (caps.mostrador_y_pos ??
+      adminConfig?.mostrador_y_pos ??
+      adminConfig?.mostrador ??
+      moduleVentaCrudo) !== false;
+  const inventarioHabilitado =
+    adminRoleEnabled && (caps.inventario ?? adminConfig?.inventario) !== false;
+  const aparatosConectadosHabilitados =
+    adminRoleEnabled &&
+    (caps.aparatos_conectados ?? adminConfig?.aparatos_conectados ?? adminConfig?.dispositivos) !==
+      false;
+  const repartoLogisticaHabilitado =
+    adminRoleEnabled &&
+    (caps.reparto_logistica ?? adminConfig?.reparto_logistica ?? adminConfig?.repart) !== false;
+  const metricasYCierresHabilitadas =
+    adminRoleEnabled &&
+    (caps.metricas_y_cierres ??
+      adminConfig?.metricas_y_cierres ??
+      adminConfig?.metricas ??
+      adminConfig?.dashboard) !== false;
+  const ticketsImpresionHabilitado =
+    adminRoleEnabled &&
+    (caps.tickets_impresion ?? adminConfig?.tickets_impresion ?? adminConfig?.tickets) !== false;
 
   const normalized: NegocioFeatures = {
+    // 9 Canónicas
+    menu: menuHabilitado,
+    control_mesas: controlMesasHabilitado,
+    comanda_cocina: comandaCocinaHabilitada,
+    mostrador_y_pos: mostradorYPosHabilitado,
+    inventario: inventarioHabilitado,
+    aparatos_conectados: aparatosConectadosHabilitados,
+    reparto_logistica: repartoLogisticaHabilitado,
+    metricas_y_cierres: metricasYCierresHabilitadas,
+    tickets_impresion: ticketsImpresionHabilitado,
+
+    // Compatibilidad Admin
     admin: adminRoleEnabled,
-    admin_dashboard: adminRoleEnabled && adminConfig?.dashboard !== false,
-    admin_menu: adminRoleEnabled && adminConfig?.menu !== false,
-    admin_inventory: adminRoleEnabled && adminConfig?.inventario !== false,
-    admin_tables: adminRoleEnabled && adminConfig?.mesas !== false,
-    admin_devices: adminRoleEnabled && adminConfig?.dispositivos !== false,
-    admin_repart: adminRoleEnabled && adminConfig?.repart !== false && repartoPermitidoPorCentral,
-    admin_mostrador: adminRoleEnabled && adminConfig?.mostrador !== false && mostradorPermitidoPorCentral,
+    admin_dashboard: metricasYCierresHabilitadas,
+    admin_menu: menuHabilitado,
+    admin_inventory: inventarioHabilitado,
+    admin_tables: controlMesasHabilitado,
+    admin_devices: aparatosConectadosHabilitados,
+    admin_repart: repartoLogisticaHabilitado,
+    admin_mostrador: mostradorYPosHabilitado,
+    admin_tickets: ticketsImpresionHabilitado,
     admin_menu_add_category: adminRoleEnabled && adminConfig?.menu_add_category !== false,
-    module_venta_crudo: adminRoleEnabled && moduleVentaCrudo && mostradorPermitidoPorCentral,
+    module_venta_crudo: adminRoleEnabled && moduleVentaCrudo,
   };
 
   const masterVentaCrudo = normalized.module_venta_crudo;
@@ -96,8 +140,6 @@ export type UseFuncionalidadesAdminProps = UseAdminFeaturesProps;
 export function useFuncionalidadesAdmin(props?: UseFuncionalidadesAdminProps) {
   const storeRutaNegocio = useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio) || '';
   const ds = useStore((s: AppStore) => s.dataSources);
-  const centralConfig = useStore((s) => s.central?.configuracion);
-  const centralEstado = useStore((s) => s.central?.estado);
 
   const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
 
@@ -120,10 +162,7 @@ export function useFuncionalidadesAdmin(props?: UseFuncionalidadesAdminProps) {
     return unsub;
   }, [db, rutaNegocio]);
 
-  const features = useMemo(
-    () => normalizarFeaturesAdmin(rawCaracteristicas, centralConfig, centralEstado),
-    [rawCaracteristicas, centralConfig, centralEstado]
-  );
+  const features = useMemo(() => normalizarFeaturesAdmin(rawCaracteristicas), [rawCaracteristicas]);
 
   const isEnabled = useCallback(
     (feature: keyof NegocioFeatures) => estaFeatureAdminHabilitada(features, feature),

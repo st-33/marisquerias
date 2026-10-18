@@ -30,6 +30,27 @@ module.exports = defineConfig([
     },
   },
   {
+    files: [
+      'jest.setup.js',
+      'src/__mocks__/**/*.{js,ts}',
+      '**/__tests__/**/*.{js,ts,tsx}',
+      '**/pruebas/**/*.{js,ts,tsx}',
+    ],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
+    },
+  },
+  {
     ignores: ['dist/*', '.expo/*', 'Evidencia/**/*', 'android/**/*', 'ios/**/*', 'backups/**/*'],
   },
 ]);

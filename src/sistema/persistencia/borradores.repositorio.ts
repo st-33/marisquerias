@@ -306,4 +306,3 @@ export type { PartidaBorrador as DraftItem };
 export type { BorradorComanda as OrderDraft };
 export type { EstadoBorrador as DraftEstado };
 export type { OrigenBorrador as DraftOrigen };
-

@@ -1,5 +1,5 @@
 import type { Database } from 'firebase/database';
-import { get, remove, ref, runTransaction, update } from 'firebase/database';
+import { get, remove, runTransaction, update } from 'firebase/database';
 import { PedidosRepository } from '../pedidos.repositorio';
 
 jest.mock('firebase/database', () => ({
@@ -110,6 +110,37 @@ describe('PedidosRepository.cerrar', () => {
         registroVentaNumero: 1,
         registroVentaEstado: 'registrado',
       })
+    );
+  });
+
+  it('purga pedidos finalizados y borradores de mesas_pendientes', async () => {
+    mockGet.mockImplementation(async (reference: { path: string }) => {
+      if (reference.path.endsWith('/pedidos')) {
+        return snapshot({
+          'PED-1': { ...pedido, id: 'PED-1', cerrado: true, estatus: 'cerrado' },
+          'PED-2': { ...pedido, id: 'PED-2', cerrado: false, estatus: 'en_cocina' },
+        });
+      }
+      if (reference.path.endsWith('/mesas_pendientes')) {
+        return snapshot({
+          'mesa-1': { items: { 'IT-1': { nombre: 'Taco' } } },
+        });
+      }
+      return snapshot(null);
+    });
+
+    const resultado = await new PedidosRepository(dbMock, rutaNegocio).purgarJornadaOperativa();
+
+    expect(resultado.pedidosEliminados).toBe(1);
+    expect(resultado.borradoresEliminados).toBe(1);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        [`${rutaNegocio}/pedidos/PED-1`]: null,
+      })
+    );
+    expect(mockRemove).toHaveBeenCalledWith(
+      expect.objectContaining({ path: `${rutaNegocio}/mesas_pendientes` })
     );
   });
 });

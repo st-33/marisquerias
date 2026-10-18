@@ -47,9 +47,9 @@ export function useSelectorVariantes({ getProduct, getProductAsync }: UseVariant
 
   const variantGroups = useMemo(() => selectedProduct?.variantes?.grupos ?? {}, [selectedProduct]);
 
-  const { delta, labels } = useMemo(() => {
+  const { delta } = useMemo(() => {
     if (!selectedProduct) {
-      return { delta: 0, labels: [] as string[] };
+      return { delta: 0 };
     }
     return computeVariantDeltaAndLabels(variantGroups, variantSelections);
   }, [selectedProduct, variantGroups, variantSelections]);

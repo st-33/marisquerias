@@ -22,7 +22,9 @@ export function SeccionGrafica({ icono, color, titulo, subtitulo, children }: Se
           <Text style={styles.titulo}>{titulo}</Text>
           {subtitulo ? <Text style={styles.subtitulo}>{subtitulo}</Text> : null}
         </View>
-        <View style={[styles.iconoBadge, { backgroundColor: `${color}18`, borderColor: `${color}35` }]}>
+        <View
+          style={[styles.iconoBadge, { backgroundColor: `${color}18`, borderColor: `${color}35` }]}
+        >
           <Ionicons name={icono} size={20} color={color} />
         </View>
       </View>

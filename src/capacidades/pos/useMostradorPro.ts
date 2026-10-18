@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../sistema/persistencia';
 import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repositorio';
 import type { Categoria } from '../../sistema/persistencia/menu.repositorio';
-import { SimpleSalesRepo } from '../../sistema/persistencia/ventasSimples.repositorio';
+import { RegistroVentasRepository } from '../../sistema/persistencia/registroVentas.repositorio';
 import { getRtdb } from '../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
@@ -66,7 +66,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
   useConfiguracionNegocio();
   const { config: posConfig, loading: configLoading } = usePosConfig(db, rutaNegocio);
   const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
-  const salesRepo = useMemo(() => new SimpleSalesRepo(db, rutaNegocio), [db, rutaNegocio]);
+  const salesRepo = useMemo(() => new RegistroVentasRepository(db, rutaNegocio), [db, rutaNegocio]);
   const inventoryRepo = useMemo(
     () => new InventoryV2Repository(db, rutaNegocio),
     [db, rutaNegocio]

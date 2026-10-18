@@ -148,10 +148,7 @@ class Logger {
       return;
     }
 
-    // TODO: Integrar Firebase Analytics cuando se configure
-    // analytics().logEvent(eventName, params);
-
-    // Por ahora, solo breadcrumb en Sentry
+    // Breadcrumb en Sentry
     addBreadcrumb(eventName, 'event', params);
   }
 
@@ -211,4 +208,3 @@ export function createModuleLogger(module: string) {
 }
 
 export const createLogger = createModuleLogger;
-

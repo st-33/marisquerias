@@ -4,7 +4,7 @@
  * NUNCA llamar a Firebase directamente desde componentes o hooks de negocio
  */
 
-import { ref, onValue, off, set, update, Unsubscribe } from 'firebase/database';
+import { ref, onValue, off, set, update } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { Animated, Pressable } from 'react-native';
 
@@ -51,4 +51,3 @@ export const PresionableAnimado: React.FC<PresionableAnimadoProps> = ({
 };
 
 export const AnimatedPressable = PresionableAnimado;
-

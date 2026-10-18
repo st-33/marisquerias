@@ -30,4 +30,3 @@ export type EntradaAuditoria = AuditEntry;
 export const registrarAuditoria = writeAudit;
 export type Notificacion = Notification;
 export const enviarNotificacion = sendNotification;
-

@@ -18,7 +18,7 @@ import {
   DEFAULT_PRINT_POLICIES,
   type PrintPolicies,
   type PrinterRef,
-} from '../../sistema/impresion/legacy/politicasImpresion';
+} from '@/sistema/impresion/fierros/contratos/tipos';
 
 export type UseGestionDispositivosProps = {
   db?: Database;
@@ -205,4 +205,3 @@ export function useGestionDispositivos(props?: UseGestionDispositivosProps) {
 }
 
 export const useDevicesManagement = useGestionDispositivos;
-

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { RADIUS, SPACING, TYPOGRAPHY } from '@/compartido/temas';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 import { formatMoney } from '../../compartido/utils/formateadores';
 
@@ -409,5 +409,3 @@ function ProductPickerOverlayComponent({
 
 export const SelectorProductoSuperpuesto = React.memo(ProductPickerOverlayComponent);
 export const ProductPickerOverlay = SelectorProductoSuperpuesto;
-
-

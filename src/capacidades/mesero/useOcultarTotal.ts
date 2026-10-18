@@ -52,4 +52,3 @@ export function useOcultarTotal({
 }
 
 export const useTotalAutoHide = useOcultarTotal;
-

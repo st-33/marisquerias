@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import type { Producto, VariantGroup, VariantOption } from '../../../../../sistema/persistencia';
-import { theme } from '@compartido/tema';
+import { theme } from '@/compartido/temas';
 import { SeccionDesplegable } from '../bloques/SeccionDesplegable';
 import { FichaVariante } from '../bloques/FichaVariante';
 

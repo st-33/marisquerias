@@ -1,5 +1,5 @@
-import { set, ref, push } from 'firebase/database';
-import { SimpleSalesRepo } from '../../persistencia/ventasSimples.repositorio';
+import { set, push } from 'firebase/database';
+import { RegistroVentasRepository } from '@/sistema/persistencia/registroVentas.repositorio';
 import { OfflineSalesSync } from '../../servicios/SincronizacionVentasOffline';
 import { OfflineInventorySync } from '../../servicios/SincronizacionInventarioOffline';
 import { SQLiteStorageAdapter } from '../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
@@ -32,9 +32,23 @@ jest.mock('firebase/database', () => {
 });
 
 const mockRegistrarMostrador = jest.fn().mockResolvedValue({ id: 'MOCK-VENTA' });
+const mockRegistrarVenta = jest.fn().mockImplementation(async (v) => {
+  const vid = v.id || 'MOCK-KEY-123';
+  await mockRegistrarMostrador({ ...v, id: vid });
+  return vid;
+});
+
+jest.mock('@/sistema/persistencia/registroVentas.repositorio', () => ({
+  RegistroVentasRepository: jest.fn().mockImplementation(() => ({
+    registrarMostrador: mockRegistrarMostrador,
+    registrarVenta: mockRegistrarVenta,
+  })),
+}));
+
 jest.mock('../../persistencia/registroVentas.repositorio', () => ({
   RegistroVentasRepository: jest.fn().mockImplementation(() => ({
     registrarMostrador: mockRegistrarMostrador,
+    registrarVenta: mockRegistrarVenta,
   })),
 }));
 
@@ -71,9 +85,9 @@ describe('offline-sync', () => {
     jest.clearAllMocks();
   });
 
-  describe('SimpleSalesRepo', () => {
+  describe('RegistroVentasRepository', () => {
     it('debe registrar venta delegando a RegistroVentasRepository sin escribir a /ventas legacy', async () => {
-      const repo = new SimpleSalesRepo(dbMock, rutaNegocio);
+      const repo = new RegistroVentasRepository(dbMock, rutaNegocio);
       const venta = {
         total: 150,
         metodoPago: 'efectivo',
@@ -92,7 +106,7 @@ describe('offline-sync', () => {
     });
 
     it('debe registrar venta con ID específico (idempotencia) sin escribir a /ventas legacy', async () => {
-      const repo = new SimpleSalesRepo(dbMock, rutaNegocio);
+      const repo = new RegistroVentasRepository(dbMock, rutaNegocio);
       const venta = {
         id: 'vc_ADI-HW_123_XYZ',
         total: 250,

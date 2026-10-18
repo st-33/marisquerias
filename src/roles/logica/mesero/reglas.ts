@@ -139,4 +139,3 @@ export function getOrderedVisibleGroups(
 export const calcularDeltaEtiquetasVariantes = computeVariantDeltaAndLabels;
 export const evaluarReglas = evaluateRules;
 export const obtenerGruposVisiblesOrdenados = getOrderedVisibleGroups;
-

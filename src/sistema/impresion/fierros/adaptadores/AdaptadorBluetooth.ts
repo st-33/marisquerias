@@ -23,8 +23,9 @@ let RNBluetoothClassic: any = null;
 // Solo importar en nativo
 if (Platform.OS !== 'web') {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     RNBluetoothClassic = require('react-native-bluetooth-classic').default;
-  } catch (e) {
+  } catch {
     console.warn('[AdaptadorBluetooth] react-native-bluetooth-classic no disponible');
   }
 }
@@ -72,7 +73,7 @@ export class AdaptadorBluetooth {
 
     try {
       return await RNBluetoothClassic.isBluetoothEnabled();
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -85,7 +86,7 @@ export class AdaptadorBluetooth {
 
     try {
       return await RNBluetoothClassic.requestBluetoothEnabled();
-    } catch (e) {
+    } catch {
       return false;
     }
   }

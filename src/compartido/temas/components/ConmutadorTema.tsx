@@ -13,7 +13,7 @@ export interface ConmutadorTemaProps {
 export type ThemeToggleProps = ConmutadorTemaProps;
 
 export function ConmutadorTema({ position = 'bottom-right' }: ConmutadorTemaProps) {
-  const { themeType, toggleTheme, isElite, colors } = useAppTheme();
+  const { toggleTheme, isElite, colors } = useAppTheme();
 
   return (
     <View style={[styles.container, position === 'bottom-left' ? styles.left : styles.right]}>

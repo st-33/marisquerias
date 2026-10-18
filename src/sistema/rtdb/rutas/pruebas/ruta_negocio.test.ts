@@ -9,6 +9,17 @@ import {
   crearRutaNegocio,
   resolver_nombre_negocio,
   resolverNombreNegocio,
+  CAJONES_CANONICOS,
+  resolverRutaCajon,
+  rutaMenu,
+  rutaInventario,
+  rutaMesas,
+  rutaMesasPendientes,
+  rutaPedidos,
+  rutaVentas,
+  rutaRepartoAjustes,
+  rutaTickets,
+  rutaDispositivos,
 } from '../ruta_negocio';
 import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/asegurarNegocio';
 import { get, set, update } from 'firebase/database';
@@ -87,8 +98,12 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
 
   describe('extraer_negocio_id_canonico', () => {
     it('extrae y aisla puerto_libres a partir de marisqueria-puerto-libres', () => {
-      expect(extraer_negocio_id_canonico('marisquerias/marisqueria-puerto-libres')).toBe('puerto_libres');
-      expect(extraer_negocio_id_canonico('marisqueria-puerto-libres', 'marisquerias')).toBe('puerto_libres');
+      expect(extraer_negocio_id_canonico('marisquerias/marisqueria-puerto-libres')).toBe(
+        'puerto_libres'
+      );
+      expect(extraer_negocio_id_canonico('marisqueria-puerto-libres', 'marisquerias')).toBe(
+        'puerto_libres'
+      );
     });
 
     it('normaliza guiones a snake_case y conserva ids simples', () => {
@@ -161,9 +176,13 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
 
     it('resuelve mpl a Marisquería Puerto Libres', () => {
       expect(resolver_nombre_negocio({ negocioId: 'mpl' })).toBe('Marisquería Puerto Libres');
-      expect(resolver_nombre_negocio({ rutaNegocio: 'marisquerias/mpl' })).toBe('Marisquería Puerto Libres');
+      expect(resolver_nombre_negocio({ rutaNegocio: 'marisquerias/mpl' })).toBe(
+        'Marisquería Puerto Libres'
+      );
       expect(resolver_nombre_negocio({ accessCode: 'MPL-01' })).toBe('Marisquería Puerto Libres');
-      expect(resolver_nombre_negocio({ negocioId: 'marisqueria-puerto-libres' })).toBe('Marisquería Puerto Libres');
+      expect(resolver_nombre_negocio({ negocioId: 'marisqueria-puerto-libres' })).toBe(
+        'Marisquería Puerto Libres'
+      );
     });
 
     it('formatea negocios estándar y marisquerías correctamente', () => {
@@ -184,6 +203,48 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
 
     it('retorna Mi Negocio como fallback si no hay información', () => {
       expect(resolver_nombre_negocio({})).toBe('Mi Negocio');
+      expect(resolverNombreNegocio({})).toBe('Mi Negocio');
+    });
+
+    it('funciona el alias crearRutaNegocio', () => {
+      expect(
+        crearRutaNegocio({
+          categoria_id: 'marisquerias',
+          negocio_id: 'el-arrecife',
+        })
+      ).toBe('marisquerias/el-arrecife');
+    });
+  });
+
+  describe('Cajones canónicos db-rtdb-unidad', () => {
+    const ruta = 'marisquerias/el-arrecife';
+
+    it('incluye exactamente los 9 cajones canónicos', () => {
+      expect(CAJONES_CANONICOS).toEqual([
+        'menu',
+        'inventario',
+        'mesas',
+        'mesas_pendientes',
+        'pedidos',
+        'ventas',
+        'reparto_ajustes',
+        'tickets',
+        'dispositivos',
+      ]);
+    });
+
+    it('resuelve correctamente las rutas de los 9 cajones', () => {
+      expect(resolverRutaCajon(ruta, 'menu')).toBe(`${ruta}/menu`);
+      expect(rutaMenu(ruta)).toBe(`${ruta}/menu`);
+      expect(rutaMenu(ruta, 'productos')).toBe(`${ruta}/menu/productos`);
+      expect(rutaInventario(ruta)).toBe(`${ruta}/inventario`);
+      expect(rutaMesas(ruta)).toBe(`${ruta}/mesas`);
+      expect(rutaMesasPendientes(ruta)).toBe(`${ruta}/mesas_pendientes`);
+      expect(rutaPedidos(ruta)).toBe(`${ruta}/pedidos`);
+      expect(rutaVentas(ruta)).toBe(`${ruta}/ventas`);
+      expect(rutaRepartoAjustes(ruta)).toBe(`${ruta}/reparto_ajustes`);
+      expect(rutaTickets(ruta)).toBe(`${ruta}/tickets`);
+      expect(rutaDispositivos(ruta)).toBe(`${ruta}/dispositivos`);
     });
   });
 
@@ -195,7 +256,7 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).rejects.toThrow(
         `Violación de Estado: La estructura base del negocio en '${rutaNegocio}' no ha sido aprovisionada por la Torre de Control.`
       );
-      
+
       expect(set).not.toHaveBeenCalled();
       expect(update).not.toHaveBeenCalled();
     });
@@ -205,7 +266,7 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       (get as jest.Mock).mockResolvedValueOnce({ exists: () => true });
 
       await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).resolves.toBeUndefined();
-      
+
       expect(set).not.toHaveBeenCalled();
       expect(update).not.toHaveBeenCalled();
     });

@@ -136,7 +136,10 @@ export class EnsambladorInstalacion {
       }
 
       // 4. Actualizar usos del código de acceso si es un objeto con metadatos
-      const codeRef = ref(this.db, `codigo_acceso/${resolvedCode.accessCode}`);
+      const codeRef = ref(
+        this.db,
+        (resolvedCode as any).nodoPath || `codigo_de_acceso/${resolvedCode.accessCode}`
+      );
       const codeSnap = await get(codeRef);
       if (codeSnap.exists() && typeof codeSnap.val() === 'object') {
         const val = codeSnap.val();

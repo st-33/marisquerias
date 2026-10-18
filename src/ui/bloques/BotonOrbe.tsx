@@ -233,4 +233,3 @@ const staticStyles = StyleSheet.create({
 });
 
 export const OrbButton = BotonOrbe;
-

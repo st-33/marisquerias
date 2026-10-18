@@ -23,11 +23,8 @@
  */
 
 import { Database } from 'firebase/database';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  servicioSincronizacion,
-  type SynchronizableItem,
-} from './ServicioSincronizacion';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { servicioSincronizacion, type SynchronizableItem } from './ServicioSincronizacion';
 import { createLogger } from '../../sistema/monitoreo';
 
 const log = createLogger('useSynchronizedArray');
@@ -87,7 +84,8 @@ export interface SynchronizedArrayResult<T extends SynchronizableItem> {
 /**
  * Hook unificado para sincronización de arrays
  */
-export type UseArregloSincronizadoConfig<T extends SynchronizableItem> = UseSynchronizedArrayConfig<T>;
+export type UseArregloSincronizadoConfig<T extends SynchronizableItem> =
+  UseSynchronizedArrayConfig<T>;
 export type ArregloSincronizadoResultado<T extends SynchronizableItem> = SynchronizedArrayResult<T>;
 
 export function useArregloSincronizado<T extends SynchronizableItem>(

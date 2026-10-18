@@ -19,7 +19,7 @@ import {
 
 const log = createLogger('descontarInventario');
 
-export { classifyInventoryError } from './erroresInventario';
+// classifyInventoryError exported via erroresInventario.ts
 
 type DescontarInventarioProps = {
   inventarioV2Repo: InventoryV2Repository;

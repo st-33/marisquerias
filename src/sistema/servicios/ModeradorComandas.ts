@@ -17,7 +17,6 @@
  */
 
 import { Database, get, ref, runTransaction } from 'firebase/database';
-import { resolver } from '../../sistema/utilidades/paths';
 
 type ItemParaEnviar = {
   productId?: string;
@@ -103,7 +102,7 @@ export class ModeradorComandas {
 
       // 3. Actualizar estado de items según destino
       const updates: Record<string, any> = {};
-      const pedidoRef = ref(this.db, `${this.rutaNegocio}/${resolver('pedidos')}/${pedidoId}`);
+      const pedidoRef = ref(this.db, `${this.rutaNegocio}/pedidos/${pedidoId}`);
       const pedidoSnap = await get(pedidoRef);
       const pedido = pedidoSnap.val();
 
@@ -185,7 +184,7 @@ export class ModeradorComandas {
    */
   async validarAccesoMesa(mesaId: string, userId: string): Promise<boolean> {
     try {
-      const mesaRef = ref(this.db, `${this.rutaNegocio}/${resolver('mesas_estado')}/${mesaId}`);
+      const mesaRef = ref(this.db, `${this.rutaNegocio}/mesas/${mesaId}`);
 
       const result = await runTransaction(mesaRef, (mesa) => {
         if (!mesa) {
@@ -250,7 +249,7 @@ export class ModeradorComandas {
    */
   async desuscribirUsuario(mesaId: string, userId: string): Promise<void> {
     try {
-      const mesaRef = ref(this.db, `${this.rutaNegocio}/${resolver('mesas_estado')}/${mesaId}`);
+      const mesaRef = ref(this.db, `${this.rutaNegocio}/mesas/${mesaId}`);
 
       await runTransaction(mesaRef, (mesa) => {
         if (!mesa || !mesa.usuariosActivos) return mesa;

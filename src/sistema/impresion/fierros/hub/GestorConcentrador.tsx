@@ -10,7 +10,7 @@
  */
 
 import NetInfo from '@react-native-community/netinfo';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getRtdb } from '../../../firebase';
 import { DevicesRepository, type HubConfig } from '../../../persistencia/dispositivos.repositorio';
 import { DespachadorCola } from '../cola/DespachadorCola';
@@ -113,9 +113,7 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
     );
     despachador.iniciar();
 
-    console.log(
-      `[GestorHub] ✅ Hub inicializado (canal: ${canal}, dispositivo: ${idDispositivo})`
-    );
+    console.log(`[GestorHub] ✅ Hub inicializado (canal: ${canal}, dispositivo: ${idDispositivo})`);
 
     const heartbeatPath = `${rutaNegocio}/impresion/hubs/heartbeat`;
     const enviarHeartbeat = async () => {

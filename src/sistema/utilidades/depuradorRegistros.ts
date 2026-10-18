@@ -4,10 +4,6 @@
  * Reduce logs excesivos en producción manteniendo solo los críticos
  */
 
-import { createLogger } from '../monitoreo';
-
-const log = createLogger('LogCleaner');
-
 /**
  * Niveles de logging
  */

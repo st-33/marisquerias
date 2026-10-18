@@ -13,9 +13,7 @@ jest.mock('firebase/database', () => ({
 // fuera de un componente (useCallback interno de Zustand).
 jest.mock('../../../sistema/store', () => ({
   useStore: jest.fn((selector: (s: any) => any) =>
-    typeof selector === 'function'
-      ? selector({ central: { configuracion: null, estado: null }, modulosBloqueados: [] })
-      : { central: { configuracion: null, estado: null }, modulosBloqueados: [] }
+    typeof selector === 'function' ? selector({ modulosBloqueados: [] }) : { modulosBloqueados: [] }
   ),
 }));
 

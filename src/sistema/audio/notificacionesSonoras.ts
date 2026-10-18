@@ -77,4 +77,3 @@ export async function reproducirSonido(tipo: TipoSonido): Promise<void> {
 export const reproducirEventoSonido = playSoundEvent;
 export const precargarEventoSonido = preloadSoundEvent;
 export const detenerEventoSonido = stopSoundEvent;
-

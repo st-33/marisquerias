@@ -1,8 +1,19 @@
+import { ref, push } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio } from '../rtdb/guards';
 import { descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 import { SQLiteStorageAdapter, type HistorialVenta } from '../sin_conexion';
 import type { Pedido } from './pedidos.repositorio';
+
+export interface VentaMostrador {
+  id?: string;
+  total: number;
+  metodoPago: string;
+  items: any[];
+  timestamp: number;
+  usuario?: string;
+  origen: 'venta_crudo';
+}
 
 export type OrigenRegistroVenta = 'pedido' | 'mostrador';
 export type CanalRegistroVenta = 'restaurante' | 'mostrador';
@@ -135,6 +146,24 @@ export class RepositorioRegistroVentas {
       timestamp,
       resumenItems: resumirItems(pedido),
     });
+  }
+
+  async registrarVenta(venta: VentaMostrador): Promise<string> {
+    const ventaId =
+      venta.id ||
+      push(ref(this.db, this.rutaNegocio + '/secuencias/ventas')).key ||
+      'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+
+    await this.registrarMostrador({
+      id: ventaId,
+      total: venta.total,
+      metodoPago: venta.metodoPago,
+      items: venta.items,
+      timestamp: venta.timestamp,
+      usuario: venta.usuario,
+    });
+
+    return ventaId;
   }
 
   async registrarMostrador(venta: {

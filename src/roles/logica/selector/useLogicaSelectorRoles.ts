@@ -63,10 +63,65 @@ export function useLogicaSelectorRoles() {
     };
   }, []);
 
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+
   // Obtener roles habilitados
   const { loading, getRolesHabilitados } = useEmpaquetadorRoles({ db, rutaNegocio });
 
   const roles = useMemo((): RolInfo[] => {
+    // Si tenemos EstadoEncendido del arranque O(1), proyectar sus roles activos canónicos
+    if (
+      estadoEncendido &&
+      Array.isArray(estadoEncendido.roles_activos) &&
+      estadoEncendido.roles_activos.length > 0
+    ) {
+      const iconos: Record<string, string> = {
+        administrador: 'settings',
+        mesero: 'restaurant',
+        cocina: 'flame',
+        mostrador: 'cart',
+        cajero: 'card-outline',
+        repartidor: 'bicycle',
+        barman: 'wine',
+        barista: 'cafe',
+        parrillero: 'bonfire',
+        empacador: 'cube',
+      };
+
+      const nombres: Record<string, string> = {
+        administrador: 'Administrador',
+        mesero: 'Mesero',
+        cocina: 'Cocina (KDS)',
+        mostrador: 'Venta Mostrador',
+        cajero: 'Cajero / Cobro',
+        repartidor: 'Repartidor',
+        barman: 'Barra / Barman',
+        barista: 'Cafetería / Barista',
+        parrillero: 'Parrilla',
+        empacador: 'Empaque',
+      };
+
+      const rutas: Record<string, string> = {
+        administrador: '/_role/admin/dashboard',
+        mesero: '/_role/mesero',
+        cocina: '/_role/cocina',
+        mostrador: '/_role/venta-crudo',
+        cajero: '/_role/caja',
+        repartidor: '/_role/repartidor',
+        barman: '/_role/barman',
+        barista: '/_role/barista',
+        parrillero: '/_role/parrillero',
+        empacador: '/_role/empacador',
+      };
+
+      return estadoEncendido.roles_activos.map((rolId) => ({
+        id: rolId,
+        nombre: nombres[rolId] || rolId,
+        icono: iconos[rolId] || 'apps',
+        ruta: rutas[rolId] || `/_role/${rolId}`,
+      }));
+    }
+
     const habilitados = getRolesHabilitados();
     return habilitados.map((r) => ({
       id: r.ruta,
@@ -74,7 +129,7 @@ export function useLogicaSelectorRoles() {
       icono: r.icono,
       ruta: r.ruta,
     }));
-  }, [getRolesHabilitados]);
+  }, [estadoEncendido, getRolesHabilitados]);
 
   // Nombre del negocio formateado canónicamente (ej. "Marisquería Puerto Libres")
   const nombreNegocio = useMemo(() => {

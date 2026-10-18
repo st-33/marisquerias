@@ -380,4 +380,3 @@ const styles = StyleSheet.create({
 });
 
 export const BluetoothPrinterModal = ModalImpresoraBluetooth;
-

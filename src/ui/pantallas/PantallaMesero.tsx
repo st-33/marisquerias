@@ -16,7 +16,11 @@ import { logger } from '../../sistema/monitoreo';
 
 import { useOcultarTotal } from '../../capacidades/mesero/useOcultarTotal';
 import { BluetoothPrinterModal, ProductPickerOverlay, PuestoMando, ModalVariantes } from '..';
-import { useLogicaMesero, useSelectorProductos, useSelectorVariantes } from '../../roles/logica/mesero';
+import {
+  useLogicaMesero,
+  useSelectorProductos,
+  useSelectorVariantes,
+} from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';

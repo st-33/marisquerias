@@ -65,4 +65,3 @@ async function restoreNavigationBar() {
 
 // Aliases canónicos en español
 export const useModoInmersivo = useImmersiveMode;
-

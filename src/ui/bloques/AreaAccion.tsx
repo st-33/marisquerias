@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Animated, Platform, Pressable, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RADIUS, SPACING, TYPOGRAPHY } from '../../compartido/constantes/tema';
+import { RADIUS, SPACING, TYPOGRAPHY } from '@/compartido/temas';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 import { formatMoney } from '../../compartido/utils/formateadores';
 import { useSonidosAlternados } from '../../capacidades/ui/useSonidosAlternados';
@@ -441,5 +441,3 @@ function ActionAreaComponent(props: ActionAreaProps) {
 
 export const AreaAccion = React.memo(ActionAreaComponent);
 export const ActionArea = AreaAccion;
-
-

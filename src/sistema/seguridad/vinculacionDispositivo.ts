@@ -65,9 +65,8 @@ export interface DeviceInfoData {
 export async function getDeviceInfo(): Promise<DeviceInfoData> {
   const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
   if (isWeb) {
-    const { obtenerDeviceIdResiliente } = await import(
-      '../instalacion/vinculacion/generar-device-id-adi'
-    );
+    const { obtenerDeviceIdResiliente } =
+      await import('../instalacion/vinculacion/generar-device-id-adi');
     const webId = obtenerDeviceIdResiliente();
     return {
       deviceId: webId,
@@ -135,9 +134,8 @@ export async function registerDevice(rutaNegocio: string): Promise<void> {
       throw new Error(`Intento de registrar dispositivo en ruta inválida/legacy: ${rutaNegocio}`);
     }
 
-    const { resolverDeviceIdADI } = await import(
-      '../instalacion/vinculacion/generar-device-id-adi'
-    );
+    const { resolverDeviceIdADI } =
+      await import('../instalacion/vinculacion/generar-device-id-adi');
     const deviceIdADI = await resolverDeviceIdADI();
     const deviceInfo = await getDeviceInfo();
 
@@ -306,5 +304,3 @@ export const deviceBinding = {
 // Aliases canónicos en español
 export const vinculacionDispositivo = deviceBinding;
 export type InformacionDispositivo = DeviceInfoData;
-
-

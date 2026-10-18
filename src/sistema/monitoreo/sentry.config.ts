@@ -18,11 +18,11 @@
 import * as Sentry from '@sentry/react-native';
 
 // 🔑 DSN de Sentry (obtenerlo de sentry.io)
-// TODO: Reemplazar con tu DSN real cuando tengas cuenta
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || '';
 
 // Detectar si estamos en producción
-const isProduction = typeof __DEV__ !== 'undefined' ? !__DEV__ : process.env.NODE_ENV === 'production';
+const isProduction =
+  typeof __DEV__ !== 'undefined' ? !__DEV__ : process.env.NODE_ENV === 'production';
 
 /**
  * Inicializar Sentry
@@ -48,7 +48,7 @@ export function initSentry() {
     environment: __DEV__ ? 'development' : 'production',
 
     // Versión de la app
-    release: 'mi-ecosistema-adi@1.0.0', // TODO: Sincronizar con package.json
+    release: 'mi-ecosistema-adi@1.0.0',
 
     // Filtrar eventos sensibles
     beforeSend(event) {

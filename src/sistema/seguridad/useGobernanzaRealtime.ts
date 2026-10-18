@@ -3,7 +3,7 @@ import { ref, onValue, off } from 'firebase/database';
 import { useRouter } from 'expo-router';
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
-import { RUTAS } from '../../compartido/rutas';
+import { RUTAS } from '../rtdb/rutas/ruta_negocio';
 import { resolverDeviceIdADI } from '../instalacion/vinculacion/generar-device-id-adi';
 
 /**

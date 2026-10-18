@@ -30,6 +30,15 @@ describe('normalizarFeaturesAdmin', () => {
     });
 
     expect(features).toEqual({
+      menu: false,
+      control_mesas: false,
+      comanda_cocina: false,
+      mostrador_y_pos: false,
+      inventario: false,
+      aparatos_conectados: false,
+      reparto_logistica: false,
+      metricas_y_cierres: false,
+      tickets_impresion: false,
       admin: false,
       admin_dashboard: false,
       admin_menu: false,
@@ -38,6 +47,7 @@ describe('normalizarFeaturesAdmin', () => {
       admin_devices: false,
       admin_repart: false,
       admin_mostrador: false,
+      admin_tickets: false,
       admin_menu_add_category: false,
       module_venta_crudo: false,
       fastbutton_venta_crudo: false,
@@ -45,7 +55,7 @@ describe('normalizarFeaturesAdmin', () => {
     });
   });
 
-  test('un admin habilitado conserva el gating individual de sus módulos', () => {
+  test('un admin habilitado conserva el gating individual de sus módulos y capacidades canónicas', () => {
     const features = normalizarFeaturesAdmin({
       roles: {
         admin: {
@@ -53,14 +63,21 @@ describe('normalizarFeaturesAdmin', () => {
           menu: true,
           inventario: false,
           mesas: true,
+          tickets: true,
         },
       },
     });
 
     expect(features.admin).toBe(true);
     expect(features.admin_dashboard).toBe(false);
+    expect(features.metricas_y_cierres).toBe(false);
     expect(features.admin_menu).toBe(true);
+    expect(features.menu).toBe(true);
     expect(features.admin_inventory).toBe(false);
+    expect(features.inventario).toBe(false);
     expect(features.admin_tables).toBe(true);
+    expect(features.control_mesas).toBe(true);
+    expect(features.admin_tickets).toBe(true);
+    expect(features.tickets_impresion).toBe(true);
   });
 });

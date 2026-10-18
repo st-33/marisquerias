@@ -2,8 +2,8 @@
  * 🎨 BOTÓN ANIMADO BRUTAL
  */
 
-import React, { useMemo, useRef } from 'react';
-import { Pressable, Text, Animated, Vibration, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { Pressable, Text, Animated, Vibration } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {

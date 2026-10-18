@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '../constantes/tema';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '@/compartido/temas';
 
 export type SyncEvent = {
   type: 'local_operation' | 'remote_snapshot' | 'eco_local_aplicado';
@@ -19,7 +19,12 @@ export type PanelEstadoSincronizacionProps = {
 };
 export type SyncStatusPanelProps = PanelEstadoSincronizacionProps;
 
-export function PanelEstadoSincronizacion({ isOnline, lastSync, events, mesaId }: PanelEstadoSincronizacionProps) {
+export function PanelEstadoSincronizacion({
+  isOnline,
+  lastSync,
+  events,
+  mesaId,
+}: PanelEstadoSincronizacionProps) {
   const [ahora, setAhora] = useState(() => Date.now());
 
   useEffect(() => {

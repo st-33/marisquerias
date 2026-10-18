@@ -6,13 +6,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useStore } from '../../sistema/store';
+import { useStore, useProductos } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
 import { useLogicaCocina } from '../../roles/logica/cocina';
 import { logger } from '../../sistema/monitoreo';
+
+import { filtrarComandasPorEstacion } from '../../roles/logica/cocina/filtrosKDS';
 
 const styles = StyleSheet.create({
   container: {
@@ -98,9 +100,14 @@ const styles = StyleSheet.create({
   },
 });
 
-export function PantallaCocina() {
+export interface PantallaCocinaProps {
+  estacion?: string;
+}
+
+export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const ds = useStore((s) => s.dataSources);
+  const productos = useProductos();
   const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const inventoryAutoDiscount =
     useStore((s) => s.negocio.features?.inventory_auto_discount?.enabled) === true;
@@ -129,6 +136,21 @@ export function PantallaCocina() {
     autoDescuentoInventario: inventoryAutoDiscount,
   });
 
+  // Filtrado por estación si está definida
+  const comandasFiltradas = useMemo(
+    () => filtrarComandasPorEstacion(orders, productos, estacion),
+    [orders, productos, estacion]
+  );
+
+  const statsFiltradas = useMemo(() => {
+    if (!estacion) return stats;
+    const total = comandasFiltradas.length;
+    const urgentes = comandasFiltradas.filter((o) => o.esUrgente).length;
+    const itemsPendientes = comandasFiltradas.reduce((acc, o) => acc + o.itemsPendientes, 0);
+    const itemsListos = comandasFiltradas.reduce((acc, o) => acc + o.itemsListos, 0);
+    return { total, urgentes, itemsPendientes, itemsListos };
+  }, [comandasFiltradas, stats, estacion]);
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -139,28 +161,32 @@ export function PantallaCocina() {
     );
   }
 
+  const tituloHeader = estacion
+    ? `KDS — ${estacion.charAt(0).toUpperCase() + estacion.slice(1)}`
+    : 'Cocina (KDS)';
+
   return (
     <View style={styles.container}>
       {/* Header con estadísticas */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name="restaurant" size={24} color="#ffffff" />
-          <Text style={styles.title}>Cocina (KDS)</Text>
+          <Text style={styles.title}>{tituloHeader}</Text>
         </View>
         <View style={styles.statsRow}>
           <View style={styles.statBadge}>
-            <Text style={styles.statValue}>{stats.total}</Text>
+            <Text style={styles.statValue}>{statsFiltradas.total}</Text>
             <Text style={styles.statLabel}>Órdenes</Text>
           </View>
-          {stats.urgentes > 0 && (
+          {statsFiltradas.urgentes > 0 && (
             <View style={[styles.statBadge, styles.statBadgeUrgent]}>
               <Ionicons name="alert-circle" size={16} color="#ffffff" />
-              <Text style={styles.statValue}>{stats.urgentes}</Text>
+              <Text style={styles.statValue}>{statsFiltradas.urgentes}</Text>
               <Text style={styles.statLabel}>Urgentes</Text>
             </View>
           )}
           <View style={styles.statBadge}>
-            <Text style={styles.statValue}>{stats.itemsPendientes}</Text>
+            <Text style={styles.statValue}>{statsFiltradas.itemsPendientes}</Text>
             <Text style={styles.statLabel}>Pendientes</Text>
           </View>
         </View>
@@ -168,16 +194,18 @@ export function PantallaCocina() {
 
       {/* Tablero Kanban */}
       <ScrollView style={styles.board} contentContainerStyle={styles.boardContent}>
-        {orders.length === 0 ? (
+        {comandasFiltradas.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="checkmark-done-circle" size={64} color="#374151" />
             <Text style={styles.emptyStateText}>Sin órdenes activas</Text>
             <Text style={styles.emptyStateSubtext}>
-              Las comandas aparecerán aquí cuando se envíen desde Mesera
+              {estacion
+                ? `No hay comandas pendientes para la estación ${estacion}`
+                : 'Las comandas aparecerán aquí cuando se envíen desde Mesera'}
             </Text>
           </View>
         ) : (
-          orders.map((order) => (
+          comandasFiltradas.map((order) => (
             <TarjetaComanda
               key={order.id}
               order={order}

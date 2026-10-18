@@ -36,7 +36,11 @@ function sanitizeDraft<T>(item: T): T {
   return JSON.parse(JSON.stringify(item));
 }
 
-export function useBorradoresCompartidos({ db, rutaNegocio, mesaId }: UseBorradoresCompartidosProps) {
+export function useBorradoresCompartidos({
+  db,
+  rutaNegocio,
+  mesaId,
+}: UseBorradoresCompartidosProps) {
   const sanitizedMesaId = useMemo(() => {
     if (!mesaId) return null;
     const trimmed = String(mesaId).trim();

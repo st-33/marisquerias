@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, Layout } from 'react-native-reanimated';
-import { RADIUS } from '../../compartido/constantes/tema';
+import { RADIUS } from '@/compartido/temas';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 
 type TarjetaPartidaProps = {

@@ -166,4 +166,3 @@ export const sincronizacionInventarioOffline = new SincronizacionInventarioOffli
 // Aliases retrocompatibles (inglés)
 export { SincronizacionInventarioOffline as OfflineInventorySyncClass };
 export { sincronizacionInventarioOffline as OfflineInventorySync };
-

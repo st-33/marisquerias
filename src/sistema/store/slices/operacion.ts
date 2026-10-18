@@ -358,7 +358,6 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
       await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
     } catch (error) {
       logger.error('STORE', 'Error actualizando mesa', error as Error);
-      // TODO: Rollback optimistic update on error
       throw error;
     }
   },

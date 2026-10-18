@@ -22,7 +22,13 @@ export type {
 export * from './mesas.repositorio';
 
 export { getVariantOptionLabel, RepositorioMenu, MenuRepository } from './menu.repositorio';
-export type { Categoria, Producto, VariantGroup, VariantOption, VariantRule } from './menu.repositorio';
+export type {
+  Categoria,
+  Producto,
+  VariantGroup,
+  VariantOption,
+  VariantRule,
+} from './menu.repositorio';
 
 export { RepositorioPlantillasTicket, TicketTemplatesRepository } from './tickets.repositorio';
 export type {
@@ -76,23 +82,13 @@ export type {
   HubConfig,
 } from './dispositivos.repositorio';
 
-export {
-  RepositorioVentasSimples,
-  VentasSimplesRepo,
-  SimpleSalesRepo,
-} from './ventasSimples.repositorio';
-export type { VentaMostrador, VentaSimple } from './ventasSimples.repositorio';
-
 export { RepositorioNegocio, NegocioRepository } from './negocio.repositorio';
 export type { Caracteristicas, Features } from './negocio.repositorio';
 
 export { RepositorioAjustesReparto, RepartoAjustesRepository } from './reparto-ajustes.repositorio';
 export type { AjustesReparto } from './reparto-ajustes.repositorio';
 
-export {
-  RepositorioInventario,
-  InventoryV2Repository,
-} from './inventario.repositorio';
+export { RepositorioInventario, InventoryV2Repository } from './inventario.repositorio';
 export type {
   AreaInventarioV2,
   ItemInventarioV2,

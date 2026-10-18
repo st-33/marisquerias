@@ -2,7 +2,7 @@
  * 🎨 TARJETA CON PULSO Y ELEVACIÓN
  */
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Animated, Pressable, Vibration } from 'react-native';
 
 export type TarjetaPulsanteProps = {

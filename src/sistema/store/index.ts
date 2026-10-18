@@ -20,7 +20,12 @@ import { createDataSourcesSlice, type DataSourcesSlice } from './slices/dataSour
 import { createHardwareSlice, type HardwareSlice } from './slices/hardware';
 import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventario';
 import { createNegocioSlice, type NegocioSlice } from './slices/negocio';
-import { createOperacionSlice, type OperacionSlice } from './slices/operacion';
+import {
+  createOperacionSlice,
+  type OperacionSlice,
+  type ItemBase,
+  type PedidoBase,
+} from './slices/operacion';
 import {
   createSesionSlice,
   type SesionSlice,
@@ -36,17 +41,10 @@ import { ESTADO_INICIAL_HARDWARE } from './slices/hardware';
 import { ESTADO_INICIAL_OPERACION } from './slices/operacion';
 import { ESTADO_INICIAL_INVENTORY_V2 } from './slices/inventario';
 
-import { createCentralSlice, type CentralSlice, ESTADO_INICIAL_CENTRAL } from './slices/central';
-import { suscribirCentralAlStore } from '../central/OyenteCentral';
-
-// Import local para uso interno en selectores
-import type { ItemBase, PedidoBase } from './slices/operacion';
-
 import type { TipoDispositivo } from '../../sistema/tipos/contratos';
 
 // Tipos centralizados
 export * from '../../sistema/tipos/contratos';
-export * from '../central/useCentralConfig';
 export type {
   CategoriaBase,
   DraftItem,
@@ -62,8 +60,7 @@ export type AppStore = SesionSlice &
   DataSourcesSlice &
   HardwareSlice &
   OperacionSlice &
-  InventoryV2Slice &
-  CentralSlice;
+  InventoryV2Slice;
 
 export const useStore = create<AppStore>()(
   subscribeWithSelector((...args) => ({
@@ -74,7 +71,6 @@ export const useStore = create<AppStore>()(
     ...createHardwareSlice(...args),
     ...createOperacionSlice(...args),
     ...createInventoryV2Slice(...args),
-    ...createCentralSlice(...args),
   }))
 );
 
@@ -84,7 +80,6 @@ const resetNegocioScopedSlices = () => {
     ui: ESTADO_INICIAL_UI,
     dataSources: ESTADO_INICIAL_DATA_SOURCES,
     hardware: ESTADO_INICIAL_HARDWARE,
-    central: ESTADO_INICIAL_CENTRAL,
     ...ESTADO_INICIAL_OPERACION,
     ...ESTADO_INICIAL_INVENTORY_V2,
   });
@@ -277,7 +272,6 @@ export function useAppListeners(isAppReady: boolean) {
     const store = useStore.getState();
     const operacionCleanup = store.inicializarOperacionListeners(db, rutaNegocio);
     const inventoryCleanup = store.inicializarInventoryV2Listeners(db, rutaNegocio);
-    const centralCleanup = negocioId ? suscribirCentralAlStore(db, negocioId, store) : () => {};
     let cleaned = false;
 
     const cleanup = () => {
@@ -285,7 +279,6 @@ export function useAppListeners(isAppReady: boolean) {
       cleaned = true;
       operacionCleanup();
       inventoryCleanup();
-      centralCleanup();
       logger.info('LISTENERS', '🔌 Suscripciones centralizadas desconectadas', {
         rutaNegocio,
         generation,

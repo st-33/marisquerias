@@ -23,7 +23,9 @@ describe('resolverAccessCode — Fuente de verdad RTDB', () => {
 
       const res = await resolverNegocioPorCodigo('MPL-01', dbMock);
       expect(res).toBe('Marisquerias/mpl');
-      expect(get).toHaveBeenCalledWith(expect.objectContaining({ path: 'codigo_acceso/MPL-01' }));
+      expect(get).toHaveBeenCalledWith(
+        expect.objectContaining({ path: 'codigo_de_acceso/MPL-01' })
+      );
     });
 
     it('devuelve null si el código no existe', async () => {
@@ -192,7 +194,7 @@ describe('resolverAccessCode — Fuente de verdad RTDB', () => {
     // Si existiera un mapa local, get no sería llamado para este código
     expect(get).toHaveBeenCalledTimes(1);
     expect(get).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'codigo_acceso/ARRECIFE-24' })
+      expect.objectContaining({ path: 'codigo_de_acceso/ARRECIFE-24' })
     );
   });
 

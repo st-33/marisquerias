@@ -212,5 +212,3 @@ export const normalizarPedido = normalizePedido;
 export const normalizarComanda = normalizePedido;
 export const normalizeOrder = normalizePedido;
 export const normalizarTimestamp = normalizeTimestamp;
-
-

@@ -29,9 +29,11 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
       void import('../../servicios/SincronizacionVentasOffline').then(({ OfflineSalesSync }) => {
         OfflineSalesSync.destroy();
       });
-      void import('../../servicios/SincronizacionInventarioOffline').then(({ OfflineInventorySync }) => {
-        OfflineInventorySync.destroy();
-      });
+      void import('../../servicios/SincronizacionInventarioOffline').then(
+        ({ OfflineInventorySync }) => {
+          OfflineInventorySync.destroy();
+        }
+      );
       void import('../../impresion/fierros/cola/DespachadorCola').then(({ DespachadorCola }) => {
         DespachadorCola.destruirInstancia(rutaNegocio, 'dispositivo');
       });
@@ -53,14 +55,16 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         await ensureNegocioBootstrap(db, rutaNegocio);
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
-        const { SQLiteStorageAdapter } = await import('../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite');
+        const { SQLiteStorageAdapter } =
+          await import('../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite');
         await SQLiteStorageAdapter.initialize();
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 
         const { OfflineSalesSync } = await import('../../servicios/SincronizacionVentasOffline');
         OfflineSalesSync.initialize(db, rutaNegocio);
 
-        const { OfflineInventorySync } = await import('../../servicios/SincronizacionInventarioOffline');
+        const { OfflineInventorySync } =
+          await import('../../servicios/SincronizacionInventarioOffline');
         OfflineInventorySync.initialize(db, rutaNegocio);
         if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
 

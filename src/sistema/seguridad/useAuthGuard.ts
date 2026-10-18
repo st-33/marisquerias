@@ -1,7 +1,7 @@
 import { useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useStore } from '../store';
-import { RUTAS } from '@compartido/rutas';
+import { RUTAS } from '../rtdb/rutas/ruta_negocio';
 import { logger } from '../monitoreo';
 import { deviceBinding } from './vinculacionDispositivo';
 
@@ -50,8 +50,8 @@ export function useAuthGuard(isSystemReady: boolean) {
   useEffect(() => {
     if (!isSystemReady || !deviceChecked) return;
 
-    // Identificar zona actual (si empieza con (auth))
-    const inAuthGroup = segments[0] === '(auth)';
+    // Identificar zona actual (si empieza con (auth) o vinculacion)
+    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'vinculacion';
 
     // 1. Acceso denegado: Dispositivo no enlazado físicamente o sin ID de negocio
     if ((!negocioId || !isDeviceRegisteredState) && !inAuthGroup) {
@@ -65,10 +65,33 @@ export function useAuthGuard(isSystemReady: boolean) {
       return;
     }
 
-    // 2. Sesión válida: Redirigir fuera de la zona de login
-    if (negocioId && isDeviceRegisteredState && inAuthGroup) {
-      logger.info('AUTH', '✅ Sesión y dispositivo válidos. Redirigiendo a Roles.');
-      router.replace(RUTAS.ROLES.SELECTOR);
+    // 2. Sesión activa: verificar consistencia de EstadoEncendido y rol activo
+    if (negocioId && isDeviceRegisteredState) {
+      void import('./guardiaArranqueO1').then(async ({ evaluarGuardiaArranque }) => {
+        const { getRtdb } = await import('../firebase');
+        const evaluacion = await evaluarGuardiaArranque(getRtdb());
+
+        if (evaluacion.estado === 'sin_sesion' || evaluacion.estado === 'sesion_expirada') {
+          if (!inAuthGroup) {
+            await clearSession();
+            router.replace(RUTAS.AUTH.LOGIN);
+          }
+          return;
+        }
+
+        if (evaluacion.estado === 'requiere_seleccion_rol') {
+          const inRolesSelector = segments.join('/') === '_role/roles';
+          if (!inRolesSelector) {
+            router.replace(RUTAS.ROLES.SELECTOR);
+          }
+          return;
+        }
+
+        if (inAuthGroup) {
+          logger.info('AUTH', '✅ Sesión y dispositivo válidos. Redirigiendo a Roles.');
+          router.replace(RUTAS.ROLES.SELECTOR);
+        }
+      });
     }
   }, [
     isSystemReady,

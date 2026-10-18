@@ -4,7 +4,7 @@
  * Vista de alertas modernas con animaciones
  */
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { AlertConfig } from './useAlertaModerna';

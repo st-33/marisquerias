@@ -23,7 +23,6 @@ import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCo
 import { useAudioCocina } from './useAudioCocina';
 import type { LogisticaPedido } from '../../../logica/dominio/logistica';
 
-
 // Logger del módulo
 const logger = createModuleLogger('COCINA');
 

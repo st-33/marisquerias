@@ -6,7 +6,7 @@
 
 import type { Database } from 'firebase/database';
 import { off, onValue, ref, set, update } from 'firebase/database';
-import type { PrintPolicies, PrinterRef } from '../impresion/legacy/politicasImpresion';
+import type { PrintPolicies, PrinterRef } from '@/sistema/impresion/fierros/contratos/tipos';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 /**
@@ -124,7 +124,9 @@ export class RepositorioDispositivos {
   /**
    * Suscribirse a configuración de formato de ticket
    */
-  suscribirConfiguracionTicket(callback: (config: Partial<ConfiguracionTicket> | null) => void): () => void {
+  suscribirConfiguracionTicket(
+    callback: (config: Partial<ConfiguracionTicket> | null) => void
+  ): () => void {
     const r = ref(this.db, this.getConfiguracionTicketPath());
     const cb = onValue(r, (snap) => {
       callback(snap.exists() ? (snap.val() as Partial<ConfiguracionTicket>) : null);
@@ -147,7 +149,9 @@ export class RepositorioDispositivos {
   /**
    * Suscribirse a la configuración de Hub Central
    */
-  suscribirConfiguracionHub(callback: (config: Partial<ConfiguracionHub> | null) => void): () => void {
+  suscribirConfiguracionHub(
+    callback: (config: Partial<ConfiguracionHub> | null) => void
+  ): () => void {
     const r = ref(this.db, this.getConfiguracionHubPath());
     const cb = onValue(r, (snap) => {
       callback(snap.exists() ? (snap.val() as Partial<ConfiguracionHub>) : null);
@@ -187,4 +191,3 @@ export { RepositorioDispositivos as DispositivosRepository };
 export { RepositorioDispositivos as DevicesRepository };
 export type { ConfiguracionTicket as TicketConfig };
 export type { ConfiguracionHub as HubConfig };
-

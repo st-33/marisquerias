@@ -14,7 +14,10 @@
 
 import { Database, onValue, ref, runTransaction } from 'firebase/database';
 import { createLogger } from '../../sistema/monitoreo';
-import { depuradorSincronizacion, DepuradorSincronizacion } from '../../sistema/utilidades/depuradorSincronizacion';
+import {
+  depuradorSincronizacion,
+  DepuradorSincronizacion,
+} from '../../sistema/utilidades/depuradorSincronizacion';
 import { metricasSincronizacion } from './MetricasSincronizacion';
 
 const log = createLogger('ServicioSincronizacion');
@@ -114,7 +117,6 @@ export class ServicioSincronizacion {
     }
 
     const firebaseRef = ref(db, path);
-    let currentItems: SynchronizableItem[] = [];
     let lastLocalOperation: ActiveSubscription['lastLocalOperation'] = null;
 
     log.debug(`🔗 Suscribiendo a: ${path}`);
@@ -160,7 +162,6 @@ export class ServicioSincronizacion {
         }
 
         // Actualizar estado
-        currentItems = newItems;
         const subscription = this.subscriptions.get(path);
         if (subscription) {
           subscription.currentItems = newItems;

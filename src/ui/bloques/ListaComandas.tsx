@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import { SPACING } from '../../compartido/constantes/tema';
+import { SPACING } from '@/compartido/temas';
 import { useThemedColors } from '../../compartido/hooks/useColoresTema';
 
 import { OrderItem, PendingItem } from '../../roles/logica/mesero/useLogicaMesero';
@@ -175,4 +175,3 @@ function ListaComandasComponent(props: ListaComandasProps) {
 
 export const ListaComandas = React.memo(ListaComandasComponent);
 export const OrderList = ListaComandas;
-

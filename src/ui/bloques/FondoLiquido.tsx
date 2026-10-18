@@ -158,4 +158,3 @@ const styles = StyleSheet.create({
 });
 
 export const LiquidBackground = FondoLiquido;
-

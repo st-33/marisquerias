@@ -179,4 +179,3 @@ export type PartidaTicket = OrderItem;
 export type ComandaTicket = Order;
 export type ConfiguracionTicketNegocio = NegocioTicketConfig;
 export const formatearTicketCaja = generarTicketCaja;
-

@@ -29,6 +29,7 @@ export type Caracteristicas = {
           module_venta_crudo?: boolean;
           fastbutton_venta_crudo?: boolean;
           menu_editor_venta_crudo?: boolean;
+          [key: string]: any;
         };
   };
   delivery?: boolean;

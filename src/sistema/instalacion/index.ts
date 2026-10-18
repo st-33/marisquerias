@@ -7,5 +7,12 @@ export {
   resolverDeviceIdADI,
   obtenerDeviceIdResiliente,
 } from './vinculacion/generar-device-id-adi';
-export { resolverAccessCode, resolverNegocioPorCodigo } from './vinculacion/resolver-access-code';
+export {
+  resolverAccessCode,
+  resolverNegocioPorCodigo,
+  resolverAccessCodeO1,
+} from './vinculacion/resolver-access-code';
 export { resolverConfiguracionInicial } from './runtime/resolver-configuracion-inicial';
+export * from './npb';
+export * from './useArranqueSistema';
+export * from './reconexion/monitorConexionO1';

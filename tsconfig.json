@@ -16,6 +16,9 @@
     "rootDir": ".",
     "types": ["node", "jest"],
     "paths": {
+      "@/*": ["./src/*"],
+      "@temas": ["./src/compartido/temas"],
+      "@temas/*": ["./src/compartido/temas/*"],
       "@assets/*": ["./assets/*"],
       "@compartido/*": ["./src/compartido/*"],
       "@temas/*": ["./src/compartido/temas/*"],

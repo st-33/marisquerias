@@ -20,7 +20,7 @@ export async function ensureNegocioBootstrap(db: Database, rutaNegocio: string):
 
   try {
     const carSnap = await get(ref(db, `${rutaNegocio}/caracteristicas`));
-    
+
     if (!carSnap.exists()) {
       const errMsg = `Violación de Estado: La estructura base del negocio en '${rutaNegocio}' no ha sido aprovisionada por la Torre de Control.`;
       logger.error('VERIFICACION_ESTRUCTURA', errMsg, new Error(errMsg));
@@ -32,8 +32,12 @@ export async function ensureNegocioBootstrap(db: Database, rutaNegocio: string):
     });
   } catch (error) {
     const errObj =
-      error instanceof Error ? error : new Error(String(error || 'Error desconocido al verificar estructura'));
-    logger.error('VERIFICACION_ESTRUCTURA', 'Fallo al verificar estructura del negocio', errObj, { rutaNegocio });
+      error instanceof Error
+        ? error
+        : new Error(String(error || 'Error desconocido al verificar estructura'));
+    logger.error('VERIFICACION_ESTRUCTURA', 'Fallo al verificar estructura del negocio', errObj, {
+      rutaNegocio,
+    });
     throw errObj;
   }
 }

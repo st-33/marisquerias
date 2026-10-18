@@ -216,4 +216,3 @@ const styles = StyleSheet.create({
 });
 
 export const StickerLayer = CapaEstampa;
-

@@ -8,7 +8,6 @@ import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizadores';
 import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
-import { resolver } from '../../sistema/utilidades/paths';
 import { assertValidRutaNegocio } from '../rtdb/guards';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 import { RegistroVentasRepository } from './registroVentas.repositorio';
@@ -89,7 +88,7 @@ export class RepositorioPedidos {
   }
 
   private getBasePath() {
-    return `${this.rutaNegocio}/${resolver('pedidos')}`;
+    return `${this.rutaNegocio}/pedidos`;
   }
 
   private getSequencesPath() {
@@ -386,7 +385,7 @@ export class RepositorioPedidos {
         return;
       }
 
-      const productosRef = ref(this.db, `${this.rutaNegocio}/${resolver('menu_productos')}`);
+      const productosRef = ref(this.db, `${this.rutaNegocio}/menu/productos`);
       const categoriasRef = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
 
       const [productosSnap, categoriasSnap] = await Promise.all([
@@ -587,6 +586,57 @@ export class RepositorioPedidos {
    */
   async eliminar(pedidoId: string): Promise<void> {
     await remove(ref(this.db, `${this.getBasePath()}/${pedidoId}`));
+  }
+
+  /**
+   * 🧹 PURGA DE JORNADA OPERATIVA (Higiene de colas)
+   * Una vez asentado el corte del día en /ventas, purga los pedidos finalizados/entregados
+   * en /pedidos y borradores muertos en /mesas_pendientes.
+   */
+  async purgarJornadaOperativa(filtros?: {
+    limpiarBorradores?: boolean;
+  }): Promise<{ pedidosEliminados: number; borradoresEliminados: number }> {
+    let pedidosEliminados = 0;
+    let borradoresEliminados = 0;
+
+    // 1. Limpiar pedidos cerrados/entregados/pagados/cancelados
+    const pedidosSnap = await get(ref(this.db, this.getBasePath()));
+    if (pedidosSnap.exists()) {
+      const pedidos = (pedidosSnap.val() as Record<string, Pedido>) || {};
+      const batchUpdates: Record<string, null> = {};
+
+      for (const [id, p] of Object.entries(pedidos)) {
+        const estatus = String(p.estatus || '').toLowerCase();
+        const estaFinalizado =
+          p.cerrado === true ||
+          estatus === 'cerrado' ||
+          estatus === 'entregado' ||
+          estatus === 'pagado' ||
+          estatus === 'cancelado';
+
+        if (estaFinalizado) {
+          batchUpdates[`${this.getBasePath()}/${id}`] = null;
+          pedidosEliminados++;
+        }
+      }
+
+      if (Object.keys(batchUpdates).length > 0) {
+        await update(ref(this.db), batchUpdates);
+      }
+    }
+
+    // 2. Limpiar borradores muertos en /mesas_pendientes
+    if (filtros?.limpiarBorradores !== false) {
+      const pendientesRef = ref(this.db, `${this.rutaNegocio}/mesas_pendientes`);
+      const pendientesSnap = await get(pendientesRef);
+      if (pendientesSnap.exists()) {
+        const mesasPendientes = (pendientesSnap.val() as Record<string, any>) || {};
+        borradoresEliminados = Object.keys(mesasPendientes).length;
+        await remove(pendientesRef);
+      }
+    }
+
+    return { pedidosEliminados, borradoresEliminados };
   }
 }
 export { RepositorioPedidos as PedidosRepository };

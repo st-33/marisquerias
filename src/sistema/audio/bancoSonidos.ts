@@ -176,4 +176,3 @@ export const bancoSonidos = new BancoSonidos();
 // Aliases retrocompatibles (inglés)
 export { BancoSonidos as SoundBankClass };
 export { bancoSonidos as SoundBank };
-

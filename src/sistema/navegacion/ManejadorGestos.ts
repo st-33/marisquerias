@@ -144,4 +144,3 @@ export function useGestureNavigation(config: GestureConfig = {}) {
 
 // Aliases canónicos en español
 export const useNavegacionGestos = useGestureNavigation;
-

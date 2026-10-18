@@ -13,6 +13,10 @@ jest.mock(
         removeListeners: jest.fn(),
       },
     },
+    Linking: {
+      openURL: jest.fn().mockResolvedValue(true),
+      canOpenURL: jest.fn().mockResolvedValue(true),
+    },
   }),
   { virtual: true }
 );

@@ -83,4 +83,3 @@ export function SelloMarca({ nombreNegocio }: SelloMarcaProps) {
 }
 
 export const BrandSeal = SelloMarca;
-

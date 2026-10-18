@@ -7,7 +7,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, SHADOWS } from '../../constantes/tema';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, SHADOWS } from '@/compartido/temas';
 
 export type TipoAviso = 'success' | 'info' | 'warning' | 'error';
 export type ToastType = TipoAviso;

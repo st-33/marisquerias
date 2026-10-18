@@ -1,4 +1,4 @@
-import { get, push, ref, update } from 'firebase/database';
+import { get, push, update } from 'firebase/database';
 import { InventoryV2Repository } from '../inventario.repositorio';
 
 jest.mock('firebase/database', () => ({

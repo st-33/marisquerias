@@ -1,18 +1,15 @@
 /**
  * 🍳 COCINA CONTAINER
- * Container ultra-fino de Expo Router. Delegación a la Fábrica de Screens.
+ * Container de Expo Router para Cocina Central (KDS) y estaciones de preparación.
  */
 
 import React from 'react';
-import { useResolvedorPantalla } from '../../src/composicion';
+import { PantallaCocina } from '../../src/ui/pantallas/PantallaCocina';
 
-export default function CocinaContainer() {
-  const resolved = useResolvedorPantalla('cocina');
+export interface CocinaContainerProps {
+  estacion?: string;
+}
 
-  if (resolved.loading || !resolved.Screen) {
-    return null;
-  }
-
-  const Component = resolved.Screen;
-  return <Component {...resolved.props} />;
+export default function CocinaContainer({ estacion }: CocinaContainerProps = {}) {
+  return <PantallaCocina estacion={estacion} />;
 }

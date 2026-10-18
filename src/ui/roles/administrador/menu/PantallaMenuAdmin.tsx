@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import { BarraCategorias } from './bloques/BarraCategorias';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
-import { theme } from '@compartido/tema';
+import { theme } from '@/compartido/temas';
 import type { Producto } from '../../../../sistema/persistencia';
 import { getRtdb } from '../../../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
@@ -167,7 +167,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     });
 
     return items;
-  }, [activeCat, featureEnabled, showToast]);
+  }, [activeCat, featureEnabled, showToast, actions]);
 
   usePuenteAccionesFlotantes({
     items: fabItems,

@@ -11,7 +11,7 @@
  * 4. NO EMITIR VENTAS: No emite datos de caja, ventas financieras ni cobros.
  */
 
-import { ref, set, remove, get } from 'firebase/database';
+import { ref, set, remove } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { getRtdb } from '../../sistema/firebase';
 import { logger } from '../../sistema/monitoreo';
@@ -43,11 +43,7 @@ export function mapearCanalOrigen(pedido: {
   metadatos?: { canal?: string; origen?: string; [key: string]: any };
 }): CanalOrigenLogistico {
   const orig = String(
-    pedido.origen ||
-      pedido.canal ||
-      pedido.metadatos?.canal ||
-      pedido.metadatos?.origen ||
-      ''
+    pedido.origen || pedido.canal || pedido.metadatos?.canal || pedido.metadatos?.origen || ''
   ).toLowerCase();
 
   // 1. WhatsApp
@@ -171,7 +167,10 @@ export interface OpcionesDespacho {
 }
 
 // Cola en memoria para reintentos en caso de indisponibilidad remota
-const COLA_PENDIENTES = new Map<string, { evento: PedidoLogisticoEvent; opciones?: OpcionesDespacho }>();
+const COLA_PENDIENTES = new Map<
+  string,
+  { evento: PedidoLogisticoEvent; opciones?: OpcionesDespacho }
+>();
 
 export class DespachadorEventosLogisticos {
   /**
@@ -201,10 +200,7 @@ export class DespachadorEventosLogisticos {
 
     // 2. Intentar emisión hacia la RTDB de Servicio a Domicilio
     try {
-      const eventoRef = ref(
-        dbReparto,
-        `servicio_a_domicilio/eventos/${evento.idempotencia_key}`
-      );
+      const eventoRef = ref(dbReparto, `servicio_a_domicilio/eventos/${evento.idempotencia_key}`);
       await set(eventoRef, evento);
 
       // Limpieza de cola tras éxito

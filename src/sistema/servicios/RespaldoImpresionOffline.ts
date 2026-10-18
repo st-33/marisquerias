@@ -83,7 +83,7 @@ class RespaldoImpresionOffline {
   private async checkBluetoothStatus(): Promise<void> {
     try {
       this.isBluetoothConnected = servicioFierros.estaConectado;
-    } catch (error) {
+    } catch {
       this.isBluetoothConnected = false;
     }
   }
@@ -281,4 +281,3 @@ export const respaldoImpresionOffline = new RespaldoImpresionOffline();
 // Aliases retrocompatibles (inglés)
 export { RespaldoImpresionOffline as OfflinePrintFallbackClass };
 export { respaldoImpresionOffline as OfflinePrintFallback };
-
