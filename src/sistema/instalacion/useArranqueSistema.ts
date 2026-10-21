@@ -12,7 +12,7 @@
  * Cualquier fallo en b, c o d detiene el arranque con error explícito.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Database } from 'firebase/database';
 import { resolverAccessCodeO1 } from './vinculacion/resolver-access-code';
 import { cargarNPB } from './npb/cargarNPB';
@@ -21,10 +21,12 @@ import type { NegocioPlantillaBase } from './npb/tiposNPB';
 import type { NegocioReal } from './npb/tiposNegocioReal';
 import type { RolDispositivoCanonico } from '../../negocio/roles/catalogoRoles';
 import { resolverRolPorDefecto } from '../../negocio/roles/redireccionRol';
-import { guardarSesionO1 } from './npb/persistenciaSesionO1';
+import { guardarSesionO1, leerSesionO1 } from './npb/persistenciaSesionO1';
+import { revalidarVersionNPB } from './reconexion/monitorConexionO1';
 import { clasificarErrorArranque, type InfoErrorArranque } from './npb/erroresArranque';
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
+import { getSecundariaRtdb } from '../firebase';
 
 export interface ResultadoArranqueO1Exitoso {
   ok: true;
@@ -68,11 +70,28 @@ export async function ejecutarArranqueO1(
     // 1. Resolver código de acceso en Unidad Secundaria
     const { negocio, db_url_operativa } = await resolverAccessCodeO1(db, cleanCode);
 
+    // 1b. Validar que el código pertenezca a la categoría Marisquerías
+    const esPlantilla = negocio.tipo_acceso === 'plantilla';
+    const catSlug = (negocio.slug_categoria || '').toLowerCase();
+    const catId = (negocio.categoria_id || '').toLowerCase();
+    if (!esPlantilla && catSlug && catSlug !== 'marisquerias' && catId !== '01') {
+      throw new Error(
+        `El código de acceso no corresponde a la categoría Marisquerías (pertenece a '${catSlug}').`
+      );
+    }
+
+    // 1c. Validar asignación de Unidad Operativa para negocio real
+    if (!esPlantilla && (!db_url_operativa || !db_url_operativa.trim().startsWith('http'))) {
+      throw new Error(
+        'El negocio real no tiene asignada una Unidad Operativa válida en Unidad Secundaria.'
+      );
+    }
+
     // 2. Cargar NPB 00 y validar compatibilidad
     const npb = await cargarNPB(db, negocio.slug_categoria, negocio.version_npb_origen);
 
-    // 3. Encender capacidades y roles (cálculo de activados / dormidos)
-    const estadoEncendido = encenderCapacidades(npb);
+    // 3. Encender capacidades y roles (intersección NPB ∩ Negocio Real)
+    const estadoEncendido = encenderCapacidades(npb, negocio);
 
     // 4. Guardar EstadoEncendido en el store global
     const store = useStore.getState();
@@ -108,11 +127,13 @@ export async function ejecutarArranqueO1(
       rol_activo: destinoRol.rol,
       estadoEncendido,
       db_url_operativa,
+      tipo_acceso: estadoEncendido.tipo_acceso,
     });
 
     logger.info('ARRANQUE_O1', 'Arranque O(1) completado con éxito', {
       negocioId: negocio.negocio_id,
       categoria: negocio.slug_categoria,
+      tipoAcceso: estadoEncendido.tipo_acceso,
       capacidadesActivas: estadoEncendido.capacidades_activas.length,
       rolesActivos: estadoEncendido.roles_activos.length,
     });
@@ -179,4 +200,87 @@ export function useArranqueO1() {
   };
 }
 
-export { useArranqueO1 as useArranqueSistema };
+/**
+ * 🚀 HOOK CANÓNICO DE ARRANQUE DEL SISTEMA (O(1))
+ * Utilizado por app/_layout.tsx para inicializar la aplicación:
+ * - Restaura sesión válida desde persistenciaSesionO1
+ * - Hidrata EstadoEncendido en el store global
+ * - Activa monitorConexionO1 (revalidación de NPB)
+ * - Retorna isReady: boolean
+ */
+export function useArranqueSistema(): boolean {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const arrancar = async () => {
+      try {
+        logger.info('ARRANQUE_SISTEMA', '⚡ Iniciando arranque O(1) desde persistencia...');
+        const lectura = await leerSesionO1();
+        const store = useStore.getState();
+
+        if (lectura.valida && lectura.sesion) {
+          const { sesion } = lectura;
+
+          // Cargar EstadoEncendido
+          if (sesion.estadoEncendido) {
+            store.setEstadoEncendido(sesion.estadoEncendido);
+          }
+
+          // Cargar dataSources operativos
+          if (sesion.db_url_operativa) {
+            await store.setDataSources({ operacionUrl: sesion.db_url_operativa });
+          }
+
+          // Inyectar sesión en store
+          await store.setSession({
+            access_code: sesion.codigo_acceso_hash,
+            negocioId: sesion.negocio_id,
+            negocio_id: sesion.negocio_id,
+            categoria_id: sesion.slug_categoria,
+            category: sesion.slug_categoria,
+            niche: sesion.slug_categoria,
+            rutaNegocio: `negocios/${sesion.negocio_id}`,
+            ruta_negocio: `negocios/${sesion.negocio_id}`,
+            rol: (sesion.rol_activo as any) || 'mesero',
+          });
+
+          // Activar monitor de reconexión / revalidación en segundo plano usando Unidad Secundaria
+          try {
+            const dbSecundaria = getSecundariaRtdb();
+            void revalidarVersionNPB(
+              dbSecundaria,
+              sesion.slug_categoria,
+              sesion.version_npb_origen
+            );
+          } catch {
+            // Silencioso si no hay conexión
+          }
+        }
+
+        // Cargar hardware y dataSources locales
+        await Promise.all([store.loadDataSources(), store.loadHardware()]);
+
+        if (mounted) {
+          logger.info('ARRANQUE_SISTEMA', '✅ Sistema O(1) listo para operar');
+          setIsReady(true);
+        }
+      } catch (error) {
+        logger.error('ARRANQUE_SISTEMA', '❌ Error fatal en arranque O(1)', error as Error);
+        if (mounted) setIsReady(true);
+      }
+    };
+
+    void arrancar();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return isReady;
+}
+
+// Alias retrocompatibles
+export { useArranqueSistema as useBootstrapper };

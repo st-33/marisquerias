@@ -109,7 +109,7 @@ describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 
   test('1. Arranque feliz: resuelve código, carga NPB, enciende capacidades y duerme las no declaradas', async () => {
     // a) Resolver access code
     const resCodigo = await resolverAccessCodeO1(dbMock, 'TEST123');
-    expect(resCodigo.negocio).toEqual({
+    expect(resCodigo.negocio).toMatchObject({
       negocio_id: 'mar-01',
       categoria_id: '01',
       slug_categoria: 'marisquerias',

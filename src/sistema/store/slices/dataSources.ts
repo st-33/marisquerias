@@ -7,6 +7,7 @@ type SessionContext = { sesion: { rutaNegocio: string | null } };
 
 export const ESTADO_INICIAL_DATA_SOURCES: ContratoDataSources = {
   operacionUrl: null,
+  secundariaUrl: null,
   repartoUrl: null,
   perfilesUrl: null,
 };

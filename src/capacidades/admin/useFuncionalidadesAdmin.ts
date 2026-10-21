@@ -1,12 +1,7 @@
-// src/verticales/admin/logica/useAdminFeatures.ts
 import type { Database } from 'firebase/database';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useStore, type AppStore } from '../../sistema/store';
-import { getRtdb } from '../../sistema/firebase';
-import {
-  NegocioRepository,
-  type Caracteristicas,
-} from '../../sistema/persistencia/negocio.repositorio';
+import { useCallback, useMemo } from 'react';
+import { useStore } from '../../sistema/store';
+import type { Caracteristicas } from '../../sistema/persistencia/negocio.repositorio';
 import { estaFeatureAdminHabilitada } from './seguridadMenu';
 
 /**
@@ -137,39 +132,62 @@ export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures 
  */
 export type UseFuncionalidadesAdminProps = UseAdminFeaturesProps;
 
-export function useFuncionalidadesAdmin(props?: UseFuncionalidadesAdminProps) {
-  const storeRutaNegocio = useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio) || '';
-  const ds = useStore((s: AppStore) => s.dataSources);
+export function useFuncionalidadesAdmin(_props?: UseFuncionalidadesAdminProps) {
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
 
-  const rutaNegocio = props?.rutaNegocio !== undefined ? props.rutaNegocio : storeRutaNegocio;
+  const features = useMemo((): NegocioFeatures => {
+    const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
+    const caps =
+      estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas ?? [];
 
-  const db = useMemo(() => {
-    if (props?.db) return props.db;
-    return getRtdb(ds?.operacionUrl || undefined);
-  }, [props?.db, ds?.operacionUrl]);
+    const adminRoleEnabled = roles.includes('administrador') || roles.includes('admin' as any);
+    const hasCap = (cap: string) => caps.includes(cap as any);
 
-  const [rawCaracteristicas, setRawCaracteristicas] = useState<Caracteristicas>({});
-  const [loading, setLoading] = useState(true);
+    const menuHabilitado = adminRoleEnabled && hasCap('menu');
+    const controlMesasHabilitado = adminRoleEnabled && hasCap('control_mesas');
+    const comandaCocinaHabilitada = adminRoleEnabled && hasCap('comanda_cocina');
+    const mostradorYPosHabilitado = adminRoleEnabled && hasCap('mostrador_y_pos');
+    const inventarioHabilitado = adminRoleEnabled && hasCap('inventario');
+    const aparatosConectadosHabilitados = adminRoleEnabled && hasCap('aparatos_conectados');
+    const repartoLogisticaHabilitado = adminRoleEnabled && hasCap('reparto_logistica');
+    const metricasYCierresHabilitadas = adminRoleEnabled && hasCap('metricas_y_cierres');
+    const ticketsImpresionHabilitado = adminRoleEnabled && hasCap('tickets_impresion');
 
-  useEffect(() => {
-    if (!rutaNegocio) return;
-    const negocioRepo = new NegocioRepository(db, rutaNegocio);
-    const unsub = negocioRepo.suscribirCaracteristicas((data) => {
-      setRawCaracteristicas(data);
-      setLoading(false);
-    });
+    return {
+      // 9 Canónicas
+      menu: menuHabilitado,
+      control_mesas: controlMesasHabilitado,
+      comanda_cocina: comandaCocinaHabilitada,
+      mostrador_y_pos: mostradorYPosHabilitado,
+      inventario: inventarioHabilitado,
+      aparatos_conectados: aparatosConectadosHabilitados,
+      reparto_logistica: repartoLogisticaHabilitado,
+      metricas_y_cierres: metricasYCierresHabilitadas,
+      tickets_impresion: ticketsImpresionHabilitado,
 
-    return unsub;
-  }, [db, rutaNegocio]);
-
-  const features = useMemo(() => normalizarFeaturesAdmin(rawCaracteristicas), [rawCaracteristicas]);
+      // Compatibilidad Admin
+      admin: adminRoleEnabled,
+      admin_dashboard: metricasYCierresHabilitadas,
+      admin_menu: menuHabilitado,
+      admin_inventory: inventarioHabilitado,
+      admin_tables: controlMesasHabilitado,
+      admin_devices: aparatosConectadosHabilitados,
+      admin_repart: repartoLogisticaHabilitado,
+      admin_mostrador: mostradorYPosHabilitado,
+      admin_tickets: ticketsImpresionHabilitado,
+      admin_menu_add_category: menuHabilitado,
+      module_venta_crudo: mostradorYPosHabilitado,
+      fastbutton_venta_crudo: mostradorYPosHabilitado,
+      menu_editor_venta_crudo: mostradorYPosHabilitado,
+    };
+  }, [estadoEncendido]);
 
   const isEnabled = useCallback(
     (feature: keyof NegocioFeatures) => estaFeatureAdminHabilitada(features, feature),
     [features]
   );
 
-  return { features, loading, isEnabled };
+  return { features, loading: false, isEnabled };
 }
 
 export const useAdminFeatures = useFuncionalidadesAdmin;

@@ -3,112 +3,139 @@
     ".read": false,
     ".write": false,
 
-    "codigo_acceso": {
+    "codigo_de_acceso": {
       "$codigo": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": false,
-        ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_\\-]+(\\/[A-Za-z0-9_\\-]+)+$/)"
+        ".validate": "newData.isString() || newData.hasChildren(['slug_categoria', 'negocio_id']) || newData.hasChildren(['rutaNegocio'])"
       }
     },
 
-    "2 alimentos_y_bebidas": {
-      "marisquerias": {
-        "$negocioId": {
-          ".read": "auth != null",
-          ".write": "auth != null",
+    "codigo_acceso": {
+      "$codigo": {
+        ".read": true,
+        ".write": false
+      }
+    },
 
-          "dispositivos": {
-            "$deviceId": {
-              ".validate": "newData.hasChildren(['rol', 'deviceIdADI']) || data.exists()",
-              "rol": {
-                ".validate": "newData.isString() && (newData.val() == 'mesero' || newData.val() == 'cocina' || newData.val() == 'mostrador' || newData.val() == 'admin')"
-              },
-              "isAdmin": {
-                ".validate": "newData.isBoolean()"
-              }
-            }
-          },
-
-          "mesas": {
-            "$mesaId": {
-              "estado": {
-                ".validate": "newData.isString() && (newData.val() == 'libre' || newData.val() == 'ocupada' || newData.val() == 'cuenta')"
-              }
-            }
-          },
-
-          "pedidos": {
-            ".indexOn": ["estatus", "mesaId", "cuentaSolicitada", "cerrado"],
-            "$pedidoId": {
-              "estatus": {
-                ".validate": "newData.isString() && (newData.val() == 'creado' || newData.val() == 'enviado_cocina' || newData.val() == 'en_preparacion' || newData.val() == 'listo_para_entregar' || newData.val() == 'entregado' || newData.val() == 'cerrado')"
-              },
-              "tipo": {
-                ".validate": "newData.isString() && (newData.val() == 'mesa' || newData.val() == 'para_llevar' || newData.val() == 'delivery')"
-              },
-              "items": {
-                "$itemId": {
-                  "estado": {
-                    ".validate": "newData.isString() && (newData.val() == 'nuevo' || newData.val() == 'en_preparacion' || newData.val() == 'listo' || newData.val() == 'entregado')"
-                  },
-                  "cantidad": {
-                    ".validate": "newData.isNumber() && newData.val() > 0"
-                  }
-                }
-              }
-            }
-          },
-
-          "spool": {
-            "jobs": {
-              "$jobId": {
-                "state": {
-                  ".validate": "newData.isString() && (newData.val() == 'pendiente_aprobacion' || newData.val() == 'pendiente_impresion' || newData.val() == 'impresion_enviada' || newData.val() == 'exito' || newData.val() == 'fallo')"
-                },
-                "purpose": {
-                  ".validate": "newData.isString() && (newData.val() == 'comanda' || newData.val() == 'cuenta' || newData.val() == 'venta_crudo')"
-                },
-                "orderId": {
-                  ".validate": "newData.isString()"
-                }
-              }
-            }
-          },
-
-          "inventario": {
-            "$containerId": {
-              "items": {
-                "$itemId": {
-                  "cantidad": {
-                    ".validate": "newData.isNumber()"
-                  }
-                }
-              }
-            }
-          },
-
-          "ventas": {
-            "$ventaId": {
-              ".validate": "newData.hasChild('total')",
-              "total": {
-                ".validate": "newData.isNumber() && newData.val() >= 0"
-              }
-            }
-          },
-
-          "tickets": {
-            "$ticketId": {
-              ".validate": "newData.hasChildren()"
-            }
+    "categorias": {
+      "$slug": {
+        "plantilla_base": {
+          ".read": true,
+          ".write": false
+        },
+        "negocios_derivados": {
+          "$negocioId": {
+            ".read": true,
+            ".write": false
           }
         }
+      }
+    },
+
+    "plantillas": {
+      "$slug": {
+        ".read": true,
+        ".write": false
       }
     },
 
     "negocios": {
       "$negocioId": {
         ".read": "auth != null",
+        ".write": "auth != null",
+
+        "configuracion": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
+
+        "flags": {
+          ".read": "auth != null",
+          ".write": false
+        },
+
+        "dispositivos": {
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['rol']) || data.exists()",
+            "rol": {
+              ".validate": "newData.isString()"
+            }
+          }
+        },
+
+        "menu": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
+
+        "mesas": {
+          "$mesaId": {
+            "estado": {
+              ".validate": "newData.isString() && (newData.val() == 'libre' || newData.val() == 'ocupada' || newData.val() == 'cuenta')"
+            }
+          }
+        },
+
+        "mesas_pendientes": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
+
+        "pedidos": {
+          ".indexOn": ["estatus", "mesaId", "cuentaSolicitada", "cerrado"],
+          "$pedidoId": {
+            "estatus": {
+              ".validate": "newData.isString() && (newData.val() == 'creado' || newData.val() == 'enviado_cocina' || newData.val() == 'en_preparacion' || newData.val() == 'listo_para_entregar' || newData.val() == 'entregado' || newData.val() == 'cerrado')"
+            },
+            "tipo": {
+              ".validate": "newData.isString() && (newData.val() == 'mesa' || newData.val() == 'para_llevar' || newData.val() == 'delivery')"
+            },
+            "items": {
+              "$itemId": {
+                "cantidad": {
+                  ".validate": "newData.isNumber() && newData.val() > 0"
+                }
+              }
+            }
+          }
+        },
+
+        "inventario": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        },
+
+        "ventas": {
+          "$ventaId": {
+            ".validate": "newData.hasChild('total')",
+            "total": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            }
+          }
+        },
+
+        "tickets": {
+          "$ticketId": {
+            ".validate": "newData.hasChildren()"
+          }
+        },
+
+        "reparto_ajustes": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    },
+
+    "marisquerias": {
+      "Negocio principal de categoría": {
+        ".read": true,
         ".write": false
+      },
+      "$negocioId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     }
   }

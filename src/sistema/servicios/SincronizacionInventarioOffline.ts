@@ -3,11 +3,6 @@ import type { Database } from 'firebase/database';
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
-import {
-  isCurrentNegocioLifecycle,
-  switchNegocioLifecycle,
-} from '../ciclo_de_vida/ControladorCicloVidaNegocio';
-
 import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
 class SincronizacionInventarioOffline {
@@ -15,7 +10,6 @@ class SincronizacionInventarioOffline {
   private unsubscribeNetInfo: (() => void) | null = null;
   private db: Database | null = null;
   private rutaNegocio: string | null = null;
-  private lifecycleGeneration = 0;
 
   initialize(db: Database, rutaNegocio: string): void {
     if (!validar_ruta_negocio(rutaNegocio)) {
@@ -32,7 +26,6 @@ class SincronizacionInventarioOffline {
 
     this.db = db;
     this.rutaNegocio = rutaNegocio;
-    this.lifecycleGeneration = switchNegocioLifecycle(rutaNegocio);
 
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
       if (state.isConnected && !this.isRunning && this.isCurrent()) {
@@ -50,17 +43,12 @@ class SincronizacionInventarioOffline {
   }
 
   private isCurrent(): boolean {
-    return Boolean(
-      this.db &&
-      this.rutaNegocio &&
-      isCurrentNegocioLifecycle(this.rutaNegocio, this.lifecycleGeneration)
-    );
+    return Boolean(this.db && this.rutaNegocio);
   }
 
   async syncPendingMovements(): Promise<{ synced: number; failed: number }> {
     const db = this.db;
     const rutaNegocio = this.rutaNegocio;
-    const generation = this.lifecycleGeneration;
     if (this.isRunning || !db || !rutaNegocio || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
@@ -81,7 +69,7 @@ class SincronizacionInventarioOffline {
       logger.info(
         'OFFLINE_INV_SYNC',
         `Sincronizando ${pendingMovements.length} movimientos de inventario...`,
-        { rutaNegocio, generation }
+        { rutaNegocio }
       );
 
       const store = useStore.getState();
@@ -152,7 +140,6 @@ class SincronizacionInventarioOffline {
   }
 
   destroy(): void {
-    this.lifecycleGeneration += 1;
     this.isRunning = false;
     this.unsubscribeNetInfo?.();
     this.unsubscribeNetInfo = null;

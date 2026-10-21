@@ -226,8 +226,11 @@ export interface ContratoUI {
  * 4. Seguridad granular (permisos diferentes por RTDB)
  */
 export interface ContratoDataSources {
-  /** URL de la RTDB operacional (por defecto) */
+  /** URL de la RTDB operacional del negocio concreto */
   operacionUrl: string | null;
+
+  /** URL de la RTDB de Unidad Secundaria (catálogos, plantillas NPB, códigos de acceso) */
+  secundariaUrl?: string | null;
 
   /** URL de la RTDB de reparto y logística */
   repartoUrl: string | null;

@@ -22,6 +22,7 @@ export const CLAVES_SESION_O1 = {
   TIMESTAMP_ARRANQUE: '@sesion:timestamp_arranque',
   ESTADO_ENCENDIDO: '@sesion:estado_encendido',
   DB_URL_OPERATIVA: '@sesion:db_url_operativa',
+  TIPO_ACCESO: '@sesion:tipo_acceso',
 } as const;
 
 export const DURACION_MAXIMA_SESION_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
@@ -49,6 +50,8 @@ export interface DatosSesionO1 {
   timestamp_arranque: number;
   estadoEncendido: EstadoEncendido | null;
   db_url_operativa?: string;
+  tipo_acceso?: 'plantilla' | 'negocio_real';
+  [key: string]: unknown;
 }
 
 export interface ResultadoLecturaSesionO1 {
@@ -66,6 +69,7 @@ export interface GuardarSesionO1Params {
   rol_activo: string | null;
   estadoEncendido: EstadoEncendido;
   db_url_operativa?: string;
+  tipo_acceso?: 'plantilla' | 'negocio_real';
   timestamp?: number;
 }
 
@@ -76,6 +80,7 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
   const timestamp = params.timestamp ?? Date.now();
   const codigoHash = hashCodigoAcceso(params.codigo_acceso);
   const estadoJson = JSON.stringify(params.estadoEncendido);
+  const tipoAcceso = params.tipo_acceso || params.estadoEncendido?.tipo_acceso || 'negocio_real';
 
   const pares: [string, string][] = [
     [CLAVES_SESION_O1.NEGOCIO_ID, params.negocio_id],
@@ -85,6 +90,7 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
     [CLAVES_SESION_O1.ROL_ACTIVO, params.rol_activo || ''],
     [CLAVES_SESION_O1.TIMESTAMP_ARRANQUE, String(timestamp)],
     [CLAVES_SESION_O1.ESTADO_ENCENDIDO, estadoJson],
+    [CLAVES_SESION_O1.TIPO_ACCESO, tipoAcceso],
   ];
 
   if (params.db_url_operativa) {
@@ -154,6 +160,11 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
       }
     }
 
+    const tipo_acceso =
+      (mapa[CLAVES_SESION_O1.TIPO_ACCESO] as 'plantilla' | 'negocio_real' | null) ||
+      estadoEncendido?.tipo_acceso ||
+      'negocio_real';
+
     const sesion: DatosSesionO1 = {
       negocio_id,
       slug_categoria: mapa[CLAVES_SESION_O1.SLUG_CATEGORIA] || '',
@@ -163,6 +174,7 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
       timestamp_arranque,
       estadoEncendido,
       db_url_operativa: mapa[CLAVES_SESION_O1.DB_URL_OPERATIVA] || undefined,
+      tipo_acceso,
     };
 
     return {

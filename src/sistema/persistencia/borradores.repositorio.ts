@@ -8,6 +8,9 @@
  * - Aislado por negocioId + deviceId. Nunca cruza negocios.
  */
 
+import type { Database } from 'firebase/database';
+import { get, ref, remove } from 'firebase/database';
+import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
 import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { logger } from '../monitoreo';
 
@@ -306,3 +309,20 @@ export type { PartidaBorrador as DraftItem };
 export type { BorradorComanda as OrderDraft };
 export type { EstadoBorrador as DraftEstado };
 export type { OrigenBorrador as DraftOrigen };
+
+/**
+ * 🧹 PURGA DE BORRADORES / MESAS PENDIENTES
+ * Limpia el nodo /mesas_pendientes en RTDB bajo control de jornada operativa.
+ */
+export async function purgarMesasPendientes(db: Database, rutaNegocio: string): Promise<number> {
+  assertCajonActivo('mesas_pendientes');
+  const pendientesRef = ref(db, `${rutaNegocio}/mesas_pendientes`);
+  const pendientesSnap = await get(pendientesRef);
+  if (pendientesSnap.exists()) {
+    const mesasPendientes = (pendientesSnap.val() as Record<string, any>) || {};
+    const count = Object.keys(mesasPendientes).length;
+    await remove(pendientesRef);
+    return count;
+  }
+  return 0;
+}

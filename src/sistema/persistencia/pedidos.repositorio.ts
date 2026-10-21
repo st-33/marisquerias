@@ -9,6 +9,8 @@ import { get, off, onValue, ref, remove, runTransaction, set, update } from 'fir
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizadores';
 import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { assertValidRutaNegocio } from '../rtdb/guards';
+import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
+import { purgarMesasPendientes } from './borradores.repositorio';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 import { RegistroVentasRepository } from './registroVentas.repositorio';
 import type {
@@ -88,6 +90,7 @@ export class RepositorioPedidos {
   }
 
   private getBasePath() {
+    assertCajonActivo('pedidos');
     return `${this.rutaNegocio}/pedidos`;
   }
 
@@ -627,13 +630,7 @@ export class RepositorioPedidos {
 
     // 2. Limpiar borradores muertos en /mesas_pendientes
     if (filtros?.limpiarBorradores !== false) {
-      const pendientesRef = ref(this.db, `${this.rutaNegocio}/mesas_pendientes`);
-      const pendientesSnap = await get(pendientesRef);
-      if (pendientesSnap.exists()) {
-        const mesasPendientes = (pendientesSnap.val() as Record<string, any>) || {};
-        borradoresEliminados = Object.keys(mesasPendientes).length;
-        await remove(pendientesRef);
-      }
+      borradoresEliminados = await purgarMesasPendientes(this.db, this.rutaNegocio);
     }
 
     return { pedidosEliminados, borradoresEliminados };

@@ -6,7 +6,7 @@
  * requeridas (condición sine qua non para activarse) y capacidades opcionales.
  */
 
-import type { CapacidadCanonica } from '../../sistema/utilidades/caracteristicas';
+import type { CapacidadCanonica } from '../../sistema/instalacion/npb/tiposNPB';
 
 export type RolDispositivoCanonico =
   | 'administrador'

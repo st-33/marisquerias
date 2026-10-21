@@ -20,10 +20,10 @@ import {
   rutaRepartoAjustes,
   rutaTickets,
   rutaDispositivos,
+  esCajonDormido,
+  assertCajonActivo,
+  registrarProveedorCajonesDormidos,
 } from '../ruta_negocio';
-import { ensureNegocioBootstrap } from '../../../ciclo_de_vida/asegurarNegocio';
-import { get, set, update } from 'firebase/database';
-import type { Database } from 'firebase/database';
 
 jest.mock('firebase/database', () => ({
   ref: jest.fn((db: unknown, path: string) => ({ db, path })),
@@ -42,8 +42,6 @@ jest.mock('../../../monitoreo', () => ({
 }));
 
 describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
-  const dbMock = {} as unknown as Database;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -246,29 +244,48 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(rutaTickets(ruta)).toBe(`${ruta}/tickets`);
       expect(rutaDispositivos(ruta)).toBe(`${ruta}/dispositivos`);
     });
-  });
 
-  describe('ensureNegocioBootstrap', () => {
-    it('arroja error si las características no existen (estructura no inicializada por Torre de Control)', async () => {
-      const rutaNegocio = 'marisquerias/el-arrecife';
-      (get as jest.Mock).mockResolvedValueOnce({ exists: () => false });
+    it('bloquea accesos a cajones dormidos con assertCajonActivo y resolverRutaCajon', () => {
+      const dormidos = ['mesas', 'pedidos'] as const;
 
-      await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).rejects.toThrow(
-        `Violación de Estado: La estructura base del negocio en '${rutaNegocio}' no ha sido aprovisionada por la Torre de Control.`
+      expect(esCajonDormido('mesas', dormidos)).toBe(true);
+      expect(esCajonDormido('menu', dormidos)).toBe(false);
+
+      expect(() => assertCajonActivo('mesas', dormidos)).toThrow(/El cajón 'mesas' está dormido/);
+      expect(() => resolverRutaCajon(ruta, 'mesas', undefined, dormidos)).toThrow(
+        /El cajón 'mesas' está dormido/
       );
 
-      expect(set).not.toHaveBeenCalled();
-      expect(update).not.toHaveBeenCalled();
+      // Si no está dormido, no lanza error
+      expect(() => assertCajonActivo('menu', dormidos)).not.toThrow();
+      expect(resolverRutaCajon(ruta, 'menu', undefined, dormidos)).toBe(`${ruta}/menu`);
     });
 
-    it('pasa silenciosamente si las características existen', async () => {
-      const rutaNegocio = 'marisquerias/el-arrecife';
-      (get as jest.Mock).mockResolvedValueOnce({ exists: () => true });
+    it('soporta registrarProveedorCajonesDormidos para resolución global dinámica', () => {
+      let mockDormidos: readonly string[] = ['tickets'];
+      registrarProveedorCajonesDormidos(() => mockDormidos as any);
 
-      await expect(ensureNegocioBootstrap(dbMock, rutaNegocio)).resolves.toBeUndefined();
+      expect(esCajonDormido('tickets')).toBe(true);
+      expect(() => assertCajonActivo('tickets')).toThrow(/El cajón 'tickets' está dormido/);
 
-      expect(set).not.toHaveBeenCalled();
-      expect(update).not.toHaveBeenCalled();
+      // Limpiar proveedor
+      registrarProveedorCajonesDormidos(() => null);
+      expect(esCajonDormido('tickets')).toBe(false);
+      expect(() => assertCajonActivo('tickets')).not.toThrow();
+    });
+
+    it('bloquea cajón dormido con hidratacionCompleta === true y permite acceso si hidratacionCompleta === false', () => {
+      const dormidos = ['pedidos'] as const;
+
+      // 1. Con hidratacionCompleta === true (o por defecto), bloquea el cajón dormido
+      expect(() => assertCajonActivo('pedidos', dormidos, { hidratacionCompleta: true })).toThrow(
+        /El cajón 'pedidos' está dormido/
+      );
+
+      // 2. Con hidratacionCompleta === false, permite lecturas de bootstrap
+      expect(() =>
+        assertCajonActivo('pedidos', dormidos, { hidratacionCompleta: false })
+      ).not.toThrow();
     });
   });
 });

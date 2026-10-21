@@ -9,13 +9,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { getRtdb } from '../firebase';
 import { logger } from '../monitoreo';
-import {
-  registerNegocioCleanup,
-  registerNegocioScopedStateReset,
-  registerNegocioStateReset,
-  resetNegocioLifecycle,
-  switchNegocioLifecycle,
-} from '../ciclo_de_vida/ControladorCicloVidaNegocio';
+import { registrarProveedorCajonesDormidos } from '../rtdb/rutas/ruta_negocio';
 import { createDataSourcesSlice, type DataSourcesSlice } from './slices/dataSources';
 import { createHardwareSlice, type HardwareSlice } from './slices/hardware';
 import { createInventoryV2Slice, type InventoryV2Slice } from './slices/inventario';
@@ -74,7 +68,9 @@ export const useStore = create<AppStore>()(
   }))
 );
 
-const resetNegocioScopedSlices = () => {
+registrarProveedorCajonesDormidos(() => useStore.getState().estadoEncendido?.dormidos);
+
+export const resetNegocioScopedSlices = () => {
   useStore.setState({
     negocio: ESTADO_INICIAL_NEGOCIO,
     ui: ESTADO_INICIAL_UI,
@@ -85,14 +81,13 @@ const resetNegocioScopedSlices = () => {
   });
 };
 
-registerNegocioScopedStateReset(resetNegocioScopedSlices);
-registerNegocioStateReset(() => {
+export const resetNegocioState = () => {
   resetNegocioScopedSlices();
   useStore.setState({
     sesion: ESTADO_SESION_INICIAL,
     estadoInstalacion: 'SIN_VINCULO',
   });
-});
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SELECTORES Y HOOKS (Compatibilidad y Comodidad)
@@ -240,7 +235,7 @@ export async function cargarEstadoPersistido() {
 }
 
 export async function limpiarEstadoPersistido() {
-  resetNegocioLifecycle('persisted_state_cleanup');
+  resetNegocioState();
   await storage.multiRemove([
     SESION_STORAGE_KEY,
     'sesion',
@@ -267,7 +262,6 @@ export function useAppListeners(isAppReady: boolean) {
       return;
     }
 
-    const generation = switchNegocioLifecycle(rutaNegocio);
     const db = getRtdb();
     const store = useStore.getState();
     const operacionCleanup = store.inicializarOperacionListeners(db, rutaNegocio);
@@ -281,23 +275,16 @@ export function useAppListeners(isAppReady: boolean) {
       inventoryCleanup();
       logger.info('LISTENERS', '🔌 Suscripciones centralizadas desconectadas', {
         rutaNegocio,
-        generation,
       });
     };
 
-    const unregister = registerNegocioCleanup(rutaNegocio, cleanup);
-    cleanupRef.current = () => {
-      unregister();
-      cleanup();
-    };
+    cleanupRef.current = cleanup;
 
     logger.info('LISTENERS', '🔌 Suscripciones centralizadas activas', {
       rutaNegocio,
-      generation,
     });
 
     return () => {
-      unregister();
       cleanup();
       if (cleanupRef.current) cleanupRef.current = null;
     };

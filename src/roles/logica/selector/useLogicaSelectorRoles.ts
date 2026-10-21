@@ -70,11 +70,8 @@ export function useLogicaSelectorRoles() {
 
   const roles = useMemo((): RolInfo[] => {
     // Si tenemos EstadoEncendido del arranque O(1), proyectar sus roles activos canónicos
-    if (
-      estadoEncendido &&
-      Array.isArray(estadoEncendido.roles_activos) &&
-      estadoEncendido.roles_activos.length > 0
-    ) {
+    const rolesActivos = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos;
+    if (rolesActivos && Array.isArray(rolesActivos) && rolesActivos.length > 0) {
       const iconos: Record<string, string> = {
         administrador: 'settings',
         mesero: 'restaurant',
@@ -114,7 +111,7 @@ export function useLogicaSelectorRoles() {
         empacador: '/_role/empacador',
       };
 
-      return estadoEncendido.roles_activos.map((rolId) => ({
+      return rolesActivos.map((rolId) => ({
         id: rolId,
         nombre: nombres[rolId] || rolId,
         icono: iconos[rolId] || 'apps',

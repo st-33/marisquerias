@@ -19,6 +19,7 @@ import {
 import { z } from 'zod';
 import { stripVoidDeep } from '../../logica/dominio/partidaCanonica';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
+import { resolver_ruta_cajon } from '../rtdb/rutas/ruta_negocio';
 
 // --- Esquemas de Datos ---
 
@@ -112,7 +113,7 @@ export class RepositorioInventario {
     rutaNegocio: string
   ) {
     assertValidRutaNegocio(rutaNegocio);
-    this.baseRef = `${rutaNegocio}/inventario`;
+    this.baseRef = resolver_ruta_cajon(rutaNegocio, 'inventario');
   }
 
   // ==================== CATÁLOGO (Global por Negocio) ====================

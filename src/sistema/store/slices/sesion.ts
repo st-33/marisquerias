@@ -7,11 +7,6 @@ import {
   descomponer_ruta_negocio,
   extraer_negocio_id_canonico,
 } from '../../rtdb/rutas/ruta_negocio';
-import {
-  resetNegocioLifecycle,
-  switchNegocioLifecycle,
-  negocioStorageKey,
-} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 
 export type EstadoInstalacion =
   | 'HIDRATANDO'
@@ -55,7 +50,8 @@ export function getNegocioStorageKey(
   modulo: string,
   clave: string
 ): string | null {
-  return negocioStorageKey(rutaNegocio, modulo, clave);
+  if (!rutaNegocio || !validar_ruta_negocio(rutaNegocio)) return null;
+  return `@${rutaNegocio}:${modulo}:${clave}`;
 }
 
 export interface AccionesSesion {
@@ -82,7 +78,10 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
     const resolvedRutaNegocio = sesion.ruta_negocio || sesion.rutaNegocio || null;
     const previousRutaNegocio = get().sesion.ruta_negocio || get().sesion.rutaNegocio;
     if (previousRutaNegocio !== resolvedRutaNegocio) {
-      switchNegocioLifecycle(resolvedRutaNegocio);
+      logger.info('STORE_SESION', 'Contexto negocio cambiado', {
+        anterior: previousRutaNegocio,
+        nuevo: resolvedRutaNegocio,
+      });
     }
 
     let resolvedCategory = sesion.categoria_id || sesion.category || null;
@@ -165,7 +164,7 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
 
   async clearSession() {
     const previousRutaNegocio = get().sesion.rutaNegocio;
-    resetNegocioLifecycle('clear_session');
+    logger.info('STORE_SESION', 'Limpiando sesión');
 
     set({
       sesion: ESTADO_SESION_INICIAL,

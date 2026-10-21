@@ -20,12 +20,28 @@ export async function cargarNPB(
     throw new Error('El slug de categoría es requerido para cargar el NPB');
   }
 
-  // 1. Consulta el nodo principal en Unidad Secundaria
-  const rutaPrincipal = `${cleanSlug}/Negocio principal de categoría`;
-  const principalRef = ref(db, rutaPrincipal);
-  const snapshot = await get(principalRef);
+  // 1. Consulta el nodo de la plantilla en Unidad Secundaria
+  // Intenta primero la ruta canónica del Ecosistema: categorias/{slug}/plantilla_base
+  // Fallbacks: {slug}/Negocio principal de categoría, plantillas/{slug}
+  const rutasCandidatas = [
+    `categorias/${cleanSlug}/plantilla_base`,
+    `${cleanSlug}/Negocio principal de categoría`,
+    `plantillas/${cleanSlug}`,
+  ];
 
-  if (!snapshot.exists()) {
+  let snapshot = null;
+  let rutaUsada = '';
+
+  for (const ruta of rutasCandidatas) {
+    const snap = await get(ref(db, ruta));
+    if (snap.exists()) {
+      snapshot = snap;
+      rutaUsada = ruta;
+      break;
+    }
+  }
+
+  if (!snapshot || !snapshot.exists()) {
     throw new Error(
       `No se encontró el Negocio Principal de Categoría para '${cleanSlug}' en Unidad Secundaria`
     );
@@ -35,12 +51,23 @@ export async function cargarNPB(
 
   // 2. Verificación de versión con respecto a version_npb_origen
   if (versionNpbOrigen !== undefined && npb.version_npb !== versionNpbOrigen) {
-    // Intentar cargar del histórico
-    const rutaHistorico = `${cleanSlug}/Negocio principal de categoría/historico/${versionNpbOrigen}`;
-    const histRef = ref(db, rutaHistorico);
-    const histSnap = await get(histRef);
+    // Intentar cargar del histórico en la misma jerarquía encontrada
+    const rutasHistorico = [
+      `${rutaUsada}/historico/${versionNpbOrigen}`,
+      `categorias/${cleanSlug}/plantilla_base/historico/${versionNpbOrigen}`,
+      `${cleanSlug}/Negocio principal de categoría/historico/${versionNpbOrigen}`,
+    ];
 
-    if (histSnap.exists()) {
+    let histSnap = null;
+    for (const rHist of rutasHistorico) {
+      const snap = await get(ref(db, rHist));
+      if (snap.exists()) {
+        histSnap = snap;
+        break;
+      }
+    }
+
+    if (histSnap && histSnap.exists()) {
       npb = histSnap.val() as NegocioPlantillaBase;
     } else {
       throw new Error(

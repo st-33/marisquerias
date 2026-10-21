@@ -173,6 +173,43 @@ export async function resolverAccessCode(
       ? (val.cliente_id as string) || (val.negocio as any)?.cliente_id || 'cliente-local'
       : 'cliente-local';
 
+  const esPlantillaAcceso =
+    cleanCode === 'NPB00-TEST' ||
+    (typeof val === 'object' &&
+      val !== null &&
+      ((val as any).tipo_acceso === 'plantilla' ||
+        (val as any).tipoAcceso === 'plantilla' ||
+        (val as any).es_plantilla === true ||
+        (val as any).negocio_id === '00' ||
+        (val as any).negocio_id === '__plantilla_base')) ||
+    identidad.negocio_id === '00' ||
+    identidad.negocio_id === '__plantilla_base';
+
+  const tipo_acceso = esPlantillaAcceso ? 'plantilla' : 'negocio_real';
+
+  const capacidades_autorizadas =
+    typeof val === 'object' && val !== null
+      ? Array.isArray((val as any).capacidades_autorizadas)
+        ? (val as any).capacidades_autorizadas
+        : Array.isArray((val as any).capacidadesAutorizadas)
+          ? (val as any).capacidadesAutorizadas
+          : undefined
+      : undefined;
+
+  const cajones_dormidos_forzados =
+    typeof val === 'object' && val !== null
+      ? Array.isArray((val as any).cajones_dormidos_forzados)
+        ? (val as any).cajones_dormidos_forzados
+        : Array.isArray((val as any).cajonesDormidosForzados)
+          ? (val as any).cajonesDormidosForzados
+          : undefined
+      : undefined;
+
+  const nombre_comercial =
+    typeof val === 'object' && val !== null
+      ? (val as any).nombre_comercial || (val as any).nombreComercial || (val as any).nombre
+      : undefined;
+
   const negocio: NegocioReal = {
     negocio_id:
       (typeof val === 'object' &&
@@ -193,6 +230,11 @@ export async function resolverAccessCode(
     cliente_id: clienteId,
     estado,
     db_url_operativa,
+    tipo_acceso,
+    nombre_comercial,
+    capacidades_autorizadas,
+    cajones_dormidos_forzados,
+    roles_permitidos: rolesPermitidos,
   };
 
   // Guardar sesión local en AsyncStorage
@@ -237,15 +279,8 @@ export async function resolverAccessCodeO1(
   accessCode: string
 ): Promise<RespuestaAccessCode> {
   const res = await resolverAccessCode(db, accessCode);
-  const negocio: NegocioReal = {
-    negocio_id: res.negocio.negocio_id,
-    categoria_id: res.negocio.categoria_id,
-    slug_categoria: res.negocio.slug_categoria,
-    version_npb_origen: res.negocio.version_npb_origen,
-    cliente_id: res.negocio.cliente_id,
-  };
   return {
-    negocio,
+    negocio: res.negocio,
     db_url_operativa: res.db_url_operativa,
   };
 }

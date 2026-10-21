@@ -1,11 +1,11 @@
 /**
- * 🎭 ROLES AUTH CONTAINER
- * Ruta Expo Router para selección de rol post-autenticación / post-arranque O(1).
+ * 🎭 REDIRECCIÓN A SELECTOR DE ROLES CANÓNICO
+ * Evita la duplicación de pantallas de roles redirigiendo a /_role/roles.
  */
 
 import React from 'react';
-import RolesContainer from '../_role/roles';
+import { Redirect } from 'expo-router';
 
 export default function RolesAuthRoute() {
-  return <RolesContainer />;
+  return <Redirect href="/_role/roles" />;
 }

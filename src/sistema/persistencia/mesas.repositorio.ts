@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizadores';
 import { logger } from '../monitoreo/logger';
 import { assertValidRutaNegocio } from '../rtdb/guards';
+import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
 
 export type EstadoMesa = 'libre' | 'ocupada' | 'reservada' | 'solicitar_cuenta';
 
@@ -39,6 +40,7 @@ export class RepositorioMesas {
   }
 
   private getBasePath() {
+    assertCajonActivo('mesas');
     return `${this.rutaNegocio}/mesas`;
   }
 

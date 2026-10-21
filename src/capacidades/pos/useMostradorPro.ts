@@ -19,7 +19,6 @@ import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
 import { useConfiguracionNegocio } from '../../sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useConfiguracionCaja as usePosConfig } from '../mostrador/useConfiguracionCaja';
-import { useCaracteristica } from '../../negocio/roles/GestorCaracteristicas';
 
 function stripUndefinedDeep<T>(input: T): T {
   if (input === undefined) return null as any;
@@ -77,10 +76,12 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       .then(setDeviceId)
       .catch((err) => console.error('[MostradorPro] Error obteniendo deviceId:', err));
   }, []);
-  const isInventarioEnabled = useCaracteristica('inventario', true);
-  const isImpresionEnabled = useCaracteristica('impresion', true);
-  const isBasculaEnabled = useCaracteristica('bascula', true);
-  const isDeliveryEnabled = useCaracteristica('delivery', true);
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const caps = estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas;
+  const isInventarioEnabled = !caps || caps.includes('inventario');
+  const isImpresionEnabled = !caps || caps.includes('tickets_impresion');
+  const isBasculaEnabled = true;
+  const isDeliveryEnabled = !caps || caps.includes('reparto_logistica');
 
   const rawInventoryAutoDiscount = useStore(
     (s) => s.negocio.features?.inventory_auto_discount?.enabled ?? true

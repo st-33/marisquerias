@@ -1,92 +1,100 @@
 /**
- * 🧹 LIMPIADOR DE LOGS
+ * 🧹 DEPURADOR DE REGISTROS
  *
- * Reduce logs excesivos en producción manteniendo solo los críticos
+ * Reduce logs excesivos en producción manteniendo solo los críticos.
+ * Claves de módulo en español, conforme al protocolo de nomenclatura del Ecosistema.
  */
 
-/**
- * Niveles de logging
- */
-export enum LogLevel {
-  NONE = 0,
+export enum NivelLog {
+  NINGUNO = 0,
   ERROR = 1,
-  WARN = 2,
+  AVISO = 2,
   INFO = 3,
-  DEBUG = 4,
+  DEPURACION = 4,
 }
 
-/**
- * Configuración de logging por módulo
- */
-const LOG_CONFIG: Record<string, LogLevel> = {
+const CONFIGURACION_LOG: Record<string, NivelLog> = {
   // Críticos: siempre mostrar
-  SynchronizationService: LogLevel.INFO,
-  useSynchronizedArray: LogLevel.INFO,
-  useMeseroLogic: LogLevel.INFO,
-  useProductSelector: LogLevel.INFO,
+  ServicioSincronizacion: NivelLog.INFO,
+  useArregloSincronizado: NivelLog.INFO,
+  useLogicaMesero: NivelLog.INFO,
+  useSelectorProducto: NivelLog.INFO,
 
-  // Moderados: solo warnings y errores
-  DASHBOARD: LogLevel.WARN,
-  RolePacker: LogLevel.WARN,
-  PrintNotificationListener: LogLevel.WARN,
-  ItemStatusListener: LogLevel.WARN,
+  // Moderados: solo avisos y errores
+  TABLERO: NivelLog.AVISO,
+  EmpaquetadorRol: NivelLog.AVISO,
+  EscuchaNotificacionImpresion: NivelLog.AVISO,
+  EscuchaEstadoPartida: NivelLog.AVISO,
 
   // Verbosos: solo errores
-  usePrinterConnection: LogLevel.ERROR,
-  BluetoothPrinterModal: LogLevel.ERROR,
+  useConexionImpresora: NivelLog.ERROR,
+  ModalImpresoraBluetooth: NivelLog.ERROR,
 
-  // Por defecto: INFO
-  default: LogLevel.INFO,
+  // Por defecto
+  defecto: NivelLog.INFO,
 };
 
-/**
- * Obtiene el nivel de log para un módulo
- */
-function getLogLevel(module: string): LogLevel {
-  return LOG_CONFIG[module] || LOG_CONFIG['default'];
+function obtenerNivelLog(modulo: string): NivelLog {
+  return CONFIGURACION_LOG[modulo] || CONFIGURACION_LOG['defecto'];
 }
 
-/**
- * Verifica si un log debe mostrarse
- */
-export function shouldLog(module: string, level: 'error' | 'warn' | 'info' | 'debug'): boolean {
-  const configLevel = getLogLevel(module);
-  const messageLevel =
-    level === 'error'
-      ? LogLevel.ERROR
-      : level === 'warn'
-        ? LogLevel.WARN
-        : level === 'info'
-          ? LogLevel.INFO
-          : LogLevel.DEBUG;
-
-  return messageLevel <= configLevel;
+export function debeRegistrar(
+  modulo: string,
+  nivel: 'error' | 'aviso' | 'info' | 'depuracion'
+): boolean {
+  const nivelConfig = obtenerNivelLog(modulo);
+  const nivelMensaje =
+    nivel === 'error'
+      ? NivelLog.ERROR
+      : nivel === 'aviso'
+        ? NivelLog.AVISO
+        : nivel === 'info'
+          ? NivelLog.INFO
+          : NivelLog.DEPURACION;
+  return nivelMensaje <= nivelConfig;
 }
 
-/**
- * Wrapper para console.log que respeta configuración
- */
-export function conditionalLog(
-  module: string,
-  level: 'error' | 'warn' | 'info' | 'debug',
-  message: string,
+export function registrarCondicional(
+  modulo: string,
+  nivel: 'error' | 'aviso' | 'info' | 'depuracion',
+  mensaje: string,
   ...args: any[]
 ): void {
-  if (!shouldLog(module, level)) return;
+  if (!debeRegistrar(modulo, nivel)) return;
 
-  const prefix = `[${module}]`;
-  switch (level) {
+  const prefijo = `[${modulo}]`;
+  switch (nivel) {
     case 'error':
-      console.error(prefix, message, ...args);
+      console.error(prefijo, mensaje, ...args);
       break;
-    case 'warn':
-      console.warn(prefix, message, ...args);
+    case 'aviso':
+      console.warn(prefijo, mensaje, ...args);
       break;
     case 'info':
-      console.log(prefix, message, ...args);
-      break;
-    case 'debug':
-      console.log(prefix, message, ...args);
+    case 'depuracion':
+      console.log(prefijo, mensaje, ...args);
       break;
   }
 }
+
+// Alias retrocompatible para módulos que usen la API anterior
+/** @deprecated Usar debeRegistrar() */
+export const shouldLog = (modulo: string, nivel: 'error' | 'warn' | 'info' | 'debug') =>
+  debeRegistrar(
+    modulo,
+    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : nivel as any
+  );
+
+/** @deprecated Usar registrarCondicional() */
+export const conditionalLog = (
+  modulo: string,
+  nivel: 'error' | 'warn' | 'info' | 'debug',
+  mensaje: string,
+  ...args: any[]
+) =>
+  registrarCondicional(
+    modulo,
+    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : nivel as any,
+    mensaje,
+    ...args
+  );

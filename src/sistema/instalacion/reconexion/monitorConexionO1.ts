@@ -32,10 +32,22 @@ export async function revalidarVersionNPB(
 ): Promise<ResultadoRevalidacionNPB> {
   try {
     const cleanSlug = slugCategoria.trim().replace(/^\/+|\/+$/g, '');
-    const ruta = `${cleanSlug}/Negocio principal de categoría`;
-    const snapshot = await get(ref(db, ruta));
+    const rutasCandidatas = [
+      `categorias/${cleanSlug}/plantilla_base`,
+      `${cleanSlug}/Negocio principal de categoría`,
+      `plantillas/${cleanSlug}`,
+    ];
 
-    if (!snapshot.exists()) {
+    let snapshot = null;
+    for (const r of rutasCandidatas) {
+      const snap = await get(ref(db, r));
+      if (snap.exists()) {
+        snapshot = snap;
+        break;
+      }
+    }
+
+    if (!snapshot || !snapshot.exists()) {
       return { versionCambio: false, versionActual };
     }
 

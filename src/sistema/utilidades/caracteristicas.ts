@@ -1,27 +1,7 @@
 import type { CajonOperativo } from '../rtdb/rutas/ruta_negocio';
+import { CAPACIDADES_CANONICAS, type CapacidadCanonica } from '../instalacion/npb/tiposNPB';
 
-export type CapacidadCanonica =
-  | 'menu'
-  | 'control_mesas'
-  | 'comanda_cocina'
-  | 'mostrador_y_pos'
-  | 'inventario'
-  | 'aparatos_conectados'
-  | 'reparto_logistica'
-  | 'metricas_y_cierres'
-  | 'tickets_impresion';
-
-export const CAPACIDADES_CANONICAS: readonly CapacidadCanonica[] = [
-  'menu',
-  'control_mesas',
-  'comanda_cocina',
-  'mostrador_y_pos',
-  'inventario',
-  'aparatos_conectados',
-  'reparto_logistica',
-  'metricas_y_cierres',
-  'tickets_impresion',
-] as const;
+export { CAPACIDADES_CANONICAS, type CapacidadCanonica };
 
 export const CAJONES_POR_CAPACIDAD: Record<CapacidadCanonica, readonly CajonOperativo[]> = {
   menu: ['menu'],

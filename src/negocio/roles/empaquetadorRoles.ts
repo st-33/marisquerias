@@ -1,16 +1,11 @@
 /**
  * 📦 ENSAMBLADOR DE ROLES (Role Packer)
- * Sistema dinámico que activa/desactiva módulos según las features del negocio
- *
- * MODULARIDAD EXTREMA:
- * - Lee features desde Firebase
- * - Auto-configura la aplicación
- * - Permite hiper-personalización sin tocar código
+ * Proyecta los roles y módulos habilitados directamente desde EstadoEncendido (NPB 00)
+ * almacenado en el store global de Zustand en O(1), sin suscripciones RTDB.
  */
 
+import { useCallback, useMemo } from 'react';
 import type { Database } from 'firebase/database';
-import { off, onValue, ref } from 'firebase/database';
-import { useEffect, useState, useMemo } from 'react';
 import { RUTAS } from '@/sistema/rtdb/rutas/ruta_negocio';
 import { useStore } from '../../sistema/store';
 
@@ -40,15 +35,13 @@ export type ConfiguracionNegocio = {
   features: Record<string, boolean>;
 };
 
-type PropsEmpaquetadorRoles = {
-  db: Database;
-  rutaNegocio: string;
+export type PropsEmpaquetadorRoles = {
+  db?: Database;
+  rutaNegocio?: string;
 };
 
-export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles) {
-  const [config, setConfig] = useState<ConfiguracionNegocio | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function useEmpaquetadorRoles(_props?: PropsEmpaquetadorRoles) {
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
   const modulosBloqueados = useStore((s) => s.modulosBloqueados);
 
   const esModuloBloqueado = useMemo(() => {
@@ -68,267 +61,82 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
     };
   }, [modulosBloqueados]);
 
-  useEffect(() => {
-    if (!rutaNegocio) {
-      console.log('[RolePacker] ❌ Sin rutaNegocio, no se cargarán roles');
-      return;
-    }
+  const config = useMemo((): ConfiguracionNegocio => {
+    const rolesActivos = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
+    const capsActivas =
+      estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas ?? [];
 
-    console.log('[RolePacker] 🔍 Iniciando carga de roles desde:', rutaNegocio);
+    const hasRol = (rol: string) => rolesActivos.includes(rol as any);
+    const hasCap = (cap: string) => capsActivas.includes(cap as any);
 
-    const capacidadesRef = ref(db, `${rutaNegocio}/capacidades`);
-    const rolesRef = ref(db, `${rutaNegocio}/roles`);
-    const configRef = ref(db, `${rutaNegocio}/caracteristicas`);
-
-    let ultimasCapacidades: Record<string, any> = {};
-    let ultimosRoles: Record<string, any> = {};
-
-    const sincronizarYProcesar = () => {
-      const merged = {
-        roles: ultimosRoles,
-        capacidades: ultimasCapacidades,
-        ...ultimasCapacidades,
-      };
-      procesarDatos(merged);
-    };
-
-    const cbRoles = onValue(rolesRef, (snapshot) => {
-      try {
-        const val = snapshot.val();
-        if (val && typeof val === 'object') {
-          ultimosRoles = val.roles ? val.roles : val;
-          sincronizarYProcesar();
-        }
-      } catch (err: any) {
-        console.error('[RolePacker] ❌ Error procesando roles:', err);
-      }
-    });
-
-    const cbCapacidades = onValue(capacidadesRef, (snapshot) => {
-      try {
-        const val = snapshot.val();
-        if (val && typeof val === 'object') {
-          ultimasCapacidades = val.capacidades ? val.capacidades : val;
-          sincronizarYProcesar();
-        }
-      } catch (err: any) {
-        console.error('[RolePacker] ❌ Error procesando capacidades:', err);
-      }
-    });
-
-    const cbConfig = onValue(
-      configRef,
-      (snapshot) => {
-        try {
-          const data = snapshot.val();
-          if (data && typeof data === 'object') {
-            if (data.roles) ultimosRoles = { ...data.roles, ...ultimosRoles };
-            if (data.capacidades) {
-              ultimasCapacidades = { ...data.capacidades, ...ultimasCapacidades };
-            }
-            procesarDatos(data);
-          }
-        } catch (err: any) {
-          console.error('[RolePacker] ❌ Error procesando configuración:', err);
-          setError(`Error al cargar configuración: ${err.message || 'Desconocido'}`);
-          setLoading(false);
-        }
+    const roles: RolesDisponibles = {
+      mesero: {
+        habilitado: hasRol('mesero'),
+        nombre: 'Mesero',
+        icono: 'restaurant',
+        ruta: RUTAS.ROLES.MESERO,
       },
-      (err: any) => {
-        console.error('[RolePacker] ❌ Firebase error:', err);
-        setError(`Error de Firebase: ${err.message || 'Desconocido'}`);
-        setLoading(false);
-      }
-    );
-
-    function procesarDatos(data: any) {
-      console.log('[RolePacker] 🔎 Procesando datos:', Object.keys(data));
-
-      // Determinar tipo de negocio
-      const tipo: TipoNegocio = data.tipo || 'restaurante';
-      const proceso = (tipo === 'tienda' ? 1 : 2) as 1 | 2;
-
-      // Normalizar roles
-      const rolesData = data.roles || {};
-      const roles: RolesDisponibles = {};
-
-      // Helper robusto para extraer configuración de rol
-      const extraherRol = (
-        key: string,
-        fallbackKey: string | null,
-        nombre: string,
-        icono: string,
-        ruta: string,
-        forceEnabledByFeature?: boolean
-      ): RolConfig | undefined => {
-        const raw =
-          rolesData[key] ??
-          (fallbackKey ? rolesData[fallbackKey] : undefined) ??
-          data[key] ??
-          (fallbackKey ? data[fallbackKey] : undefined);
-
-        if (raw === undefined && !forceEnabledByFeature) return undefined;
-
-        const isTruthy = (v: any) => v === true || v === 'true' || v === 1 || v === '1';
-
-        // Determinar si está habilitado
-        let habilitado = false;
-        if (forceEnabledByFeature) {
-          habilitado = true;
-        } else if (typeof raw === 'boolean') {
-          habilitado = raw;
-        } else if (typeof raw === 'object' && raw !== null) {
-          habilitado =
-            isTruthy(raw.habilitado) ||
-            isTruthy(raw.enabled) ||
-            isTruthy(raw.activo) ||
-            Object.keys(raw).length > 0;
-        } else {
-          habilitado = isTruthy(raw);
-        }
-
-        // Casos especiales de deshabilitación explícita
-        if (typeof raw === 'object' && raw !== null && raw.habilitado === false) habilitado = false;
-
-        return {
-          habilitado,
-          nombre,
-          icono,
-          ruta,
-          modulos: typeof raw === 'object' ? { ...raw } : {},
-        };
-      };
-
-      // 1. MESERO
-      roles.mesero = extraherRol('mesero', 'waiter', 'Mesero', 'restaurant', RUTAS.ROLES.MESERO);
-
-      // 2. COCINA
-      roles.cocina = extraherRol('cocina', 'kitchen', 'Cocina', 'flame', RUTAS.ROLES.COCINA);
-
-      // 3. VENTA Y CRUDO (POS)
-      const isVCrudoFeature = (v: any) => v === true || v === 'true' || v === 1 || v === '1';
-      const forceVentaCrudo =
-        isVCrudoFeature(data.module_venta_crudo) ||
-        isVCrudoFeature(data.features?.module_venta_crudo) ||
-        isVCrudoFeature(data.capacidades?.mostrador_y_pos);
-
-      roles.mostrador = extraherRol(
-        'mostrador',
-        'venta_crudo',
-        'Venta y Crudo',
-        'cart',
-        RUTAS.ROLES.VENTA_CRUDO,
-        forceVentaCrudo
-      );
-
-      // 4. ADMIN
-      roles.admin = extraherRol('admin', null, 'Admin', 'settings', RUTAS.ROLES.ADMIN);
-      if (roles.admin && typeof rolesData.admin === 'object') {
-        roles.admin.modulos = {
-          dashboard: rolesData.admin.dashboard !== false,
-          menu: (rolesData.admin.menu ?? data.capacidades?.menu) !== false,
-          control_mesas:
-            (rolesData.admin.control_mesas ??
-              rolesData.admin.mesas ??
-              data.capacidades?.control_mesas) !== false,
-          comanda_cocina:
-            (rolesData.admin.comanda_cocina ??
-              rolesData.admin.cocina ??
-              data.capacidades?.comanda_cocina) !== false,
-          mostrador_y_pos:
-            (rolesData.admin.mostrador_y_pos ??
-              rolesData.admin.mostrador ??
-              data.capacidades?.mostrador_y_pos) !== false,
-          inventario: (rolesData.admin.inventario ?? data.capacidades?.inventario) !== false,
-          aparatos_conectados:
-            (rolesData.admin.aparatos_conectados ??
-              rolesData.admin.dispositivos ??
-              data.capacidades?.aparatos_conectados) !== false,
-          reparto_logistica:
-            (rolesData.admin.reparto_logistica ??
-              rolesData.admin.repart ??
-              data.capacidades?.reparto_logistica) !== false,
-          metricas_y_cierres:
-            (rolesData.admin.metricas_y_cierres ??
-              rolesData.admin.metricas ??
-              rolesData.admin.dashboard ??
-              data.capacidades?.metricas_y_cierres) !== false,
-          tickets_impresion:
-            (rolesData.admin.tickets_impresion ??
-              rolesData.admin.tickets ??
-              data.capacidades?.tickets_impresion) !== false,
-        };
-      }
-
-      // 5. INVENTARIO
-      roles.inventario = extraherRol(
-        'inventario',
-        'inventory',
-        'Inventario',
-        'cube',
-        RUTAS.ROLES.INVENTARIO
-      );
-
-      // 6. REPARTIDOR
-      roles.repart = extraherRol(
-        'repart',
-        'repartidor',
-        'ADI-Repart',
-        'bicycle',
-        RUTAS.ROLES.REPARTIDOR
-      );
-
-      // Normalizar features globales
-      const features: Record<string, boolean> = {};
-      Object.entries(data).forEach(([key, value]) => {
-        if (typeof value === 'boolean') {
-          features[key] = value;
-        }
-      });
-
-      const configData: ConfiguracionNegocio = {
-        tipo,
-        proceso,
-        roles,
-        features,
-      };
-
-      console.log('[RolePacker] ✅ Configuración cargada:', {
-        tipo,
-        proceso,
-        rolesHabilitados: Object.keys(roles).filter(
-          (k) => roles[k as keyof RolesDisponibles]?.habilitado
-        ),
-        featuresCount: Object.keys(features).length,
-      });
-
-      setConfig(configData);
-      setLoading(false);
-    }
-
-    return () => {
-      console.log('[RolePacker] 🔌 Desuscribiendo de configuración');
-      off(capacidadesRef, 'value', cbCapacidades as any);
-      off(rolesRef, 'value', cbRoles as any);
-      off(configRef, 'value', cbConfig as any);
+      cocina: {
+        habilitado: hasRol('cocina'),
+        nombre: 'Cocina',
+        icono: 'flame',
+        ruta: RUTAS.ROLES.COCINA,
+      },
+      mostrador: {
+        habilitado: hasRol('mostrador') || hasCap('mostrador_y_pos'),
+        nombre: 'Venta y Crudo',
+        icono: 'cart',
+        ruta: RUTAS.ROLES.VENTA_CRUDO,
+      },
+      admin: {
+        habilitado: hasRol('administrador') || hasRol('admin'),
+        nombre: 'Admin',
+        icono: 'settings',
+        ruta: RUTAS.ROLES.ADMIN,
+        modulos: {
+          dashboard: hasCap('metricas_y_cierres'),
+          menu: hasCap('menu'),
+          control_mesas: hasCap('control_mesas'),
+          comanda_cocina: hasCap('comanda_cocina'),
+          mostrador_y_pos: hasCap('mostrador_y_pos'),
+          inventario: hasCap('inventario'),
+          aparatos_conectados: hasCap('aparatos_conectados'),
+          reparto_logistica: hasCap('reparto_logistica'),
+          metricas_y_cierres: hasCap('metricas_y_cierres'),
+          tickets_impresion: hasCap('tickets_impresion'),
+        },
+      },
+      inventario: {
+        habilitado: hasRol('inventario') || hasCap('inventario'),
+        nombre: 'Inventario',
+        icono: 'cube',
+        ruta: RUTAS.ROLES.INVENTARIO,
+      },
+      repart: {
+        habilitado: hasRol('repartidor') || hasRol('repart') || hasCap('reparto_logistica'),
+        nombre: 'ADI-Repart',
+        icono: 'bicycle',
+        ruta: RUTAS.ROLES.REPARTIDOR,
+      },
     };
-  }, [db, rutaNegocio]);
 
-  /**
-   * Obtener roles habilitados
-   */
-  const getRolesHabilitados = (): RolConfig[] => {
-    if (!config) {
-      console.warn('[RolePacker] ⚠️ getRolesHabilitados: No hay configuración cargada');
-      // 🔥 CORRECCIÓN: Proporcionar roles por defecto si no hay configuración
-      if (!loading) {
-        // Fallback remoto debe existir, no usamos hardcodeo
-        return [];
-      }
-      return [];
+    const features: Record<string, boolean> = {};
+    for (const cap of capsActivas) {
+      features[cap] = true;
     }
 
-    const roles = Object.entries(config.roles)
+    return {
+      tipo: 'restaurante',
+      proceso: 2,
+      roles,
+      features,
+    };
+  }, [estadoEncendido]);
+
+  const getRolesHabilitados = useCallback((): RolConfig[] => {
+    if (!config) return [];
+
+    return Object.entries(config.roles)
       .filter((entry): entry is [keyof RolesDisponibles, RolConfig] => {
         const [key, rol] = entry;
         if (!rol || rol.habilitado !== true) return false;
@@ -336,53 +144,43 @@ export function useEmpaquetadorRoles({ db, rutaNegocio }: PropsEmpaquetadorRoles
         return true;
       })
       .map(([_, rol]) => rol);
+  }, [config, esModuloBloqueado]);
 
-    console.log(
-      '[RolePacker] 🔍 getRolesHabilitados:',
-      roles.map((r) => r.nombre)
-    );
-    return roles;
-  };
+  const isRolHabilitado = useCallback(
+    (rolKey: keyof RolesDisponibles): boolean => {
+      const rol = config?.roles[rolKey];
+      if (!rol || rol.habilitado !== true) return false;
+      if (esModuloBloqueado(rolKey, rol.nombre)) return false;
+      return true;
+    },
+    [config, esModuloBloqueado]
+  );
 
-  /**
-   * Verificar si un rol está habilitado
-   */
-  const isRolHabilitado = (rolKey: keyof RolesDisponibles): boolean => {
-    const rol = config?.roles[rolKey];
-    if (!rol || rol.habilitado !== true) return false;
-    if (esModuloBloqueado(rolKey, rol.nombre)) return false;
-    return true;
-  };
+  const isModuloHabilitado = useCallback(
+    (rolKey: keyof RolesDisponibles, moduloKey: string): boolean => {
+      const rol = config?.roles[rolKey];
+      if (!rol || !rol.habilitado) return false;
+      return rol.modulos?.[moduloKey] !== false;
+    },
+    [config]
+  );
 
-  /**
-   * Verificar si un módulo de un rol está habilitado
-   */
-  const isModuloHabilitado = (rolKey: keyof RolesDisponibles, moduloKey: string): boolean => {
-    const rol = config?.roles[rolKey];
-    if (!rol || !rol.habilitado) return false;
-    return rol.modulos?.[moduloKey] !== false;
-  };
-
-  /**
-   * Verificar si una feature global está habilitada
-   */
-  const isFeatureHabilitada = (featureKey: string): boolean => {
-    return config?.features[featureKey] === true;
-  };
+  const isFeatureHabilitada = useCallback(
+    (featureKey: string): boolean => {
+      return config?.features[featureKey] === true;
+    },
+    [config]
+  );
 
   return {
     config,
-    loading,
-    error,
-
-    // Helpers
+    loading: false,
+    error: null,
     getRolesHabilitados,
     isRolHabilitado,
     isModuloHabilitado,
     isFeatureHabilitada,
-
-    // Datos directos
-    tipo: config?.tipo || 'restaurante',
-    proceso: config?.proceso || 2,
+    tipo: config.tipo,
+    proceso: config.proceso,
   };
 }

@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ref, set, get, update, serverTimestamp } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import { ensureNegocioBootstrap } from '../../ciclo_de_vida/asegurarNegocio';
 import { resolverDeviceIdADI } from '../vinculacion/generar-device-id-adi';
 import { resolverAccessCode } from '../vinculacion/resolver-access-code';
 import { resolverConfiguracionInicial } from '../runtime/resolver-configuracion-inicial';
@@ -117,10 +116,7 @@ export class EnsambladorInstalacion {
         };
       }
 
-      // 2. Garantizar bootstrap del negocio (inicializar nodos de impresora, reparto, etc.)
-      await ensureNegocioBootstrap(this.db, resolvedCode.rutaNegocio);
-
-      // 3. Resolver configuración asignada al dispositivo
+      // 2. Resolver configuración asignada al dispositivo
       const { dispositivoConfig } = await resolverConfiguracionInicial(
         this.db,
         resolvedCode.rutaNegocio,

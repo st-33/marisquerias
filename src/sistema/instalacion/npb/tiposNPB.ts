@@ -5,6 +5,29 @@
  * Sellado por Torre de Control en Unidad Secundaria.
  */
 
+export type CapacidadCanonica =
+  | 'menu'
+  | 'control_mesas'
+  | 'comanda_cocina'
+  | 'mostrador_y_pos'
+  | 'inventario'
+  | 'aparatos_conectados'
+  | 'reparto_logistica'
+  | 'metricas_y_cierres'
+  | 'tickets_impresion';
+
+export const CAPACIDADES_CANONICAS: readonly CapacidadCanonica[] = [
+  'menu',
+  'control_mesas',
+  'comanda_cocina',
+  'mostrador_y_pos',
+  'inventario',
+  'aparatos_conectados',
+  'reparto_logistica',
+  'metricas_y_cierres',
+  'tickets_impresion',
+] as const;
+
 export interface RolDispositivoNPB {
   id: string;
   pantallas_visibles: string[];

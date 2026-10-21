@@ -84,4 +84,3 @@ export function useAlertaModerna() {
   };
 }
 
-export const useModernAlert = useAlertaModerna;

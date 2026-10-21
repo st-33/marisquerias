@@ -1,111 +1,91 @@
-import { onValue, ref } from 'firebase/database';
 import { useEmpaquetadorRoles } from '../empaquetadorRoles';
-import type { Database } from 'firebase/database';
-import React from 'react';
+import { useStore } from '../../../sistema/store';
 
-jest.mock('firebase/database', () => ({
-  ref: jest.fn(),
-  onValue: jest.fn(),
-  off: jest.fn(),
-}));
+jest.mock('react', () => {
+  const actual = jest.requireActual('react');
+  return {
+    ...actual,
+    useState: jest.fn((initial: any) => [initial, jest.fn()]),
+    useEffect: jest.fn((fn) => fn()),
+    useMemo: jest.fn((fn) => fn()),
+    useCallback: jest.fn((fn) => fn),
+  };
+});
 
-// El store se mockea para que useStore() no intente invocar hooks de React
-// fuera de un componente (useCallback interno de Zustand).
 jest.mock('../../../sistema/store', () => ({
-  useStore: jest.fn((selector: (s: any) => any) =>
-    typeof selector === 'function' ? selector({ modulosBloqueados: [] }) : { modulosBloqueados: [] }
-  ),
+  useStore: jest.fn(),
 }));
 
-describe('useEmpaquetadorRoles — Autoridad Remota', () => {
-  const dbMock = {} as Database;
-  const rutaNegocio = 'marisquerias/el-arrecife';
-
-  let effectCallback: any;
-  let stateSetter: any;
-  let mockState: unknown = null;
-
+describe('useEmpaquetadorRoles — Lectura directa de EstadoEncendido (O(1))', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockState = null;
-    stateSetter = jest.fn((val: unknown) => {
-      mockState = typeof val === 'function' ? (val as (state: unknown) => unknown)(mockState) : val;
-    });
-
-    jest.spyOn(React, 'useEffect').mockImplementation((cb) => {
-      effectCallback = cb;
-    });
-
-    jest.spyOn(React, 'useMemo').mockImplementation((fn: any) => fn());
-
-    let callCount = 0;
-    const useStateSpy = jest.spyOn(React, 'useState') as jest.Mock;
-    useStateSpy.mockImplementation((initial: unknown) => {
-      // Very naive mock for this specific hook:
-      // First call is config, second is loading, third is error.
-      const isConfig = callCount % 3 === 0;
-      const isLoading = callCount % 3 === 1;
-      callCount++;
-
-      if (isConfig) {
-        return [mockState, stateSetter];
-      }
-      if (isLoading) {
-        return [false, jest.fn()];
-      }
-      return [initial, jest.fn()];
-    });
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+  it('retorna lista vacía si no hay roles activos en EstadoEncendido', () => {
+    (useStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        modulosBloqueados: [],
+        estadoEncendido: {
+          activos: { roles: [], capacidades: [], cajones: [] },
+          roles_activos: [],
+          capacidades_activas: [],
+        },
+      })
+    );
+
+    const { getRolesHabilitados } = useEmpaquetadorRoles();
+    expect(getRolesHabilitados()).toEqual([]);
   });
 
-  it('valida roles remotos y rechaza fallback local cuando RTDB devuelve null', () => {
-    (ref as jest.Mock).mockReturnValue('mockRef');
-
-    (onValue as jest.Mock).mockImplementation((ref, callback) => {
-      callback({ val: () => null });
-      return jest.fn();
-    });
-
-    const getRoles = useEmpaquetadorRoles({ db: dbMock, rutaNegocio }).getRolesHabilitados;
-
-    // Simulate mount
-    if (effectCallback) effectCallback();
-
-    // Still empty since fallback was removed
-    expect(getRoles()).toEqual([]);
-  });
-
-  it('carga roles desde RTDB correctamente', () => {
-    (ref as jest.Mock).mockReturnValue('mockRef');
-
-    (onValue as jest.Mock).mockImplementation((ref, callback) => {
-      callback({
-        val: () => ({
-          roles: {
-            mesero: true,
-            cocina: false,
+  it('proyecta roles habilitados desde estadoEncendido.activos.roles y capacidades', () => {
+    (useStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        modulosBloqueados: [],
+        estadoEncendido: {
+          activos: {
+            roles: ['mesero', 'administrador'],
+            capacidades: ['menu', 'control_mesas'],
+            cajones: ['menu', 'mesas'],
           },
-        }),
-      });
-      return jest.fn();
-    });
+          roles_activos: ['mesero', 'administrador'],
+          capacidades_activas: ['menu', 'control_mesas'],
+        },
+      })
+    );
 
-    // Simulate mount
-    if (effectCallback) effectCallback();
-
-    // Call getRoles after state has updated (simulated by mocking useState returns)
-    // We need to re-render conceptually. Let's just call useEmpaquetadorRoles again to get the updated closure if needed.
-    // In our simplistic mock, useEmpaquetadorRoles reads `mockState` through the first useState.
-
-    // Mock the state as it would be after setConfig(configData)
-    const { getRolesHabilitados } = useEmpaquetadorRoles({ db: dbMock, rutaNegocio });
-
+    const { getRolesHabilitados, isRolHabilitado, isModuloHabilitado } = useEmpaquetadorRoles();
     const rolesHabilitados = getRolesHabilitados();
 
-    expect(rolesHabilitados.length).toBe(1);
-    expect(rolesHabilitados[0].nombre).toBe('Mesero');
+    expect(rolesHabilitados.length).toBe(2);
+    expect(rolesHabilitados.map((r) => r.nombre)).toEqual(['Mesero', 'Admin']);
+    expect(isRolHabilitado('mesero')).toBe(true);
+    expect(isRolHabilitado('cocina')).toBe(false);
+    expect(isModuloHabilitado('admin', 'menu')).toBe(true);
+    expect(isModuloHabilitado('admin', 'reparto_logistica')).toBe(false);
+  });
+
+  it('excluye roles que estén en modulosBloqueados', () => {
+    (useStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        modulosBloqueados: ['mesero'],
+        estadoEncendido: {
+          activos: {
+            roles: ['mesero', 'cocina'],
+            capacidades: ['comanda_cocina'],
+            cajones: ['pedidos'],
+          },
+          roles_activos: ['mesero', 'cocina'],
+          capacidades_activas: ['comanda_cocina'],
+        },
+      })
+    );
+
+    const { getRolesHabilitados, isRolHabilitado } = useEmpaquetadorRoles();
+    const roles = getRolesHabilitados();
+
+    expect(roles.length).toBe(1);
+    expect(roles[0].nombre).toBe('Cocina');
+    expect(isRolHabilitado('mesero')).toBe(false);
+    expect(isRolHabilitado('cocina')).toBe(true);
   });
 });

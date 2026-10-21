@@ -12,13 +12,12 @@ import {
 } from 'react-native';
 import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
-import { estaCaracteristicaHabilitada } from '../src/negocio/roles/GestorCaracteristicas';
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorConcentrador';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AccionRadialFlotante } from '../src/ui/bloques/AccionRadialFlotante';
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
-import { useArranqueSistema } from '../src/sistema/estado/useArranqueSistema';
+import { useArranqueSistema } from '../src/sistema/instalacion/useArranqueSistema';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
@@ -64,8 +63,8 @@ export default function RootLayout() {
   const dataSources = useStore((state) => state.dataSources);
   const estadoInstalacion = useStore((state) => state.estadoInstalacion);
   const operacionDb = useMemo(
-    () => (isReady ? getRtdb(dataSources.operacionUrl || undefined) : null),
-    [dataSources.operacionUrl, isReady]
+    () => (isReady && dataSources?.operacionUrl ? getRtdb(dataSources.operacionUrl) : null),
+    [dataSources?.operacionUrl, isReady]
   );
   useSincronizarPedidosLogistica({
     db: operacionDb,
@@ -76,6 +75,8 @@ export default function RootLayout() {
     rutaNegocio: rutaNegocio || undefined,
   });
 
+  const estadoEncendido = useStore((state) => state.estadoEncendido);
+
   // 🛡️ Guardia de Navegación de la Fábrica en Runtime (Fase 3)
   useEffect(() => {
     if (!isReady) return;
@@ -85,11 +86,23 @@ export default function RootLayout() {
       const requirement = ROUTE_FEATURES[matchedRoute];
       if (requirement.admin && adminFeaturesLoading) return;
 
+      const caps =
+        estadoEncendido?.activos?.capacidades || estadoEncendido?.capacidades_activas || [];
+
+      let isGenericEnabled = true;
+      if (requirement.generic === 'restaurante.mesas') {
+        isGenericEnabled = !estadoEncendido || caps.includes('control_mesas');
+      } else if (requirement.generic === 'restaurante.kds') {
+        isGenericEnabled = !estadoEncendido || caps.includes('comanda_cocina');
+      } else if (requirement.generic === 'venta_crudo') {
+        isGenericEnabled = !estadoEncendido || caps.includes('mostrador_y_pos');
+      }
+
       const isEnabled = requirement.admin
         ? requirement.admin.every(
             (feature) => (adminFeatures as Record<string, boolean>)[feature] === true
           )
-        : estaCaracteristicaHabilitada(requirement.generic || '', true);
+        : isGenericEnabled;
 
       if (!isEnabled) {
         logger.warn(
@@ -99,7 +112,7 @@ export default function RootLayout() {
         router.replace('/_role/roles');
       }
     }
-  }, [adminFeatures, adminFeaturesLoading, pathname, isReady, router]);
+  }, [adminFeatures, adminFeaturesLoading, estadoEncendido, pathname, isReady, router]);
 
   // Orquestador de servicios (DOGMA: Cero lógica de negocio en layout)
   useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegocio });
@@ -188,7 +201,7 @@ function RootLayoutContent({
                 <Stack.Screen name="index" options={{ title: 'Inicio' }} />
                 <Stack.Screen name="(auth)/access" />
                 <Stack.Screen name="_role/roles" />
-                <Stack.Screen name="_role/admin/index" />
+                <Stack.Screen name="_role/admin/dashboard" />
                 <Stack.Screen name="_role/venta-crudo" />
               </Stack>
               <GlobalFabSlot />

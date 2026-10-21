@@ -224,13 +224,62 @@ export const CAJONES_CANONICOS: readonly CajonOperativo[] = [
 export function resolver_ruta_cajon(
   rutaNegocio: string,
   cajon: CajonOperativo,
-  subruta?: string
+  subruta?: string,
+  dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null
 ): string {
+  assertCajonActivo(cajon, dormidos);
   const base = `${rutaNegocio}/${cajon}`;
   return subruta ? `${base}/${subruta}` : base;
 }
 
 export const resolverRutaCajon = resolver_ruta_cajon;
+
+let proveedorCajonesDormidos:
+  | (() => readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null | undefined)
+  | null = null;
+
+export function registrarProveedorCajonesDormidos(
+  proveedor: () =>
+    | readonly CajonOperativo[]
+    | { cajones?: readonly CajonOperativo[] }
+    | null
+    | undefined
+): void {
+  proveedorCajonesDormidos = proveedor;
+}
+
+/**
+ * 🛡️ GUARD DE CAJONES DORMIDOS
+ * Comprueba si un cajón está dormido en el EstadoEncendido del negocio.
+ */
+export function esCajonDormido(
+  cajon: CajonOperativo,
+  dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null
+): boolean {
+  const fuente = dormidos !== undefined ? dormidos : proveedorCajonesDormidos?.();
+  if (!fuente) return false;
+  const lista = Array.isArray(fuente)
+    ? fuente
+    : 'cajones' in fuente && Array.isArray(fuente.cajones)
+      ? fuente.cajones
+      : undefined;
+  return Array.isArray(lista) && lista.includes(cajon);
+}
+
+export function assertCajonActivo(
+  cajon: CajonOperativo,
+  dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null,
+  opciones?: { hidratacionCompleta?: boolean }
+): void {
+  if (opciones?.hidratacionCompleta === false) {
+    return;
+  }
+  if (esCajonDormido(cajon, dormidos)) {
+    throw new Error(
+      `Acceso denegado: El cajón '${cajon}' está dormido para este negocio según el EstadoEncendido.`
+    );
+  }
+}
 
 export const rutaMenu = (rutaNegocio: string, sub?: string) =>
   resolver_ruta_cajon(rutaNegocio, 'menu', sub);
@@ -260,11 +309,11 @@ export const RUTAS = {
     SELECTOR: '/_role/roles',
     MESERO: '/_role/mesero',
     COCINA: '/_role/cocina',
-    ADMIN: '/_role/admin',
+    ADMIN: '/_role/admin/dashboard',
     VENTA_CRUDO: '/_role/venta-crudo',
     INVENTARIO: '/_role/inventory',
     REPARTIDOR: '/_role/repart',
-    ADMIN_DASHBOARD: '/_role/admin',
+    ADMIN_DASHBOARD: '/_role/admin/dashboard',
   },
   PRINTER: '/printer',
   INICIO: '/index',

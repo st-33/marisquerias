@@ -42,7 +42,7 @@ export async function evaluarGuardiaArranque(db?: Database): Promise<ResultadoGu
     if (db && sesion.slug_categoria) {
       try {
         const npb = await cargarNPB(db, sesion.slug_categoria, sesion.version_npb_origen);
-        estadoEncendido = encenderCapacidades(npb);
+        estadoEncendido = encenderCapacidades(npb, sesion);
         store.setEstadoEncendido(estadoEncendido);
       } catch (err) {
         logger.warn(

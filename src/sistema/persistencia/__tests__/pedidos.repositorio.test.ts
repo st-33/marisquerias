@@ -1,6 +1,7 @@
 import type { Database } from 'firebase/database';
 import { get, remove, runTransaction, update } from 'firebase/database';
 import { PedidosRepository } from '../pedidos.repositorio';
+import { registrarProveedorCajonesDormidos } from '../../rtdb/rutas/ruta_negocio';
 
 jest.mock('firebase/database', () => ({
   get: jest.fn(),
@@ -142,5 +143,18 @@ describe('PedidosRepository.cerrar', () => {
     expect(mockRemove).toHaveBeenCalledWith(
       expect.objectContaining({ path: `${rutaNegocio}/mesas_pendientes` })
     );
+  });
+
+  it('bloquea operaciones si el cajón pedidos está dormido', async () => {
+    registrarProveedorCajonesDormidos(() => ['pedidos']);
+
+    try {
+      const repo = new PedidosRepository(dbMock, rutaNegocio);
+      await expect(repo.purgarJornadaOperativa()).rejects.toThrow(
+        /El cajón 'pedidos' está dormido/
+      );
+    } finally {
+      registrarProveedorCajonesDormidos(() => null);
+    }
   });
 });

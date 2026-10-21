@@ -45,10 +45,6 @@ jest.mock('../../monitoreo', () => ({
   setUser: jest.fn(),
 }));
 
-jest.mock('../../ciclo_de_vida/asegurarNegocio', () => ({
-  ensureNegocioBootstrap: jest.fn().mockResolvedValue(undefined),
-}));
-
 describe('Módulo de Instalación y Device Binding - Hardened', () => {
   const dbMock = {} as unknown as Database;
 

@@ -1,10 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { logger } from '../../monitoreo';
-import {
-  isCurrentNegocioLifecycle,
-  registerNegocioCleanup,
-  switchNegocioLifecycle,
-} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 import type { EstadoInstalacion } from '../../store/slices/sesion';
 import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 
@@ -22,7 +17,6 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
       return;
     }
 
-    const generation = switchNegocioLifecycle(rutaNegocio);
     let cancelled = false;
 
     const destruirServicios = () => {
@@ -40,25 +34,19 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
       initializedNegocioRef.current = null;
     };
 
-    const unregister = registerNegocioCleanup(rutaNegocio, destruirServicios);
-
     const inicializar = async () => {
       if (initializedNegocioRef.current === rutaNegocio) return;
       initializedNegocioRef.current = rutaNegocio;
 
       try {
-        const { getRtdb } = await import('../../firebase');
-        const db = getRtdb();
-        if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
-
-        const { ensureNegocioBootstrap } = await import('../../ciclo_de_vida/asegurarNegocio');
-        await ensureNegocioBootstrap(db, rutaNegocio);
-        if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
+        const { getOperacionRtdb } = await import('../../firebase');
+        const db = getOperacionRtdb();
+        if (cancelled) return;
 
         const { SQLiteStorageAdapter } =
           await import('../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite');
         await SQLiteStorageAdapter.initialize();
-        if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
+        if (cancelled) return;
 
         const { OfflineSalesSync } = await import('../../servicios/SincronizacionVentasOffline');
         OfflineSalesSync.initialize(db, rutaNegocio);
@@ -66,11 +54,11 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         const { OfflineInventorySync } =
           await import('../../servicios/SincronizacionInventarioOffline');
         OfflineInventorySync.initialize(db, rutaNegocio);
-        if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
+        if (cancelled) return;
 
         const { deviceBinding } = await import('../../seguridad/vinculacionDispositivo');
         const deviceId = await deviceBinding.getStoredDeviceId();
-        if (cancelled || !isCurrentNegocioLifecycle(rutaNegocio, generation)) return;
+        if (cancelled) return;
 
         if (!deviceId || deviceId === 'unknown' || deviceId.includes('UNKNOWN_HW')) {
           logger.warn(
@@ -93,7 +81,6 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         logger.info('OFFLINE_BOOT', '✅ Servicios Offline Inicializados', {
           rutaNegocio,
           deviceId,
-          generation,
         });
       } catch (err) {
         if (!cancelled) {
@@ -106,7 +93,6 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
 
     return () => {
       cancelled = true;
-      unregister();
       destruirServicios();
     };
   }, [estadoInstalacion, rutaNegocio]);

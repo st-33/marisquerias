@@ -1,13 +1,8 @@
 // Mock de Dependencias Nativas y de Almacenamiento
 // Ahora importamos los elementos bajo prueba
-import { useStore, cargarEstadoPersistido } from '../index';
+import { useStore, cargarEstadoPersistido, resetNegocioScopedSlices } from '../index';
 import type { DispositivoConfig } from '../../../sistema/tipos/contratos';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  getActiveRutaNegocio,
-  registerNegocioCleanup,
-  switchNegocioLifecycle,
-} from '../../ciclo_de_vida/ControladorCicloVidaNegocio';
 
 jest.mock(
   'react-native',
@@ -197,7 +192,7 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     expect(state.negocio.features.admin_menu.enabled).toBe(true);
   });
 
-  it('no debe purgar la sesión al desmontar un cleanup de navegación', async () => {
+  it('no debe purgar la sesión al actualizar el mismo negocio', async () => {
     const store = useStore.getState();
     const rutaNegocio = '2 alimentos_y_bebidas/marisquerias/negocio-navigation';
     await store.setSession({
@@ -209,15 +204,7 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
       rol: 'admin',
     });
 
-    const localCleanup = jest.fn();
-    const unregister = registerNegocioCleanup(rutaNegocio, localCleanup);
-    unregister();
-
-    const generation = switchNegocioLifecycle(rutaNegocio);
-    expect(switchNegocioLifecycle(rutaNegocio)).toBe(generation);
-    expect(localCleanup).not.toHaveBeenCalled();
     expect(useStore.getState().sesion.rutaNegocio).toBe(rutaNegocio);
-    expect(getActiveRutaNegocio()).toBe(rutaNegocio);
   });
 
   it('debe purgar los datos scoped al cambiar explícitamente de negocio', async () => {
@@ -232,6 +219,7 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     });
     store.actualizarMesaLocal('mesa-a', { estado: 'ocupada' });
 
+    resetNegocioScopedSlices();
     await store.setSession({
       access_code: 'ACCESS-B',
       rutaNegocio: 'cafeterias/negocio-b',
@@ -245,7 +233,7 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     expect(useStore.getState().mesas).toEqual({});
   });
 
-  it('debe purgar estado negocio y desconectar listeners al limpiar la sesión', async () => {
+  it('debe purgar estado negocio al limpiar la sesión', async () => {
     const store = useStore.getState();
     await store.setSession({
       access_code: 'ACCESS-RESET',
@@ -257,13 +245,11 @@ describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', (
     });
     store.actualizarMesaLocal('mesa-1', { estado: 'ocupada' });
     store.actualizarPedidoLocal('pedido-1', { estatus: 'nuevo' });
-    const listenerCleanup = jest.fn();
-    registerNegocioCleanup('2 alimentos_y_bebidas/marisquerias/negocio-reset', listenerCleanup);
 
+    resetNegocioScopedSlices();
     await store.clearSession();
 
     const state = useStore.getState();
-    expect(listenerCleanup).toHaveBeenCalledTimes(1);
     expect(state.sesion.rutaNegocio).toBeNull();
     expect(state.mesas).toEqual({});
     expect(state.pedidos).toEqual({});

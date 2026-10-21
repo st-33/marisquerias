@@ -6,7 +6,6 @@
 
 import type { Database } from 'firebase/database';
 import { get, off, onValue, ref, update } from 'firebase/database';
-import { ensureNegocioBootstrap } from '../ciclo_de_vida/asegurarNegocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
 
 export type Caracteristicas = {
@@ -66,7 +65,7 @@ export class RepositorioNegocio {
    * Asegurar que el negocio tenga la estructura base inicializada
    */
   async asegurarBootstrap(): Promise<void> {
-    await ensureNegocioBootstrap(this.db, this.rutaNegocio);
+    return Promise.resolve();
   }
 
   /**

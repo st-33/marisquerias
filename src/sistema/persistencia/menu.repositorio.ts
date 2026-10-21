@@ -5,6 +5,7 @@
 
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
+import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
 import { get, off, onValue, push, ref, remove, set, update } from 'firebase/database';
 
 export type Categoria = {
@@ -194,9 +195,11 @@ export class RepositorioMenu {
   }
 
   private getFlatProductosPath() {
+    assertCajonActivo('menu');
     return `${this.rutaNegocio}/menu/productos`;
   }
   private getCategoriasPath() {
+    assertCajonActivo('menu');
     return `${this.rutaNegocio}/menu/categorias`;
   }
   private async ensureUniqueCategorySlug(base: string, excludeId?: string): Promise<string> {

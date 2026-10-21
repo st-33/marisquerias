@@ -16,7 +16,6 @@ export type VistaAlertaModernaProps = {
   onCancel: () => void;
   onDismiss: () => void;
 };
-export type ModernAlertViewProps = VistaAlertaModernaProps;
 
 export function VistaAlertaModerna({
   visible,
@@ -207,4 +206,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ModernAlertView = VistaAlertaModerna;

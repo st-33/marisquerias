@@ -1,8 +1,9 @@
 /**
- * 🎯 MODERN ALERT - Exports
+ * 🎯 ALERTA MODERNA - Exports
  * Sistema de alertas modernas con separación correcta
  */
 
-export { useAlertaModerna, useModernAlert } from './useAlertaModerna';
-export { VistaAlertaModerna, ModernAlertView } from './VistaAlertaModerna';
+export { useAlertaModerna } from './useAlertaModerna';
+export { VistaAlertaModerna } from './VistaAlertaModerna';
 export type { AlertType, AlertConfig } from './useAlertaModerna';
+export type { VistaAlertaModernaProps } from './VistaAlertaModerna';

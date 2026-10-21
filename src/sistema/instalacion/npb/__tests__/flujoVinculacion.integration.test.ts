@@ -1,4 +1,5 @@
 import type { Database } from 'firebase/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ejecutarArranqueO1 } from '../../useArranqueSistema';
 import {
   guardarSesionO1,
@@ -429,5 +430,234 @@ describe('Flujo de Vinculación y Arranque O(1) End-to-End', () => {
 
     const resGuard = await evaluarGuardiaArranque(dbMock);
     expect(resGuard.estado).toBe('requiere_seleccion_rol');
+  });
+
+  test('18. Código de prueba NPB00-TEST abre en modo plantilla y activa todo el catálogo del NPB', async () => {
+    mockRtdb['codigo_de_acceso/NPB00-TEST'] = {
+      tipo_acceso: 'plantilla',
+      negocio_id: '00',
+      slug_categoria: 'marisquerias',
+      version_npb_origen: 1,
+      estado: 'activo',
+      db_url_operativa: 'https://test-operacion.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'NPB00-TEST');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.tipo_acceso).toBe('plantilla');
+    expect(res.estadoEncendido.capacidades_activas).toEqual([
+      'menu',
+      'control_mesas',
+      'comanda_cocina',
+      'tickets_impresion',
+    ]);
+    expect(res.negocio.negocio_id).toBe('00');
+  });
+
+  test('19. Negocio real con capacidades_autorizadas restringidas solo activa la intersección', async () => {
+    mockRtdb['codigo_de_acceso/RESTRICTED'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'mar-restringido',
+      slug_categoria: 'marisquerias',
+      version_npb_origen: 1,
+      estado: 'activo',
+      capacidades_autorizadas: ['menu'], // Solo contrató menú
+      cajones_dormidos_forzados: ['mesas'],
+      db_url_operativa: 'https://op-restringido.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'RESTRICTED');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.tipo_acceso).toBe('negocio_real');
+    expect(res.estadoEncendido.capacidades_activas).toEqual(['menu']);
+    expect(res.estadoEncendido.capacidades_dormidas).toContain('control_mesas');
+    expect(res.estadoEncendido.capacidades_dormidas).toContain('comanda_cocina');
+    expect(res.estadoEncendido.cajones_dormidos).toContain('mesas');
+  });
+
+  test('20. Carga de plantilla desde ruta canónica categorias/marisquerias/plantilla_base', async () => {
+    // Retirar ruta legacy de mock y colocar ruta canónica
+    delete mockRtdb['marisquerias/Negocio principal de categoría'];
+    mockRtdb['categorias/marisquerias/plantilla_base'] = npbCanonicoV1;
+
+    const res = await ejecutarArranqueO1(dbMock, 'TEST123');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.npb.slug_categoria).toBe('marisquerias');
+    expect(res.npb.version_npb).toBe(1);
+
+    // Restaurar para pruebas subsiguientes
+    mockRtdb['marisquerias/Negocio principal de categoría'] = npbCanonicoV1;
+  });
+
+  test('21. Código de otra categoría (ej: taquerias) es rechazado por la app de Marisquerías', async () => {
+    mockRtdb['codigo_de_acceso/TACO-99'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'taco-01',
+      slug_categoria: 'taquerias',
+      categoria_id: '02',
+      version_npb_origen: 1,
+      estado: 'activo',
+      db_url_operativa: 'https://tacos.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'TACO-99');
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain('taquerias');
+  });
+
+  test('22. Negocio real sin db_url_operativa válida es rechazado para no contaminar Unidad Secundaria', async () => {
+    mockRtdb['codigo_de_acceso/SIN-DB'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'mar-sin-db',
+      slug_categoria: 'marisquerias',
+      categoria_id: '01',
+      version_npb_origen: 1,
+      estado: 'activo',
+      // db_url_operativa ausente
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'SIN-DB');
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain('Unidad Operativa');
+  });
+
+  test('23. Código MARISQUERIAS-00 abre solo el contexto de plantilla/pruebas', async () => {
+    mockRtdb['codigo_de_acceso/MARISQUERIAS-00'] = {
+      tipo_acceso: 'plantilla',
+      negocio_id: '00',
+      slug_categoria: 'marisquerias',
+      version_npb_origen: 1,
+      estado: 'activo',
+      db_url_operativa: 'https://demo-marisquerias.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'MARISQUERIAS-00');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.tipo_acceso).toBe('plantilla');
+    expect(res.negocio.tipo_acceso).toBe('plantilla');
+    expect(res.negocio.negocio_id).toBe('00');
+    expect(res.estadoEncendido.capacidades_activas).toEqual([
+      'menu',
+      'control_mesas',
+      'comanda_cocina',
+      'tickets_impresion',
+    ]);
+  });
+
+  test('24. Puerto Libres no muestra mostrador si no está autorizado/configurado', async () => {
+    mockRtdb['codigo_de_acceso/MPL-01'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'mar-mpl-01',
+      slug_categoria: 'marisquerias',
+      categoria_id: '01',
+      version_npb_origen: 1,
+      estado: 'activo',
+      nombre_comercial: 'Marisquería Puerto Libres',
+      capacidades_autorizadas: ['menu', 'control_mesas', 'comanda_cocina'], // Sin mostrador_y_pos
+      cajones_dormidos_forzados: ['ventas'],
+      roles_permitidos: ['administrador', 'mesero', 'cocina'], // Sin mostrador
+      db_url_operativa: 'https://op-puertolibres.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'MPL-01');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.roles_activos).not.toContain('mostrador');
+    expect(res.estadoEncendido.roles_dormidos).toContain('mostrador');
+    expect(res.estadoEncendido.cajones_activos).not.toContain('ventas');
+    expect(res.estadoEncendido.cajones_dormidos).toContain('ventas');
+  });
+
+  test('25. El Arrecife conserva mostrador cuando corresponde', async () => {
+    // NPB que soporte mostrador_y_pos y rol mostrador
+    mockRtdb['categorias/marisquerias/plantilla_base'] = {
+      ...npbCanonicoV1,
+      capacidades: [
+        ...npbCanonicoV1.capacidades,
+        { id: 'mostrador_y_pos', configuracion_giro: 'Venta directa' },
+      ],
+      roles_dispositivo: [
+        ...npbCanonicoV1.roles_dispositivo,
+        { id: 'mostrador', pantallas_visibles: ['/_role/mostrador'] },
+      ],
+      cajones_activos: [...npbCanonicoV1.cajones_activos, 'ventas'],
+    };
+
+    mockRtdb['codigo_de_acceso/ARRECIFE-01'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'mar-arrecife-01',
+      slug_categoria: 'marisquerias',
+      categoria_id: '01',
+      version_npb_origen: 1,
+      estado: 'activo',
+      nombre_comercial: 'Marisquería El Arrecife',
+      capacidades_autorizadas: ['menu', 'control_mesas', 'comanda_cocina', 'mostrador_y_pos'],
+      roles_permitidos: ['administrador', 'mesero', 'cocina', 'mostrador'],
+      db_url_operativa: 'https://op-elarrecife.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'ARRECIFE-01');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.roles_activos).toContain('mostrador');
+    expect(res.estadoEncendido.cajones_activos).toContain('ventas');
+
+    // Restaurar NPB
+    mockRtdb['categorias/marisquerias/plantilla_base'] = npbCanonicoV1;
+  });
+
+  test('26. Fallo de lectura de Secundaria no provoca fallback a una búsqueda global no acotada', async () => {
+    // Si el nodo exacto no existe, debe fallar inmediatamente sin recorrer otros nodos
+    const res = await ejecutarArranqueO1(dbMock, 'CODIGO-DESCONOCIDO-XYZ');
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/no encontrado o inválido/i);
+    // Verificar que solo intentó acceder al path acotado
+    expect(mockRtdb['codigo_de_acceso/CODIGO-DESCONOCIDO-XYZ']).toBeUndefined();
+  });
+
+  test('27. La revocación de código o negocio bloquea arranque y no purga datos locales de pedidos/ventas pendientes', async () => {
+    // Preparar datos offline locales simulados en AsyncStorage
+    await AsyncStorage.setItem(
+      '@offline_pedidos_pendientes',
+      JSON.stringify([{ id: 'PED-LOCAL-1' }])
+    );
+    await AsyncStorage.setItem(
+      '@offline_ventas_pendientes',
+      JSON.stringify([{ id: 'VTA-LOCAL-1' }])
+    );
+
+    mockRtdb['codigo_de_acceso/CODIGO-REVOCADO'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'mar-01',
+      slug_categoria: 'marisquerias',
+      categoria_id: '01',
+      version_npb_origen: 1,
+      estado: 'revocado',
+      db_url_operativa: 'https://op-revocado.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'CODIGO-REVOCADO');
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toMatch(/revocado/i);
+
+    // Los pedidos y ventas locales pendientes de sincronización permanecen intactos
+    const pedidosLocales = await AsyncStorage.getItem('@offline_pedidos_pendientes');
+    const ventasLocales = await AsyncStorage.getItem('@offline_ventas_pendientes');
+    expect(pedidosLocales).toContain('PED-LOCAL-1');
+    expect(ventasLocales).toContain('VTA-LOCAL-1');
   });
 });

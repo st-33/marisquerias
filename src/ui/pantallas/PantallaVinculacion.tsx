@@ -2,14 +2,12 @@
  * 📲 PANTALLA DE VINCULACIÓN — ARRANQUE O(1)
  *
  * Flujo UX:
- * 1. Input sanitizado en tiempo real (6-8 chars, mayúsculas, alfanumérico + guion, sin espacios).
- * 2. Botón "Vincular negocio" condicionado a >= 6 caracteres.
- * 3. Feedback de carga mientras resuelve en Unidad Secundaria.
- * 4. Despliegue de errores con ErrorArranque (7 variantes canónicas).
- * 5. Redirección automática post-arranque (rol preferente o selector si > 1 rol).
+ * 1. Entrada de código de acceso sin restricciones visuales innecesarias.
+ * 2. Fondo ambiental "MI NEGOCIO A UN CLICK".
+ * 3. Tarjeta compacta y legible sin cortes de texto.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -19,29 +17,29 @@ import {
   Platform,
   ActivityIndicator,
   StyleSheet,
-} from 'react-native';
-import { router } from 'expo-router';
-import { useArranqueO1 } from '../../sistema/instalacion/useArranqueSistema';
-import { getRtdb } from '../../sistema/firebase';
-import { ErrorArranque } from '../bloques/ErrorArranque';
-import { SelloMarca } from '../bloques/SelloMarca';
+} from "react-native";
+import { router } from "expo-router";
+import { useArranqueO1 } from "../../sistema/instalacion/useArranqueSistema";
+import { getSecundariaRtdb } from "../../sistema/firebase";
+import { ErrorArranque } from "../bloques/ErrorArranque";
 
-/**
- * Sanitiza la entrada del usuario impidiendo espacios o caracteres inválidos.
- */
 export function sanitizarCodigoInput(valor: string): string {
   return valor
     .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, '')
-    .slice(0, 8);
+    .replace(/[^A-Z0-9-]/g, "")
+    .slice(0, 12);
 }
 
 export function PantallaVinculacion() {
-  const [codigo, setCodigo] = useState('');
+  const [codigo, setCodigo] = useState("");
   const { loading, errorInfo, arrancar, resetError } = useArranqueO1();
 
   const esValidoParaEnviar = useMemo(() => {
-    return codigo.length >= 6 && codigo.length <= 8;
+    return codigo.trim().length >= 4;
+  }, [codigo]);
+
+  const esModoPlantilla = useMemo(() => {
+    return codigo.startsWith("NPB") || codigo.includes("00");
   }, [codigo]);
 
   const handleCambioTexto = (texto: string) => {
@@ -53,18 +51,18 @@ export function PantallaVinculacion() {
     if (!esValidoParaEnviar || loading) return;
 
     try {
-      const db = getRtdb();
+      const db = getSecundariaRtdb();
       const resultado = await arrancar(db, codigo);
 
       if (resultado.ok) {
         if (resultado.requiereSeleccionRol) {
-          router.replace('/_role/roles');
+          router.replace("/_role/roles");
         } else {
           router.replace(resultado.rutaPorDefecto as any);
         }
       }
     } catch {
-      // El hook useArranqueO1 ya gestiona y clasifica el error internamente
+      // Gestionado en useArranqueO1
     }
   };
 
@@ -74,25 +72,23 @@ export function PantallaVinculacion() {
 
   const handleSalir = () => {
     resetError();
-    setCodigo('');
+    setCodigo("");
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.keyboardContainer}
     >
       <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.selloWrapper}>
-            <SelloMarca nombreNegocio="Marisquerías" />
-          </View>
+        {/* Fondo ambiental tipográfico en grande */}
+        <View style={styles.fondoTextoWrapper} pointerEvents="none">
+          <Text style={styles.fondoTexto}>MI NEGOCIO A UN CLICK</Text>
+        </View>
 
+        <View style={styles.card}>
+          <Text style={styles.marcaHeader}>MARISQUERÍAS</Text>
           <Text style={styles.titulo}>Vincular Dispositivo</Text>
-          <Text style={styles.subtitulo}>
-            Ingresa el código de acceso proporcionado por Torre de Control para inicializar tu
-            terminal operativa.
-          </Text>
 
           {errorInfo ? (
             <ErrorArranque
@@ -103,22 +99,27 @@ export function PantallaVinculacion() {
           ) : (
             <>
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>CÓDIGO DE ACCESO (6-8 CARACTERES)</Text>
                 <TextInput
                   value={codigo}
                   onChangeText={handleCambioTexto}
-                  placeholder="TEST-123"
+                  placeholder="CÓDIGO DE ACCESO"
                   placeholderTextColor="#475569"
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  maxLength={8}
+                  maxLength={12}
                   editable={!loading}
                   style={styles.input}
                   returnKeyType="done"
                   onSubmitEditing={handleVincular}
                   testID="input-codigo-acceso"
                 />
-                <Text style={styles.contador}>{codigo.length}/8</Text>
+                {esModoPlantilla && (
+                  <View style={styles.badgePlantilla}>
+                    <Text style={styles.textoBadgePlantilla}>
+                      🧪 Modo Exploración Plantilla Base (NPB 00)
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <Pressable
@@ -134,10 +135,12 @@ export function PantallaVinculacion() {
                 {loading ? (
                   <View style={styles.cargandoWrapper}>
                     <ActivityIndicator color="#ffffff" size="small" />
-                    <Text style={styles.textoBoton}>Verificando en Torre de Control...</Text>
+                    <Text style={styles.textoBoton}>Verificando...</Text>
                   </View>
                 ) : (
-                  <Text style={styles.textoBoton}>Vincular Negocio</Text>
+                  <Text style={styles.textoBoton}>
+                    {esModoPlantilla ? "Abrir Plantilla Base (NPB 00)" : "Vincular Negocio"}
+                  </Text>
                 )}
               </Pressable>
             </>
@@ -153,98 +156,114 @@ export default PantallaVinculacion;
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: '#0a0f1d',
+    backgroundColor: "#070b14",
   },
   container: {
     flex: 1,
-    padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0a0f1d',
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#070b14",
+    position: "relative",
+  },
+  fondoTextoWrapper: {
+    position: "absolute",
+    top: "14%",
+    width: "100%",
+    alignItems: "center",
+    zIndex: 0,
+    opacity: 0.07,
+  },
+  fondoTexto: {
+    color: "#ffffff",
+    fontSize: 56,
+    fontWeight: "900",
+    letterSpacing: 4,
+    textAlign: "center",
+    textTransform: "uppercase",
   },
   card: {
-    width: '100%',
-    maxWidth: 480,
-    backgroundColor: '#111827',
-    padding: 32,
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "rgba(17, 24, 39, 0.92)",
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    shadowColor: '#000',
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    shadowColor: "#000",
     shadowOpacity: 0.6,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
     elevation: 16,
+    zIndex: 1,
   },
-  selloWrapper: {
-    alignItems: 'center',
-    marginBottom: 16,
+  marcaHeader: {
+    color: "#ffffff",
+    fontSize: 28,
+    fontWeight: "900",
+    textAlign: "center",
+    letterSpacing: 3,
+    marginBottom: 6,
+    textTransform: "uppercase",
   },
   titulo: {
-    color: '#ffffff',
-    fontSize: 26,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  subtitulo: {
-    color: '#94a3b8',
+    color: "#94a3b8",
     fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
+    fontWeight: "600",
+    textAlign: "center",
     marginBottom: 24,
-    lineHeight: 20,
+    letterSpacing: 0.5,
   },
   inputWrapper: {
     marginBottom: 20,
   },
-  label: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
   input: {
-    backgroundColor: '#030712',
+    backgroundColor: "#030712",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
-    color: '#ffffff',
+    borderColor: "#334155",
+    color: "#ffffff",
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "800",
     letterSpacing: 3,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
-  contador: {
-    color: '#475569',
+  badgePlantilla: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(56, 189, 248, 0.15)",
+    borderRadius: 6,
+    alignSelf: "center",
+  },
+  textoBadgePlantilla: {
+    color: "#38bdf8",
     fontSize: 11,
-    textAlign: 'right',
-    marginTop: 6,
+    fontWeight: "700",
   },
   botonVincular: {
-    backgroundColor: '#0284c7',
+    backgroundColor: "#0284c7",
     borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   botonDeshabilitado: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     opacity: 0.6,
   },
   cargandoWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   textoBoton: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
     letterSpacing: 0.5,
   },
 });

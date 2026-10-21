@@ -3,11 +3,6 @@ import type { Database } from 'firebase/database';
 import { RegistroVentasRepository } from '../persistencia/registroVentas.repositorio';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
-import {
-  isCurrentNegocioLifecycle,
-  switchNegocioLifecycle,
-} from '../ciclo_de_vida/ControladorCicloVidaNegocio';
-
 import { validar_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
 
 class SincronizacionVentasOffline {
@@ -31,7 +26,6 @@ class SincronizacionVentasOffline {
     if (this.salesRepo && this.rutaNegocio !== rutaNegocio) this.destroy();
 
     this.rutaNegocio = rutaNegocio;
-    this.lifecycleGeneration = switchNegocioLifecycle(rutaNegocio);
     this.salesRepo = new RegistroVentasRepository(db, rutaNegocio);
 
     this.unsubscribeNetInfo = NetInfo.addEventListener((state) => {
@@ -45,17 +39,12 @@ class SincronizacionVentasOffline {
   }
 
   private isCurrent(): boolean {
-    return Boolean(
-      this.rutaNegocio &&
-      this.salesRepo &&
-      isCurrentNegocioLifecycle(this.rutaNegocio, this.lifecycleGeneration)
-    );
+    return Boolean(this.rutaNegocio && this.salesRepo);
   }
 
   async syncPendingSales(): Promise<{ synced: number; failed: number }> {
     const repo = this.salesRepo;
     const rutaNegocio = this.rutaNegocio;
-    const generation = this.lifecycleGeneration;
     if (this.isRunning || !repo || !rutaNegocio || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
@@ -75,7 +64,6 @@ class SincronizacionVentasOffline {
 
       logger.info('OFFLINE_SYNC', `Sincronizando ${pendingVentas.length} ventas...`, {
         rutaNegocio,
-        generation,
       });
 
       for (const venta of pendingVentas) {

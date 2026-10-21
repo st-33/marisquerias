@@ -5,10 +5,9 @@
  * capacidades, roles o cajones que el APK operativo desconozca o no soporte.
  */
 
-import { CAPACIDADES_CANONICAS } from '../../utilidades/caracteristicas';
 import { ROLES_DISPOSITIVO_CANONICOS } from '../../../negocio/roles/catalogoRoles';
 import { CAJONES_CANONICOS } from '../../rtdb/rutas/ruta_negocio';
-import type { NegocioPlantillaBase } from './tiposNPB';
+import { CAPACIDADES_CANONICAS, type NegocioPlantillaBase } from './tiposNPB';
 
 export interface ResultadoValidacionNPB {
   compatible: boolean;
