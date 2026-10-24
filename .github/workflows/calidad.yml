@@ -1,0 +1,34 @@
+name: Calidad
+
+on:
+  pull_request:
+  push:
+    branches:
+      - rama-2
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calidad-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias reproducibles
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Verificar calidad
+        run: npm run verify
