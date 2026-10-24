@@ -24,6 +24,16 @@ export type IdentidadNegocio = {
 };
 
 /**
+ * Cada negocio opera en una instancia RTDB independiente. Por ello, los datos
+ * transaccionales viven directamente en la raiz de esa instancia y no debajo
+ * de `negocios/{id}` ni de `marisquerias/{id}`.
+ *
+ * Se conserva como valor explicito y truthy porque varios orquestadores usan
+ * `rutaNegocio` para saber si ya existe una sesion operativa vinculada.
+ */
+export const RUTA_RAIZ_UNIDAD_OPERATIVA = '/' as const;
+
+/**
  * Extrae y aisla el negocio_id canónico eliminando prefijos redundantes
  * de categoría (ej: "marisqueria-puerto-libres" -> "puerto_libres") y normalizando
  * a snake_case en minúsculas.
@@ -80,6 +90,7 @@ export const crearRutaNegocio = crear_ruta_negocio;
  */
 export function validar_ruta_negocio(valor: string): boolean {
   if (!valor || typeof valor !== 'string') return false;
+  if (valor === RUTA_RAIZ_UNIDAD_OPERATIVA) return true;
   if (es_ruta_legacy(valor)) return false;
   const parts = valor.split('/').filter(Boolean);
   return parts.length >= 2;
@@ -93,6 +104,22 @@ export const validarRutaNegocio = validar_ruta_negocio;
  */
 export function descomponer_ruta_negocio(ruta: string): IdentidadNegocio | null {
   if (!ruta || typeof ruta !== 'string' || es_ruta_legacy(ruta)) return null;
+  if (ruta === RUTA_RAIZ_UNIDAD_OPERATIVA) {
+    return {
+      ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+      negocio_id: 'unidad_operativa',
+      categoria_id: 'marisquerias',
+      contexto_path: '',
+      rutaNegocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+      negocioId: 'unidad_operativa',
+      categoriaId: 'marisquerias',
+      contextoPath: '',
+      nichoId: 'marisquerias',
+      negocioBaseId: 'unidad_operativa',
+      negocio_id_canonico: 'unidad_operativa',
+      negocioIdCanonico: 'unidad_operativa',
+    };
+  }
   const parts = ruta.split('/').filter(Boolean);
   if (parts.length < 2) return null;
 
@@ -228,7 +255,10 @@ export function resolver_ruta_cajon(
   dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null
 ): string {
   assertCajonActivo(cajon, dormidos);
-  const base = `${rutaNegocio}/${cajon}`;
+  const base =
+    rutaNegocio === RUTA_RAIZ_UNIDAD_OPERATIVA
+      ? cajon
+      : `${rutaNegocio.replace(/\/+$/, '')}/${cajon}`;
   return subruta ? `${base}/${subruta}` : base;
 }
 

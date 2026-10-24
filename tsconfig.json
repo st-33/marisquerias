@@ -21,13 +21,11 @@
       "@temas/*": ["./src/compartido/temas/*"],
       "@assets/*": ["./assets/*"],
       "@compartido/*": ["./src/compartido/*"],
-      "@temas/*": ["./src/compartido/temas/*"],
       "@components/*": ["./src/compartido/componentes/*"],
       "@hooks/*": ["./src/compartido/hooks/*"],
       "@lib/*": ["./lib/*"]
     }
   },
-  "files": ["app/index.tsx", "app/_layout.tsx", "expo-env.d.ts"],
   "exclude": [
     "**/node_modules/**/*",
     "**/*.d.ts",

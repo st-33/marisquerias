@@ -21,9 +21,11 @@ export async function cargarNPB(
   }
 
   // 1. Consulta el nodo de la plantilla en Unidad Secundaria
-  // Intenta primero la ruta canónica del Ecosistema: categorias/{slug}/plantilla_base
-  // Fallbacks: {slug}/Negocio principal de categoría, plantillas/{slug}
+  // Intenta primero la ruta plana canónica del Ecosistema: negocio/{slug}-00.
+  // Las rutas restantes son solo compatibilidad de lectura; nunca se escriben
+  // desde esta aplicación.
   const rutasCandidatas = [
+    `negocio/${cleanSlug}-00`,
     `categorias/${cleanSlug}/plantilla_base`,
     `${cleanSlug}/Negocio principal de categoría`,
     `plantillas/${cleanSlug}`,
@@ -54,6 +56,7 @@ export async function cargarNPB(
     // Intentar cargar del histórico en la misma jerarquía encontrada
     const rutasHistorico = [
       `${rutaUsada}/historico/${versionNpbOrigen}`,
+      `negocio/${cleanSlug}-00/historico/${versionNpbOrigen}`,
       `categorias/${cleanSlug}/plantilla_base/historico/${versionNpbOrigen}`,
       `${cleanSlug}/Negocio principal de categoría/historico/${versionNpbOrigen}`,
     ];

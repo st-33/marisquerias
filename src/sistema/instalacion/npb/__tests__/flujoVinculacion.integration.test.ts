@@ -127,6 +127,8 @@ describe('Flujo de Vinculación y Arranque O(1) End-to-End', () => {
     expect(estadoEnStore).not.toBeNull();
     expect(estadoEnStore?.capacidades_activas).toContain('tickets_impresion');
     expect(estadoEnStore?.roles_activos).toContain('administrador');
+    expect(useStore.getState().sesion.rutaNegocio).toBe('/');
+    expect(useStore.getState().sesion.negocioId).toBe('mar-01');
 
     // AsyncStorage poblado
     expect(storageMemoria[CLAVES_SESION_O1.NEGOCIO_ID]).toBe('mar-01');
@@ -552,6 +554,61 @@ describe('Flujo de Vinculación y Arranque O(1) End-to-End', () => {
       'comanda_cocina',
       'tickets_impresion',
     ]);
+  });
+
+  test('23b. Acepta el payload exacto plantilla_pruebas emitido por Ecosistema', async () => {
+    delete mockRtdb['marisquerias/Negocio principal de categoría'];
+    mockRtdb['negocio/marisquerias-00'] = npbCanonicoV1;
+    mockRtdb['codigo_de_acceso/MARISQUERIAS-00'] = {
+      tipo_acceso: 'plantilla_pruebas',
+      negocio_id: 'marisquerias-00',
+      categoria_id: '01',
+      slug_categoria: 'marisquerias',
+      cliente_id: null,
+      version_npb_origen: 1,
+      estado: 'activo',
+      db_url_operativa: 'https://demo-marisquerias.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'MARISQUERIAS-00');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.negocio.tipo_acceso).toBe('plantilla');
+    expect(res.estadoEncendido.tipo_acceso).toBe('plantilla');
+    expect(res.estadoEncendido.capacidades_activas).toEqual([
+      'menu',
+      'control_mesas',
+      'comanda_cocina',
+      'tickets_impresion',
+    ]);
+  });
+
+  test('23c. Normaliza autorizaciones booleanas y roles emitidos por Ecosistema', async () => {
+    mockRtdb['codigo_de_acceso/ECOSIS01'] = {
+      tipo_acceso: 'negocio_real',
+      negocio_id: 'marisquerias-01',
+      categoria_id: '01',
+      slug_categoria: 'marisquerias',
+      cliente_id: '001',
+      version_npb_origen: 1,
+      estado: 'activo',
+      capacidades_autorizadas: {
+        menu: true,
+        control_mesas: false,
+        comanda_cocina: false,
+      },
+      roles_autorizados: ['mesero'],
+      db_url_operativa: 'https://marisquerias-01.firebaseio.com',
+    };
+
+    const res = await ejecutarArranqueO1(dbMock, 'ECOSIS01');
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    expect(res.estadoEncendido.capacidades_activas).toEqual(['menu']);
+    expect(res.estadoEncendido.roles_activos).toEqual(['mesero']);
+    expect(res.estadoEncendido.cajones_dormidos).toContain('mesas');
   });
 
   test('24. Puerto Libres no muestra mostrador si no está autorizado/configurado', async () => {

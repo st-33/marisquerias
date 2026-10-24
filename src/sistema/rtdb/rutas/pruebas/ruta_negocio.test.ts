@@ -23,6 +23,7 @@ import {
   esCajonDormido,
   assertCajonActivo,
   registrarProveedorCajonesDormidos,
+  RUTA_RAIZ_UNIDAD_OPERATIVA,
 } from '../ruta_negocio';
 
 jest.mock('firebase/database', () => ({
@@ -52,6 +53,11 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(validar_ruta_negocio('nicho/marisquerias/__plantilla_base')).toBe(true);
       expect(validar_ruta_negocio('a/b/c/d/e')).toBe(true);
       expect(validarRutaNegocio('marisquerias/el-arrecife')).toBe(true);
+    });
+
+    it('acepta la raíz de una Unidad Operativa independiente', () => {
+      expect(validar_ruta_negocio(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe(true);
+      expect(validarRutaNegocio(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe(true);
     });
 
     it('rechaza rutas con menos de 2 segmentos', () => {
@@ -160,6 +166,14 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(descomponer_ruta_negocio('restaurantero/el-arrecife')).toBe(null);
       expect(descomponerRutaNegocio('marisquerias')).toBe(null);
     });
+
+    it('representa la raíz operativa sin inventar contenedores RTDB', () => {
+      expect(descomponer_ruta_negocio(RUTA_RAIZ_UNIDAD_OPERATIVA)).toMatchObject({
+        ruta_negocio: '/',
+        categoria_id: 'marisquerias',
+        negocio_id: 'unidad_operativa',
+      });
+    });
   });
 
   describe('resolver_nombre_negocio', () => {
@@ -243,6 +257,14 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(rutaRepartoAjustes(ruta)).toBe(`${ruta}/reparto_ajustes`);
       expect(rutaTickets(ruta)).toBe(`${ruta}/tickets`);
       expect(rutaDispositivos(ruta)).toBe(`${ruta}/dispositivos`);
+    });
+
+    it('resuelve los cajones directamente en la raíz de la Unidad Operativa', () => {
+      expect(rutaMenu(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe('menu');
+      expect(rutaPedidos(RUTA_RAIZ_UNIDAD_OPERATIVA, 'pedido-01')).toBe(
+        'pedidos/pedido-01'
+      );
+      expect(rutaDispositivos(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe('dispositivos');
     });
 
     it('bloquea accesos a cajones dormidos con assertCajonActivo y resolverRutaCajon', () => {

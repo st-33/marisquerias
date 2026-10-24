@@ -122,7 +122,10 @@ export async function resolverAccessCode(
     if (typeof obj.usosActuales === 'number') usosActuales = obj.usosActuales;
     if (typeof obj.expiraEn === 'number') expiraEn = obj.expiraEn;
     if (typeof obj.creadoEn === 'number') creadoEn = obj.creadoEn;
-    if (Array.isArray(obj.rolesPermitidos)) rolesPermitidos = obj.rolesPermitidos as string[];
+    if (Array.isArray(obj.roles_permitidos)) rolesPermitidos = obj.roles_permitidos as string[];
+    else if (Array.isArray(obj.roles_autorizados))
+      rolesPermitidos = obj.roles_autorizados as string[];
+    else if (Array.isArray(obj.rolesPermitidos)) rolesPermitidos = obj.rolesPermitidos as string[];
     if (Array.isArray(obj.modulosPermitidos)) modulosPermitidos = obj.modulosPermitidos as string[];
 
     if (obj.usadoPorDeviceIds) {
@@ -178,22 +181,27 @@ export async function resolverAccessCode(
     (typeof val === 'object' &&
       val !== null &&
       ((val as any).tipo_acceso === 'plantilla' ||
+        (val as any).tipo_acceso === 'plantilla_pruebas' ||
         (val as any).tipoAcceso === 'plantilla' ||
         (val as any).es_plantilla === true ||
         (val as any).negocio_id === '00' ||
-        (val as any).negocio_id === '__plantilla_base')) ||
+        (val as any).negocio_id === '__plantilla_base' ||
+        String((val as any).negocio_id || '').endsWith('-00'))) ||
     identidad.negocio_id === '00' ||
     identidad.negocio_id === '__plantilla_base';
 
   const tipo_acceso = esPlantillaAcceso ? 'plantilla' : 'negocio_real';
 
-  const capacidades_autorizadas =
+  const capacidadesRaw =
     typeof val === 'object' && val !== null
-      ? Array.isArray((val as any).capacidades_autorizadas)
-        ? (val as any).capacidades_autorizadas
-        : Array.isArray((val as any).capacidadesAutorizadas)
-          ? (val as any).capacidadesAutorizadas
-          : undefined
+      ? (val as any).capacidades_autorizadas ?? (val as any).capacidadesAutorizadas
+      : undefined;
+  const capacidades_autorizadas = Array.isArray(capacidadesRaw)
+    ? capacidadesRaw
+    : capacidadesRaw && typeof capacidadesRaw === 'object'
+      ? Object.entries(capacidadesRaw)
+          .filter(([, autorizada]) => autorizada === true)
+          .map(([capacidad]) => capacidad)
       : undefined;
 
   const cajones_dormidos_forzados =
