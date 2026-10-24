@@ -84,7 +84,7 @@
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@playwright/test": "^1.56.1",
-    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli": "^20.2.0",
     "@types/jest": "29.5.14",
     "@types/node": "^25.9.3",
     "@types/react": "~19.2.14",

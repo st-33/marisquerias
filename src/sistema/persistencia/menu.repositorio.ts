@@ -419,7 +419,7 @@ export class RepositorioMenu {
     const id = newRef.key!;
     const baseSlug = this.slugify(producto.nombre);
     const uniqueSlug = await this.ensureUniqueProductSlug(producto.categoriaId, baseSlug);
-    const payload = { ...producto, slug: uniqueSlug } as any;
+    const payload = sanitizeRtdbPayload({ ...producto, slug: uniqueSlug }) as any;
     // Flat write (compat)
     await set(newRef, payload);
     // Nested write (canonical)
@@ -451,8 +451,9 @@ export class RepositorioMenu {
       const base = this.slugify(datos.nombre);
       patch.slug = await this.ensureUniqueProductSlug(nextCat, base, productoId);
     }
+    const sanitizedPatch = sanitizeRtdbPayload(patch);
     // Flat
-    await update(ref(this.db, `${this.getFlatProductosPath()}/${productoId}`), patch);
+    await update(ref(this.db, `${this.getFlatProductosPath()}/${productoId}`), sanitizedPatch);
     // Nested: si cambió de categoría, mover
     if (prevCat && prevCat !== nextCat) {
       const prevRef = ref(
@@ -465,14 +466,14 @@ export class RepositorioMenu {
       );
       const prevDataSnap = await get(prevRef);
       const prevData = (prevDataSnap.val() as any) || {};
-      const merged = { ...prevData, ...patch };
+      const merged = sanitizeRtdbPayload({ ...prevData, ...sanitizedPatch });
       await set(nextRef, merged);
       await set(prevRef, null as any);
     } else if (nextCat) {
       // 🔥 MIGRACIÓN AUTOMÁTICA: Leer datos completos de Flat y fusionar con patch
       const flatSnap = await get(ref(this.db, `${this.getFlatProductosPath()}/${productoId}`));
       const flatData = (flatSnap.val() as any) || {};
-      const merged = { ...flatData, ...patch };
+      const merged = sanitizeRtdbPayload({ ...flatData, ...sanitizedPatch });
       // Usar set() en lugar de update() para crear el producto en Nested si no existe
       await set(
         ref(this.db, `${this.getCategoriasPath()}/${nextCat}/productos/${productoId}`),

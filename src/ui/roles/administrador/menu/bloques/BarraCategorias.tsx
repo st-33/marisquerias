@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { Categoria } from '../../../../../sistema/persistencia';
-import { theme } from '@/compartido/temas';
+import { theme, useAppTheme } from '@/compartido/temas';
 
 export type BarraCategoriasProps = {
   categorias: Categoria[];
   activeId: string | null;
   totals?: Record<string, number>;
   onSelect: (id: string) => void;
+  onAgregar?: () => void;
   onDelete: (id: string, nombre: string) => void;
   onToggleEnviarACocina?: (id: string, enabled: boolean) => void;
   onToggleSaltarPreparando?: (id: string, enabled: boolean) => void;
@@ -20,15 +21,36 @@ export function BarraCategorias({
   activeId,
   totals,
   onSelect,
+  onAgregar,
   onDelete,
   onToggleEnviarACocina,
   onToggleSaltarPreparando,
   onUpdateHerencia,
   showVentaCrudo = true,
 }: BarraCategoriasProps) {
+  const { colors } = useAppTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Categorías</Text>
+      <View style={styles.titleRow}>
+        <Text style={[styles.title, { color: colors.textSecondary }]}>Categorías</Text>
+        {onAgregar ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Nueva categoría"
+            testID="agregar-categoria"
+            onPress={onAgregar}
+            style={({ pressed }) => [
+              styles.addCategory,
+              { backgroundColor: `${colors.primary}18`, borderColor: `${colors.primary}55` },
+              pressed && styles.addCategoryPressed,
+            ]}
+          >
+            <Ionicons name="add" size={18} color={colors.primary} />
+            <Text style={[styles.addCategoryText, { color: colors.primary }]}>Nueva</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {categorias.map((cat) => {
           const active = activeId === cat.id;
@@ -212,12 +234,35 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   title: {
-    color: theme.colors.textSecondary,
     fontSize: theme.typography.sizes.sm,
     fontWeight: theme.typography.weights.semibold,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     paddingBottom: theme.spacing.xs,
+  },
+  titleRow: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+  },
+  addCategory: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderRadius: theme.borderRadius.round,
+  },
+  addCategoryPressed: {
+    opacity: 0.78,
+    transform: [{ scale: 0.97 }],
+  },
+  addCategoryText: {
+    fontSize: theme.typography.sizes.xs,
+    fontWeight: theme.typography.weights.semibold,
   },
   list: {
     paddingBottom: theme.spacing.md,

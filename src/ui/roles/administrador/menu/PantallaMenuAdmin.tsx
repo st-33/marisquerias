@@ -260,6 +260,10 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     () => categorias.find((c) => c.id === activeCat),
     [categorias, activeCat]
   );
+  const abrirNuevaCategoria = () => {
+    setCatNombre('');
+    setShowModal('addCat');
+  };
   const currentProducts = useMemo(
     () => (activeCat ? getProductosPorCategoria(activeCat) : []),
     [activeCat, getProductosPorCategoria]
@@ -299,6 +303,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
           activeId={activeCat}
           totals={totals}
           onSelect={setSelectedCat}
+          onAgregar={featureEnabled('admin_menu_add_category') ? abrirNuevaCategoria : undefined}
           onDelete={handleDeleteCategory}
           onToggleEnviarACocina={(id, enabled) =>
             actions.actualizarCategoria(id, { enviarACocina: enabled })
@@ -314,6 +319,9 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
           <ListaProductos
             categoriaNombre={activeCategoryObj?.nombre}
             productos={currentProducts}
+            onAgregarCategoria={
+              featureEnabled('admin_menu_add_category') ? abrirNuevaCategoria : undefined
+            }
             onAgregarProducto={() => {
               if (!activeCat) return;
               setFormData({ ...crearFormularioVacio(), categoriaId: activeCat });

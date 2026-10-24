@@ -5,13 +5,15 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@/compartido/temas';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { theme, useAppTheme } from '@/compartido/temas';
 import type { Producto } from '../../../../../sistema/persistencia';
 import { TarjetaProducto } from '../bloques/TarjetaProducto';
 
 type ListaProductosProps = {
   categoriaNombre?: string;
   productos: Producto[];
+  onAgregarCategoria?: () => void;
   onAgregarProducto: () => void;
   onEditar: (producto: Producto) => void;
   onToggle: (producto: Producto) => void;
@@ -22,18 +24,47 @@ type ListaProductosProps = {
 export function ListaProductos({
   categoriaNombre,
   productos,
+  onAgregarCategoria,
   onAgregarProducto,
   onEditar,
   onToggle,
   onReceta,
   onEliminar,
 }: ListaProductosProps) {
+  const { colors } = useAppTheme();
+
   if (!categoriaNombre) {
     return (
-      <View style={styles.emptyProducts}>
-        <Ionicons name="folder-open-outline" size={48} color="#64748b" />
-        <Text style={styles.emptyTitle}>Selecciona o crea una categoría</Text>
-      </View>
+      <Animated.View
+        entering={FadeInDown.duration(280)}
+        style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}18` }]}>
+          <Ionicons name="folder-open-outline" size={38} color={colors.primary} />
+        </View>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>Tu catálogo está vacío</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+          Crea una categoría para comenzar a agregar productos y sus variantes.
+        </Text>
+        {onAgregarCategoria ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Crear primera categoría"
+            testID="crear-primera-categoria"
+            onPress={onAgregarCategoria}
+            style={({ pressed }) => [
+              styles.btnPrimary,
+              { backgroundColor: colors.primary },
+              pressed && styles.btnPressed,
+            ]}
+          >
+            <Ionicons name="add" size={20} color={colors.background} />
+            <Text style={[styles.btnPrimaryText, { color: colors.background }]}>
+              Crear primera categoría
+            </Text>
+          </Pressable>
+        ) : null}
+      </Animated.View>
     );
   }
 
@@ -46,9 +77,18 @@ export function ListaProductos({
             {productos.length} {productos.length === 1 ? 'producto' : 'productos'}
           </Text>
         </View>
-        <Pressable style={styles.btnPrimary} onPress={onAgregarProducto}>
-          <Ionicons name="add" size={20} color="white" />
-          <Text style={styles.btnPrimaryText}>Agregar Producto</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.btnPrimary,
+            { backgroundColor: colors.primary },
+            pressed && styles.btnPressed,
+          ]}
+          onPress={onAgregarProducto}
+        >
+          <Ionicons name="add" size={20} color={colors.background} />
+          <Text style={[styles.btnPrimaryText, { color: colors.background }]}>
+            Agregar Producto
+          </Text>
         </Pressable>
       </View>
 
@@ -107,6 +147,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: theme.spacing.xxl,
   },
+  emptyCard: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 520,
+    marginTop: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.xxl,
+    borderWidth: 1,
+    borderRadius: theme.borderRadius.xl,
+  },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.borderRadius.round,
+  },
   emptyTitle: {
     color: theme.colors.textMuted,
     fontSize: theme.typography.sizes.md,
@@ -114,9 +173,12 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptySubtitle: {
-    color: '#0F172A',
     fontSize: theme.typography.sizes.sm,
     marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.lg,
+    maxWidth: 360,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   btnPrimary: {
     backgroundColor: theme.colors.primary,
@@ -128,8 +190,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   btnPrimaryText: {
-    color: '#FFFFFF',
     fontWeight: theme.typography.weights.semibold,
     fontSize: theme.typography.sizes.sm,
+  },
+  btnPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.98 }],
   },
 });

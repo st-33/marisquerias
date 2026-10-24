@@ -173,9 +173,6 @@ dependencies {
         }
     }
 
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
-    }
+    // Hermes is the only JS engine in RN 0.86+
+    implementation("com.facebook.react:hermes-android")
 }

@@ -17,8 +17,13 @@ module.exports = function (api) {
         {
           root: ['./'],
           alias: {
+            '@': './src',
             '@assets': './assets',
             '@compartido': './src/compartido',
+            '@temas': './src/compartido/temas',
+            '@components': './src/compartido/componentes',
+            '@hooks': './src/compartido/hooks',
+            '@lib': './lib',
           },
           extensions: ['.js', '.jsx', '.ts', '.tsx', '.wav', '.mp3', '.png', '.jpg', '.jpeg'],
         },
