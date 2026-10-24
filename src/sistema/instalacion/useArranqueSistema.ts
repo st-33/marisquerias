@@ -27,6 +27,7 @@ import { clasificarErrorArranque, type InfoErrorArranque } from './npb/erroresAr
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
 import { getSecundariaRtdb } from '../firebase';
+import { RUTA_RAIZ_UNIDAD_OPERATIVA } from '../rtdb/rutas/ruta_negocio';
 
 export interface ResultadoArranqueO1Exitoso {
   ok: true;
@@ -113,8 +114,8 @@ export async function ejecutarArranqueO1(
       categoria_id: negocio.categoria_id,
       category: negocio.categoria_id,
       niche: negocio.slug_categoria,
-      rutaNegocio: `negocios/${negocio.negocio_id}`,
-      ruta_negocio: `negocios/${negocio.negocio_id}`,
+      rutaNegocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+      ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
       rol: destinoRol.rol,
     });
 
@@ -241,8 +242,8 @@ export function useArranqueSistema(): boolean {
             categoria_id: sesion.slug_categoria,
             category: sesion.slug_categoria,
             niche: sesion.slug_categoria,
-            rutaNegocio: `negocios/${sesion.negocio_id}`,
-            ruta_negocio: `negocios/${sesion.negocio_id}`,
+            rutaNegocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+            ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
             rol: (sesion.rol_activo as any) || 'mesero',
           });
 
