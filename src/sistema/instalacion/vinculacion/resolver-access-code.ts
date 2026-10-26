@@ -39,11 +39,12 @@ export async function resolverNegocioPorCodigo(codigo: string, db: any): Promise
   if (snapshot.exists()) {
     const val = snapshot.val();
     if (typeof val === 'string') return val;
-    if (val && typeof val === 'object' && typeof (val as any).tenantPath === 'string') {
-      return (val as any).tenantPath;
-    }
-    if (val && typeof val === 'object' && typeof (val as any).rutaNegocio === 'string') {
-      return (val as any).rutaNegocio;
+    if (val && typeof val === 'object') {
+      const obj = val as Record<string, unknown>;
+      if (typeof obj.ruta === 'string') return obj.ruta;
+      if (typeof obj.ruta_configuracion_secundaria === 'string') return obj.ruta_configuracion_secundaria;
+      if (typeof obj.tenantPath === 'string') return obj.tenantPath;
+      if (typeof obj.rutaNegocio === 'string') return obj.rutaNegocio;
     }
     return typeof val === 'string' ? val : null;
   }
@@ -93,13 +94,17 @@ export async function resolverAccessCode(
   } else if (val !== null && typeof val === 'object') {
     const obj = val as Record<string, unknown>;
     rutaNegocio =
-      typeof obj.rutaNegocio === 'string'
-        ? obj.rutaNegocio
-        : typeof obj.tenantPath === 'string'
-          ? obj.tenantPath
-          : typeof (obj.negocio as any)?.ruta_negocio === 'string'
-            ? (obj.negocio as any).ruta_negocio
-            : '';
+      typeof obj.ruta === 'string'
+        ? obj.ruta
+        : typeof obj.ruta_configuracion_secundaria === 'string'
+          ? obj.ruta_configuracion_secundaria
+          : typeof obj.rutaNegocio === 'string'
+            ? obj.rutaNegocio
+            : typeof obj.tenantPath === 'string'
+              ? obj.tenantPath
+              : typeof (obj.negocio as any)?.ruta_negocio === 'string'
+                ? (obj.negocio as any).ruta_negocio
+                : '';
 
     // Si viene en formato canónico de Unidad Secundaria con slug_categoria y negocio_id
     if (
@@ -160,7 +165,7 @@ export async function resolverAccessCode(
 
   const db_url_operativa =
     typeof val === 'object' && val !== null
-      ? (val.db_url_operativa as string) || (val.operacionUrl as string) || ''
+      ? (val.url_unidad as string) || (val.db_url_operativa as string) || (val.operacionUrl as string) || ''
       : '';
 
   const versionNpbOrigen =

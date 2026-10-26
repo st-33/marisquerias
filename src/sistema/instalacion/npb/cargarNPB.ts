@@ -24,7 +24,9 @@ export async function cargarNPB(
   // Intenta primero la ruta canónica del Ecosistema: categorias/{slug}/plantilla_base
   // Fallbacks: {slug}/Negocio principal de categoría, plantillas/{slug}
   const rutasCandidatas = [
+    `comedores_y_servicios_de_mesa/${cleanSlug}/negocio_plantilla_base`,
     `categorias/${cleanSlug}/plantilla_base`,
+    `${cleanSlug}/negocio_plantilla_base`,
     `${cleanSlug}/Negocio principal de categoría`,
     `plantillas/${cleanSlug}`,
   ];
@@ -54,6 +56,7 @@ export async function cargarNPB(
     // Intentar cargar del histórico en la misma jerarquía encontrada
     const rutasHistorico = [
       `${rutaUsada}/historico/${versionNpbOrigen}`,
+      `comedores_y_servicios_de_mesa/${cleanSlug}/negocio_plantilla_base/historico/${versionNpbOrigen}`,
       `categorias/${cleanSlug}/plantilla_base/historico/${versionNpbOrigen}`,
       `${cleanSlug}/Negocio principal de categoría/historico/${versionNpbOrigen}`,
     ];
