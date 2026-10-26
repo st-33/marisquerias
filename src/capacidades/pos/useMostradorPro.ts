@@ -236,9 +236,31 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       if (inventoryAutoDiscount) {
         try {
           const areas = await inventoryRepo.obtenerAreas();
-          const areaId = Object.entries(areas).find(([, a]) => a?.hubId === 'venta_crudo')?.[0];
+          const targetAreaEntry =
+            Object.entries(areas).find(
+              ([, a]) => a?.hubId === 'venta_crudo' && a?.stock && Object.keys(a.stock).length > 0
+            ) ||
+            Object.entries(areas).find(([, a]) => a?.hubId === 'venta_crudo' && !!a?.parentId) ||
+            Object.entries(areas).find(([, a]) => a?.hubId === 'venta_crudo');
+          const areaId = targetAreaEntry?.[0];
           if (areaId) {
-            const inventoryItems = safeItems.filter((i) => typeof i?.productoId === 'string');
+            const rawItems = safeItems.filter((i) => typeof i?.productoId === 'string');
+            const inventoryItems: any[] = [];
+            for (const item of rawItems) {
+              const prod = productos[item.productoId];
+              if (prod?.receta?.ingredientes && Object.keys(prod.receta.ingredientes).length > 0) {
+                for (const [ingId, ingQty] of Object.entries(prod.receta.ingredientes)) {
+                  inventoryItems.push({
+                    productoId: ingId,
+                    cantidad: Number(item.cantidad || 1) * Number(ingQty || 1),
+                    nombre: `${item.nombre} (${ingId})`,
+                    precio: item.precio,
+                  });
+                }
+              } else {
+                inventoryItems.push(item);
+              }
+            }
             if (inventoryItems.length > 0) {
               await inventoryRepo.registrarVentaMultiple({
                 items: inventoryItems,
@@ -246,7 +268,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
                 total,
                 metodoPago,
                 usuario,
-                allowNegative: !!posConfig?.allowNegativeStock,
+                allowNegative: posConfig?.allowNegativeStock ?? true,
                 metadata: { origen: 'venta_crudo', tsVenta: payload?.timestamp },
               });
             }
@@ -374,7 +396,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   return {
     loading: loading || configLoading,
-    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo === true),
+    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo !== false),
     categorias: Object.values(categorias).filter((c) => c.herencia?.ventaCrudo !== false),
     areas: [],
     selectedAreaId: null,

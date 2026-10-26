@@ -66,6 +66,9 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
 
   // Modales
   const [showItemModal, setShowItemModal] = useState(false);
+  const [itemModalTab, setItemModalTab] = useState<"catalogo" | "nuevo">("catalogo");
+  const [selectedCatalogItemId, setSelectedCatalogItemId] = useState<string>("");
+  const [assignQty, setAssignQty] = useState<string>("5");
   const [showAreaModal, setShowAreaModal] = useState(false);
   const [showContainerModal, setShowContainerModal] = useState(false);
 
@@ -85,6 +88,10 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
   });
 
   // --- COMPUTED (SECTION SCOPED) ---
+
+  const availableCatalogItems = useMemo(() => {
+    return catalog.filter((c) => (c.sectionId || 'otros') === activeSectionId);
+  }, [catalog, activeSectionId]);
 
   const activeAreas = useMemo(() => {
     return areas
@@ -106,22 +113,67 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
     return areas.find((a) => a.id === selectedContainerId) || null;
   }, [areas, selectedContainerId]);
 
+  const sectionNodes = useMemo(() => {
+    return areas.filter((a) => (a.sectionId || 'otros') === activeSectionId);
+  }, [areas, activeSectionId]);
+
+  const sectionStockByItem = useMemo(() => {
+    const acc: Record<string, number> = {};
+    const sectionStock = (sections as any)?.[activeSectionId]?.stock || {};
+    for (const [itemId, qty] of Object.entries(sectionStock)) {
+      acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
+    }
+    for (const node of sectionNodes) {
+      const stock = node.stock || {};
+      for (const [itemId, qty] of Object.entries(stock)) {
+        acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
+      }
+    }
+    return acc;
+  }, [activeSectionId, sectionNodes, sections]);
+
   const effectiveItemStock = useMemo(() => {
     if (viewMode === 'items_container') {
       return (selectedContainer?.stock || {}) as Record<string, number>;
     }
     if (viewMode === 'items_area') {
-      return (selectedArea?.stock || {}) as Record<string, number>;
+      const acc: Record<string, number> = {};
+      for (const [itemId, qty] of Object.entries(selectedArea?.stock || {})) {
+        acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
+      }
+      for (const container of containersForSelectedArea) {
+        for (const [itemId, qty] of Object.entries(container.stock || {})) {
+          acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
+        }
+      }
+      return acc;
     }
     if (viewMode === 'items_section') {
-      const sectionStock = (sections as any)?.[activeSectionId]?.stock || {};
-      return sectionStock as Record<string, number>;
+      return sectionStockByItem;
     }
     return {} as Record<string, number>;
-  }, [activeSectionId, sections, selectedArea?.stock, selectedContainer?.stock, viewMode]);
+  }, [
+    activeSectionId,
+    containersForSelectedArea,
+    sectionStockByItem,
+    selectedArea?.stock,
+    selectedContainer?.stock,
+    viewMode,
+  ]);
 
   const effectiveItems = useMemo(() => {
     if (!viewMode.startsWith('items_')) return [];
+    if (viewMode === 'items_section') {
+      return availableCatalogItems
+        .map((it) => ({
+          itemId: it.id,
+          nombre: it.nombre,
+          unidad: it.unidad || 'pza',
+          minStock: it.minStock || 0,
+          qty: Number(effectiveItemStock[it.id] || 0),
+        }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+    }
     return Object.entries(effectiveItemStock)
       .map(([itemId, qty]) => {
         const it = catalog.find((c) => c.id === itemId);
@@ -134,7 +186,7 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
         };
       })
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [catalog, effectiveItemStock, viewMode]);
+  }, [availableCatalogItems, catalog, effectiveItemStock, viewMode]);
 
   const itemsViewMeta = useMemo(() => {
     if (viewMode === 'items_container') {
@@ -171,25 +223,6 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
     selectedContainer?.nombre,
     viewMode,
   ]);
-
-  const sectionNodes = useMemo(() => {
-    return areas.filter((a) => (a.sectionId || 'otros') === activeSectionId);
-  }, [areas, activeSectionId]);
-
-  const sectionStockByItem = useMemo(() => {
-    const acc: Record<string, number> = {};
-    const sectionStock = (sections as any)?.[activeSectionId]?.stock || {};
-    for (const [itemId, qty] of Object.entries(sectionStock)) {
-      acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
-    }
-    for (const node of sectionNodes) {
-      const stock = node.stock || {};
-      for (const [itemId, qty] of Object.entries(stock)) {
-        acc[itemId] = (acc[itemId] || 0) + Number(qty || 0);
-      }
-    }
-    return acc;
-  }, [activeSectionId, sectionNodes, sections]);
 
   const itemsBajoStock = useMemo(() => {
     return catalog
@@ -547,7 +580,7 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
                               return;
                             }
                             const targetId =
-                              viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
+                              viewMode === 'items_area' ? (containersForSelectedArea[0]?.id || selectedAreaId) : selectedContainerId;
                             if (!targetId) return;
                             actions.ajustarStockDelta({
                               containerId: targetId,
@@ -572,7 +605,7 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
                               return;
                             }
                             const targetId =
-                              viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
+                              viewMode === 'items_area' ? (containersForSelectedArea[0]?.id || selectedAreaId) : selectedContainerId;
                             if (!targetId) return;
                             actions.ajustarStockDelta({
                               containerId: targetId,
@@ -588,6 +621,32 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
                     </View>
                   );
                 }}
+                ListEmptyComponent={
+                  <View style={{ padding: 30, alignItems: 'center' }}>
+                    <Ionicons name="cube-outline" size={44} color="#64748b" style={{ marginBottom: 12 }} />
+                    <Text style={{ color: '#94a3b8', fontSize: 14, marginBottom: 16, textAlign: 'center' }}>
+                      {viewMode === 'items_container'
+                        ? 'No hay insumos asignados a este contenedor.'
+                        : viewMode === 'items_area'
+                        ? 'No hay insumos en los contenedores de esta área.'
+                        : 'No hay insumos en el catálogo de esta sección.'}
+                    </Text>
+                    <Pressable
+                      style={{
+                        backgroundColor: theme.colors.primary,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                      }}
+                      onPress={() => setShowItemModal(true)}
+                    >
+                      <Ionicons name="add-circle-outline" size={18} color="white" style={{ marginRight: 8 }} />
+                      <Text style={{ color: 'white', fontWeight: 'bold' }}>Asignar o Crear Insumo</Text>
+                    </Pressable>
+                  </View>
+                }
               />
             </View>
           </View>
@@ -596,90 +655,236 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
 
       {/* --- MODALES --- */}
 
-      {/* Crear Item Global */}
+      {/* Modal Agregar Insumo (Catálogo o Nuevo) */}
       <Modal visible={showItemModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nuevo Item</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre del insumo"
-              placeholderTextColor="#64748b"
-              value={itemForm.nombre}
-              onChangeText={(t) => setItemForm({ ...itemForm, nombre: t })}
-            />
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Unidad</Text>
-                <View style={styles.unitSelector}>
-                  {(['kg', 'pza'] as const).map((u) => (
-                    <Pressable
-                      key={u}
-                      onPress={() => setItemForm((prev) => ({ ...prev, unidad: u }))}
-                      style={[styles.unitBtn, itemForm.unidad === u && styles.unitBtnActive]}
-                    >
-                      <Text style={[styles.unitText, itemForm.unidad === u && { color: 'white' }]}>
-                        {u.toUpperCase()}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Stock Mínimo</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="0"
-                  placeholderTextColor="#64748b"
-                  keyboardType="numeric"
-                  value={itemForm.minStock}
-                  onChangeText={(t) => setItemForm({ ...itemForm, minStock: t })}
-                />
-              </View>
-            </View>
+            <Text style={styles.modalTitle}>
+              {viewMode === 'items_container'
+                ? `Insumo en ${selectedContainer?.nombre || 'Contenedor'}`
+                : viewMode === 'items_area'
+                ? `Insumo en ${selectedArea?.nombre || 'Área'}`
+                : 'Nuevo Insumo'}
+            </Text>
 
-            <View style={styles.modalActions}>
-              <Pressable onPress={() => setShowItemModal(false)} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancelar</Text>
+            {/* Selector de modo: Catálogo vs Nuevo */}
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+              <Pressable
+                onPress={() => setItemModalTab('catalogo')}
+                style={[
+                  styles.unitBtn,
+                  itemModalTab === 'catalogo' && styles.unitBtnActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.unitText,
+                    itemModalTab === 'catalogo' && { color: 'white' },
+                  ]}
+                >
+                  DEL CATÁLOGO ({availableCatalogItems.length})
+                </Text>
               </Pressable>
               <Pressable
-                onPress={async () => {
-                  if (viewMode === 'items_section') {
-                    await actions.crearItemEnSeccion({
-                      sectionId: activeSectionId,
-                      item: {
-                        nombre: itemForm.nombre,
-                        unidad: itemForm.unidad,
-                        minStock: parseFloat(itemForm.minStock) || 0,
-                        sectionId: activeSectionId,
-                      } as any,
-                      initialQty: 0,
-                    });
-                  } else {
-                    const targetId =
-                      viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
-                    if (!targetId) {
-                      Alert.alert('Error', 'Selecciona un área o un contenedor');
-                      return;
-                    }
-                    await actions.crearItemEnContenedor({
-                      containerId: targetId,
-                      item: {
-                        nombre: itemForm.nombre,
-                        unidad: itemForm.unidad,
-                        minStock: parseFloat(itemForm.minStock) || 0,
-                        sectionId: activeSectionId,
-                      } as any,
-                      initialQty: 0,
-                    });
-                  }
-                  setShowItemModal(false);
-                }}
-                style={styles.confirmBtn}
+                onPress={() => setItemModalTab('nuevo')}
+                style={[
+                  styles.unitBtn,
+                  itemModalTab === 'nuevo' && styles.unitBtnActive,
+                ]}
               >
-                <Text style={styles.confirmText}>Crear</Text>
+                <Text
+                  style={[
+                    styles.unitText,
+                    itemModalTab === 'nuevo' && { color: 'white' },
+                  ]}
+                >
+                  NUEVO
+                </Text>
               </Pressable>
             </View>
+
+            {itemModalTab === 'catalogo' ? (
+              <View>
+                <Text style={styles.label}>Selecciona un insumo existente:</Text>
+                <ScrollView
+                  style={{ maxHeight: 180, marginBottom: 15 }}
+                  nestedScrollEnabled
+                >
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {availableCatalogItems.map((catItem) => {
+                      const isSel =
+                        (selectedCatalogItemId || availableCatalogItems[0]?.id) === catItem.id;
+                      return (
+                        <Pressable
+                          key={catItem.id}
+                          onPress={() => setSelectedCatalogItemId(catItem.id)}
+                          style={[
+                            styles.areaChipSmall,
+                            isSel && { borderColor: theme.colors.primary, backgroundColor: '#1e3a8a' },
+                          ]}
+                        >
+                          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>
+                            {catItem.nombre}
+                          </Text>
+                          <Text style={{ color: '#94a3b8', fontSize: 10 }}>
+                            {catItem.unidad.toUpperCase()}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+
+                <Text style={styles.label}>Cantidad inicial a asignar:</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="5"
+                  placeholderTextColor="#64748b"
+                  keyboardType="numeric"
+                  value={assignQty}
+                  onChangeText={setAssignQty}
+                />
+
+                <View style={styles.modalActions}>
+                  <Pressable onPress={() => setShowItemModal(false)} style={styles.cancelBtn}>
+                    <Text style={styles.cancelText}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={async () => {
+                      const selId = selectedCatalogItemId || availableCatalogItems[0]?.id;
+                      if (!selId) {
+                        Alert.alert('Error', 'Selecciona un insumo');
+                        return;
+                      }
+                      const qty = parseFloat(assignQty) || 0;
+                      if (viewMode === 'items_section') {
+                        await actions.ajustarStockDeltaSeccion({
+                          sectionId: activeSectionId,
+                          itemId: selId,
+                          delta: qty,
+                          razon: 'Asignación catálogo',
+                        });
+                      } else {
+                        const targetId =
+                          viewMode === 'items_area'
+                            ? (containersForSelectedArea[0]?.id || selectedAreaId)
+                            : selectedContainerId;
+                        if (!targetId) {
+                          Alert.alert('Error', 'Selecciona un contenedor primero');
+                          return;
+                        }
+                        await actions.ajustarStockDelta({
+                          containerId: targetId,
+                          itemId: selId,
+                          delta: qty,
+                          razon: 'Asignación catálogo a contenedor',
+                        });
+                      }
+                      setShowItemModal(false);
+                      setAssignQty('5');
+                    }}
+                    style={styles.confirmBtn}
+                  >
+                    <Text style={styles.confirmText}>Asignar Stock</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nombre del insumo"
+                  placeholderTextColor="#64748b"
+                  value={itemForm.nombre}
+                  onChangeText={(t) => setItemForm({ ...itemForm, nombre: t })}
+                />
+                <View style={styles.row}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Unidad</Text>
+                    <View style={styles.unitSelector}>
+                      {(['kg', 'pza'] as const).map((u) => (
+                        <Pressable
+                          key={u}
+                          onPress={() => setItemForm((prev) => ({ ...prev, unidad: u }))}
+                          style={[styles.unitBtn, itemForm.unidad === u && styles.unitBtnActive]}
+                        >
+                          <Text style={[styles.unitText, itemForm.unidad === u && { color: 'white' }]}>
+                            {u.toUpperCase()}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Stock Mínimo</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="0"
+                      placeholderTextColor="#64748b"
+                      keyboardType="numeric"
+                      value={itemForm.minStock}
+                      onChangeText={(t) => setItemForm({ ...itemForm, minStock: t })}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <Pressable onPress={() => setShowItemModal(false)} style={styles.cancelBtn}>
+                    <Text style={styles.cancelText}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={async () => {
+                      if (!itemForm.nombre.trim()) {
+                        Alert.alert('Error', 'Ingresa el nombre del insumo');
+                        return;
+                      }
+                      if (viewMode === 'items_section') {
+                        await actions.crearItemEnSeccion({
+                          sectionId: activeSectionId,
+                          item: {
+                            nombre: itemForm.nombre.trim(),
+                            unidad: itemForm.unidad,
+                            minStock: parseFloat(itemForm.minStock) || 0,
+                            sectionId: activeSectionId,
+                          } as any,
+                          initialQty: 0,
+                        });
+                      } else {
+                        const targetId =
+                          viewMode === 'items_area'
+                            ? (containersForSelectedArea[0]?.id || selectedAreaId)
+                            : selectedContainerId;
+                        if (!targetId) {
+                          Alert.alert('Error', 'Selecciona un área o un contenedor');
+                          return;
+                        }
+                        await actions.crearItemEnContenedor({
+                          containerId: targetId,
+                          item: {
+                            nombre: itemForm.nombre.trim(),
+                            unidad: itemForm.unidad,
+                            minStock: parseFloat(itemForm.minStock) || 0,
+                            sectionId: activeSectionId,
+                          } as any,
+                          initialQty: 0,
+                        });
+                      }
+                      setShowItemModal(false);
+                      setItemForm({
+                        nombre: '',
+                        unidad: 'kg',
+                        minStock: '0',
+                        costo: '',
+                        proveedor: '',
+                      });
+                    }}
+                    style={styles.confirmBtn}
+                  >
+                    <Text style={styles.confirmText}>Crear</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </Modal>

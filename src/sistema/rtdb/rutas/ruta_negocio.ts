@@ -97,8 +97,13 @@ export function descomponer_ruta_negocio(ruta: string): IdentidadNegocio | null 
   if (parts.length < 2) return null;
 
   const negocio_id = parts[parts.length - 1];
-  const categoria_id = parts[parts.length - 2];
-  const contexto_path = parts.slice(0, parts.length - 2).join('/');
+  let categoria_id = parts[parts.length - 2];
+  let contexto_path = parts.slice(0, parts.length - 2).join('/');
+
+  if (categoria_id === "negocio" && parts.length >= 3) {
+    categoria_id = parts[parts.length - 3];
+    contexto_path = parts.slice(0, parts.length - 3).join('/');
+  }
   const negocio_id_canonico = extraer_negocio_id_canonico(negocio_id, categoria_id);
 
   return {

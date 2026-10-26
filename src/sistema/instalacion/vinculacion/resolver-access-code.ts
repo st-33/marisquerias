@@ -224,12 +224,12 @@ export async function resolverAccessCode(
     categoria_id:
       (typeof val === 'object' &&
         val !== null &&
-        (val.categoria_id || (val.negocio as any)?.categoria_id)) ||
+        (val.clave_categoria || val.categoria_id || (val.negocio as any)?.categoria_id)) ||
       identidad.categoria_id,
     slug_categoria:
       (typeof val === 'object' &&
         val !== null &&
-        (val.slug_categoria || (val.negocio as any)?.slug_categoria)) ||
+        (val.clave_categoria || val.slug_categoria || (val.negocio as any)?.slug_categoria)) ||
       identidad.categoria_id,
     version_npb_origen: versionNpbOrigen,
     cliente_id: clienteId,

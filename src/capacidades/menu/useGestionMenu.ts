@@ -297,7 +297,7 @@ export function useGestionMenu({ db, rutaNegocio }: PropsGestionMenu) {
       categoriaId: datos.categoriaId,
       activo: true,
       variantes: datos.variantes || {},
-      visible: datos.visible || { digital: true, mesero: true },
+      visible: datos.visible || { digital: true, mesero: true, ventaCrudo: true },
       prepMin: datos.prepMin || 0,
       receta: datos.receta || {},
       usarConfigPersonalizada: datos.usarConfigPersonalizada,
