@@ -21,11 +21,15 @@ export function useGestionMenu({ db, rutaNegocio }: PropsGestionMenu) {
   const listenersActivos = useStore((s) => s.listenersActivos);
   const loading = !listenersActivos;
 
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const caps = estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas;
+  const isInventarioEnabled = !caps || caps.includes('inventario');
+
   const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
 
   const inventarioRepo = useMemo(
-    () => new RepositorioInventario(db, rutaNegocio),
-    [db, rutaNegocio]
+    () => (isInventarioEnabled ? new RepositorioInventario(db, rutaNegocio) : null),
+    [db, rutaNegocio, isInventarioEnabled]
   );
 
   // 🔥 SELF-HEALING: Ejecutar reparación silenciosa al iniciar
@@ -147,6 +151,9 @@ export function useGestionMenu({ db, rutaNegocio }: PropsGestionMenu) {
 
       const errores: string[] = [];
       const advertencias: string[] = [];
+      if (!inventarioRepo) {
+        return { valida: true, errores: [], advertencias: [] };
+      }
       const [catalogo, areas] = await Promise.all([
         inventarioRepo.obtenerCatalogo(),
         inventarioRepo.obtenerAreas(),

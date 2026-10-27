@@ -93,6 +93,15 @@ export function encenderCapacidades(
           idsCapacidadesActivas.add(cap);
         }
       }
+    } else if (
+      negocio.capacidades_autorizadas &&
+      typeof negocio.capacidades_autorizadas === 'object'
+    ) {
+      for (const [cap, enabled] of Object.entries(negocio.capacidades_autorizadas)) {
+        if (enabled && capacidadesDisponiblesNPB.has(cap as CapacidadCanonica)) {
+          idsCapacidadesActivas.add(cap as CapacidadCanonica);
+        }
+      }
     } else {
       // Si el negocio real no tiene capacidades_autorizadas explícitas en el payload
       // (ej. códigos provisionados estándar o heredados), adopta las del NPB

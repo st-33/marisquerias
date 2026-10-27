@@ -64,12 +64,6 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   useConfiguracionNegocio();
   const { config: posConfig, loading: configLoading } = usePosConfig(db, rutaNegocio);
-  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
-  const salesRepo = useMemo(() => new RegistroVentasRepository(db, rutaNegocio), [db, rutaNegocio]);
-  const inventoryRepo = useMemo(
-    () => new InventoryV2Repository(db, rutaNegocio),
-    [db, rutaNegocio]
-  );
 
   useEffect(() => {
     resolverDeviceIdADI()
@@ -79,6 +73,13 @@ export function useMostradorPro(props?: UseMostradorProProps) {
   const estadoEncendido = useStore((s) => s.estadoEncendido);
   const caps = estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas;
   const isInventarioEnabled = !caps || caps.includes('inventario');
+
+  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
+  const salesRepo = useMemo(() => new RegistroVentasRepository(db, rutaNegocio), [db, rutaNegocio]);
+  const inventoryRepo = useMemo(
+    () => (isInventarioEnabled ? new InventoryV2Repository(db, rutaNegocio) : null),
+    [db, rutaNegocio, isInventarioEnabled]
+  );
   const isImpresionEnabled = !caps || caps.includes('tickets_impresion');
   const isBasculaEnabled = true;
   const isDeliveryEnabled = !caps || caps.includes('reparto_logistica');
