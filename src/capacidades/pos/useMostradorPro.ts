@@ -268,7 +268,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
                 total,
                 metodoPago,
                 usuario,
-                allowNegative: posConfig?.allowNegativeStock ?? true,
+                allowNegative: !!posConfig?.allowNegativeStock,
                 metadata: { origen: 'venta_crudo', tsVenta: payload?.timestamp },
               });
             }
@@ -396,7 +396,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   return {
     loading: loading || configLoading,
-    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo !== false),
+    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo === true),
     categorias: Object.values(categorias).filter((c) => c.herencia?.ventaCrudo !== false),
     areas: [],
     selectedAreaId: null,

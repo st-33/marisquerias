@@ -81,7 +81,9 @@ export const crearRutaNegocio = crear_ruta_negocio;
 export function validar_ruta_negocio(valor: string): boolean {
   if (!valor || typeof valor !== 'string') return false;
   if (es_ruta_legacy(valor)) return false;
-  const parts = valor.split('/').filter(Boolean);
+  const clean = valor.trim().replace(/^\/+|\/+$/g, '');
+  if (!clean || clean === '.') return true; // Raíz canónica para Unidades Operativas dedicadas
+  const parts = clean.split('/').filter(Boolean);
   return parts.length >= 2;
 }
 
@@ -233,7 +235,9 @@ export function resolver_ruta_cajon(
   dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null
 ): string {
   assertCajonActivo(cajon, dormidos);
-  const base = `${rutaNegocio}/${cajon}`;
+  const cleanRuta = (rutaNegocio || '').trim().replace(/^\/+|\/+$/g, '');
+  // Si la ruta está vacía o es '.', o se opera sobre una RTDB dedicada a nivel raíz:
+  const base = !cleanRuta || cleanRuta === '.' ? cajon : `${cleanRuta}/${cajon}`;
   return subruta ? `${base}/${subruta}` : base;
 }
 

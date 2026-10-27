@@ -113,8 +113,8 @@ export async function ejecutarArranqueO1(
       categoria_id: negocio.categoria_id,
       category: negocio.categoria_id,
       niche: negocio.slug_categoria,
-      rutaNegocio: `negocios/${negocio.negocio_id}`,
-      ruta_negocio: `negocios/${negocio.negocio_id}`,
+      rutaNegocio: '',
+      ruta_negocio: '',
       rol: destinoRol.rol,
     });
 
@@ -241,8 +241,8 @@ export function useArranqueSistema(): boolean {
             categoria_id: sesion.slug_categoria,
             category: sesion.slug_categoria,
             niche: sesion.slug_categoria,
-            rutaNegocio: `negocios/${sesion.negocio_id}`,
-            ruta_negocio: `negocios/${sesion.negocio_id}`,
+            rutaNegocio: '',
+            ruta_negocio: '',
             rol: (sesion.rol_activo as any) || 'mesero',
           });
 
