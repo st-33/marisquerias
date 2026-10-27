@@ -3,7 +3,7 @@ import { validar_ruta_negocio } from './rutas/ruta_negocio';
 export function assert_valid_ruta_negocio(
   ruta_negocio: string | null | undefined
 ): asserts ruta_negocio is string {
-  if (!ruta_negocio || !validar_ruta_negocio(ruta_negocio)) {
+  if (typeof ruta_negocio !== 'string' || !validar_ruta_negocio(ruta_negocio, { permitirRaiz: true })) {
     throw new Error(`ruta_negocio inválida o ausente: ${String(ruta_negocio)}`);
   }
 }

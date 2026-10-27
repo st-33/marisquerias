@@ -32,7 +32,7 @@ export function useConfiguracionCaja(customDb?: Database, customRutaNegocio?: st
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!rutaNegocio) return;
+    if (rutaNegocio === undefined || rutaNegocio === null) return;
     const configRef = ref(db, `${rutaNegocio}/config/pos`);
 
     const unsub = onValue(configRef, (snapshot) => {

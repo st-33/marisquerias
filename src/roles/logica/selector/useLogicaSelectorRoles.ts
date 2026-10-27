@@ -148,8 +148,29 @@ export function useLogicaSelectorRoles() {
 
   // Manejar selección de rol
   const handleRolPress = useCallback(
-    async (ruta: string) => {
+    async (ruta: string, rolId?: string) => {
       await playFeedback();
+      try {
+        if (rolId) {
+          const { guardarSesionO1, leerSesionO1 } = await import('../../../sistema/instalacion/npb/persistenciaSesionO1');
+          const lectura = await leerSesionO1();
+          if (lectura.valida && lectura.sesion) {
+            await guardarSesionO1({
+              negocio_id: lectura.sesion.negocio_id,
+              slug_categoria: lectura.sesion.slug_categoria,
+              version_npb_origen: lectura.sesion.version_npb_origen,
+              codigo_acceso: (lectura.sesion.codigo_acceso as string) || lectura.sesion.codigo_acceso_hash,
+              rol_activo: rolId,
+              estadoEncendido: lectura.sesion.estadoEncendido!,
+              db_url_operativa: lectura.sesion.db_url_operativa,
+              tipo_acceso: lectura.sesion.tipo_acceso,
+            });
+          }
+          await useStore.getState().setSession({ rol: rolId as any });
+        }
+      } catch (err) {
+        console.warn('[SelectorRoles] Error actualizando rol activo:', err);
+      }
       router.push(ruta as any);
     },
     [playFeedback]

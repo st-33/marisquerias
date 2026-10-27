@@ -12,7 +12,7 @@ export function PantallaRoles() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
   const negocioId = useStore((s) => s.sesion.negocioId);
 
-  if (!rutaNegocio || !negocioId) {
+  if (!negocioId) {
     return (
       <View
         style={{

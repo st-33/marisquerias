@@ -78,11 +78,11 @@ export const crearRutaNegocio = crear_ruta_negocio;
  * Valida que una ruta sea de al menos 2 segmentos no vacíos y no sea legacy.
  * Formato esperado: [...contexto]/{categoria}/{negocio}
  */
-export function validar_ruta_negocio(valor: string): boolean {
-  if (!valor || typeof valor !== 'string') return false;
+export function validar_ruta_negocio(valor: string, opciones?: { permitirRaiz?: boolean }): boolean {
+  if (typeof valor !== 'string') return false;
   if (es_ruta_legacy(valor)) return false;
   const clean = valor.trim().replace(/^\/+|\/+$/g, '');
-  if (!clean || clean === '.') return true; // Raíz canónica para Unidades Operativas dedicadas
+  if (!clean || clean === '.') return opciones?.permitirRaiz ?? false;
   const parts = clean.split('/').filter(Boolean);
   return parts.length >= 2;
 }

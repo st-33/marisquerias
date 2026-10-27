@@ -148,7 +148,8 @@ function RootLayoutContent({
 }) {
   const { theme } = useAppTheme();
   const router = useRouter();
-  const needsNegocio = pathname.startsWith('/_role') && !rutaNegocio;
+  const negocioId = useStore((state) => state.sesion.negocioId);
+  const needsNegocio = pathname.startsWith('/_role') && !negocioId;
 
   useEffect(() => {
     if (!isReady || !needsNegocio) return;

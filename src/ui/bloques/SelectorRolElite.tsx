@@ -148,7 +148,7 @@ export function SelectorRolElite() {
                   key={rol.id}
                   icono={rol.icono}
                   etiqueta={rol.nombre}
-                  onPress={() => handleRolPress(rol.ruta)}
+                  onPress={() => handleRolPress(rol.ruta, rol.id)}
                   esPrincipal={esPrincipal}
                   esSecundario={esSecundario}
                 />

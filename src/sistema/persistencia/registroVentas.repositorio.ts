@@ -1,7 +1,7 @@
-import { ref, push } from 'firebase/database';
+import { ref, push, set } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio } from '../rtdb/guards';
-import { descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
+import { descomponer_ruta_negocio, resolver_ruta_cajon } from '../rtdb/rutas/ruta_negocio';
 import { SQLiteStorageAdapter, type HistorialVenta } from '../sin_conexion';
 import type { Pedido } from './pedidos.repositorio';
 
@@ -149,12 +149,14 @@ export class RepositorioRegistroVentas {
   }
 
   async registrarVenta(venta: VentaMostrador): Promise<string> {
+    const cleanRuta = (this.rutaNegocio || '').trim().replace(/^\/+|\/+$/g, '');
+    const seqPath = cleanRuta ? `${cleanRuta}/secuencias/ventas` : 'secuencias/ventas';
     const ventaId =
       venta.id ||
-      push(ref(this.db, this.rutaNegocio + '/secuencias/ventas')).key ||
+      push(ref(this.db, seqPath)).key ||
       'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
 
-    await this.registrarMostrador({
+    const reg = await this.registrarMostrador({
       id: ventaId,
       total: venta.total,
       metodoPago: venta.metodoPago,
@@ -162,6 +164,15 @@ export class RepositorioRegistroVentas {
       timestamp: venta.timestamp,
       usuario: venta.usuario,
     });
+
+    try {
+      if (this.db) {
+        const rutaVentas = resolver_ruta_cajon(this.rutaNegocio, 'ventas', ventaId);
+        await set(ref(this.db, rutaVentas), reg);
+      }
+    } catch (err) {
+      console.warn('[RepositorioRegistroVentas] No se pudo escribir venta en RTDB:', err);
+    }
 
     return ventaId;
   }

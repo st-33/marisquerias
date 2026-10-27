@@ -90,7 +90,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   // --- Carga de Datos ---
   useEffect(() => {
-    if (!rutaNegocio) return;
+    if (rutaNegocio === undefined || rutaNegocio === null) return;
 
     // Cargar caché local primero por si estamos offline o para render rápido
     const cargarCacheOffline = async () => {

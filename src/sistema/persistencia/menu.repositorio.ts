@@ -196,11 +196,13 @@ export class RepositorioMenu {
 
   private getFlatProductosPath() {
     assertCajonActivo('menu');
-    return `${this.rutaNegocio}/menu/productos`;
+    const clean = (this.rutaNegocio || '').trim().replace(/^\/+|\/+$/g, '');
+    return clean ? `${clean}/menu/productos` : 'menu/productos';
   }
   private getCategoriasPath() {
     assertCajonActivo('menu');
-    return `${this.rutaNegocio}/menu/categorias`;
+    const clean = (this.rutaNegocio || '').trim().replace(/^\/+|\/+$/g, '');
+    return clean ? `${clean}/menu/categorias` : 'menu/categorias';
   }
   private async ensureUniqueCategorySlug(base: string, excludeId?: string): Promise<string> {
     const snap = await get(ref(this.db, `${this.rutaNegocio}/menu/categorias`));

@@ -110,9 +110,16 @@ export async function getDeviceInfo(): Promise<DeviceInfoData> {
 export async function isDeviceRegistered(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem('adi_dispositivo_vinculado');
-    if (!raw) return false;
-    const dispositivo = JSON.parse(raw);
-    return dispositivo && dispositivo.estado === 'activo' && !!dispositivo.deviceIdADI;
+    if (raw) {
+      const dispositivo = JSON.parse(raw);
+      if (dispositivo && dispositivo.estado === 'activo' && !!dispositivo.deviceIdADI) {
+        return true;
+      }
+    }
+    // Fallback canónico: verificar sesión O(1) persistida
+    const { leerSesionO1 } = await import('../instalacion/npb/persistenciaSesionO1');
+    const sesionO1 = await leerSesionO1();
+    return sesionO1.valida && !!sesionO1.sesion?.negocio_id;
   } catch (error) {
     logger.error('SECURITY', 'Error al verificar registro de dispositivo', error as Error);
     return false;
