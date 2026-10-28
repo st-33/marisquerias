@@ -12,7 +12,7 @@ class SincronizacionInventarioOffline {
   private rutaNegocio: string | null = null;
 
   initialize(db: Database, rutaNegocio: string): void {
-    if (!validar_ruta_negocio(rutaNegocio)) {
+    if (!validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
       logger.error(
         'OFFLINE_INV_SYNC',
         'Intento de inicializar inventario con rutaNegocio inválido o legacy',
@@ -43,13 +43,13 @@ class SincronizacionInventarioOffline {
   }
 
   private isCurrent(): boolean {
-    return Boolean(this.db && this.rutaNegocio);
+    return Boolean(this.db && this.rutaNegocio !== null);
   }
 
   async syncPendingMovements(): Promise<{ synced: number; failed: number }> {
     const db = this.db;
     const rutaNegocio = this.rutaNegocio;
-    if (this.isRunning || !db || !rutaNegocio || !this.isCurrent()) {
+    if (this.isRunning || !db || this.rutaNegocio === null || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
 

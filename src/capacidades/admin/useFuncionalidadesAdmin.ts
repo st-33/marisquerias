@@ -104,7 +104,7 @@ export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures 
 
     // Compatibilidad Admin
     admin: adminRoleEnabled,
-    admin_dashboard: metricasYCierresHabilitadas,
+    admin_dashboard: adminRoleEnabled && adminConfig?.dashboard !== false,
     admin_menu: menuHabilitado,
     admin_inventory: inventarioHabilitado,
     admin_tables: controlMesasHabilitado,
@@ -168,7 +168,7 @@ export function useFuncionalidadesAdmin(_props?: UseFuncionalidadesAdminProps) {
 
       // Compatibilidad Admin
       admin: adminRoleEnabled,
-      admin_dashboard: metricasYCierresHabilitadas,
+      admin_dashboard: adminRoleEnabled,
       admin_menu: menuHabilitado,
       admin_inventory: inventarioHabilitado,
       admin_tables: controlMesasHabilitado,

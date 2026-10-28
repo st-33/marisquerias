@@ -75,11 +75,10 @@ export function useGestionarMesas({ mesasRepo }: GestionarMesasProps) {
   const tablesRef = useRef<Table[]>(tables);
   useEffect(() => {
     tablesRef.current = tables;
-    if (tables.length > 0 || Object.keys(mesasDelStore).length > 0) {
-      setTimeout(() => {
-        setLoading(false);
-      }, 0);
-    }
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 50);
+    return () => clearTimeout(timer);
   }, [tables, mesasDelStore]);
 
   const selectedTablePedidoRef = useRef<string | null>(null);
