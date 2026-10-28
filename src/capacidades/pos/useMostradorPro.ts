@@ -234,7 +234,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       }
 
       // Inventario
-      if (inventoryAutoDiscount) {
+      if (inventoryAutoDiscount && inventoryRepo) {
         try {
           const areas = await inventoryRepo.obtenerAreas();
           const targetAreaEntry =
@@ -318,7 +318,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       }
 
       // Inventario Offline
-      if (inventoryAutoDiscount) {
+      if (inventoryAutoDiscount && inventoryRepo) {
         try {
           const storeState = useStore.getState();
           const areaId = Object.entries(storeState.areas).find(

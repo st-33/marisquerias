@@ -63,9 +63,7 @@ export async function ejecutarArranqueO1(
   }
 
   try {
-    logger.info('ARRANQUE_O1', 'Iniciando resolución O(1) con código', {
-      codigo: cleanCode,
-    });
+    logger.info('ARRANQUE_O1', 'Iniciando acceso al negocio');
 
     // 1. Resolver código de acceso en Unidad Secundaria
     const { negocio, db_url_operativa } = await resolverAccessCodeO1(db, cleanCode);
@@ -73,8 +71,7 @@ export async function ejecutarArranqueO1(
     // 1b. Validar que el código pertenezca a la categoría Marisquerías
     const esPlantilla = negocio.tipo_acceso === 'plantilla';
     const catSlug = (negocio.slug_categoria || '').toLowerCase();
-    const catId = (negocio.categoria_id || '').toLowerCase();
-    if (!esPlantilla && catSlug && catSlug !== 'marisquerias' && catId !== '01') {
+    if (!esPlantilla && catSlug && catSlug !== 'marisquerias' ) {
       throw new Error(
         `El código de acceso no corresponde a la categoría Marisquerías (pertenece a '${catSlug}').`
       );
@@ -88,7 +85,7 @@ export async function ejecutarArranqueO1(
     }
 
     // 2. Cargar NPB 00 y validar compatibilidad
-    const npb = await cargarNPB(db, negocio.slug_categoria, negocio.version_npb_origen);
+    const npb = await cargarNPB(db, negocio.ruta_npb as string, negocio.version_npb_origen);
 
     // 3. Encender capacidades y roles (intersección NPB ∩ Negocio Real)
     const estadoEncendido = encenderCapacidades(npb, negocio);
@@ -122,6 +119,7 @@ export async function ejecutarArranqueO1(
     await guardarSesionO1({
       negocio_id: negocio.negocio_id,
       slug_categoria: negocio.slug_categoria,
+      ruta_npb: negocio.ruta_npb as string,
       version_npb_origen: negocio.version_npb_origen,
       codigo_acceso: cleanCode,
       rol_activo: destinoRol.rol,
@@ -251,7 +249,7 @@ export function useArranqueSistema(): boolean {
             const dbSecundaria = getSecundariaRtdb();
             void revalidarVersionNPB(
               dbSecundaria,
-              sesion.slug_categoria,
+              sesion.ruta_npb || '',
               sesion.version_npb_origen
             );
           } catch {

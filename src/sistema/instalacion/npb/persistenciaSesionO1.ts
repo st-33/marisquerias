@@ -16,6 +16,7 @@ import { logger } from '../../monitoreo';
 export const CLAVES_SESION_O1 = {
   NEGOCIO_ID: '@sesion:negocio_id',
   SLUG_CATEGORIA: '@sesion:slug_categoria',
+  RUTA_NPB: '@sesion:ruta_npb',
   VERSION_NPB_ORIGEN: '@sesion:version_npb_origen',
   CODIGO_ACCESO_HASH: '@sesion:codigo_acceso_hash',
   ROL_ACTIVO: '@sesion:rol_activo',
@@ -44,6 +45,7 @@ export function hashCodigoAcceso(codigo: string): string {
 export interface DatosSesionO1 {
   negocio_id: string;
   slug_categoria: string;
+  ruta_npb?: string;
   version_npb_origen: number;
   codigo_acceso_hash: string;
   rol_activo: string | null;
@@ -64,6 +66,7 @@ export interface ResultadoLecturaSesionO1 {
 export interface GuardarSesionO1Params {
   negocio_id: string;
   slug_categoria: string;
+  ruta_npb?: string;
   version_npb_origen: number;
   codigo_acceso: string;
   rol_activo: string | null;
@@ -85,6 +88,7 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
   const pares: [string, string][] = [
     [CLAVES_SESION_O1.NEGOCIO_ID, params.negocio_id],
     [CLAVES_SESION_O1.SLUG_CATEGORIA, params.slug_categoria],
+    [CLAVES_SESION_O1.RUTA_NPB, params.ruta_npb || ''],
     [CLAVES_SESION_O1.VERSION_NPB_ORIGEN, String(params.version_npb_origen)],
     [CLAVES_SESION_O1.CODIGO_ACCESO_HASH, codigoHash],
     [CLAVES_SESION_O1.ROL_ACTIVO, params.rol_activo || ''],
@@ -168,6 +172,7 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
     const sesion: DatosSesionO1 = {
       negocio_id,
       slug_categoria: mapa[CLAVES_SESION_O1.SLUG_CATEGORIA] || '',
+      ruta_npb: mapa[CLAVES_SESION_O1.RUTA_NPB] || '',
       version_npb_origen: parseInt(mapa[CLAVES_SESION_O1.VERSION_NPB_ORIGEN] || '1', 10),
       codigo_acceso_hash: mapa[CLAVES_SESION_O1.CODIGO_ACCESO_HASH] || '',
       rol_activo: mapa[CLAVES_SESION_O1.ROL_ACTIVO] || null,

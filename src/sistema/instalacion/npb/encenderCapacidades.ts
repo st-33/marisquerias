@@ -98,36 +98,16 @@ export function encenderCapacidades(
       typeof negocio.capacidades_autorizadas === 'object'
     ) {
       for (const [cap, enabled] of Object.entries(negocio.capacidades_autorizadas)) {
-        if (enabled && capacidadesDisponiblesNPB.has(cap as CapacidadCanonica)) {
+        if (enabled === true && capacidadesDisponiblesNPB.has(cap as CapacidadCanonica)) {
           idsCapacidadesActivas.add(cap as CapacidadCanonica);
         }
       }
-    } else {
-      // Si el negocio real no tiene capacidades_autorizadas explícitas en el payload
-      // (ej. códigos provisionados estándar o heredados), adopta las del NPB
-      idsCapacidadesActivas = new Set(capacidadesDisponiblesNPB);
     }
   }
 
-  // 1. Resolver dependencias entre capacidades
-  // Si cualquier rol KDS está declarado en el NPB y comanda_cocina no se prohibió explícitamente, asegurar comanda_cocina
   const idsRolesDeclarados = new Set(
     (npb.roles_dispositivo || []).map((r) => (r.id === 'admin' ? 'administrador' : r.id))
   );
-  const rolesKDS: RolDispositivoCanonico[] = [
-    'cocina',
-    'barman',
-    'barista',
-    'parrillero',
-    'empacador',
-  ];
-  if (
-    rolesKDS.some((r) => idsRolesDeclarados.has(r)) &&
-    (!Array.isArray(negocio?.capacidades_autorizadas) ||
-      negocio.capacidades_autorizadas.includes('comanda_cocina'))
-  ) {
-    idsCapacidadesActivas.add('comanda_cocina');
-  }
 
   // - comanda_cocina requiere menu
   if (idsCapacidadesActivas.has('comanda_cocina') && !idsCapacidadesActivas.has('menu')) {

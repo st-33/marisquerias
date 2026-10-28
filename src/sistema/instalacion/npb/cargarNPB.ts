@@ -1,89 +1,24 @@
-/**
- * 📥 CARGADOR DEL NPB 00 DESDE UNIDAD SECUNDARIA
- *
- * Resuelve la plantilla base de categoría y valida su compatibilidad estricta
- * antes de permitir cualquier arranque o encendido dinámico en el APK.
- */
-
-import { get, ref } from 'firebase/database';
-import type { Database } from 'firebase/database';
+import { get, ref, type Database } from 'firebase/database';
 import type { NegocioPlantillaBase } from './tiposNPB';
 import { validarCompatibilidadNPB } from './validarCompatibilidadNPB';
 
-export async function cargarNPB(
-  db: Database,
-  slugCategoria: string,
-  versionNpbOrigen?: number
-): Promise<NegocioPlantillaBase> {
-  const cleanSlug = slugCategoria.trim().replace(/^\/+|\/+$/g, '');
-  if (!cleanSlug) {
-    throw new Error('El slug de categoría es requerido para cargar el NPB');
+/** La pertenencia del negocio determina una sola ruta; no hay nichos fijados ni búsquedas alternativas. */
+export async function cargarNPB(db: Database, rutaNPB: string, versionNpbOrigen?: number): Promise<NegocioPlantillaBase> {
+  const partes = rutaNPB.split('/');
+  if (partes.length !== 3 || partes.some(p => !p.trim()) || partes[2] !== 'negocio_plantilla_base') {
+    throw new Error('Se requiere la ruta completa de la plantilla de la categoría');
   }
-
-  // 1. Consulta el nodo de la plantilla en Unidad Secundaria
-  // Intenta primero la ruta canónica del Ecosistema: categorias/{slug}/plantilla_base
-  // Fallbacks: {slug}/Negocio principal de categoría, plantillas/{slug}
-  const rutasCandidatas = [
-    `comedores_y_servicios_de_mesa/${cleanSlug}/negocio_plantilla_base`,
-    `categorias/${cleanSlug}/plantilla_base`,
-    `${cleanSlug}/negocio_plantilla_base`,
-    `${cleanSlug}/Negocio principal de categoría`,
-    `plantillas/${cleanSlug}`,
-  ];
-
-  let snapshot = null;
-  let rutaUsada = '';
-
-  for (const ruta of rutasCandidatas) {
-    const snap = await get(ref(db, ruta));
-    if (snap.exists()) {
-      snapshot = snap;
-      rutaUsada = ruta;
-      break;
-    }
-  }
-
-  if (!snapshot || !snapshot.exists()) {
-    throw new Error(
-      `No se encontró el Negocio Principal de Categoría para '${cleanSlug}' en Unidad Secundaria`
-    );
-  }
-
+  const snapshot = await get(ref(db, rutaNPB));
+  if (!snapshot.exists()) throw new Error('No se encontró la plantilla de la categoría');
   let npb = snapshot.val() as NegocioPlantillaBase;
-
-  // 2. Verificación de versión con respecto a version_npb_origen
   if (versionNpbOrigen !== undefined && npb.version_npb !== versionNpbOrigen) {
-    // Intentar cargar del histórico en la misma jerarquía encontrada
-    const rutasHistorico = [
-      `${rutaUsada}/historico/${versionNpbOrigen}`,
-      `comedores_y_servicios_de_mesa/${cleanSlug}/negocio_plantilla_base/historico/${versionNpbOrigen}`,
-      `categorias/${cleanSlug}/plantilla_base/historico/${versionNpbOrigen}`,
-      `${cleanSlug}/Negocio principal de categoría/historico/${versionNpbOrigen}`,
-    ];
-
-    let histSnap = null;
-    for (const rHist of rutasHistorico) {
-      const snap = await get(ref(db, rHist));
-      if (snap.exists()) {
-        histSnap = snap;
-        break;
-      }
-    }
-
-    if (histSnap && histSnap.exists()) {
-      npb = histSnap.val() as NegocioPlantillaBase;
-    } else {
-      throw new Error(
-        `Versión de NPB solicitada (${versionNpbOrigen}) no coincide con la versión activa (${npb.version_npb}) y no existe en el histórico`
-      );
-    }
+    const historico = await get(ref(db, `${rutaNPB}/historico/${versionNpbOrigen}`));
+    if (!historico.exists()) throw new Error('La versión de plantilla asignada no existe en el histórico');
+    npb = historico.val();
   }
-
-  // 3. Validación de compatibilidad con catálogos cerrados del APK
+  if (versionNpbOrigen !== undefined && npb.version_npb !== versionNpbOrigen) throw new Error('La versión de la plantilla no coincide');
+  if ((npb as any).estado !== 'sellado') throw new Error('La plantilla no está sellada');
   const validacion = validarCompatibilidadNPB(npb);
-  if (!validacion.compatible) {
-    throw new Error(`NPB incompatible con este APK. Faltantes: ${validacion.faltantes.join(', ')}`);
-  }
-
+  if (!validacion.compatible) throw new Error(`NPB incompatible con este APK. Faltantes: ${validacion.faltantes.join(', ')}`);
   return npb;
 }
