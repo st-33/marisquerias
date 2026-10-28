@@ -32,7 +32,7 @@ import type { RolDispositivoCanonico } from '../src/negocio/roles/catalogoRoles'
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
-const PUBLIC_ROUTES = ['/'];
+const PUBLIC_ROUTES = ['/', '/access', '/(auth)/access', '/vinculacion'];
 
 const ROUTE_FEATURES: Record<
   string,
@@ -67,7 +67,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.includes(route)) || pathname === '/';
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
