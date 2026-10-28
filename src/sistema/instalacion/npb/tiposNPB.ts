@@ -43,7 +43,6 @@ export interface CapacidadNPB {
 export interface NegocioPlantillaBase {
   categoria_id: string;
   slug_categoria: string;
-  version_npb: number;
   estado: 'borrador' | 'sellado';
   roles_dispositivo: RolDispositivoNPB[];
   capacidades: CapacidadNPB[];

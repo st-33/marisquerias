@@ -4,7 +4,7 @@ import {
   type TipoErrorArranque,
 } from '../erroresArranque';
 
-describe('clasificarErrorArranque — 7 Variantes Canónicas de Error', () => {
+describe('clasificarErrorArranque — Variantes Canónicas de Error', () => {
   test('variante 1: codigo_invalido (código inexistente o formato erróneo)', () => {
     const error = new Error('El código de acceso no existe en Unidad Secundaria');
     const res = clasificarErrorArranque(error, 'XYZ-99');
@@ -43,7 +43,7 @@ describe('clasificarErrorArranque — 7 Variantes Canónicas de Error', () => {
     expect(res.accionTexto).toBe('Reintentar');
   });
 
-  test('variante 5: npb_incompatible (capacidades no soportadas por el APK)', () => {
+  test('variante 5: npb_incompatible (capacidades no soportadas por la aplicación)', () => {
     const error = new Error(
       'NPB incompatible con este APK. Faltantes: capacidad:reservaciones, rol:auditor'
     );
@@ -55,21 +55,7 @@ describe('clasificarErrorArranque — 7 Variantes Canónicas de Error', () => {
     expect(res.accionTexto).toBe('Salir');
   });
 
-  test('variante 6: version_obsoleta (versión sin histórico en servidor)', () => {
-    const error = new Error(
-      'Versión de NPB solicitada (v3) no coincide y no existe en el histórico'
-    );
-    const res = clasificarErrorArranque(error, 'VER-01');
-    expect(res.tipo).toBe<TipoErrorArranque>('version_obsoleta');
-    expect(res.mensaje).toBe(
-      'La versión del negocio (v3) no está disponible en el servidor. Contacta soporte.'
-    );
-    expect(res.version).toBe(3);
-    expect(res.permiteReintentar).toBe(false);
-    expect(res.accionTexto).toBe('Salir');
-  });
-
-  test('variante 7: desconocido (error inesperado)', () => {
+  test('variante 6: desconocido (error inesperado)', () => {
     const error = new Error('Unexpected internal fault in cipher generator');
     const res = clasificarErrorArranque(error, 'UNK-01');
     expect(res.tipo).toBe<TipoErrorArranque>('desconocido');

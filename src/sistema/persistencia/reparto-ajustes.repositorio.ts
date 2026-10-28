@@ -7,6 +7,7 @@
 import { ref, onValue, off, set, update } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
+import { rutaRepartoAjustes } from '../rtdb/rutas/ruta_negocio';
 
 export type AjustesReparto = {
   umbrales: {
@@ -34,7 +35,7 @@ export class RepositorioAjustesReparto {
   }
 
   private getBasePath() {
-    return `${this.rutaNegocio}/ajustes/reparto`;
+    return rutaRepartoAjustes(this.rutaNegocio);
   }
 
   /**

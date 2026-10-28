@@ -1,32 +1,32 @@
 /**
  * 🚀 ARRANQUE O(1) END-TO-END DEL SISTEMA
  *
- * Flujo canónico:
- * a) Leer código de acceso (6-8 caracteres).
- * b) resolver-access-code → NegocioReal + db_url_operativa.
- * c) cargarNPB → NegocioPlantillaBase validado.
- * d) encenderCapacidades → EstadoEncendido.
- * e) Guardar EstadoEncendido en el store global.
- * f) Determinar rol por defecto o selección múltiple.
+ * Flujo canónico (Puntos 3, 4, 5, 8, 9):
+ * a) Leer código de acceso.
+ * b) resolverAccessCodeO1 → /codigo_de_acceso/{CODIGO} → configuración individual del negocio + url_unidad.
+ * c) encenderCapacidades → activa las capacidades y perfiles autorizados usando la implementación de la categoría.
+ * d) Guardar EstadoEncendido y fuente operativa en el store global.
+ * e) Determinar perfil operativo inicial o selección de perfil.
  *
- * Cualquier fallo en b, c o d detiene el arranque con error explícito.
+ * La aplicación NO consulta el árbol del NPB 00 en cada inicio de negocio.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Database } from 'firebase/database';
 import { resolverAccessCodeO1 } from './vinculacion/resolver-access-code';
-import { cargarNPB } from './npb/cargarNPB';
-import { encenderCapacidades, type EstadoEncendido } from './npb/encenderCapacidades';
-import type { NegocioPlantillaBase } from './npb/tiposNPB';
+import {
+  encenderCapacidades,
+  PLANTILLA_CATEGORIA_MARISQUERIAS,
+  type EstadoEncendido,
+} from './npb/encenderCapacidades';
+import { CAPACIDADES_CANONICAS, type NegocioPlantillaBase } from './npb/tiposNPB';
 import type { NegocioReal } from './npb/tiposNegocioReal';
 import type { RolDispositivoCanonico } from '../../negocio/roles/catalogoRoles';
 import { resolverRolPorDefecto } from '../../negocio/roles/redireccionRol';
 import { guardarSesionO1, leerSesionO1 } from './npb/persistenciaSesionO1';
-import { revalidarVersionNPB } from './reconexion/monitorConexionO1';
 import { clasificarErrorArranque, type InfoErrorArranque } from './npb/erroresArranque';
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
-import { getSecundariaRtdb } from '../firebase';
 
 export interface ResultadoArranqueO1Exitoso {
   ok: true;
@@ -65,13 +65,13 @@ export async function ejecutarArranqueO1(
   try {
     logger.info('ARRANQUE_O1', 'Iniciando acceso al negocio');
 
-    // 1. Resolver código de acceso en Unidad Secundaria
+    // 1. Resolver código de acceso y configuración individual en Unidad Secundaria
     const { negocio, db_url_operativa } = await resolverAccessCodeO1(db, cleanCode);
 
     // 1b. Validar que el código pertenezca a la categoría Marisquerías
     const esPlantilla = negocio.tipo_acceso === 'plantilla';
     const catSlug = (negocio.slug_categoria || '').toLowerCase();
-    if (!esPlantilla && catSlug && catSlug !== 'marisquerias' ) {
+    if (!esPlantilla && catSlug && catSlug !== 'marisquerias') {
       throw new Error(
         `El código de acceso no corresponde a la categoría Marisquerías (pertenece a '${catSlug}').`
       );
@@ -84,17 +84,27 @@ export async function ejecutarArranqueO1(
       );
     }
 
-    // 2. Cargar NPB 00 y validar compatibilidad
-    const npb = await cargarNPB(db, negocio.ruta_npb as string, negocio.version_npb_origen);
+    // 1d. Verificar que las capacidades autorizadas sean reconocidas por esta aplicación
+    const capacidadesReconocidas = new Set<string>(CAPACIDADES_CANONICAS);
+    const capacidadesDesconocidas = (negocio.capacidades_autorizadas || []).filter(
+      (cap) => !capacidadesReconocidas.has(cap)
+    );
+    if (capacidadesDesconocidas.length > 0) {
+      throw new Error(
+        `NPB incompatible con este APK. Faltantes: ${capacidadesDesconocidas
+          .map((c) => `capacidad:${c}`)
+          .join(', ')}`
+      );
+    }
 
-    // 3. Encender capacidades y roles (intersección NPB ∩ Negocio Real)
-    const estadoEncendido = encenderCapacidades(npb, negocio);
+    // 2. Encender capacidades y roles directamente desde la configuración autorizada del negocio
+    const estadoEncendido = encenderCapacidades(negocio);
 
-    // 4. Guardar EstadoEncendido en el store global
+    // 3. Guardar EstadoEncendido en el store global
     const store = useStore.getState();
     store.setEstadoEncendido(estadoEncendido);
 
-    // 5. Configurar fuente de datos operativa y sesión
+    // 4. Configurar fuente de datos operativa y sesión (raíz operativa dedicada '')
     if (db_url_operativa) {
       await store.setDataSources({ operacionUrl: db_url_operativa });
     }
@@ -115,12 +125,11 @@ export async function ejecutarArranqueO1(
       rol: destinoRol.rol,
     });
 
-    // 6. Persistir en AsyncStorage (únicamente tras validar cada paso sin excepción)
+    // 5. Persistir en almacenamiento local tras validar cada paso sin excepción
     await guardarSesionO1({
       negocio_id: negocio.negocio_id,
       slug_categoria: negocio.slug_categoria,
-      ruta_npb: negocio.ruta_npb as string,
-      version_npb_origen: negocio.version_npb_origen,
+      ruta_configuracion_secundaria: negocio.ruta_configuracion_secundaria,
       codigo_acceso: cleanCode,
       rol_activo: destinoRol.rol,
       estadoEncendido,
@@ -139,7 +148,7 @@ export async function ejecutarArranqueO1(
     return {
       ok: true,
       negocio,
-      npb,
+      npb: PLANTILLA_CATEGORIA_MARISQUERIAS,
       estadoEncendido,
       rolPorDefecto: destinoRol.rol,
       rutaPorDefecto: destinoRol.ruta,
@@ -202,8 +211,7 @@ export function useArranqueO1() {
  * 🚀 HOOK CANÓNICO DE ARRANQUE DEL SISTEMA (O(1))
  * Utilizado por app/_layout.tsx para inicializar la aplicación:
  * - Restaura sesión válida desde persistenciaSesionO1
- * - Hidrata EstadoEncendido en el store global
- * - Activa monitorConexionO1 (revalidación de NPB)
+ * - Hidrata EstadoEncendido y URL operativa en el store global
  * - Retorna isReady: boolean
  */
 export function useArranqueSistema(): boolean {
@@ -221,17 +229,14 @@ export function useArranqueSistema(): boolean {
         if (lectura.valida && lectura.sesion) {
           const { sesion } = lectura;
 
-          // Cargar EstadoEncendido
           if (sesion.estadoEncendido) {
             store.setEstadoEncendido(sesion.estadoEncendido);
           }
 
-          // Cargar dataSources operativos
           if (sesion.db_url_operativa) {
             await store.setDataSources({ operacionUrl: sesion.db_url_operativa });
           }
 
-          // Inyectar sesión en store
           await store.setSession({
             access_code: sesion.codigo_acceso_hash,
             negocioId: sesion.negocio_id,
@@ -243,21 +248,8 @@ export function useArranqueSistema(): boolean {
             ruta_negocio: '',
             rol: (sesion.rol_activo as any) || 'mesero',
           });
-
-          // Activar monitor de reconexión / revalidación en segundo plano usando Unidad Secundaria
-          try {
-            const dbSecundaria = getSecundariaRtdb();
-            void revalidarVersionNPB(
-              dbSecundaria,
-              sesion.ruta_npb || '',
-              sesion.version_npb_origen
-            );
-          } catch {
-            // Silencioso si no hay conexión
-          }
         }
 
-        // Cargar hardware y dataSources locales
         await Promise.all([store.loadDataSources(), store.loadHardware()]);
 
         if (mounted) {
@@ -280,5 +272,4 @@ export function useArranqueSistema(): boolean {
   return isReady;
 }
 
-// Alias retrocompatibles
 export { useArranqueSistema as useBootstrapper };

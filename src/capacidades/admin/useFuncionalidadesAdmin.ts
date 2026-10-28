@@ -1,8 +1,9 @@
 import type { Database } from 'firebase/database';
 import { useCallback, useMemo } from 'react';
 import { useStore } from '../../sistema/store';
-import type { Caracteristicas } from '../../sistema/persistencia/negocio.repositorio';
 import { estaFeatureAdminHabilitada } from './seguridadMenu';
+
+export type Caracteristicas = Record<string, any>;
 
 /**
  * Contrato de feature flags administrativos del negocio.

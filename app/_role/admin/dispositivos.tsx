@@ -14,10 +14,9 @@ import {
   View,
 } from 'react-native';
 
-import { useSesion } from '../../../src/sistema/store';
+import { useSesion, useStore } from '../../../src/sistema/store';
 import { useFierros } from '../../../src/sistema/impresion/fierros';
 import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
-import { useConfiguracionNegocio } from '../../../src/sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useDevicesManagement } from '../../../src/capacidades/dispositivos';
 
 type HubDestino = 'restaurante' | 'venta_crudo' | null;
@@ -37,11 +36,6 @@ export default function AdminDeviceSettings() {
     basculaActiva,
     error: hardwareError,
   } = useFierros();
-  const {
-    config: negocioConfig,
-    isLoading: isConfigLoading,
-    error: configError,
-  } = useConfiguracionNegocio();
 
   const [scannedDevices, setScannedDevices] = useState<DispositivoFierro[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -49,7 +43,12 @@ export default function AdminDeviceSettings() {
 
   // 🔌 MODO HUB DUAL
   const { rutaNegocio } = useSesion();
-  const { hubConfig, actions: deviceActions } = useDevicesManagement();
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const mostradorHabilitado =
+    (estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas ?? []).includes(
+      'mostrador_y_pos'
+    );
+  const { hubConfig, ticketConfig: remoteTicketConfig, actions: deviceActions } = useDevicesManagement();
 
   const [hubDeviceId, setHubDeviceId] = useState<string | null>(null);
 
@@ -162,17 +161,17 @@ export default function AdminDeviceSettings() {
   };
 
   const handleTestPrint = useCallback(async () => {
-    if (!estaConectado || !negocioConfig) {
+    if (!estaConectado) {
       Alert.alert(
         'Error',
-        'Asegúrese de que la impresora esté conectada y la configuración cargada.'
+        'Asegúrese de que la impresora esté conectada.'
       );
       return;
     }
 
     const ticketConfig = {
-      nombreNegocio: negocioConfig?.ticket?.header || 'Mi Negocio',
-      mensajeFinal: negocioConfig?.ticket?.footer || 'Gracias',
+      nombreNegocio: remoteTicketConfig?.businessName || 'Mi Negocio',
+      mensajeFinal: remoteTicketConfig?.footerMessage || 'Gracias',
     };
 
     try {
@@ -225,15 +224,7 @@ export default function AdminDeviceSettings() {
     } catch (e: any) {
       Alert.alert('Error de Impresión', e.message);
     }
-  }, [estaConectado, negocioConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
-
-  if (isConfigLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-      </View>
-    );
-  }
+  }, [estaConectado, remoteTicketConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
 
   // ===================== RENDER =====================
 
@@ -305,8 +296,7 @@ export default function AdminDeviceSettings() {
                       Restaurante
                     </Text>
                   </Pressable>
-                  {/* MOSTRADOR OPTION - FEATURE GATED */}
-                  {negocioConfig?.features?.module_venta_crudo !== false && (
+                  {mostradorHabilitado && (
                     <Pressable
                       style={[
                         styles.destinoBtn,
@@ -421,30 +411,20 @@ export default function AdminDeviceSettings() {
             </View>
 
             {/* 4. VISTA PREVIA TICKET */}
-            {configError && (
-              <Text style={styles.errorText}>Error al cargar config: {configError.message}</Text>
-            )}
-            {negocioConfig && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Vista Previa del Ticket</Text>
-                <View style={styles.ticketPreview}>
-                  <Text style={styles.ticketText}>
-                    {negocioConfig?.ticket?.header || 'Nombre del Negocio'}
-                  </Text>
-                  <Text style={styles.ticketText}>--------------------------------</Text>
-                  <Text style={styles.ticketText}>PRODUCTO CANT X PRECIO</Text>
-                  <Text style={styles.ticketText}>--------------------------------</Text>
-                  <Text style={styles.ticketText}>Producto 1 1 x $10.00</Text>
-                  <Text style={styles.ticketText}>Producto 2 2 x $5.00</Text>
-                  <Text style={styles.ticketText}>--------------------------------</Text>
-                  <Text style={styles.ticketText}>TOTAL: $20.00</Text>
-
-                  <Text style={styles.ticketText}>
-                    {negocioConfig?.ticket?.footer || 'Mensaje de Despedida'}
-                  </Text>
-                </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Vista Previa del Ticket</Text>
+              <View style={styles.ticketPreview}>
+                <Text style={styles.ticketText}>Marisquería Autorizada</Text>
+                <Text style={styles.ticketText}>--------------------------------</Text>
+                <Text style={styles.ticketText}>PRODUCTO CANT X PRECIO</Text>
+                <Text style={styles.ticketText}>--------------------------------</Text>
+                <Text style={styles.ticketText}>Producto 1 1 x $10.00</Text>
+                <Text style={styles.ticketText}>Producto 2 2 x $5.00</Text>
+                <Text style={styles.ticketText}>--------------------------------</Text>
+                <Text style={styles.ticketText}>TOTAL: $20.00</Text>
+                <Text style={styles.ticketText}>Gracias por su preferencia</Text>
               </View>
-            )}
+            </View>
           </>
         )}
 

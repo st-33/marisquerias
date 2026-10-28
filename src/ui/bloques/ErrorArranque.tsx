@@ -27,7 +27,6 @@ export function ErrorArranque({ errorInfo, onReintentar, onSalir }: ErrorArranqu
       case 'codigo_expirado':
         return 'lock-closed-outline';
       case 'npb_incompatible':
-      case 'version_obsoleta':
         return 'shield-half-outline';
       case 'codigo_invalido':
       case 'desconocido':

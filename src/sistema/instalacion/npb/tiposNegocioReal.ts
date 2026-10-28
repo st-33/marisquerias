@@ -15,7 +15,7 @@ export interface NegocioReal {
   negocio_id: string;
   categoria_id: string;
   slug_categoria: string;
-  version_npb_origen: number; // versión del NPB con la que nació este negocio
+  ruta_configuracion_secundaria?: string;
   cliente_id: string;
   estado?: 'activo' | 'usado' | 'revocado' | 'expirado' | string;
   db_url_operativa?: string;

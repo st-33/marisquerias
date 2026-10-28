@@ -21,9 +21,13 @@ export type RolesDisponibles = {
   mesero?: RolConfig;
   cocina?: RolConfig;
   admin?: RolConfig;
-  mostrador?: RolConfig; // Para Venta en Crudo / POS
-  inventario?: RolConfig;
+  mostrador?: RolConfig;
+  cajero?: RolConfig;
   repart?: RolConfig;
+  barman?: RolConfig;
+  barista?: RolConfig;
+  parrillero?: RolConfig;
+  empacador?: RolConfig;
 };
 
 export type TipoNegocio = 'restaurante' | 'tienda' | 'hibrido';
@@ -83,10 +87,16 @@ export function useEmpaquetadorRoles(_props?: PropsEmpaquetadorRoles) {
         ruta: RUTAS.ROLES.COCINA,
       },
       mostrador: {
-        habilitado: hasRol('mostrador') || hasCap('mostrador_y_pos'),
+        habilitado: hasRol('mostrador'),
         nombre: 'Venta y Crudo',
         icono: 'cart',
         ruta: RUTAS.ROLES.VENTA_CRUDO,
+      },
+      cajero: {
+        habilitado: hasRol('cajero'),
+        nombre: 'Caja',
+        icono: 'cash',
+        ruta: RUTAS.ROLES.CAJERO,
       },
       admin: {
         habilitado: hasRol('administrador') || hasRol('admin'),
@@ -106,17 +116,35 @@ export function useEmpaquetadorRoles(_props?: PropsEmpaquetadorRoles) {
           tickets_impresion: hasCap('tickets_impresion'),
         },
       },
-      inventario: {
-        habilitado: hasRol('inventario') || hasCap('inventario'),
-        nombre: 'Inventario',
-        icono: 'cube',
-        ruta: RUTAS.ROLES.INVENTARIO,
-      },
       repart: {
-        habilitado: hasRol('repartidor') || hasRol('repart') || hasCap('reparto_logistica'),
-        nombre: 'ADI-Repart',
+        habilitado: hasRol('repartidor') || hasRol('repart'),
+        nombre: 'Repartidor',
         icono: 'bicycle',
         ruta: RUTAS.ROLES.REPARTIDOR,
+      },
+      barman: {
+        habilitado: hasRol('barman'),
+        nombre: 'Barra / Barman',
+        icono: 'wine',
+        ruta: RUTAS.ROLES.BARMAN,
+      },
+      barista: {
+        habilitado: hasRol('barista'),
+        nombre: 'Barista',
+        icono: 'cafe',
+        ruta: RUTAS.ROLES.BARISTA,
+      },
+      parrillero: {
+        habilitado: hasRol('parrillero'),
+        nombre: 'Parrilla',
+        icono: 'bonfire',
+        ruta: RUTAS.ROLES.PARRILLERO,
+      },
+      empacador: {
+        habilitado: hasRol('empacador'),
+        nombre: 'Empaque',
+        icono: 'bag-check',
+        ruta: RUTAS.ROLES.EMPACADOR,
       },
     };
 

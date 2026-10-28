@@ -1,10 +1,7 @@
 import type { Database } from 'firebase/database';
 import { resolverAccessCodeO1 } from '../../vinculacion/resolver-access-code';
-import { cargarNPB } from '../cargarNPB';
 import { encenderCapacidades } from '../encenderCapacidades';
-import { validarCompatibilidadNPB } from '../validarCompatibilidadNPB';
 import { ejecutarArranqueO1 } from '../../useArranqueSistema';
-import type { NegocioPlantillaBase } from '../tiposNPB';
 import { servicioTicketsImpresion } from '../../../../capacidades/tickets_impresion';
 import { useStore } from '../../../store';
 
@@ -42,95 +39,52 @@ jest.mock('firebase/database', () => ({
 
 const dbMock = {} as Database;
 
-describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 00', () => {
-  const npbCanonicoSellado: NegocioPlantillaBase = {
-    categoria_id: '01',
-    slug_categoria: 'marisquerias',
-    version_npb: 1,
-    estado: 'sellado',
-    roles_dispositivo: [
-      { id: 'administrador', pantallas_visibles: ['/_role/admin/dashboard'] },
-      { id: 'mesero', pantallas_visibles: ['/_role/mesero'] },
-      { id: 'cocina', pantallas_visibles: ['/_role/cocina'] },
-      { id: 'cajero', pantallas_visibles: ['/_role/caja'] },
-      { id: 'mostrador', pantallas_visibles: ['/_role/mostrador'] },
-    ],
-    capacidades: [
-      { id: 'menu', configuracion_giro: 'Catálogo de mariscos y bebidas' },
-      { id: 'control_mesas', configuracion_giro: 'Comedor de playa y terraza' },
-      { id: 'comanda_cocina', configuracion_giro: 'Tiempos de barra fría y caliente' },
-      { id: 'mostrador_y_pos', configuracion_giro: 'Venta rápida para llevar' },
-      { id: 'inventario', configuracion_giro: 'Control por kilos y piezas' },
-      { id: 'tickets_impresion', configuracion_giro: 'Impresoras térmicas de cocina y caja' },
-    ],
-    cajones_activos: [
-      'menu',
-      'inventario',
-      'mesas',
-      'mesas_pendientes',
-      'pedidos',
-      'ventas',
-      'tickets',
-      'dispositivos',
-    ],
-    cajones_desactivados_justificacion: {
-      reparto_ajustes: 'no hay reparto a domicilio en este giro',
-    },
-    sellado_por: 'torre_de_control_ecosistema',
-    sellado_en: '2026-10-18T00:00:00Z',
-  };
+describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria sin consultar NPB 00', () => {
+  const rutaNegocio01 = 'comedores_y_servicios_de_mesa/marisquerias/negocio/mar-01';
+  const rutaNegocio02 = 'comedores_y_servicios_de_mesa/marisquerias/negocio/mar-02';
 
   beforeEach(() => {
     for (const key of Object.keys(mockAsyncStorage)) {
       delete mockAsyncStorage[key];
     }
+    useStore.getState().setEstadoEncendido(null);
     mockRtdbStore = {
-      'codigo_de_acceso/TEST123': {
-        negocio_id: 'mar-01',
-        categoria_id: '01',
-        slug_categoria: 'marisquerias',
-        version_npb_origen: 1,
-        cliente_id: 'cli-01',
+      'codigo_de_acceso/TEST123': rutaNegocio01,
+      'codigo_de_acceso/TEST456': rutaNegocio02,
+      [rutaNegocio01]: {
+        id: 'mar-01',
         estado: 'activo',
-        db_url_operativa: 'https://mar-01-operativa.firebaseio.com',
+        url_unidad: 'https://mar-01-operativa.firebaseio.com',
+        capacidades_autorizadas: {
+          menu: true,
+          control_mesas: true,
+          comanda_cocina: true,
+          mostrador_y_pos: true,
+          inventario: true,
+          tickets_impresion: true,
+        },
+        roles_autorizados: ['administrador', 'mesero', 'cocina', 'mostrador', 'cajero'],
       },
-      'codigo_de_acceso/TEST456': {
-        negocio_id: 'mar-02',
-        categoria_id: '01',
-        slug_categoria: 'marisquerias',
-        version_npb_origen: 1,
-        cliente_id: 'cli-02',
+      [rutaNegocio02]: {
+        id: 'mar-02',
         estado: 'revocado',
+        url_unidad: 'https://mar-02-operativa.firebaseio.com',
       },
-      'marisquerias/Negocio principal de categoría': npbCanonicoSellado,
     };
   });
 
-  test('1. Arranque feliz: resuelve código, carga NPB, enciende capacidades y duerme las no declaradas', async () => {
-    // a) Resolver access code
+  test('1. Arranque feliz: resuelve código a ruta, consulta solo al negocio y enciende capacidades autorizadas', async () => {
     const resCodigo = await resolverAccessCodeO1(dbMock, 'TEST123');
     expect(resCodigo.negocio).toMatchObject({
       negocio_id: 'mar-01',
-      categoria_id: '01',
+      categoria_id: 'marisquerias',
       slug_categoria: 'marisquerias',
-      version_npb_origen: 1,
-      cliente_id: 'cli-01',
+      ruta_configuracion_secundaria: rutaNegocio01,
     });
     expect(resCodigo.db_url_operativa).toBe('https://mar-01-operativa.firebaseio.com');
 
-    // b) Cargar NPB
-    const npb = await cargarNPB(
-      dbMock,
-      resCodigo.negocio.slug_categoria,
-      resCodigo.negocio.version_npb_origen
-    );
-    expect(npb.version_npb).toBe(1);
-    expect(npb.estado).toBe('sellado');
+    const estado = encenderCapacidades(resCodigo.negocio);
 
-    // c) Encender capacidades
-    const estado = encenderCapacidades(npb);
-
-    // Validar capacidades activas y dormidas
     expect(estado.capacidades_activas).toEqual([
       'menu',
       'control_mesas',
@@ -145,7 +99,6 @@ describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 
       'metricas_y_cierres',
     ]);
 
-    // Validar roles activos y dormidos
     expect(estado.roles_activos).toEqual([
       'administrador',
       'mesero',
@@ -161,74 +114,53 @@ describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 
       'empacador',
     ]);
 
-    // Validar cajones
     expect(estado.cajones_activos).toContain('menu');
     expect(estado.cajones_activos).toContain('tickets');
-    expect(estado.cajones_dormidos).toEqual(['reparto_ajustes']);
-    expect(estado.justificacion_cajones_desactivados).toEqual({
-      reparto_ajustes: 'no hay reparto a domicilio en este giro',
-    });
+    expect(estado.cajones_dormidos).toContain('reparto_ajustes');
   });
 
-  test('2. Código inválido: rechaza de forma bloqueante y no ejecuta cargarNPB', async () => {
-    const spyCargarNPB = jest.fn();
+  test('2. Código inválido: rechaza de forma bloqueante', async () => {
     await expect(resolverAccessCodeO1(dbMock, 'INVALIDO')).rejects.toThrow();
-    expect(spyCargarNPB).not.toHaveBeenCalled();
   });
 
   test('3. Código revocado: detiene el arranque con error explícito', async () => {
     await expect(resolverAccessCodeO1(dbMock, 'TEST456')).rejects.toThrow(/revocado/i);
   });
 
-  test('4. NPB incompatible: detecta capacidades o roles ausentes y bloquea arranque', () => {
-    const npbConIncompatibilidad: NegocioPlantillaBase = {
-      ...npbCanonicoSellado,
-      capacidades: [
-        ...npbCanonicoSellado.capacidades,
-        { id: 'reservaciones', configuracion_giro: 'Motor de reservaciones' },
-      ],
+  test('4. Capacidad no soportada por la aplicación: detecta faltantes y bloquea arranque', async () => {
+    mockRtdbStore[rutaNegocio01] = {
+      ...mockRtdbStore[rutaNegocio01],
+      capacidades_autorizadas: ['menu', 'reservaciones'],
     };
 
-    const validacion = validarCompatibilidadNPB(npbConIncompatibilidad);
-    expect(validacion.compatible).toBe(false);
-    expect(validacion.faltantes).toEqual(['capacidad:reservaciones']);
-
-    expect(() => {
-      if (!validacion.compatible) {
-        throw new Error(
-          `NPB incompatible con este APK. Faltantes: ${validacion.faltantes.join(', ')}`
-        );
-      }
-    }).toThrow(/NPB incompatible con este APK.*capacidad:reservaciones/);
+    const resultado = await ejecutarArranqueO1(dbMock, 'TEST123');
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) {
+      expect(resultado.errorInfo?.tipo).toBe('npb_incompatible');
+      expect(resultado.errorInfo?.faltantes).toEqual(['capacidad:reservaciones']);
+    }
   });
 
-  test('5. Versión NPB obsoleta: recurre a /historico/{version} o falla bloqueante si no existe', async () => {
-    // Simular que el NPB actual subió a versión 2
-    mockRtdbStore['marisquerias/Negocio principal de categoría'] = {
-      ...npbCanonicoSellado,
-      version_npb: 2,
-    };
+  test('5. Subordinación automática de perfiles a capacidades activas cuando no se fijan roles_permitidos', () => {
+    const estado = encenderCapacidades({
+      negocio_id: 'mar-solo-mesas',
+      capacidades_autorizadas: ['menu', 'control_mesas'],
+    });
 
-    // Caso 5a: No existe en histórico -> falla
-    await expect(cargarNPB(dbMock, 'marisquerias', 1)).rejects.toThrow(
-      /no existe en el histórico/i
-    );
-
-    // Caso 5b: Existe en histórico -> carga versión histórica
-    mockRtdbStore['marisquerias/Negocio principal de categoría/historico/1'] = {
-      ...npbCanonicoSellado,
-      version_npb: 1,
-    };
-
-    const historico = await cargarNPB(dbMock, 'marisquerias', 1);
-    expect(historico.version_npb).toBe(1);
+    // Solo administrador (requiere menu) y mesero (requiere control_mesas) pueden activarse
+    expect(estado.roles_activos).toEqual(['administrador', 'mesero']);
+    expect(estado.roles_dormidos).toContain('cocina');
+    expect(estado.roles_dormidos).toContain('mostrador');
+    expect(estado.roles_dormidos).toContain('repartidor');
   });
 
   test('6. tickets_impresion activo: la capacidad se enciende y el módulo de tickets queda operativo', () => {
-    const estado = encenderCapacidades(npbCanonicoSellado);
+    const estado = encenderCapacidades({
+      negocio_id: 'mar-01',
+      capacidades_autorizadas: ['menu', 'tickets_impresion'],
+    });
     expect(estado.capacidades_activas).toContain('tickets_impresion');
 
-    // Módulo tickets_impresion responde correctamente
     expect(typeof servicioTicketsImpresion.imprimirVenta).toBe('function');
     expect(typeof servicioTicketsImpresion.imprimirComanda).toBe('function');
     expect(typeof servicioTicketsImpresion.imprimirCuenta).toBe('function');
@@ -236,34 +168,22 @@ describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 
     expect(typeof servicioTicketsImpresion.estaListoParaImprimir()).toBe('boolean');
   });
 
-  test('7. Tolerancia a campos extra y ejecución integrada O(1) con persistencia en store', async () => {
-    // Simular que Torre de Control agrega campos adicionales en el NPB
-    const npbConCamposExtra = {
-      ...npbCanonicoSellado,
-      hash_integridad_sha256: 'a1b2c3d4e5f6',
-      metadatos_auditoria: {
-        torre_control_id: 'tc-001',
-        ambiente: 'produccion',
-      },
-    };
-    mockRtdbStore['marisquerias/Negocio principal de categoría'] = npbConCamposExtra;
-
+  test('7. Ejecución integrada O(1) con persistencia en store sin consultar NPB 00', async () => {
     const resultado = await ejecutarArranqueO1(dbMock, 'TEST123');
     expect(resultado.ok).toBe(true);
 
     if (resultado.ok) {
       expect(resultado.negocio.negocio_id).toBe('mar-01');
       expect(resultado.estadoEncendido.capacidades_activas).toContain('tickets_impresion');
-      expect(resultado.requiereSeleccionRol).toBe(true); // Porque hay 5 roles activos
+      expect(resultado.requiereSeleccionRol).toBe(true);
       expect(resultado.rolPorDefecto).toBe('administrador');
 
-      // Validar que el store global refleje el EstadoEncendido
       const estadoEnStore = useStore.getState().estadoEncendido;
       expect(estadoEnStore).not.toBeNull();
       expect(estadoEnStore?.capacidades_activas).toEqual(
         resultado.estadoEncendido.capacidades_activas
       );
-      expect(estadoEnStore?.cajones_dormidos).toEqual(['reparto_ajustes']);
+      expect(estadoEnStore?.cajones_dormidos).toContain('reparto_ajustes');
     }
   });
 });

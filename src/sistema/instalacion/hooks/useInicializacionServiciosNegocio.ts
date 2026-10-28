@@ -12,7 +12,11 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
   const initializedNegocioRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (estadoInstalacion !== 'VINCULADA' || !rutaNegocio || !validar_ruta_negocio(rutaNegocio)) {
+    if (
+      estadoInstalacion !== 'VINCULADA' ||
+      typeof rutaNegocio !== 'string' ||
+      !validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })
+    ) {
       initializedNegocioRef.current = null;
       return;
     }

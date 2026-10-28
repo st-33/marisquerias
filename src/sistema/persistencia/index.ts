@@ -82,9 +82,6 @@ export type {
   HubConfig,
 } from './dispositivos.repositorio';
 
-export { RepositorioNegocio, NegocioRepository } from './negocio.repositorio';
-export type { Caracteristicas, Features } from './negocio.repositorio';
-
 export { RepositorioAjustesReparto, RepartoAjustesRepository } from './reparto-ajustes.repositorio';
 export type { AjustesReparto } from './reparto-ajustes.repositorio';
 

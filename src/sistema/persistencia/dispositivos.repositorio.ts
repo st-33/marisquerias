@@ -8,6 +8,7 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref, set, update } from 'firebase/database';
 import type { PrintPolicies, PrinterRef } from '@/sistema/impresion/fierros/contratos/tipos';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
+import { rutaDispositivos, rutaTickets } from '../rtdb/rutas/ruta_negocio';
 
 /**
  * Configuración de formato de ticket
@@ -47,19 +48,19 @@ export class RepositorioDispositivos {
   }
 
   private getPoliciesPath() {
-    return `${this.rutaNegocio}/impresion/politicas`;
+    return rutaDispositivos(this.rutaNegocio, 'impresion/politicas');
   }
 
   private getDefaultPrinterPath() {
-    return `${this.rutaNegocio}/impresion/rutas/defaultPrinter`;
+    return rutaDispositivos(this.rutaNegocio, 'impresion/rutas/defaultPrinter');
   }
 
   private getTestMessagePath() {
-    return `${this.rutaNegocio}/impresion/destinos/testMessage`;
+    return rutaDispositivos(this.rutaNegocio, 'impresion/destinos/testMessage');
   }
 
   private getConfiguracionTicketPath() {
-    return `${this.rutaNegocio}/ajustes/ticket`;
+    return rutaTickets(this.rutaNegocio, 'configuracion');
   }
 
   /**
@@ -143,7 +144,7 @@ export class RepositorioDispositivos {
   }
 
   private getConfiguracionHubPath() {
-    return `${this.rutaNegocio}/impresion/hubs`;
+    return rutaDispositivos(this.rutaNegocio, 'impresion/hubs');
   }
 
   /**

@@ -199,25 +199,6 @@ export async function cargarEstadoPersistido() {
       const sesion = JSON.parse(rawSesion);
       await store.setSession(sesion);
       logger.info('STORE', '✅ Sesión persistida cargada en store central');
-
-      // Validar vinculación del dispositivo en el arranque
-      try {
-        const { EnsambladorInstalacion } =
-          await import('../instalacion/ensambladores/EnsambladorInstalacion');
-        const db = getRtdb();
-        const ensamblador = new EnsambladorInstalacion(db);
-        const dispositivo = await ensamblador.obtenerVinculacionLocal();
-
-        if (dispositivo) {
-          await ensamblador.enviarHeartbeat(dispositivo);
-          logger.info('STORE', '✅ Dispositivo reconocido y validado remotamente en arranque');
-        } else {
-          logger.warn('STORE', '⚠️ Dispositivo no vinculado o bloqueado. Limpiando sesión.');
-          await store.clearSession();
-        }
-      } catch (deviceError) {
-        logger.error('STORE', '❌ Error al validar dispositivo en arranque', deviceError as Error);
-      }
     }
     const featuresKey = getNegocioStorageKey(store.sesion.rutaNegocio, 'negocio', 'features');
     const rawFeatures =
@@ -251,12 +232,12 @@ export async function limpiarEstadoPersistido() {
  * Centraliza TODAS las suscripciones a Firebase siguiendo el Dogma V2.
  */
 export function useAppListeners(isAppReady: boolean) {
-  const rutaNegocio = useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio);
+  const rutaNegocio = useStore((s) => s.sesion.ruta_negocio ?? s.sesion.rutaNegocio);
   const negocioId = useStore((s) => s.sesion.negocio_id || s.sesion.negocioId);
   const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!isAppReady || !rutaNegocio) {
+    if (!isAppReady || !negocioId || typeof rutaNegocio !== 'string') {
       cleanupRef.current?.();
       cleanupRef.current = null;
       return;

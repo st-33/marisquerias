@@ -7,24 +7,24 @@ jest.mock('firebase/database', () => ({
   get: jest.fn(),
 }));
 
-describe('resolverAccessCode — Fuente de verdad RTDB', () => {
+describe('resolverAccessCode — Contrato Definitivo Unidad Secundaria', () => {
   const dbMock = {} as unknown as Database;
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('resolverNegocioPorCodigo — Flujo Normativo Torre de Control', () => {
-    it('resuelve correctamente la ruta del negocio en RTDB', async () => {
+  describe('resolverNegocioPorCodigo — Índice plano de código a ruta', () => {
+    it('resuelve correctamente la ruta canónica de 4 segmentos del negocio en RTDB', async () => {
       (get as jest.Mock).mockResolvedValueOnce({
         exists: () => true,
-        val: () => 'Marisquerias/mpl',
+        val: () => 'comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-01',
       });
 
-      const res = await resolverNegocioPorCodigo('MPL-01', dbMock);
-      expect(res).toBe('Marisquerias/mpl');
+      const res = await resolverNegocioPorCodigo('PUERTO-265316', dbMock);
+      expect(res).toBe('comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-01');
       expect(get).toHaveBeenCalledWith(
-        expect.objectContaining({ path: 'codigo_de_acceso/MPL-01' })
+        expect.objectContaining({ path: 'codigo_de_acceso/PUERTO-265316' })
       );
     });
 
@@ -42,213 +42,115 @@ describe('resolverAccessCode — Fuente de verdad RTDB', () => {
       expect(res).toBeNull();
       expect(get).not.toHaveBeenCalled();
     });
-  });
 
-  // ── 1. Los cuatro códigos reales son resueltos por RTDB ──────────────────────
-  describe('Prueba 1 — Los cuatro códigos reales delegan a RTDB', () => {
-    const casos = [
-      { code: 'ACC-ALIM-MARISCOS', path: 'marisquerias/__plantilla_base' },
-      { code: 'ARRECIFE-24', path: 'marisquerias/el-arrecife' },
-      { code: 'PERLA-24', path: 'marisquerias/marisqueria-la-perla-del-pueblo' },
-      { code: 'PUERTO-24', path: 'marisquerias/marisqueria-puerto-libres' },
-    ];
-
-    it.each(casos)('$code -> $path (desde mock RTDB)', async ({ code, path }) => {
+    it('rechaza valores que no sean cadena plana en codigo_de_acceso', async () => {
       (get as jest.Mock).mockResolvedValueOnce({
         exists: () => true,
-        val: () => ({ rutaNegocio: path, estado: 'activo' }),
+        val: () => ({ ruta: 'comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-01' }),
       });
 
-      const result = await resolverAccessCode(dbMock, code);
+      await expect(resolverNegocioPorCodigo('OBJETO-INVALIDO', dbMock)).rejects.toThrow(
+        'Estructura de ruta inválida o incompleta'
+      );
+    });
+  });
 
-      expect(result.rutaNegocio).toBe(path);
+  describe('Flujo completo: /codigo_de_acceso/{CODIGO} -> ruta -> configuración del negocio', () => {
+    it('resuelve índice en cadena y obtiene capacidades_autorizadas y url_unidad sin requerir version_npb_origen', async () => {
+      const rutaSecundaria = 'comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-01';
+      (get as jest.Mock)
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => rutaSecundaria,
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => ({
+            id: 'marisquerias-01',
+            estado: 'activo',
+            url_unidad: 'https://marisquerias-01-operativa.firebaseio.com',
+            capacidades_autorizadas: {
+              menu: true,
+              control_mesas: true,
+              inventario: false,
+            },
+          }),
+        });
+
+      const result = await resolverAccessCode(dbMock, 'PUERTO-265316');
+
+      expect(result.rutaNegocio).toBe(rutaSecundaria);
       expect(result.categoriaId).toBe('marisquerias');
-      expect(result.estado).toBe('activo');
-      // Confirmar que get fue llamado con la ruta del código — no hubo mapa local
-      expect(get).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  // ── 2. Mutabilidad: si RTDB devuelve otra ruta válida, el resultado la sigue ─
-  it('Prueba 2 — Mutabilidad: el resultado sigue exactamente la respuesta remota', async () => {
-    // El mock devuelve una ruta completamente distinta a los ejemplos conocidos
-    const rutaAlternativa = 'taquerias/taqueria-nueva-esperanza';
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({ rutaNegocio: rutaAlternativa, estado: 'activo' }),
+      expect(result.negocioId).toBe('marisquerias-01');
+      expect(result.db_url_operativa).toBe('https://marisquerias-01-operativa.firebaseio.com');
+      expect(result.negocio.capacidades_autorizadas).toEqual(['menu', 'control_mesas']);
+      expect(get).toHaveBeenCalledTimes(2);
     });
 
-    const result = await resolverAccessCode(dbMock, 'PERLA-24');
-
-    // El resultado es la ruta del mock, no un mapa local de PERLA-24
-    expect(result.rutaNegocio).toBe(rutaAlternativa);
-    expect(result.categoriaId).toBe('taquerias');
-    expect(result.negocioId).toBe('taqueria-nueva-esperanza');
-  });
-
-  // ── 3. Código vacío ───────────────────────────────────────────────────────────
-  it('Prueba 3 — Código vacío falla antes de consultar RTDB', async () => {
-    await expect(resolverAccessCode(dbMock, '')).rejects.toThrow(
-      'El código de acceso no puede estar vacío'
-    );
-    expect(get).not.toHaveBeenCalled();
-  });
-
-  // ── 4. Código inexistente en RTDB ────────────────────────────────────────────
-  it('Prueba 4 — Código inexistente en RTDB falla sin crear sesión', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({ exists: () => false });
-
-    await expect(resolverAccessCode(dbMock, 'FANTASMA-99')).rejects.toThrow(
-      'Código de acceso no encontrado o inválido'
-    );
-  });
-
-  // ── 5. Ruta remota malformada ─────────────────────────────────────────────────
-  it('Prueba 5 — Ruta remota malformada falla sin crear sesión', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({ rutaNegocio: 'solo-un-segmento', estado: 'activo' }),
+    it('falla antes de consultar RTDB cuando el código está vacío', async () => {
+      await expect(resolverAccessCode(dbMock, '')).rejects.toThrow(
+        'El código de acceso no puede estar vacío'
+      );
+      expect(get).not.toHaveBeenCalled();
     });
 
-    await expect(resolverAccessCode(dbMock, 'MAL-01')).rejects.toThrow(
-      'Estructura de ruta inválida o incompleta'
-    );
-  });
+    it('falla cuando el código no existe en /codigo_de_acceso', async () => {
+      (get as jest.Mock).mockResolvedValueOnce({ exists: () => false });
 
-  it('Prueba 5b — Ruta remota de tres segmentos es parseada correctamente', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => 'nicho/categoria/negocio',
+      await expect(resolverAccessCode(dbMock, 'FANTASMA-99')).rejects.toThrow(
+        'Código de acceso no encontrado o inválido'
+      );
     });
 
-    const result = await resolverAccessCode(dbMock, 'GOOD-02');
-    expect(result.categoriaId).toBe('categoria');
-    expect(result.negocioId).toBe('negocio');
-    expect(result.contextoPath).toBe('nicho');
-  });
-
-  it('Prueba 5c — Ruta legacy falla sin crear sesión', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => 'restaurantero/mi-negocio',
-    });
-
-    await expect(resolverAccessCode(dbMock, 'LEGACY-01')).rejects.toThrow(
-      'El código de acceso apunta a una ruta obsoleta'
-    );
-  });
-
-  // ── 6. Sesión válida persiste datos coherentes ────────────────────────────────
-  it('Prueba 6 — Sesión válida contiene rutaNegocio, negocioId y categoriaId coherentes', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({
-        rutaNegocio: 'marisquerias/marisqueria-la-perla-del-pueblo',
-        estado: 'activo',
-        maxUsos: 5,
-        usosActuales: 1,
-      }),
-    });
-
-    const result = await resolverAccessCode(dbMock, 'PERLA-24');
-
-    expect(result.rutaNegocio).toBe('marisquerias/marisqueria-la-perla-del-pueblo');
-    expect(result.negocioId).toBe('marisqueria-la-perla-del-pueblo');
-    expect(result.categoriaId).toBe('marisquerias');
-    expect(result.nichoId).toBe('marisquerias');
-    expect(result.negocioBaseId).toBe('marisqueria-la-perla-del-pueblo');
-    expect(result.estado).toBe('activo');
-    expect(result.usosActuales).toBe(1);
-  });
-
-  // ── 7. Aislamiento: dos códigos diferentes producen sesiones diferentes ───────
-  it('Prueba 7 — Dos códigos distintos producen rutas distintas y no se cruzan', async () => {
-    (get as jest.Mock)
-      .mockResolvedValueOnce({
+    it('rechaza rutas malformadas o legacy de menos de 4 segmentos', async () => {
+      (get as jest.Mock).mockResolvedValueOnce({
         exists: () => true,
-        val: () => ({ rutaNegocio: 'marisquerias/el-arrecife', estado: 'activo' }),
-      })
-      .mockResolvedValueOnce({
-        exists: () => true,
-        val: () => ({ rutaNegocio: 'marisquerias/marisqueria-puerto-libres', estado: 'activo' }),
+        val: () => 'marisquerias/puerto-libres',
       });
 
-    const resultA = await resolverAccessCode(dbMock, 'ARRECIFE-24');
-    const resultB = await resolverAccessCode(dbMock, 'PUERTO-24');
-
-    expect(resultA.rutaNegocio).toBe('marisquerias/el-arrecife');
-    expect(resultB.rutaNegocio).toBe('marisquerias/marisqueria-puerto-libres');
-    expect(resultA.negocioId).not.toBe(resultB.negocioId);
-    expect(resultA.rutaNegocio).not.toBe(resultB.rutaNegocio);
-  });
-
-  // ── 8. Sin hardcodeos: get siempre es invocado para cualquier código ──────────
-  it('Prueba 8 — Para cualquier código, siempre se consulta RTDB (get invocado)', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({ rutaNegocio: 'marisquerias/el-arrecife', estado: 'activo' }),
+      await expect(resolverAccessCode(dbMock, 'LEGACY-01')).rejects.toThrow(
+        'Estructura de ruta inválida o incompleta'
+      );
     });
 
-    await resolverAccessCode(dbMock, 'ARRECIFE-24');
+    it('rechaza negocio revocado o suspendido en su configuración secundaria', async () => {
+      const rutaSecundaria = 'comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-02';
+      (get as jest.Mock)
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => rutaSecundaria,
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => ({
+            id: 'marisquerias-02',
+            estado: 'revocado',
+            url_unidad: 'https://marisquerias-02-operativa.firebaseio.com',
+          }),
+        });
 
-    // Si existiera un mapa local, get no sería llamado para este código
-    expect(get).toHaveBeenCalledTimes(1);
-    expect(get).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'codigo_de_acceso/ARRECIFE-24' })
-    );
-  });
-
-  // ── Validaciones de estado: conservadas ──────────────────────────────────────
-  it('rechaza código revocado', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({ rutaNegocio: 'marisquerias/el-arrecife', estado: 'revocado' }),
-    });
-    await expect(resolverAccessCode(dbMock, 'REVOCADO-01')).rejects.toThrow('revocado');
-  });
-
-  it('rechaza código expirado por estado', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({ rutaNegocio: 'marisquerias/el-arrecife', estado: 'expirado' }),
-    });
-    await expect(resolverAccessCode(dbMock, 'EXPIRADO-01')).rejects.toThrow('expirado');
-  });
-
-  it('rechaza código expirado por timestamp', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({
-        rutaNegocio: 'marisquerias/el-arrecife',
-        estado: 'activo',
-        expiraEn: Date.now() - 1000,
-      }),
-    });
-    await expect(resolverAccessCode(dbMock, 'VIEJO-01')).rejects.toThrow('temporalmente');
-  });
-
-  it('rechaza código sin usos disponibles', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => ({
-        rutaNegocio: 'marisquerias/el-arrecife',
-        estado: 'activo',
-        maxUsos: 3,
-        usosActuales: 3,
-      }),
-    });
-    await expect(resolverAccessCode(dbMock, 'AGOTADO-01')).rejects.toThrow('agotado');
-  });
-
-  it('acepta string plano como rutaNegocio desde RTDB', async () => {
-    (get as jest.Mock).mockResolvedValueOnce({
-      exists: () => true,
-      val: () => 'marisquerias/puerto-libres',
+      await expect(resolverAccessCode(dbMock, 'REVOCADO-01')).rejects.toThrow(/revocado/i);
     });
 
-    const result = await resolverAccessCode(dbMock, 'CUALQUIER-CODIGO');
+    it('rechaza negocio real sin url_unidad válida', async () => {
+      const rutaSecundaria = 'comedores_y_servicios_de_mesa/marisquerias/negocio/marisquerias-03';
+      (get as jest.Mock)
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => rutaSecundaria,
+        })
+        .mockResolvedValueOnce({
+          exists: () => true,
+          val: () => ({
+            id: 'marisquerias-03',
+            estado: 'activo',
+            url_unidad: '',
+          }),
+        });
 
-    expect(result.rutaNegocio).toBe('marisquerias/puerto-libres');
-    expect(result.negocioId).toBe('puerto-libres');
+      await expect(resolverAccessCode(dbMock, 'SIN-URL-01')).rejects.toThrow(
+        'El negocio no tiene una Unidad Operativa válida'
+      );
+    });
   });
 });

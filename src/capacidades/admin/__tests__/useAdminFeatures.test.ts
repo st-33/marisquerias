@@ -14,9 +14,6 @@ jest.mock('../../../sistema/store', () => ({
 jest.mock('../../../sistema/firebase', () => ({
   getRtdb: jest.fn(),
 }));
-jest.mock('../../../sistema/persistencia/negocio.repositorio', () => ({
-  NegocioRepository: jest.fn(),
-}));
 
 describe('normalizarFeaturesAdmin', () => {
   test('el flag padre admin=false bloquea todos los módulos administrativos', () => {

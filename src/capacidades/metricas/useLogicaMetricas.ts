@@ -14,7 +14,6 @@
 
 import type { Database } from 'firebase/database';
 import { useState } from 'react';
-import { NegocioRepository } from '../../sistema/persistencia';
 import {
   useFuncionalidadesAdmin as useAdminFeatures,
   type NegocioFeatures,
@@ -49,7 +48,7 @@ export type MetricasPanel = {
  * el cálculo de métricas y el filtro de período en una sola interfaz.
  */
 export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegocio: string }) {
-  // Carga de feature flags (responsabilidad compartida de la capacidad admin)
+  // Carga de feature flags gobernados por Ecosistema
   const { features, loading: featuresLoading } = useAdminFeatures({ db, rutaNegocio });
 
   // Filtro de período (estado local del módulo)
@@ -61,11 +60,11 @@ export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegoc
 
   const loading = featuresLoading || metricsLoading;
 
-  // Acción para activar o desactivar un flag del negocio
-  const toggleFeature = async (feature: keyof NegocioFeatures, enabled: boolean) => {
-    const negocioRepo = new NegocioRepository(db, rutaNegocio);
-    const featureKey = String(feature).replace('admin_', '');
-    await negocioRepo.actualizarCaracteristicasAdmin({ [featureKey]: enabled } as any);
+  // Las capacidades son gobernadas exclusivamente por Ecosistema (Regla 8)
+  const toggleFeature = async (_feature: keyof NegocioFeatures, _enabled: boolean) => {
+    throw new Error(
+      'Las capacidades del negocio son gobernadas exclusivamente desde Ecosistema (Torre de Control).'
+    );
   };
 
   const setDateFilterAction = (filter: DateFilter) => {

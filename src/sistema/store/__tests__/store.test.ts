@@ -68,12 +68,6 @@ jest.mock('../../seguridad', () => ({
   },
 }));
 
-// Mock de EnsambladorInstalacion para logout
-jest.mock('../../instalacion', () => ({
-  EnsambladorInstalacion: jest.fn().mockImplementation(() => ({
-    desvincularLocalmente: jest.fn().mockResolvedValue(undefined),
-  })),
-}));
 
 describe('Store Centralizado Unificado ADI - Pruebas de Carga y Persistencia', () => {
   beforeEach(async () => {

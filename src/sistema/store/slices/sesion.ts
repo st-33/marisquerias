@@ -32,14 +32,6 @@ export const ESTADO_SESION_INICIAL: ContratoSesion = {
 };
 
 const getStorage = () => {
-  if (typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined') {
-    return {
-      setItem: async (k: string, v: string) => sessionStorage.setItem(k, v),
-      getItem: async (k: string) => sessionStorage.getItem(k),
-      removeItem: async (k: string) => sessionStorage.removeItem(k),
-      multiRemove: async (keys: string[]) => keys.forEach((k) => sessionStorage.removeItem(k)),
-    };
-  }
   return AsyncStorage;
 };
 
@@ -50,8 +42,11 @@ export function getNegocioStorageKey(
   modulo: string,
   clave: string
 ): string | null {
-  if (!rutaNegocio || !validar_ruta_negocio(rutaNegocio)) return null;
-  return `@${rutaNegocio}:${modulo}:${clave}`;
+  if (typeof rutaNegocio !== 'string' || !validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
+    return null;
+  }
+  const scope = rutaNegocio.trim() || 'raiz';
+  return `@${scope}:${modulo}:${clave}`;
 }
 
 export interface AccionesSesion {
@@ -75,8 +70,13 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
   modulosBloqueados: [],
 
   async setSession(sesion) {
-    const resolvedRutaNegocio = sesion.ruta_negocio || sesion.rutaNegocio || null;
-    const previousRutaNegocio = get().sesion.ruta_negocio || get().sesion.rutaNegocio;
+    const resolvedRutaNegocio =
+      sesion.ruta_negocio !== undefined && sesion.ruta_negocio !== null
+        ? sesion.ruta_negocio
+        : sesion.rutaNegocio !== undefined && sesion.rutaNegocio !== null
+          ? sesion.rutaNegocio
+          : null;
+    const previousRutaNegocio = get().sesion.ruta_negocio ?? get().sesion.rutaNegocio;
     if (previousRutaNegocio !== resolvedRutaNegocio) {
       logger.info('STORE_SESION', 'Contexto negocio cambiado', {
         anterior: previousRutaNegocio,
@@ -132,7 +132,10 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
         })
       );
 
-      if (newSesion.ruta_negocio && validar_ruta_negocio(newSesion.ruta_negocio)) {
+      const rutaValida =
+        typeof newSesion.ruta_negocio === 'string' &&
+        validar_ruta_negocio(newSesion.ruta_negocio, { permitirRaiz: true });
+      if (Boolean(newSesion.negocio_id || newSesion.negocioId) && rutaValida) {
         set({ estadoInstalacion: 'VINCULADA' });
       } else {
         set({ estadoInstalacion: 'ERROR' });

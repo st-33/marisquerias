@@ -1,7 +1,7 @@
 /**
  * 🚨 CLASIFICADOR Y DEFINICIÓN DE ERRORES DE ARRANQUE O(1)
  *
- * Clasifica y mapea las 7 variantes de error canónicas sin exponer
+ * Clasifica y mapea las variantes de error canónicas sin exponer
  * datos sensibles (tokens ni URLs operativas).
  */
 
@@ -13,7 +13,6 @@ export type TipoErrorArranque =
   | 'codigo_expirado'
   | 'sin_conexion'
   | 'npb_incompatible'
-  | 'version_obsoleta'
   | 'desconocido';
 
 export interface InfoErrorArranque {
@@ -22,7 +21,6 @@ export interface InfoErrorArranque {
   permiteReintentar: boolean;
   accionTexto: 'Reintentar' | 'Salir';
   faltantes?: string[];
-  version?: number;
   detalleTecnico?: string;
 }
 
@@ -40,7 +38,7 @@ export function sanitizarCodigo(codigo?: string): string {
 
 /**
  * Analiza un error arrojado durante la vinculación/arranque y lo clasifica
- * en una de las 7 variantes canónicas estipuladas.
+ * en una de las variantes canónicas estipuladas.
  */
 export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): InfoErrorArranque {
   const rawMsg = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
@@ -49,8 +47,8 @@ export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): 
 
   let info: InfoErrorArranque;
 
-  // 1. Código revocado
-  if (msgLower.includes('revocado')) {
+  // 1. Código revocado o negocio suspendido
+  if (msgLower.includes('revocado') || msgLower.includes('suspendido')) {
     info = {
       tipo: 'codigo_revocado',
       mensaje: 'Este código fue revocado. Contacta a tu especialista para uno nuevo.',
@@ -93,7 +91,7 @@ export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): 
       detalleTecnico,
     };
   }
-  // 4. NPB incompatible (faltantes de capacidades, roles o cajones)
+  // 4. Incompatibilidad de capacidades
   else if (msgLower.includes('incompatible') || msgLower.includes('faltantes')) {
     let faltantes: string[] = [];
     const match = rawMsg.match(/faltantes:\s*(.+)$/i);
@@ -111,30 +109,7 @@ export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): 
       detalleTecnico,
     };
   }
-  // 5. Versión NPB obsoleta sin histórico
-  else if (
-    msgLower.includes('versión') ||
-    msgLower.includes('version') ||
-    msgLower.includes('histórico') ||
-    msgLower.includes('historico')
-  ) {
-    let versionNum: number | undefined;
-    const vMatch = rawMsg.match(/(?:solicitada\s*\(|v(?:ersión\s*)?|versión\s+)(\d+)/i);
-    if (vMatch && vMatch[1]) {
-      versionNum = parseInt(vMatch[1], 10);
-    }
-    info = {
-      tipo: 'version_obsoleta',
-      mensaje: `La versión del negocio (v${
-        versionNum ?? 'X'
-      }) no está disponible en el servidor. Contacta soporte.`,
-      permiteReintentar: false,
-      accionTexto: 'Salir',
-      version: versionNum,
-      detalleTecnico,
-    };
-  }
-  // 6. Código inválido o inexistente
+  // 5. Código inválido o inexistente
   else if (
     msgLower.includes('no existe') ||
     msgLower.includes('inexistente') ||
@@ -152,7 +127,7 @@ export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): 
       detalleTecnico,
     };
   }
-  // 7. Error desconocido
+  // 6. Error desconocido
   else {
     info = {
       tipo: 'desconocido',
@@ -163,7 +138,6 @@ export function clasificarErrorArranque(error: unknown, codigoAcceso?: string): 
     };
   }
 
-  // Log estructurado (sin exponer URLs operativas ni tokens)
   logger.error(
     'ARRANQUE_O1',
     `Fallo clasificado: ${info.tipo}`,

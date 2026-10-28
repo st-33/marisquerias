@@ -22,19 +22,35 @@ import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store'
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
 import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
-import { ProveedorConfiguracionNegocio } from '../src/sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useInicializacionServiciosNegocio } from '../src/sistema/instalacion/hooks/useInicializacionServiciosNegocio';
 import { useAdminFeatures } from '../src/capacidades/admin';
 import { useSincronizarPedidosLogistica } from '../src/capacidades/logistica';
 import { getRtdb } from '../src/sistema/firebase';
+import type { CapacidadCanonica } from '../src/sistema/instalacion/npb/tiposNPB';
+import type { RolDispositivoCanonico } from '../src/negocio/roles/catalogoRoles';
 
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
 const PUBLIC_ROUTES = ['/'];
 
-const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
-  '/_role/venta-crudo': { generic: 'venta_crudo' },
+const ROUTE_FEATURES: Record<
+  string,
+  {
+    capacidad?: CapacidadCanonica;
+    rol?: RolDispositivoCanonico;
+    admin?: string[];
+  }
+> = {
+  '/_role/venta-crudo': { capacidad: 'mostrador_y_pos', rol: 'mostrador' },
+  '/_role/caja': { capacidad: 'mostrador_y_pos', rol: 'cajero' },
+  '/_role/mesero': { capacidad: 'control_mesas', rol: 'mesero' },
+  '/_role/cocina': { capacidad: 'comanda_cocina', rol: 'cocina' },
+  '/_role/repartidor': { capacidad: 'reparto_logistica', rol: 'repartidor' },
+  '/_role/barman': { capacidad: 'comanda_cocina', rol: 'barman' },
+  '/_role/barista': { capacidad: 'comanda_cocina', rol: 'barista' },
+  '/_role/parrillero': { capacidad: 'comanda_cocina', rol: 'parrillero' },
+  '/_role/empacador': { capacidad: 'comanda_cocina', rol: 'empacador' },
   '/_role/admin/venta-crudo': {
     admin: ['admin_mostrador', 'module_venta_crudo'],
   },
@@ -44,8 +60,6 @@ const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/admin/mesas': { admin: ['admin_tables'] },
   '/_role/admin/dispositivos': { admin: ['admin_devices'] },
   '/_role/admin/reparto': { admin: ['admin_repart'] },
-  '/_role/mesero': { generic: 'restaurante.mesas' },
-  '/_role/cocina': { generic: 'restaurante.kds' },
 };
 
 export default function RootLayout() {
@@ -77,7 +91,7 @@ export default function RootLayout() {
 
   const estadoEncendido = useStore((state) => state.estadoEncendido);
 
-  // 🛡️ Guardia de Navegación de la Fábrica en Runtime (Fase 3)
+  // 🛡️ Guardia de Navegación de Capacidades y Perfiles en Runtime
   useEffect(() => {
     if (!isReady) return;
 
@@ -88,21 +102,19 @@ export default function RootLayout() {
 
       const caps =
         estadoEncendido?.activos?.capacidades || estadoEncendido?.capacidades_activas || [];
+      const roles =
+        estadoEncendido?.activos?.roles || estadoEncendido?.roles_activos || [];
 
-      let isGenericEnabled = true;
-      if (requirement.generic === 'restaurante.mesas') {
-        isGenericEnabled = !estadoEncendido || caps.includes('control_mesas');
-      } else if (requirement.generic === 'restaurante.kds') {
-        isGenericEnabled = !estadoEncendido || caps.includes('comanda_cocina');
-      } else if (requirement.generic === 'venta_crudo') {
-        isGenericEnabled = !estadoEncendido || caps.includes('mostrador_y_pos');
-      }
+      const cumpleCapacidad =
+        !requirement.capacidad || !estadoEncendido || caps.includes(requirement.capacidad);
+      const cumpleRol =
+        !requirement.rol || !estadoEncendido || roles.includes(requirement.rol);
 
       const isEnabled = requirement.admin
         ? requirement.admin.every(
             (feature) => (adminFeatures as Record<string, boolean>)[feature] === true
           )
-        : isGenericEnabled;
+        : cumpleCapacidad && cumpleRol;
 
       if (!isEnabled) {
         logger.warn(
@@ -183,37 +195,35 @@ function RootLayoutContent({
 
   return (
     <ProveedorFierros>
-      <ProveedorConfiguracionNegocio>
-        <GestorHubGlobal rutaNegocio={rutaNegocio} />
+      <GestorHubGlobal rutaNegocio={rutaNegocio} />
 
-        <GestureHandlerRootView
-          style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
-        >
-          <ProveedorAudioNotificaciones>
-            <View style={{ flex: 1 }}>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: Platform.OS === 'web' ? 'none' : 'fade',
-                  animationDuration: 240,
-                  contentStyle: { backgroundColor: theme.colors.background },
-                }}
-              >
-                <Stack.Screen name="index" options={{ title: 'Inicio' }} />
-                <Stack.Screen name="(auth)/access" />
-                <Stack.Screen name="_role/roles" />
-                <Stack.Screen name="_role/admin/dashboard" />
-                <Stack.Screen name="_role/venta-crudo" />
-              </Stack>
-              <GlobalFabSlot />
-              <RouteTransitionOverlay
-                pathname={pathname}
-                backgroundColor={theme.colors.background}
-              />
-            </View>
-          </ProveedorAudioNotificaciones>
-        </GestureHandlerRootView>
-      </ProveedorConfiguracionNegocio>
+      <GestureHandlerRootView
+        style={{ flex: 1, backgroundColor: theme.colors.background, minHeight: '100%' }}
+      >
+        <ProveedorAudioNotificaciones>
+          <View style={{ flex: 1 }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: Platform.OS === 'web' ? 'none' : 'fade',
+                animationDuration: 240,
+                contentStyle: { backgroundColor: theme.colors.background },
+              }}
+            >
+              <Stack.Screen name="index" options={{ title: 'Inicio' }} />
+              <Stack.Screen name="(auth)/access" />
+              <Stack.Screen name="_role/roles" />
+              <Stack.Screen name="_role/admin/dashboard" />
+              <Stack.Screen name="_role/venta-crudo" />
+            </Stack>
+            <GlobalFabSlot />
+            <RouteTransitionOverlay
+              pathname={pathname}
+              backgroundColor={theme.colors.background}
+            />
+          </View>
+        </ProveedorAudioNotificaciones>
+      </GestureHandlerRootView>
     </ProveedorFierros>
   );
 }

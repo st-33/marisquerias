@@ -17,7 +17,6 @@ import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionO
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
-import { useConfiguracionNegocio } from '../../sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useConfiguracionCaja as usePosConfig } from '../mostrador/useConfiguracionCaja';
 
 function stripUndefinedDeep<T>(input: T): T {
@@ -62,7 +61,6 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     return getRtdb(ds?.operacionUrl || undefined);
   }, [props?.db, ds?.operacionUrl]);
 
-  useConfiguracionNegocio();
   const { config: posConfig, loading: configLoading } = usePosConfig(db, rutaNegocio);
 
   useEffect(() => {

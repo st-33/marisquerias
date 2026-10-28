@@ -16,8 +16,7 @@ import { logger } from '../../monitoreo';
 export const CLAVES_SESION_O1 = {
   NEGOCIO_ID: '@sesion:negocio_id',
   SLUG_CATEGORIA: '@sesion:slug_categoria',
-  RUTA_NPB: '@sesion:ruta_npb',
-  VERSION_NPB_ORIGEN: '@sesion:version_npb_origen',
+  RUTA_CONFIGURACION_SECUNDARIA: '@sesion:ruta_configuracion_secundaria',
   CODIGO_ACCESO_HASH: '@sesion:codigo_acceso_hash',
   ROL_ACTIVO: '@sesion:rol_activo',
   TIMESTAMP_ARRANQUE: '@sesion:timestamp_arranque',
@@ -45,8 +44,7 @@ export function hashCodigoAcceso(codigo: string): string {
 export interface DatosSesionO1 {
   negocio_id: string;
   slug_categoria: string;
-  ruta_npb?: string;
-  version_npb_origen: number;
+  ruta_configuracion_secundaria?: string;
   codigo_acceso_hash: string;
   rol_activo: string | null;
   timestamp_arranque: number;
@@ -66,8 +64,7 @@ export interface ResultadoLecturaSesionO1 {
 export interface GuardarSesionO1Params {
   negocio_id: string;
   slug_categoria: string;
-  ruta_npb?: string;
-  version_npb_origen: number;
+  ruta_configuracion_secundaria?: string;
   codigo_acceso: string;
   rol_activo: string | null;
   estadoEncendido: EstadoEncendido;
@@ -88,8 +85,10 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
   const pares: [string, string][] = [
     [CLAVES_SESION_O1.NEGOCIO_ID, params.negocio_id],
     [CLAVES_SESION_O1.SLUG_CATEGORIA, params.slug_categoria],
-    [CLAVES_SESION_O1.RUTA_NPB, params.ruta_npb || ''],
-    [CLAVES_SESION_O1.VERSION_NPB_ORIGEN, String(params.version_npb_origen)],
+    [
+      CLAVES_SESION_O1.RUTA_CONFIGURACION_SECUNDARIA,
+      params.ruta_configuracion_secundaria || '',
+    ],
     [CLAVES_SESION_O1.CODIGO_ACCESO_HASH, codigoHash],
     [CLAVES_SESION_O1.ROL_ACTIVO, params.rol_activo || ''],
     [CLAVES_SESION_O1.TIMESTAMP_ARRANQUE, String(timestamp)],
@@ -145,7 +144,6 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
     const ahora = Date.now();
     const tiempoTranscurrido = ahora - timestamp_arranque;
 
-    // Verificar si pasaron más de 30 días
     if (tiempoTranscurrido > DURACION_MAXIMA_SESION_MS) {
       logger.warn('PERSISTENCIA_SESION', 'Sesión persistida expirada (> 30 días)', {
         timestamp_arranque,
@@ -172,8 +170,8 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
     const sesion: DatosSesionO1 = {
       negocio_id,
       slug_categoria: mapa[CLAVES_SESION_O1.SLUG_CATEGORIA] || '',
-      ruta_npb: mapa[CLAVES_SESION_O1.RUTA_NPB] || '',
-      version_npb_origen: parseInt(mapa[CLAVES_SESION_O1.VERSION_NPB_ORIGEN] || '1', 10),
+      ruta_configuracion_secundaria:
+        mapa[CLAVES_SESION_O1.RUTA_CONFIGURACION_SECUNDARIA] || '',
       codigo_acceso_hash: mapa[CLAVES_SESION_O1.CODIGO_ACCESO_HASH] || '',
       rol_activo: mapa[CLAVES_SESION_O1.ROL_ACTIVO] || null,
       timestamp_arranque,
@@ -217,18 +215,18 @@ export async function desvincularNegocioO1(confirmacion: string): Promise<boolea
       }
     }
 
-    // Limpiar claves legacy auxiliares si existieran
     const legacyKeys = [
       '@negocio_id',
       '@slug_categoria',
       '@version_npb_origen',
+      '@sesion:version_npb_origen',
+      '@sesion:ruta_npb',
       '@db_url_operativa',
     ];
     for (const k of legacyKeys) {
       await AsyncStorage.removeItem(k);
     }
 
-    // Purgar estado del store global
     const store = useStore.getState();
     store.setEstadoEncendido(null);
     await store.clearSession();

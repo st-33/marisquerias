@@ -20,7 +20,13 @@ import type { Database } from 'firebase/database';
 import { off, onValue, ref, update } from 'firebase/database';
 import type { StateCreator } from 'zustand';
 import { logger } from '../../monitoreo';
-import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
+import {
+  esCajonDormido,
+  rutaMenu,
+  rutaMesas,
+  rutaPedidos,
+  validar_ruta_negocio,
+} from '../../rtdb/rutas/ruta_negocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';
 import type {
   ClientePedido,
@@ -230,7 +236,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   // INICIALIZACIÓN DE LISTENERS
   // ─────────────────────────────────────────────────────────────────────────
   inicializarOperacionListeners: (db: Database, rutaNegocio: string) => {
-    if (!validar_ruta_negocio(rutaNegocio)) {
+    if (!validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
       logger.error('STORE', 'No se montan listeners de operación con rutaNegocio inválido');
       return () => {};
     }
@@ -244,81 +250,86 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     const cleanupFunctions: (() => void)[] = [];
 
-    // 1. MESAS - Un solo listener para todas las mesas
-    const mesasRef = ref(db, `${rutaNegocio}/mesas`);
-    const mesasCallback = onValue(mesasRef, (snap) => {
-      const data = snap.val() || {};
-      const mesasFiltradas: Record<string, MesaBase> = {};
-      const INVALID_IDS = new Set(['estado', 'undefined', 'null']);
+    // 1. MESAS - Solo si el cajón mesas no está dormido
+    if (!esCajonDormido('mesas')) {
+      const mesasRef = ref(db, rutaMesas(rutaNegocio));
+      const mesasCallback = onValue(mesasRef, (snap) => {
+        const data = snap.val() || {};
+        const mesasFiltradas: Record<string, MesaBase> = {};
+        const INVALID_IDS = new Set(['estado', 'undefined', 'null']);
 
-      Object.entries(data).forEach(([id, mesa]) => {
-        if (!INVALID_IDS.has(id.toLowerCase()) && mesa && typeof mesa === 'object') {
-          mesasFiltradas[id] = { id, ...(mesa as any) };
-        }
+        Object.entries(data).forEach(([id, mesa]) => {
+          if (!INVALID_IDS.has(id.toLowerCase()) && mesa && typeof mesa === 'object') {
+            mesasFiltradas[id] = { id, ...(mesa as any) };
+          }
+        });
+
+        const count = Object.keys(mesasFiltradas).length;
+        if (count > 0) logger.debug('STORE', `📋 ${count} mesas`);
+        set({ mesas: mesasFiltradas, ultimaActualizacion: Date.now() });
       });
+      cleanupFunctions.push(() => off(mesasRef, 'value', mesasCallback as any));
+    }
 
-      const count = Object.keys(mesasFiltradas).length;
-      if (count > 0) logger.debug('STORE', `📋 ${count} mesas`);
-      set({ mesas: mesasFiltradas, ultimaActualizacion: Date.now() });
-    });
-    cleanupFunctions.push(() => off(mesasRef, 'value', mesasCallback as any));
+    // 2. PEDIDOS - Solo si el cajón pedidos no está dormido
+    if (!esCajonDormido('pedidos')) {
+      const pedidosRef = ref(db, rutaPedidos(rutaNegocio));
+      const pedidosCallback = onValue(pedidosRef, (snap) => {
+        const data = snap.val() || {};
+        const pedidos: Record<string, PedidoBase> = {};
 
-    // 2. PEDIDOS - Un solo listener para todos los pedidos
-    const pedidosRef = ref(db, `${rutaNegocio}/pedidos`);
-    const pedidosCallback = onValue(pedidosRef, (snap) => {
-      const data = snap.val() || {};
-      const pedidos: Record<string, PedidoBase> = {};
+        Object.entries(data).forEach(([id, pedido]) => {
+          if (pedido && typeof pedido === 'object') {
+            pedidos[id] = { id, ...(pedido as any) };
+          }
+        });
 
-      Object.entries(data).forEach(([id, pedido]) => {
-        if (pedido && typeof pedido === 'object') {
-          pedidos[id] = { id, ...(pedido as any) };
-        }
+        const count = Object.keys(pedidos).length;
+        if (count > 0) logger.debug('STORE', `📦 ${count} pedidos`);
+        set({ pedidos, ultimaActualizacion: Date.now() });
       });
+      cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
+    }
 
-      const count = Object.keys(pedidos).length;
-      if (count > 0) logger.debug('STORE', `📦 ${count} pedidos`);
-      set({ pedidos, ultimaActualizacion: Date.now() });
-    });
-    cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
+    // 3 & 4. MENÚ (Categorías y Productos) - Solo si el cajón menu no está dormido
+    if (!esCajonDormido('menu')) {
+      const categoriasRef = ref(db, rutaMenu(rutaNegocio, 'categorias'));
+      const categoriasCallback = onValue(categoriasRef, (snap) => {
+        const data = snap.val() || {};
+        const categorias: Record<string, CategoriaBase> = {};
 
-    // 3. MENÚ (Categorías) - Un solo listener
-    const categoriasRef = ref(db, `${rutaNegocio}/menu/categorias`);
-    const categoriasCallback = onValue(categoriasRef, (snap) => {
-      const data = snap.val() || {};
-      const categorias: Record<string, CategoriaBase> = {};
+        Object.entries(data).forEach(([id, cat]) => {
+          if (cat && typeof cat === 'object') {
+            categorias[id] = { id, ...(cat as any) };
+          }
+        });
 
-      Object.entries(data).forEach(([id, cat]) => {
-        if (cat && typeof cat === 'object') {
-          categorias[id] = { id, ...(cat as any) };
-        }
+        const count = Object.keys(categorias).length;
+        if (count > 0) logger.debug('STORE', `📂 ${count} categorías`);
+        set({ categorias, ultimaActualizacion: Date.now() });
       });
+      cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
 
-      const count = Object.keys(categorias).length;
-      if (count > 0) logger.debug('STORE', `📂 ${count} categorías`);
-      set({ categorias, ultimaActualizacion: Date.now() });
-    });
-    cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
+      const productosRef = ref(db, rutaMenu(rutaNegocio, 'productos'));
+      const productosCallback = onValue(productosRef, (snap) => {
+        const data = snap.val() || {};
+        const productos: Record<string, ProductoBase> = {};
 
-    // 4. MENÚ (Productos) - Un solo listener
-    const productosRef = ref(db, `${rutaNegocio}/menu/productos`);
-    const productosCallback = onValue(productosRef, (snap) => {
-      const data = snap.val() || {};
-      const productos: Record<string, ProductoBase> = {};
+        Object.entries(data).forEach(([id, prod]) => {
+          if (prod && typeof prod === 'object') {
+            productos[id] = { id, ...(prod as any) };
+          }
+        });
 
-      Object.entries(data).forEach(([id, prod]) => {
-        if (prod && typeof prod === 'object') {
-          productos[id] = { id, ...(prod as any) };
-        }
+        const count = Object.keys(productos).length;
+        if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
+        set({ productos, ultimaActualizacion: Date.now() });
       });
-
-      const count = Object.keys(productos).length;
-      if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
-      set({ productos, ultimaActualizacion: Date.now() });
-    });
-    cleanupFunctions.push(() => off(productosRef, 'value', productosCallback as any));
+      cleanupFunctions.push(() => off(productosRef, 'value', productosCallback as any));
+    }
 
     set({ listenersActivos: true });
-    logger.info('STORE', '✅ Listeners centralizados activos (4 total)');
+    logger.info('STORE', `✅ Listeners centralizados activos (${cleanupFunctions.length} total)`);
 
     // Retornar función de cleanup
     let cleaned = false;
@@ -347,6 +358,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
   actualizarMesa: async (db, rutaNegocio, mesaId, data) => {
     assertValidRutaNegocio(rutaNegocio);
+    const pathMesa = rutaMesas(rutaNegocio, mesaId);
     const now = Date.now();
     const payload = sanitizeRtdbPayload({ ...data, updatedAt: now });
 
@@ -355,7 +367,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
+      await update(ref(db, pathMesa), payload);
     } catch (error) {
       logger.error('STORE', 'Error actualizando mesa', error as Error);
       throw error;
@@ -364,6 +376,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
   liberarMesa: async (db, rutaNegocio, mesaId) => {
     assertValidRutaNegocio(rutaNegocio);
+    const pathMesa = rutaMesas(rutaNegocio, mesaId);
     const now = Date.now();
     const payload = { estado: 'libre', pedidoActivoId: null, updatedAt: now };
 
@@ -372,7 +385,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
+      await update(ref(db, pathMesa), payload);
     } catch (error) {
       logger.error('STORE', 'Error liberando mesa', error as Error);
       throw error;

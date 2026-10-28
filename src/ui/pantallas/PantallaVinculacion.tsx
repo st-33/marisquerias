@@ -33,13 +33,10 @@ export function sanitizarCodigoInput(valor: string): string {
 export function PantallaVinculacion() {
   const [codigo, setCodigo] = useState("");
   const { loading, errorInfo, arrancar, resetError } = useArranqueO1();
+  const esWeb = Platform.OS === "web";
 
   const esValidoParaEnviar = useMemo(() => {
     return codigo.trim().length >= 4;
-  }, [codigo]);
-
-  const esModoPlantilla = useMemo(() => {
-    return codigo.startsWith("NPB") || codigo.includes("00");
   }, [codigo]);
 
   const handleCambioTexto = (texto: string) => {
@@ -55,10 +52,10 @@ export function PantallaVinculacion() {
       const resultado = await arrancar(db, codigo);
 
       if (resultado.ok) {
-        if (resultado.requiereSeleccionRol) {
-          router.replace("/_role/roles");
-        } else {
+        if (esWeb || !resultado.requiereSeleccionRol) {
           router.replace(resultado.rutaPorDefecto as any);
+        } else {
+          router.replace("/_role/roles");
         }
       }
     } catch {
@@ -88,7 +85,9 @@ export function PantallaVinculacion() {
 
         <View style={styles.card}>
           <Text style={styles.marcaHeader}>MARISQUERÍAS</Text>
-          <Text style={styles.titulo}>Vincular Dispositivo</Text>
+          <Text style={styles.titulo}>
+            {esWeb ? "Acceso al Negocio" : "Vincular Dispositivo"}
+          </Text>
 
           {errorInfo ? (
             <ErrorArranque
@@ -113,13 +112,6 @@ export function PantallaVinculacion() {
                   onSubmitEditing={handleVincular}
                   testID="input-codigo-acceso"
                 />
-                {esModoPlantilla && (
-                  <View style={styles.badgePlantilla}>
-                    <Text style={styles.textoBadgePlantilla}>
-                      🧪 Modo Exploración Plantilla Base (NPB 00)
-                    </Text>
-                  </View>
-                )}
               </View>
 
               <Pressable
@@ -139,7 +131,7 @@ export function PantallaVinculacion() {
                   </View>
                 ) : (
                   <Text style={styles.textoBoton}>
-                    {esModoPlantilla ? "Abrir Plantilla Base (NPB 00)" : "Vincular Negocio"}
+                    {esWeb ? "Ingresar al Sistema" : "Vincular Negocio"}
                   </Text>
                 )}
               </Pressable>

@@ -20,11 +20,11 @@ beforeEach(() => {
     val: () => datos[path],
   }));
 });
-test('lee URL, versión y permisos exclusivamente del negocio apuntado', async () => {
+test('lee URL y permisos exclusivamente del negocio apuntado', async () => {
   const acceso = await resolverAccessCode(db, ' puerto-265316 ');
   expect(acceso.db_url_operativa).toBe(negocio.url_unidad);
   expect(acceso.negocio.capacidades_autorizadas).toEqual(['menu']);
-  expect(acceso.negocio.ruta_npb).toBe('comedores_y_servicios/marisquerias/negocio_plantilla_base');
+  expect(acceso.negocio.ruta_configuracion_secundaria).toBe(ruta);
   expect(ref).toHaveBeenNthCalledWith(1, db, 'codigo_de_acceso/PUERTO-265316');
   expect(get).toHaveBeenCalledTimes(2);
 });
@@ -34,7 +34,7 @@ test('un código inexistente no consulta otro negocio', async () => {
 });
 test('un negocio inactivo impide el acceso aunque exista el código', async () => {
   datos[ruta] = { ...negocio, estado: 'inactivo' };
-  await expect(resolverAccessCode(db, 'PUERTO-265316')).rejects.toThrow('no está activo');
+  await expect(resolverAccessCode(db, 'PUERTO-265316')).rejects.toThrow('revocado o el negocio fue suspendido');
 });
 test('no acepta una ruta incompleta ni una URL ausente', async () => {
   datos['codigo_de_acceso/PUERTO-265316'] = 'marisquerias/local';

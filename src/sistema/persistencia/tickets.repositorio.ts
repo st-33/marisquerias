@@ -1,6 +1,7 @@
 import { ref, onValue, off, set, update, get } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
+import { rutaTickets } from '../rtdb/rutas/ruta_negocio';
 
 export type TicketElementTipo = 'texto' | 'listaProductos' | 'total' | 'fechaHora';
 
@@ -46,7 +47,7 @@ export class RepositorioPlantillasTicket {
   }
 
   private basePath() {
-    return `${this.rutaNegocio}/ajustes/dispositivos/tickets`;
+    return rutaTickets(this.rutaNegocio, 'plantillas');
   }
 
   suscribirTemplates(callback: (templates: TicketTemplatesPorRol) => void) {

@@ -2,7 +2,6 @@
 export * from './contratos/contrato-instalacion';
 export * from './contratos/dispositivo-vinculado';
 export * from './contratos/resultado-instalacion';
-export * from './ensambladores/EnsambladorInstalacion';
 export {
   resolverDeviceIdADI,
   obtenerDeviceIdResiliente,
@@ -12,7 +11,6 @@ export {
   resolverNegocioPorCodigo,
   resolverAccessCodeO1,
 } from './vinculacion/resolver-access-code';
-export { resolverConfiguracionInicial } from './runtime/resolver-configuracion-inicial';
 export * from './npb';
 export * from './useArranqueSistema';
 export * from './reconexion/monitorConexionO1';
