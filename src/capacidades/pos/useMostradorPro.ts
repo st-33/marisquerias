@@ -391,7 +391,7 @@ export function useMostradorPro(props?: UseMostradorProProps) {
 
   return {
     loading: loading || configLoading,
-    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo === true),
+    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo !== false),
     categorias: Object.values(categorias).filter((c) => c.herencia?.ventaCrudo !== false),
     areas: [],
     selectedAreaId: null,
