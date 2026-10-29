@@ -9,6 +9,8 @@ import { PantallaReparto } from '../ui/roles/administrador/reparto/PantallaRepar
 import { MostradorPro } from '../ui/bloques/MostradorPro';
 import { MostradorAdminScreen } from '../ui/roles/administrador/mostrador/PantallaMostradorAdmin';
 
+import { PantallaAjustesAdmin } from '../ui/roles/administrador/ajustes/PantallaAjustesAdmin';
+
 /**
  * 🏭 SCREEN REGISTRY GLOBAL (MARISQUERÍAS)
  * Mapa centralizado de resolución de vistas por rol.
@@ -43,5 +45,8 @@ export const REGISTRO_PANTALLAS: Record<string, { Screen: React.ComponentType<an
   },
   admin_mostrador: {
     Screen: MostradorAdminScreen,
+  },
+  admin_ajustes: {
+    Screen: PantallaAjustesAdmin,
   },
 };

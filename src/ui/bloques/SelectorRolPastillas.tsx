@@ -47,7 +47,7 @@ export function SelectorRolPastillas({
   const { colors, theme, isElite } = useAppTheme();
   const { width: screenWidth } = useWindowDimensions();
 
-  const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
+  const { loading, roles, nombreNegocio, logoUrl, handleRolPress, handleMenuCliente, handleLogout } =
     useLogicaSelectorRoles();
 
   const confirmarSalida = () => {
@@ -263,8 +263,8 @@ export function SelectorRolPastillas({
           </Pressable>
         </View>
 
-        {/* Marca del negocio */}
-        <SelloMarca nombreNegocio={nombreNegocio} />
+        {/* Marca del negocio y logo */}
+        <SelloMarca nombreNegocio={nombreNegocio} logoUrl={logoUrl} />
 
         {/* Deck vertical de roles (Pastillas ergonómicas) */}
         <View style={dynamicStyles.deckWrapper}>

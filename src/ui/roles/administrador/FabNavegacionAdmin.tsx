@@ -29,6 +29,7 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
     if (pathname.startsWith('/_role/admin/inventario')) return 'inventario';
     if (pathname.startsWith('/_role/admin/mesas')) return 'mesas';
     if (pathname.startsWith('/_role/admin/dispositivos')) return 'dispositivos';
+    if (pathname.startsWith('/_role/admin/ajustes')) return 'ajustes';
     return 'metricas';
   }, [pathname]);
 
@@ -94,6 +95,18 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
       onPress: () => {
         if (!pathname.startsWith('/_role/admin/dispositivos')) {
           router.push('/_role/admin/dispositivos');
+        }
+      },
+    });
+
+    // Módulo de Ajustes / Configuración (Personalización e Identidad)
+    list.push({
+      key: 'ajustes',
+      label: 'Ajustes',
+      icon: <Ionicons name="settings-sharp" size={22} color="#FFFFFF" />,
+      onPress: () => {
+        if (!pathname.startsWith('/_role/admin/ajustes')) {
+          router.push('/_role/admin/ajustes');
         }
       },
     });

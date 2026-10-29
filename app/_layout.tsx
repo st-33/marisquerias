@@ -44,6 +44,7 @@ const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/admin/inventario': { admin: ['admin_inventory'] },
   '/_role/admin/mesas': { admin: ['admin_tables'] },
   '/_role/admin/dispositivos': { admin: ['admin_devices'] },
+  '/_role/admin/ajustes': { admin: ['admin'] },
   '/_role/admin/reparto': { admin: ['admin_repart'] },
   '/_role/mesero': { generic: 'restaurante.mesas' },
   '/_role/cocina': { generic: 'restaurante.kds' },
@@ -82,8 +83,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady) return;
 
-    // Acceso directo garantizado al dashboard administrativo para rol administrador
-    if (pathname === '/_role/admin/dashboard' || pathname.startsWith('/_role/admin/dashboard')) {
+    // Acceso directo garantizado al dashboard administrativo, dispositivos y ajustes para rol administrador
+    if (
+      pathname.startsWith('/_role/admin/dashboard') ||
+      pathname.startsWith('/_role/admin/dispositivos') ||
+      pathname.startsWith('/_role/admin/ajustes')
+    ) {
       const rolActivo = useStore.getState().sesion.rol;
       const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
       const adminRoleEnabled =

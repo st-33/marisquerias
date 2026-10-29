@@ -3,7 +3,7 @@
  * Nombre del negocio + slogan con colores dinámicos
  */
 
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '../../compartido/temas';
 
 // [11Ene8:47.pm] SCREEN_HEIGHT: altura de pantalla usada para cálculos de margen
@@ -11,10 +11,11 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface SelloMarcaProps {
   nombreNegocio: string;
+  logoUrl?: string;
 }
 export type BrandSealProps = SelloMarcaProps;
 
-export function SelloMarca({ nombreNegocio }: SelloMarcaProps) {
+export function SelloMarca({ nombreNegocio, logoUrl }: SelloMarcaProps) {
   // [11Ene8:47.pm] colors=paleta dinámica, theme.scale=factor de escala, isElite=modo premium activo
   const { colors, theme, isElite } = useAppTheme();
 
@@ -70,6 +71,17 @@ export function SelloMarca({ nombreNegocio }: SelloMarcaProps) {
 
   return (
     <View style={dynamicStyles.brandSeal}>
+      {logoUrl ? (
+        <Image
+          source={{ uri: logoUrl }}
+          style={{
+            width: Math.round(76 * theme.scale),
+            height: Math.round(76 * theme.scale),
+            marginBottom: Math.round(10 * theme.scale),
+          }}
+          resizeMode="contain"
+        />
+      ) : null}
       <Text style={dynamicStyles.brandTitle} numberOfLines={2} adjustsFontSizeToFit>
         {nombreNegocio}
       </Text>

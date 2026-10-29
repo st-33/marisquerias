@@ -34,10 +34,12 @@ export function useLogicaSelectorRoles() {
   const negocioId = useStore((s) => s.sesion.negocioId);
   const accessCode = useStore((s) => s.sesion.access_code);
   const nombreConfigStore = useStore((s) => s.negocio?.configuracion?.nombre);
+  const logoConfigStore = useStore((s) => s.negocio?.configuracion?.logo_url);
 
   const [nombreRemoto, setNombreRemoto] = useState<string | null>(null);
+  const [logoRemoto, setLogoRemoto] = useState<string | null>(null);
 
-  // Escuchar nombre configurado en RTDB si existe
+  // Escuchar nombre y logo configurados en RTDB si existen
   useEffect(() => {
     if (!rutaNegocio) return;
     const unsubNombre = onValue(ref(db, `${rutaNegocio}/nombre`), (snap) => {
@@ -50,9 +52,15 @@ export function useLogicaSelectorRoles() {
         setNombreRemoto(snap.val().trim());
       }
     });
+    const unsubConfigLogo = onValue(ref(db, `${rutaNegocio}/configuracion/logo_url`), (snap) => {
+      if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
+        setLogoRemoto(snap.val().trim());
+      }
+    });
     return () => {
       unsubNombre();
       unsubConfigNombre();
+      unsubConfigLogo();
     };
   }, [db, rutaNegocio]);
 
@@ -168,10 +176,13 @@ export function useLogicaSelectorRoles() {
     router.replace('/(auth)/access');
   }, [clearSession, playFeedback]);
 
+  const logoUrl = logoRemoto || logoConfigStore || '';
+
   return {
     loading,
     roles,
     nombreNegocio,
+    logoUrl,
     handleRolPress,
     handleMenuCliente,
     handleLogout,

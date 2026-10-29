@@ -135,6 +135,12 @@ export interface ContratoNegocio {
       decimales: number;
     };
 
+    /** URL del logo del establecimiento (sin fondo/transparente) */
+    logo_url?: string;
+
+    /** Estilo del selector de roles (orbes, pastillas, conmutable) */
+    estilo_selector_roles?: 'orbes' | 'pastillas' | 'conmutable';
+
     /** Metadata específica del vertical (extensible) */
     [key: string]: any;
   };

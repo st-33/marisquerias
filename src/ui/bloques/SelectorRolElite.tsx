@@ -35,7 +35,7 @@ export function SelectorRolElite({
   const { colors, theme, isElite } = useAppTheme();
   const { height: screenHeight } = useWindowDimensions();
 
-  const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
+  const { loading, roles, nombreNegocio, logoUrl, handleRolPress, handleMenuCliente, handleLogout } =
     useLogicaSelectorRoles();
 
   const confirmarSalida = () => {
@@ -224,8 +224,8 @@ export function SelectorRolElite({
             </Pressable>
           </View>
 
-          {/* Nombre del negocio */}
-          <SelloMarca nombreNegocio={nombreNegocio} />
+          {/* Nombre del negocio y logo */}
+          <SelloMarca nombreNegocio={nombreNegocio} logoUrl={logoUrl} />
 
           {/* Grid de roles */}
           <View style={dynamicStyles.orbGrid}>

@@ -74,8 +74,11 @@ export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures 
     adminRoleEnabled && (caps.inventario ?? adminConfig?.inventario) !== false;
   const aparatosConectadosHabilitados =
     adminRoleEnabled &&
-    (caps.aparatos_conectados ?? adminConfig?.aparatos_conectados ?? adminConfig?.dispositivos) !==
-      false;
+    (caps.aparatos_conectados ??
+      caps.tickets_impresion ??
+      adminConfig?.aparatos_conectados ??
+      adminConfig?.dispositivos ??
+      true) !== false;
   const repartoLogisticaHabilitado =
     adminRoleEnabled &&
     (caps.reparto_logistica ?? adminConfig?.reparto_logistica ?? adminConfig?.repart) !== false;
@@ -151,7 +154,8 @@ export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures 
       const comandaCocinaHabilitada = adminRoleEnabled && hasCap('comanda_cocina');
       const mostradorYPosHabilitado = adminRoleEnabled && hasCap('mostrador_y_pos');
       const inventarioHabilitado = adminRoleEnabled && hasCap('inventario');
-      const aparatosConectadosHabilitados = adminRoleEnabled && hasCap('aparatos_conectados');
+      const aparatosConectadosHabilitados =
+        adminRoleEnabled && (hasCap('aparatos_conectados') || hasCap('tickets_impresion') || adminRoleEnabled);
       const repartoLogisticaHabilitado = adminRoleEnabled && hasCap('reparto_logistica');
       const metricasYCierresHabilitadas = adminRoleEnabled && hasCap('metricas_y_cierres');
       const ticketsImpresionHabilitado = adminRoleEnabled && hasCap('tickets_impresion');
