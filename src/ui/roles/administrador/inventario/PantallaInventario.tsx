@@ -1,21 +1,18 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { DisenoAdministrador as AdminLayout } from '../../../../compartido/componentes/layouts/DisenoAdministrador';
-import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import { PanelInventario } from './PanelInventario';
 
 export function PantallaInventario() {
   const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
-  const ds = useStore((s) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
 
   if (!rutaNegocio) return null;
 
   return (
     <AdminLayout>
       <View style={styles.container}>
-        <PanelInventario db={db} rutaNegocio={rutaNegocio} />
+        <PanelInventario />
       </View>
     </AdminLayout>
   );

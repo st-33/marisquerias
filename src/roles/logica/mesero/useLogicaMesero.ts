@@ -19,6 +19,7 @@ import {
   useProductos,
   useStore,
 } from '../../../sistema/store';
+import { getRtdb } from '../../../sistema/firebase';
 import { createLogger } from '../../../sistema/monitoreo';
 
 import { useGestionarMesas } from './gestionarMesas';
@@ -59,25 +60,30 @@ export type OrderItem = {
 };
 
 type UseLogicaMeseroProps = {
-  db: Database;
-  rutaNegocio: string;
-  accessCode: string;
-  negocioId: string;
+  db?: Database;
+  rutaNegocio?: string;
+  accessCode?: string;
+  negocioId?: string;
   onPrintBill?: (mesaId: string) => void;
   onFreeMesa?: (mesaId: string) => void;
   ensureConnection?: () => boolean | Promise<boolean>;
 };
 export type UseMeseroLogicProps = UseLogicaMeseroProps;
 
-export function useLogicaMesero({
-  db,
-  rutaNegocio,
-  accessCode,
-  negocioId,
-  onPrintBill,
-  onFreeMesa,
-  ensureConnection,
-}: UseMeseroLogicProps) {
+export function useLogicaMesero(props: UseMeseroLogicProps = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const negocioIdStore = useStore((s) => s.sesion.negocioId) || '';
+  const accessCodeStore = useStore((s) => s.sesion.access_code) || '';
+  const ds = useStore((s) => s.dataSources);
+
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const negocioId = props.negocioId || negocioIdStore;
+  const accessCode = props.accessCode || accessCodeStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
+  const { onPrintBill, onFreeMesa, ensureConnection } = props;
   // Repositorios especializados
   const pedidosRepo = useMemo(() => new PedidosRepository(db, rutaNegocio), [db, rutaNegocio]);
   const mesasRepo = useMemo(() => new MesasRepository(db, rutaNegocio), [db, rutaNegocio]);

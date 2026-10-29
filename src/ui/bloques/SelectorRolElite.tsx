@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   useWindowDimensions,
   ScrollView,
@@ -21,12 +23,36 @@ import { FondoLiquido } from './FondoLiquido';
 import { BotonOrbe } from './BotonOrbe';
 import { CapaEstampa } from './CapaEstampa';
 
-export function SelectorRolElite() {
+export interface SelectorRolEliteProps {
+  onAlternarEstilo?: () => void;
+  estiloActivo?: string;
+}
+
+export function SelectorRolElite({
+  onAlternarEstilo,
+  estiloActivo = 'orbes',
+}: SelectorRolEliteProps = {}) {
   const { colors, theme, isElite } = useAppTheme();
   const { height: screenHeight } = useWindowDimensions();
 
   const { loading, roles, nombreNegocio, handleRolPress, handleMenuCliente, handleLogout } =
     useLogicaSelectorRoles();
+
+  const confirmarSalida = () => {
+    if (Platform.OS === 'web') {
+      const seguro = window.confirm('¿Deseas desvincular esta terminal y cambiar de negocio?');
+      if (seguro) handleLogout();
+    } else {
+      Alert.alert(
+        'Cambiar de Negocio',
+        '¿Deseas desvincular esta terminal y regresar a la pantalla de código?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Desvincular', style: 'destructive', onPress: handleLogout },
+        ]
+      );
+    }
+  };
 
   // Estilos dinámicos basados en tema
   const dynamicStyles = useMemo(
@@ -47,6 +73,51 @@ export function SelectorRolElite() {
           width: '100%',
           maxWidth: 1000,
           alignSelf: 'center',
+        },
+        headerContainer: {
+          width: '100%',
+          maxWidth: 680,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+          paddingHorizontal: 8,
+        },
+        switchPill: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+          borderRadius: 20,
+          backgroundColor: isElite ? 'rgba(197, 160, 89, 0.12)' : 'rgba(37, 99, 235, 0.12)',
+          borderWidth: 1,
+          borderColor: isElite ? 'rgba(197, 160, 89, 0.35)' : 'rgba(37, 99, 235, 0.35)',
+        },
+        switchText: {
+          color: colors.primary,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+        },
+        botonDesvincularTop: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+          borderRadius: 20,
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.12)',
+        },
+        botonDesvincularTopTexto: {
+          color: colors.textMuted,
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 1,
+          textTransform: 'uppercase',
         },
         orbGrid: {
           flexDirection: 'row',
@@ -134,6 +205,25 @@ export function SelectorRolElite() {
         showsVerticalScrollIndicator={false}
       >
         <View style={dynamicStyles.contentWrapper}>
+          {/* Cabecera ergonómica con botón de cambio de vista y botón de salida seguro */}
+          <View style={dynamicStyles.headerContainer}>
+            {onAlternarEstilo ? (
+              <Pressable onPress={onAlternarEstilo} style={dynamicStyles.switchPill}>
+                <Ionicons name="shapes-outline" size={14} color={colors.primary} />
+                <Text style={dynamicStyles.switchText}>
+                  {estiloActivo === 'orbes' ? 'Ver Pastillas' : 'Ver Orbes'}
+                </Text>
+              </Pressable>
+            ) : (
+              <View />
+            )}
+
+            <Pressable onPress={confirmarSalida} style={dynamicStyles.botonDesvincularTop}>
+              <Ionicons name="log-out-outline" size={14} color={colors.textMuted} />
+              <Text style={dynamicStyles.botonDesvincularTopTexto}>Desvincular</Text>
+            </Pressable>
+          </View>
+
           {/* Nombre del negocio */}
           <SelloMarca nombreNegocio={nombreNegocio} />
 
@@ -162,22 +252,6 @@ export function SelectorRolElite() {
               <View style={[dynamicStyles.clientAccessButton, pressed && { opacity: 0.7 }]}>
                 <Text style={dynamicStyles.clientAccessText}>Menú Cliente</Text>
               </View>
-            )}
-          </Pressable>
-
-          {/* Botón Cambiar de Negocio */}
-          <Pressable onPress={handleLogout} style={dynamicStyles.logoutButton}>
-            {({ pressed }) => (
-              <>
-                <Ionicons
-                  name="arrow-back-circle-outline"
-                  size={Math.round(22 * theme.scale)}
-                  color={pressed ? colors.primary : colors.secondary}
-                />
-                <Text style={[dynamicStyles.logoutText, pressed && { color: colors.primaryLight }]}>
-                  Cambiar de Negocio
-                </Text>
-              </>
             )}
           </Pressable>
         </View>

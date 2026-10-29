@@ -6,6 +6,8 @@
 
 import type { Database } from 'firebase/database';
 import { useEffect, useMemo, useState } from 'react';
+import { getRtdb } from '../../sistema/firebase';
+import { useStore } from '../../sistema/store';
 import {
   MesasRepository,
   type EstadoMesa,
@@ -14,8 +16,8 @@ import {
 } from '../../sistema/persistencia';
 
 type PropsGestionMesas = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
 };
 
 export type { EstadoMesa, Mesa };
@@ -44,7 +46,15 @@ const mapMesaToLayout = (mesa: Mesa, index: number): MesaConLayout => {
   };
 };
 
-export function useGestionMesas({ db, rutaNegocio }: PropsGestionMesas) {
+export function useGestionMesas(props: PropsGestionMesas = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
+
   const [mesas, setMesas] = useState<Record<string, Mesa>>({});
   const [cantidad, setCantidad] = useState<number>(8);
   const [loading, setLoading] = useState(true);

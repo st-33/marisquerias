@@ -6,7 +6,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, StatusBar, View } from 'react-native';
 import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionAvisoEmergente';
-import { getRtdb } from '../../sistema/firebase';
 import { useModoInmersivo as useImmersiveMode } from '../../sistema/navegacion/ModoInmersivo';
 import { useStore } from '../../sistema/store';
 import { useFierros } from '../../sistema/impresion/fierros';
@@ -23,12 +22,6 @@ import {
 } from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
-  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
-  const negocioId = useStore((s) => s.sesion.negocioId) || '';
-  const access_code = useStore((s) => s.sesion.access_code) || '';
-  const ds = useStore((s) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
-
   // 🖨️ Conexión con el proveedor canónico de fierros
   const { estaConectado, dispositivoActivo } = useFierros();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
@@ -55,8 +48,6 @@ function MeseroScreenContent() {
 
   // 👂 Escuchar items listos de CUALQUIER mesa
   useItemStatusListener({
-    db,
-    rutaNegocio,
     enabled: true,
     onItemReady: useCallback(
       ({ mesaId, itemName }) => {
@@ -108,10 +99,6 @@ function MeseroScreenContent() {
     solicitandoEntrega,
     solicitarEntrega,
   } = useLogicaMesero({
-    db,
-    rutaNegocio,
-    accessCode: access_code,
-    negocioId,
     ensureConnection,
     onPrintBill: useCallback(
       (mesaId: string) => {

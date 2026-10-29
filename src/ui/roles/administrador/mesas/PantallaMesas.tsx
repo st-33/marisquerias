@@ -19,24 +19,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './estilos';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { TarjetaResumen } from './componentes/TarjetaResumen';
-import { getRtdb } from '../../../../sistema/firebase';
-import { useStore } from '../../../../sistema/store';
 import { useGestionMesas, usePuenteAccionesFlotantes } from '../../../../capacidades';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 
 // --- COMPONENTS ---
 
 export function PantallaMesas() {
-  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
-  const ds = useStore((s) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isCompactLayout = width < 760;
   const isNarrowLayout = width < 420;
 
   // 🧠 CEREBRO
-  const { mesas, cantidad, resumen, loading, actions } = useGestionMesas({ db, rutaNegocio });
+  const { mesas, cantidad, resumen, loading, actions } = useGestionMesas();
 
   // 👐 MANOS - Estado UI
   const [editMode, setEditMode] = useState(false);

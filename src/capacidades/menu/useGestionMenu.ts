@@ -8,14 +8,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Categoria, type Producto } from '../../sistema/persistencia';
 import { RepositorioInventario } from '../../sistema/persistencia/contratos-inventario';
 import { useStore } from '../../sistema/store';
+import { getRtdb } from '../../sistema/firebase';
 import { validarProductoParaEliminar } from '../admin/seguridadMenu';
 
 type PropsGestionMenu = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
 };
 
-export function useGestionMenu({ db, rutaNegocio }: PropsGestionMenu) {
+export function useGestionMenu(props: PropsGestionMenu = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
+
   const storeCategorias = useStore((s) => s.categorias);
   const storeProductos = useStore((s) => s.productos);
   const listenersActivos = useStore((s) => s.listenersActivos);

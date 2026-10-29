@@ -17,6 +17,7 @@ import { useSincronizacionEstadoApp as useAppStateSync } from '../../../sistema/
 import { canonicalizeString } from '../../../logica/dominio/partidaCanonica';
 import { normalizePedido } from '../../../logica/dominio/normalizadores';
 import { createModuleLogger } from '../../../sistema/monitoreo';
+import { getRtdb } from '../../../sistema/firebase';
 // 🔌 DOGMA V2: Leer datos del store centralizado
 import { useCategorias, usePedidos, useProductos, useStore } from '../../../sistema/store';
 import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
@@ -218,18 +219,23 @@ export type EstadisticasCocina = {
 };
 
 type UseCocinaLogicProps = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
   urgentThresholdMinutes?: number; // Umbral para marcar como urgente
   autoDescuentoInventario?: boolean; // Si TRUE, descuenta inventario automáticamente
 };
 
-export function useLogicaCocina({
-  db,
-  rutaNegocio,
-  urgentThresholdMinutes = 15,
-  autoDescuentoInventario = false,
-}: UseCocinaLogicProps) {
+export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
+  const urgentThresholdMinutes = props.urgentThresholdMinutes ?? 15;
+  const autoDescuentoInventario = props.autoDescuentoInventario ?? false;
+
   // Estado
   const [loading, setLoading] = useState(true);
   const [ordenes, setOrdenes] = useState<OrdenCocina[]>([]);

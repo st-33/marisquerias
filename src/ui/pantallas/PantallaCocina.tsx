@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useStore, useProductos } from '../../sistema/store';
-import { getRtdb } from '../../sistema/firebase';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
@@ -105,10 +104,7 @@ export interface PantallaCocinaProps {
 }
 
 export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
-  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
-  const ds = useStore((s) => s.dataSources);
   const productos = useProductos();
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const inventoryAutoDiscount =
     useStore((s) => s.negocio.features?.inventory_auto_discount?.enabled) === true;
 
@@ -130,8 +126,6 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
 
   // 🧠 CEREBRO: Hook de lógica pura (usa repositorios)
   const { orders, stats, loading, actions } = useLogicaCocina({
-    db,
-    rutaNegocio,
     urgentThresholdMinutes: 15, // Alerta roja después de 15 minutos
     autoDescuentoInventario: inventoryAutoDiscount,
   });

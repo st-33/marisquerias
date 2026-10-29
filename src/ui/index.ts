@@ -23,6 +23,7 @@ export type {
   PuestoMandoProps,
 } from './bloques/PuestoMando';
 export * from './bloques/SelectorRolElite';
+export * from './bloques/SelectorRolPastillas';
 export * from './bloques/CapaEstampa';
 export { CuadriculaMesas, TablesGrid } from './bloques/CuadriculaMesas';
 export type { Table as TablesGridTable, MesaCuadricula } from './bloques/CuadriculaMesas';

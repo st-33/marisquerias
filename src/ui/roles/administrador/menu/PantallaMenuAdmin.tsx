@@ -28,7 +28,6 @@ import { BarraCategorias } from './bloques/BarraCategorias';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { theme } from '@/compartido/temas';
 import type { Producto } from '../../../../sistema/persistencia';
-import { getRtdb } from '../../../../sistema/firebase';
 import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 import {
@@ -75,9 +74,6 @@ export interface PropsPantallaMenuAdmin {
 
 export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const l = useMemo(() => ({ ...ETIQUETAS_MENU_POR_DEFECTO, ...labels }), [labels]);
-  const rutaNegocio = useStore((s) => s.sesion.rutaNegocio) || '';
-  const ds = useStore((s) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
   const { width } = useWindowDimensions();
   const IS_MOBILE = width < 768;
 
@@ -88,7 +84,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     getProductosPorCategoria,
     validacionActive,
     validandoActive,
-  } = useGestionMenu({ db, rutaNegocio });
+  } = useGestionMenu();
   const catalog = useInventoryCatalog();
   const areas = useInventoryAreas();
 

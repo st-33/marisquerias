@@ -22,8 +22,8 @@ export type RetornoPartidaLista = (data: {
 export type ItemReadyCallback = RetornoPartidaLista;
 
 export type UseEscuchaEstadoPartidaProps = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
   onItemReady: RetornoPartidaLista;
   enabled?: boolean;
 };

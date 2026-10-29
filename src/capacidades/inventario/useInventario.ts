@@ -10,18 +10,27 @@ import {
   useInventoryCatalog,
   useInventorySections,
   useInventoryV2Store,
+  useStore,
 } from '../../sistema/store';
+import { getRtdb } from '../../sistema/firebase';
 import type {
   AreaInventario,
   InsumoInventario,
 } from '../../sistema/persistencia/contratos-inventario';
 
 type PropsUseInventario = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
 };
 
-export function useInventario({ db, rutaNegocio }: PropsUseInventario) {
+export function useInventario(props: PropsUseInventario = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
   const catalog = useInventoryCatalog();
   const sections = useInventorySections();
   const areas = useInventoryAreas();

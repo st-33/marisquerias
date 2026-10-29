@@ -24,14 +24,14 @@ import type {
 } from '../../../../../sistema/persistencia/contratos-inventario';
 
 type PanelInventarioProps = {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
   niche?: string;
 };
 
 type ViewMode = 'areas' | 'containers' | 'items_section' | 'items_area' | 'items_container';
 
-export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: PanelInventarioProps) {
+export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: PanelInventarioProps = {}) {
   const { width } = useWindowDimensions();
   const isLarge = width > 800;
 

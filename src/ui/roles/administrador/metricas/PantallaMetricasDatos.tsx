@@ -18,7 +18,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { getRtdb } from '../../../../sistema/firebase';
 import { useStore } from '../../../../sistema/store';
 import type { FabItem } from '../../../../sistema/tipos/contratos';
 import { useNotifications } from '../../../../compartido/hooks/useNotificaciones';
@@ -79,9 +78,6 @@ export function PantallaMetricasDatos() {
     });
   }, [nombreConfigStore, negocioId, rutaNegocio, accessCode]);
 
-  const ds = useStore((s: any) => s.dataSources);
-  const db = useMemo(() => getRtdb(ds?.operacionUrl || undefined), [ds]);
-
   // 🔔 Sistema de notificaciones (solo audio en admin)
   const { notify } = useNotifications();
 
@@ -98,10 +94,7 @@ export function PantallaMetricasDatos() {
   });
 
   // 🧠 Lógica del módulo
-  const { metrics, loading, actions, features, dateFilter } = useLogicaMetricas({
-    db,
-    rutaNegocio,
-  });
+  const { metrics, loading, actions, features, dateFilter } = useLogicaMetricas();
   const fechaDelDia = useMemo(() => {
     const fecha = new Date();
     fecha.setHours(12, 0, 0, 0);
@@ -112,7 +105,7 @@ export function PantallaMetricasDatos() {
     loading: ventasDelDiaLoading,
     error: ventasDelDiaError,
     recargar: recargarVentasDelDia,
-  } = useRegistroVentasDelDia({ db, rutaNegocio, timestamp: fechaDelDia });
+  } = useRegistroVentasDelDia({ timestamp: fechaDelDia });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
 

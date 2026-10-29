@@ -1,22 +1,30 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Database } from 'firebase/database';
 import {
   RegistroVentasRepository,
   type RegistroVenta,
 } from '../../sistema/persistencia/registroVentas.repositorio';
 import { PedidosRepository } from '../../sistema/persistencia/pedidos.repositorio';
-import { usePedidos, useVentas } from '../../sistema/store';
+import { usePedidos, useStore, useVentas } from '../../sistema/store';
+import { getRtdb } from '../../sistema/firebase';
 import { ensureNumberTimestamp, normalizePedido } from '../../logica/dominio/normalizadores';
 
 export function useRegistroVentasDelDia({
-  db,
-  rutaNegocio,
+  db: dbProp,
+  rutaNegocio: rutaProp,
   timestamp,
 }: {
-  db: Database;
-  rutaNegocio: string;
+  db?: Database;
+  rutaNegocio?: string;
   timestamp: number;
 }) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = rutaProp || rutaNegocioStore;
+  const db = useMemo(
+    () => dbProp || getRtdb(ds?.operacionUrl || undefined),
+    [dbProp, ds?.operacionUrl]
+  );
   const [registrosSQLite, setRegistrosSQLite] = useState<Record<string, RegistroVenta>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

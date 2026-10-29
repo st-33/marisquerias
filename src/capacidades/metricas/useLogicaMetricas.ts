@@ -13,8 +13,10 @@
  */
 
 import type { Database } from 'firebase/database';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NegocioRepository } from '../../sistema/persistencia';
+import { getRtdb } from '../../sistema/firebase';
+import { useStore } from '../../sistema/store';
 import {
   useFuncionalidadesAdmin as useAdminFeatures,
   type NegocioFeatures,
@@ -48,7 +50,15 @@ export type MetricasPanel = {
  * Hook central del módulo: compone los feature flags administrativos,
  * el cálculo de métricas y el filtro de período en una sola interfaz.
  */
-export function useLogicaMetricas({ db, rutaNegocio }: { db: Database; rutaNegocio: string }) {
+export function useLogicaMetricas(props: { db?: Database; rutaNegocio?: string } = {}) {
+  const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
+  const ds = useStore((s) => s.dataSources);
+  const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
+  const db = useMemo(
+    () => props.db || getRtdb(ds?.operacionUrl || undefined),
+    [props.db, ds?.operacionUrl]
+  );
+
   // Carga de feature flags (responsabilidad compartida de la capacidad admin)
   const { features, loading: featuresLoading } = useAdminFeatures({ db, rutaNegocio });
 
