@@ -72,10 +72,17 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(es_ruta_legacy('marisquerias/el-arrecife')).toBe(false);
     });
 
-    it('rechaza valores vacíos o tipos inválidos', () => {
+    it('rechaza valores vacíos o tipos inválidos por defecto', () => {
       expect(validar_ruta_negocio('')).toBe(false);
       expect(validar_ruta_negocio(null as unknown as string)).toBe(false);
       expect(validar_ruta_negocio(undefined as unknown as string)).toBe(false);
+    });
+
+    it('acepta cadena vacía y raíz cuando permitirRaiz es true', () => {
+      expect(validar_ruta_negocio('', { permitirRaiz: true })).toBe(true);
+      expect(validar_ruta_negocio(RUTA_RAIZ_UNIDAD_OPERATIVA, { permitirRaiz: true })).toBe(true);
+      expect(validar_ruta_negocio('marisquerias/el-arrecife', { permitirRaiz: true })).toBe(true);
+      expect(validar_ruta_negocio('restaurantero/el-arrecife', { permitirRaiz: true })).toBe(false);
     });
   });
 

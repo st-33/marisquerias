@@ -169,11 +169,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     return items;
   }, [activeCat, featureEnabled, showToast, actions]);
 
-  usePuenteAccionesFlotantes({
-    items: fabItems,
-    position: 'bottom-right',
-    initialKey: null,
-  });
+  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   const handleAddCategory = async () => {
     if (!catNombre.trim()) {

@@ -14,13 +14,14 @@ import { usePathname, Stack, useRouter } from 'expo-router';
 import { logger } from '../src/sistema/monitoreo';
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorConcentrador';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AccionRadialFlotante } from '../src/ui/bloques/AccionRadialFlotante';
+import { FabNavegacionAdmin } from '../src/ui/roles/administrador/FabNavegacionAdmin';
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useArranqueSistema } from '../src/sistema/instalacion/useArranqueSistema';
 import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ProveedorAudioNotificaciones } from '../src/sistema/proveedores/ProveedorAudioNotificaciones';
 import { ProveedorConfiguracionNegocio } from '../src/sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useInicializacionServiciosNegocio } from '../src/sistema/instalacion/hooks/useInicializacionServiciosNegocio';
@@ -31,7 +32,7 @@ import { getRtdb } from '../src/sistema/firebase';
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
-const PUBLIC_ROUTES = ['/'];
+const PUBLIC_ROUTES = ['/index', '/(auth)', '/vinculacion'];
 
 const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/venta-crudo': { generic: 'venta_crudo' },
@@ -53,7 +54,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.includes(route)) || pathname === '/';
+  const isPublicRoute = pathname === '/' || PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
@@ -80,6 +81,18 @@ export default function RootLayout() {
   // 🛡️ Guardia de Navegación de la Fábrica en Runtime (Fase 3)
   useEffect(() => {
     if (!isReady) return;
+
+    // Acceso directo garantizado al dashboard administrativo para rol administrador
+    if (pathname === '/_role/admin/dashboard' || pathname.startsWith('/_role/admin/dashboard')) {
+      const rolActivo = useStore.getState().sesion.rol;
+      const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
+      const adminRoleEnabled =
+        rolActivo === 'admin' ||
+        rolActivo === 'administrador' ||
+        roles.includes('administrador') ||
+        roles.includes('admin' as any);
+      if (adminRoleEnabled) return;
+    }
 
     const matchedRoute = Object.keys(ROUTE_FEATURES).find((route) => pathname.startsWith(route));
     if (matchedRoute) {
@@ -131,9 +144,11 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider rutaNegocio={rutaNegocio || ''}>
-      <RootLayoutContent isReady={isReady} pathname={pathname} rutaNegocio={rutaNegocio || null} />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider rutaNegocio={rutaNegocio || ''}>
+        <RootLayoutContent isReady={isReady} pathname={pathname} rutaNegocio={rutaNegocio || null} />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -255,18 +270,12 @@ function RouteTransitionOverlay({
 function GlobalFabSlot() {
   const rawPathname = usePathname();
   const pathname = normalizePathname(rawPathname);
-  const displayConfig = useFabForRoute(pathname);
 
-  if (!displayConfig || displayConfig.enabled === false || displayConfig.items.length === 0) {
+  // 🛡️ REGLA CANÓNICA: El FAB Radial pertenece EXCLUSIVAMENTE a las vistas del Administrador.
+  // Queda estrictamente prohibido renderizar el FAB fuera de las rutas de administrador.
+  if (!pathname.startsWith('/_role/admin')) {
     return null;
   }
 
-  return (
-    <AccionRadialFlotante
-      key={`${pathname}:${displayConfig.initialKey ?? ''}`}
-      items={displayConfig.items}
-      initialKey={displayConfig.initialKey}
-      position={displayConfig.position ?? 'bottom-right'}
-    />
-  );
+  return <FabNavegacionAdmin pathname={pathname} />;
 }

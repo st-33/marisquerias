@@ -230,7 +230,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   // INICIALIZACIÓN DE LISTENERS
   // ─────────────────────────────────────────────────────────────────────────
   inicializarOperacionListeners: (db: Database, rutaNegocio: string) => {
-    if (!validar_ruta_negocio(rutaNegocio)) {
+    if (!validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
       logger.error('STORE', 'No se montan listeners de operación con rutaNegocio inválido');
       return () => {};
     }
@@ -243,9 +243,13 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     logger.info('STORE', '🔌 Inicializando listeners centralizados', { rutaNegocio });
 
     const cleanupFunctions: (() => void)[] = [];
+    const resolverRutaCajonLocal = (ruta: string, cajon: string) => {
+      const limpia = ruta ? ruta.replace(/^\/+|\/+$/g, '') : '';
+      return limpia ? `${limpia}/${cajon}` : cajon;
+    };
 
     // 1. MESAS - Un solo listener para todas las mesas
-    const mesasRef = ref(db, `${rutaNegocio}/mesas`);
+    const mesasRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'mesas'));
     const mesasCallback = onValue(mesasRef, (snap) => {
       const data = snap.val() || {};
       const mesasFiltradas: Record<string, MesaBase> = {};
@@ -264,7 +268,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(mesasRef, 'value', mesasCallback as any));
 
     // 2. PEDIDOS - Un solo listener para todos los pedidos
-    const pedidosRef = ref(db, `${rutaNegocio}/pedidos`);
+    const pedidosRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'pedidos'));
     const pedidosCallback = onValue(pedidosRef, (snap) => {
       const data = snap.val() || {};
       const pedidos: Record<string, PedidoBase> = {};
@@ -282,7 +286,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
 
     // 3. MENÚ (Categorías) - Un solo listener
-    const categoriasRef = ref(db, `${rutaNegocio}/menu/categorias`);
+    const categoriasRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'menu/categorias'));
     const categoriasCallback = onValue(categoriasRef, (snap) => {
       const data = snap.val() || {};
       const categorias: Record<string, CategoriaBase> = {};
@@ -300,7 +304,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
 
     // 4. MENÚ (Productos) - Un solo listener
-    const productosRef = ref(db, `${rutaNegocio}/menu/productos`);
+    const productosRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'menu/productos'));
     const productosCallback = onValue(productosRef, (snap) => {
       const data = snap.val() || {};
       const productos: Record<string, ProductoBase> = {};
@@ -346,7 +350,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   },
 
   actualizarMesa: async (db, rutaNegocio, mesaId, data) => {
-    assertValidRutaNegocio(rutaNegocio);
+    assertValidRutaNegocio(rutaNegocio, { permitirRaiz: true });
     const now = Date.now();
     const payload = sanitizeRtdbPayload({ ...data, updatedAt: now });
 
@@ -355,7 +359,9 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
+      const limpia = rutaNegocio ? rutaNegocio.replace(/^\/+|\/+$/g, '') : '';
+      const basePath = limpia ? `${limpia}/mesas/${mesaId}` : `mesas/${mesaId}`;
+      await update(ref(db, basePath), payload);
     } catch (error) {
       logger.error('STORE', 'Error actualizando mesa', error as Error);
       throw error;
@@ -363,7 +369,7 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
   },
 
   liberarMesa: async (db, rutaNegocio, mesaId) => {
-    assertValidRutaNegocio(rutaNegocio);
+    assertValidRutaNegocio(rutaNegocio, { permitirRaiz: true });
     const now = Date.now();
     const payload = { estado: 'libre', pedidoActivoId: null, updatedAt: now };
 
@@ -372,7 +378,9 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
 
     // Write to Firebase
     try {
-      await update(ref(db, `${rutaNegocio}/mesas/${mesaId}`), payload);
+      const limpia = rutaNegocio ? rutaNegocio.replace(/^\/+|\/+$/g, '') : '';
+      const basePath = limpia ? `${limpia}/mesas/${mesaId}` : `mesas/${mesaId}`;
+      await update(ref(db, basePath), payload);
     } catch (error) {
       logger.error('STORE', 'Error liberando mesa', error as Error);
       throw error;

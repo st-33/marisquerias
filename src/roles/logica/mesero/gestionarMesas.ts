@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { MesasRepository } from '../../../sistema/persistencia';
-import { useMesas } from '../../../sistema/store';
+import { useMesas, useStore } from '../../../sistema/store';
 import { createLogger } from '../../../sistema/monitoreo';
 
 const log = createLogger('gestionarMesas');
@@ -27,6 +27,7 @@ export function useGestionarMesas({ mesasRepo }: GestionarMesasProps) {
   const [loading, setLoading] = useState(true);
 
   const mesasDelStore = useMesas();
+  const ultimaActualizacion = useStore((s) => s.ultimaActualizacion);
 
   const tables = useMemo(() => {
     const INVALID_IDS = new Set([
@@ -75,12 +76,23 @@ export function useGestionarMesas({ mesasRepo }: GestionarMesasProps) {
   const tablesRef = useRef<Table[]>(tables);
   useEffect(() => {
     tablesRef.current = tables;
-    if (tables.length > 0 || Object.keys(mesasDelStore).length > 0) {
+    if (
+      tables.length > 0 ||
+      Object.keys(mesasDelStore || {}).length > 0 ||
+      (ultimaActualizacion !== null && ultimaActualizacion > 0)
+    ) {
       setTimeout(() => {
         setLoading(false);
       }, 0);
     }
-  }, [tables, mesasDelStore]);
+  }, [tables, mesasDelStore, ultimaActualizacion]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const selectedTablePedidoRef = useRef<string | null>(null);
   useEffect(() => {

@@ -89,71 +89,10 @@ export function normalizarFeaturesAdmin(data: Caracteristicas): NegocioFeatures 
     adminRoleEnabled &&
     (caps.tickets_impresion ?? adminConfig?.tickets_impresion ?? adminConfig?.tickets) !== false;
 
-  const normalized: NegocioFeatures = {
-    // 9 Canónicas
-    menu: menuHabilitado,
-    control_mesas: controlMesasHabilitado,
-    comanda_cocina: comandaCocinaHabilitada,
-    mostrador_y_pos: mostradorYPosHabilitado,
-    inventario: inventarioHabilitado,
-    aparatos_conectados: aparatosConectadosHabilitados,
-    reparto_logistica: repartoLogisticaHabilitado,
-    metricas_y_cierres: metricasYCierresHabilitadas,
-    tickets_impresion: ticketsImpresionHabilitado,
+    const dashboardHabilitado =
+      adminRoleEnabled && (adminConfig?.admin_dashboard ?? adminConfig?.dashboard) !== false;
 
-    // Compatibilidad Admin
-    admin: adminRoleEnabled,
-    admin_dashboard: metricasYCierresHabilitadas,
-    admin_menu: menuHabilitado,
-    admin_inventory: inventarioHabilitado,
-    admin_tables: controlMesasHabilitado,
-    admin_devices: aparatosConectadosHabilitados,
-    admin_repart: repartoLogisticaHabilitado,
-    admin_mostrador: mostradorYPosHabilitado,
-    admin_tickets: ticketsImpresionHabilitado,
-    admin_menu_add_category: adminRoleEnabled && adminConfig?.menu_add_category !== false,
-    module_venta_crudo: adminRoleEnabled && moduleVentaCrudo,
-  };
-
-  const masterVentaCrudo = normalized.module_venta_crudo;
-  normalized.fastbutton_venta_crudo =
-    masterVentaCrudo &&
-    (data?.fastbutton_venta_crudo ?? adminConfig?.fastbutton_venta_crudo) !== false;
-  normalized.menu_editor_venta_crudo =
-    masterVentaCrudo &&
-    (data?.menu_editor_venta_crudo ?? adminConfig?.menu_editor_venta_crudo) !== false;
-
-  return normalized;
-}
-
-/**
- * Hook que suscribe los flags administrativos del negocio.
- * La fuente de autoridad es `rutaNegocio/caracteristicas/roles/admin`.
- */
-export type UseFuncionalidadesAdminProps = UseAdminFeaturesProps;
-
-export function useFuncionalidadesAdmin(_props?: UseFuncionalidadesAdminProps) {
-  const estadoEncendido = useStore((s) => s.estadoEncendido);
-
-  const features = useMemo((): NegocioFeatures => {
-    const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
-    const caps =
-      estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas ?? [];
-
-    const adminRoleEnabled = roles.includes('administrador') || roles.includes('admin' as any);
-    const hasCap = (cap: string) => caps.includes(cap as any);
-
-    const menuHabilitado = adminRoleEnabled && hasCap('menu');
-    const controlMesasHabilitado = adminRoleEnabled && hasCap('control_mesas');
-    const comandaCocinaHabilitada = adminRoleEnabled && hasCap('comanda_cocina');
-    const mostradorYPosHabilitado = adminRoleEnabled && hasCap('mostrador_y_pos');
-    const inventarioHabilitado = adminRoleEnabled && hasCap('inventario');
-    const aparatosConectadosHabilitados = adminRoleEnabled && hasCap('aparatos_conectados');
-    const repartoLogisticaHabilitado = adminRoleEnabled && hasCap('reparto_logistica');
-    const metricasYCierresHabilitadas = adminRoleEnabled && hasCap('metricas_y_cierres');
-    const ticketsImpresionHabilitado = adminRoleEnabled && hasCap('tickets_impresion');
-
-    return {
+    const normalized: NegocioFeatures = {
       // 9 Canónicas
       menu: menuHabilitado,
       control_mesas: controlMesasHabilitado,
@@ -167,12 +106,76 @@ export function useFuncionalidadesAdmin(_props?: UseFuncionalidadesAdminProps) {
 
       // Compatibilidad Admin
       admin: adminRoleEnabled,
-      admin_dashboard: metricasYCierresHabilitadas,
+      admin_dashboard: dashboardHabilitado,
       admin_menu: menuHabilitado,
       admin_inventory: inventarioHabilitado,
       admin_tables: controlMesasHabilitado,
       admin_devices: aparatosConectadosHabilitados,
       admin_repart: repartoLogisticaHabilitado,
+      admin_mostrador: mostradorYPosHabilitado,
+      admin_tickets: ticketsImpresionHabilitado,
+      admin_menu_add_category: adminRoleEnabled && adminConfig?.menu_add_category !== false,
+      module_venta_crudo: adminRoleEnabled && moduleVentaCrudo,
+    };
+
+    const masterVentaCrudo = normalized.module_venta_crudo;
+    normalized.fastbutton_venta_crudo =
+      masterVentaCrudo &&
+      (data?.fastbutton_venta_crudo ?? adminConfig?.fastbutton_venta_crudo) !== false;
+    normalized.menu_editor_venta_crudo =
+      masterVentaCrudo &&
+      (data?.menu_editor_venta_crudo ?? adminConfig?.menu_editor_venta_crudo) !== false;
+
+    return normalized;
+  }
+
+  /**
+   * Hook que suscribe los flags administrativos del negocio.
+   * La fuente de autoridad es `rutaNegocio/caracteristicas/roles/admin`.
+   */
+  export type UseFuncionalidadesAdminProps = UseAdminFeaturesProps;
+
+  export function useFuncionalidadesAdmin(_props?: UseFuncionalidadesAdminProps) {
+    const estadoEncendido = useStore((s) => s.estadoEncendido);
+
+    const features = useMemo((): NegocioFeatures => {
+      const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
+      const caps =
+        estadoEncendido?.activos?.capacidades ?? estadoEncendido?.capacidades_activas ?? [];
+
+      const adminRoleEnabled = roles.includes('administrador') || roles.includes('admin' as any);
+      const hasCap = (cap: string) => caps.includes(cap as any);
+
+      const menuHabilitado = adminRoleEnabled && hasCap('menu');
+      const controlMesasHabilitado = adminRoleEnabled && hasCap('control_mesas');
+      const comandaCocinaHabilitada = adminRoleEnabled && hasCap('comanda_cocina');
+      const mostradorYPosHabilitado = adminRoleEnabled && hasCap('mostrador_y_pos');
+      const inventarioHabilitado = adminRoleEnabled && hasCap('inventario');
+      const aparatosConectadosHabilitados = adminRoleEnabled && hasCap('aparatos_conectados');
+      const repartoLogisticaHabilitado = adminRoleEnabled && hasCap('reparto_logistica');
+      const metricasYCierresHabilitadas = adminRoleEnabled && hasCap('metricas_y_cierres');
+      const ticketsImpresionHabilitado = adminRoleEnabled && hasCap('tickets_impresion');
+
+      return {
+        // 9 Canónicas
+        menu: menuHabilitado,
+        control_mesas: controlMesasHabilitado,
+        comanda_cocina: comandaCocinaHabilitada,
+        mostrador_y_pos: mostradorYPosHabilitado,
+        inventario: inventarioHabilitado,
+        aparatos_conectados: aparatosConectadosHabilitados,
+        reparto_logistica: repartoLogisticaHabilitado,
+        metricas_y_cierres: metricasYCierresHabilitadas,
+        tickets_impresion: ticketsImpresionHabilitado,
+
+        // Compatibilidad Admin
+        admin: adminRoleEnabled,
+        admin_dashboard: adminRoleEnabled,
+        admin_menu: menuHabilitado,
+        admin_inventory: inventarioHabilitado,
+        admin_tables: controlMesasHabilitado,
+        admin_devices: aparatosConectadosHabilitados,
+        admin_repart: repartoLogisticaHabilitado,
       admin_mostrador: mostradorYPosHabilitado,
       admin_tickets: ticketsImpresionHabilitado,
       admin_menu_add_category: menuHabilitado,

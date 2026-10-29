@@ -94,6 +94,12 @@ const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-
   const COLORS = useThemedColors();
   const [activeKey, setActiveKey] = useState(initialKey ?? items[0]?.key);
 
+  useEffect(() => {
+    if (initialKey) {
+      setActiveKey(initialKey);
+    }
+  }, [initialKey]);
+
   const isOpen = useSharedValue(0);
   const pulse = useSharedValue(1);
 

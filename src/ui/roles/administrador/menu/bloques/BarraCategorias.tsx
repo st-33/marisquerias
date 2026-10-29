@@ -34,7 +34,7 @@ export function BarraCategorias({
     <View style={styles.container}>
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: colors.textSecondary }]}>Categorías</Text>
-        {onAgregar ? (
+        {onAgregar && categorias.length > 0 ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Nueva categoría"

@@ -1,5 +1,6 @@
 import { useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { useStore } from '../store';
 import { RUTAS } from '../rtdb/rutas/ruta_negocio';
 import { logger } from '../monitoreo';
@@ -10,6 +11,7 @@ import { deviceBinding } from './vinculacionDispositivo';
  * Vigila las fronteras del sistema a nivel de Hardware y Sesión.
  * - Si el hardware no está registrado o el negocioId falta, limpia la sesión y expulsa a login.
  * - Si está autenticado y registrado, y se encuentra en zona pública, redirige a selector de roles.
+ * - En Web (Punto 8), el acceso es por validación de código sin vinculación de hardware físico.
  */
 export function useAuthGuard(isSystemReady: boolean) {
   const router = useRouter();
@@ -26,6 +28,12 @@ export function useAuthGuard(isSystemReady: boolean) {
 
     const verificarDispositivo = async () => {
       try {
+        if (Platform.OS === 'web') {
+          setIsDeviceRegisteredState(true);
+          setDeviceChecked(true);
+          return;
+        }
+
         const registrado = await deviceBinding.isDeviceRegistered();
         setIsDeviceRegisteredState(registrado);
         if (registrado && rutaNegocio) {
@@ -53,8 +61,10 @@ export function useAuthGuard(isSystemReady: boolean) {
     // Identificar zona actual (si empieza con (auth) o vinculacion)
     const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'vinculacion';
 
+    const esDispositivoValido = Platform.OS === 'web' || isDeviceRegisteredState;
+
     // 1. Acceso denegado: Dispositivo no enlazado físicamente o sin ID de negocio
-    if ((!negocioId || !isDeviceRegisteredState) && !inAuthGroup) {
+    if ((!negocioId || !esDispositivoValido) && !inAuthGroup) {
       logger.warn(
         'AUTH',
         '⛔ Intrusión o desvinculación detectada. Limpiando sesión y expulsando a Login.'
@@ -66,7 +76,7 @@ export function useAuthGuard(isSystemReady: boolean) {
     }
 
     // 2. Sesión activa: verificar consistencia de EstadoEncendido y rol activo
-    if (negocioId && isDeviceRegisteredState) {
+    if (negocioId && esDispositivoValido) {
       void import('./guardiaArranqueO1').then(async ({ evaluarGuardiaArranque }) => {
         const { getRtdb } = await import('../firebase');
         const evaluacion = await evaluarGuardiaArranque(getRtdb());

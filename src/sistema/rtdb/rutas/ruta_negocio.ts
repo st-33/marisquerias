@@ -84,11 +84,22 @@ export function crear_ruta_negocio({
 
 export const crearRutaNegocio = crear_ruta_negocio;
 
+export interface OpcionesValidarRutaNegocio {
+  permitirRaiz?: boolean;
+}
+
 /**
  * Valida que una ruta sea de al menos 2 segmentos no vacíos y no sea legacy.
  * Formato esperado: [...contexto]/{categoria}/{negocio}
+ * Si se especifica permitirRaiz: true, acepta la raíz de RTDB dedicada ('' o '/').
  */
-export function validar_ruta_negocio(valor: string): boolean {
+export function validar_ruta_negocio(
+  valor: string,
+  opciones?: OpcionesValidarRutaNegocio
+): boolean {
+  if (opciones?.permitirRaiz && (valor === '' || valor === RUTA_RAIZ_UNIDAD_OPERATIVA)) {
+    return true;
+  }
   if (!valor || typeof valor !== 'string') return false;
   if (valor === RUTA_RAIZ_UNIDAD_OPERATIVA) return true;
   if (es_ruta_legacy(valor)) return false;
@@ -124,8 +135,14 @@ export function descomponer_ruta_negocio(ruta: string): IdentidadNegocio | null 
   if (parts.length < 2) return null;
 
   const negocio_id = parts[parts.length - 1];
-  const categoria_id = parts[parts.length - 2];
-  const contexto_path = parts.slice(0, parts.length - 2).join('/');
+  let categoria_id = parts[parts.length - 2];
+  let contexto_path = parts.slice(0, parts.length - 2).join('/');
+
+  if (categoria_id === 'negocio' && parts.length >= 3) {
+    categoria_id = parts[parts.length - 3];
+    contexto_path = parts.slice(0, parts.length - 3).join('/');
+  }
+
   const negocio_id_canonico = extraer_negocio_id_canonico(negocio_id, categoria_id);
 
   return {

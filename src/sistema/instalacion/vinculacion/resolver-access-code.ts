@@ -72,7 +72,7 @@ export async function resolverAccessCode(
   const codeRef = ref(db, nodoPath);
   const snapshot = await get(codeRef);
 
-  if (!snapshot.exists()) {
+  if (!snapshot || (typeof snapshot.exists === 'function' && !snapshot.exists())) {
     throw new Error('Código de acceso no encontrado o inválido');
   }
 
@@ -163,7 +163,11 @@ export async function resolverAccessCode(
 
   const db_url_operativa =
     typeof val === 'object' && val !== null
-      ? (val.db_url_operativa as string) || (val.operacionUrl as string) || ''
+      ? (val.db_url_operativa as string) ||
+        (val.url_unidad as string) ||
+        (val.operacionUrl as string) ||
+        (val.operacion_url as string) ||
+        ''
       : '';
 
   const versionNpbOrigen =
@@ -197,7 +201,7 @@ export async function resolverAccessCode(
       ? (val as any).capacidades_autorizadas ?? (val as any).capacidadesAutorizadas
       : undefined;
   const capacidades_autorizadas = Array.isArray(capacidadesRaw)
-    ? capacidadesRaw
+    ? (capacidadesRaw as any)
     : capacidadesRaw && typeof capacidadesRaw === 'object'
       ? Object.entries(capacidadesRaw)
           .filter(([, autorizada]) => autorizada === true)
@@ -243,6 +247,7 @@ export async function resolverAccessCode(
     capacidades_autorizadas,
     cajones_dormidos_forzados,
     roles_permitidos: rolesPermitidos,
+    ruta_negocio: rutaNegocio,
   };
 
   // Guardar sesión local en AsyncStorage

@@ -10,18 +10,25 @@ const CLAVE_STORAGE_WEB = '@adi_device_id';
 export function obtenerDeviceIdResiliente(): string {
   const clave = CLAVE_STORAGE_WEB;
   let devId: string | null = null;
-  if (typeof localStorage !== 'undefined') {
+  const storage =
+    typeof window !== 'undefined' && window.sessionStorage
+      ? window.sessionStorage
+      : typeof sessionStorage !== 'undefined'
+      ? sessionStorage
+      : null;
+
+  if (storage) {
     try {
-      devId = localStorage.getItem(clave);
+      devId = storage.getItem(clave);
     } catch {
       // Ignorar restricciones locales de navegador
     }
   }
   if (!devId) {
     devId = `ADI-web-${Math.random().toString(36).substring(2, 9).toUpperCase()}-${Date.now()}`;
-    if (typeof localStorage !== 'undefined') {
+    if (storage) {
       try {
-        localStorage.setItem(clave, devId);
+        storage.setItem(clave, devId);
       } catch {
         // Ignorar
       }

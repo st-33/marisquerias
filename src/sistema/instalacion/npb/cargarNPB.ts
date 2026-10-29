@@ -21,10 +21,11 @@ export async function cargarNPB(
   }
 
   // 1. Consulta el nodo de la plantilla en Unidad Secundaria
-  // Intenta primero la ruta plana canónica del Ecosistema: negocio/{slug}-00.
-  // Las rutas restantes son solo compatibilidad de lectura; nunca se escriben
-  // desde esta aplicación.
+  // Intenta la ruta canónica jerárquica del Ecosistema y rutas de compatibilidad
   const rutasCandidatas = [
+    `comedores_y_servicios_de_mesa/${cleanSlug}/negocio_plantilla_base`,
+    `${cleanSlug}/negocio_plantilla_base`,
+    `comedores_y_servicios_de_mesa/marisquerias/negocio_plantilla_base`,
     `negocio/${cleanSlug}-00`,
     `categorias/${cleanSlug}/plantilla_base`,
     `${cleanSlug}/Negocio principal de categoría`,
@@ -50,9 +51,16 @@ export async function cargarNPB(
   }
 
   let npb = snapshot.val() as NegocioPlantillaBase;
+  if (!npb.slug_categoria) npb.slug_categoria = cleanSlug;
+  if (!npb.categoria_id) npb.categoria_id = '01';
+  if (npb.version_npb === undefined) npb.version_npb = versionNpbOrigen ?? 1;
 
   // 2. Verificación de versión con respecto a version_npb_origen
-  if (versionNpbOrigen !== undefined && npb.version_npb !== versionNpbOrigen) {
+  if (
+    versionNpbOrigen !== undefined &&
+    npb.version_npb !== undefined &&
+    npb.version_npb !== versionNpbOrigen
+  ) {
     // Intentar cargar del histórico en la misma jerarquía encontrada
     const rutasHistorico = [
       `${rutaUsada}/historico/${versionNpbOrigen}`,

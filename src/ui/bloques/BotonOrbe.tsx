@@ -122,13 +122,12 @@ export function BotonOrbe({
       }),
     ]).start();
 
-    // [11Ene8:47.pm] setTimeout 30ms: pequeño delay antes de ejecutar onPress (UX feedback)
+    // [11Ene8:47.pm] setTimeout 30ms: pequeño delay antes de resetear estado visual
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
     timerRef.current = setTimeout(() => {
       resetInstant();
-      onPress();
     }, 30);
   };
 
@@ -189,6 +188,7 @@ export function BotonOrbe({
       // [11Ene8:47.pm] color: usa textSecondary del tema para la etiqueta
       color: colors.textSecondary,
       fontSize: labelSize,
+      textAlign: 'center',
     },
   });
 
@@ -207,7 +207,7 @@ export function BotonOrbe({
       />
 
       {/* [11Ene8:47.pm] PRESSABLE: zona táctil del botón */}
-      <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
         <Animated.View style={[dynamicStyles.orb, { transform: [{ scale: scaleAnim }] }]}>
           {/* [11Ene8:47.pm] ICONO: usa Ionicons, tamaño=iconSize, color=primario del tema */}
           <Ionicons

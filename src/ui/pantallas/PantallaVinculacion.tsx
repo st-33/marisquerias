@@ -27,7 +27,7 @@ export function sanitizarCodigoInput(valor: string): string {
   return valor
     .toUpperCase()
     .replace(/[^A-Z0-9-]/g, "")
-    .slice(0, 12);
+    .slice(0, 20);
 }
 
 export function PantallaVinculacion() {
@@ -106,7 +106,7 @@ export function PantallaVinculacion() {
                   placeholderTextColor="#475569"
                   autoCapitalize="characters"
                   autoCorrect={false}
-                  maxLength={12}
+                  maxLength={20}
                   editable={!loading}
                   style={styles.input}
                   returnKeyType="done"

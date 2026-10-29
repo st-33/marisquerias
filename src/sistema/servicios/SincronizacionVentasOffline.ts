@@ -13,7 +13,7 @@ class SincronizacionVentasOffline {
   private lifecycleGeneration = 0;
 
   initialize(db: Database, rutaNegocio: string): void {
-    if (!validar_ruta_negocio(rutaNegocio)) {
+    if (!validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
       logger.error(
         'OFFLINE_SYNC',
         'Intento de inicializar ventas con rutaNegocio inválido o legacy',
@@ -39,13 +39,13 @@ class SincronizacionVentasOffline {
   }
 
   private isCurrent(): boolean {
-    return Boolean(this.rutaNegocio && this.salesRepo);
+    return Boolean(this.rutaNegocio !== null && this.salesRepo);
   }
 
   async syncPendingSales(): Promise<{ synced: number; failed: number }> {
     const repo = this.salesRepo;
     const rutaNegocio = this.rutaNegocio;
-    if (this.isRunning || !repo || !rutaNegocio || !this.isCurrent()) {
+    if (this.isRunning || !repo || rutaNegocio === null || !this.isCurrent()) {
       return { synced: 0, failed: 0 };
     }
 

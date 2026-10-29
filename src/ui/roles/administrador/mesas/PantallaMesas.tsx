@@ -165,11 +165,7 @@ export function PantallaMesas() {
     ];
   }, [editMode, handleSaveLayout]);
 
-  usePuenteAccionesFlotantes({
-    items: fabItems,
-    position: 'bottom-right',
-    initialKey: null,
-  });
+  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   if (loading) {
     return (

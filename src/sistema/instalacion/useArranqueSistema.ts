@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { get, ref } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { resolverAccessCodeO1 } from './vinculacion/resolver-access-code';
 import { cargarNPB } from './npb/cargarNPB';
@@ -69,7 +70,38 @@ export async function ejecutarArranqueO1(
     });
 
     // 1. Resolver código de acceso en Unidad Secundaria
-    const { negocio, db_url_operativa } = await resolverAccessCodeO1(db, cleanCode);
+    const { negocio, db_url_operativa: dbUrlInicial } = await resolverAccessCodeO1(db, cleanCode);
+    let db_url_operativa = dbUrlInicial || negocio.db_url_operativa || '';
+
+    // Si el código era una referencia O(1) hacia la ruta secundaria del negocio:
+    const rutaRemota = (negocio.ruta_negocio as string) || (negocio as any).nodoPath || '';
+    if (rutaRemota && (!db_url_operativa || !negocio.capacidades_autorizadas)) {
+      try {
+        const snapNegocio = await get(ref(db, rutaRemota));
+        if (snapNegocio && typeof snapNegocio.exists === 'function' && snapNegocio.exists()) {
+          const cfg = snapNegocio.val();
+          if (cfg && typeof cfg === 'object') {
+            if (!db_url_operativa) {
+              db_url_operativa = cfg.db_url_operativa || cfg.url_unidad || cfg.operacionUrl || cfg.operacion_url || '';
+            }
+            if (cfg.capacidades_autorizadas && !negocio.capacidades_autorizadas) {
+              const caps = cfg.capacidades_autorizadas;
+              negocio.capacidades_autorizadas = Array.isArray(caps)
+                ? caps
+                : Object.entries(caps).filter(([, v]) => v === true).map(([k]) => k as any);
+            }
+            if (cfg.nombre_comercial && !negocio.nombre_comercial) {
+              negocio.nombre_comercial = cfg.nombre_comercial;
+            }
+            if (cfg.roles_permitidos && !negocio.roles_permitidos) {
+              negocio.roles_permitidos = cfg.roles_permitidos;
+            }
+          }
+        }
+      } catch (err) {
+        logger.warn('ARRANQUE_O1', 'No se pudo leer la configuración remota en rutaNegocio', { error: err });
+      }
+    }
 
     // 1b. Validar que el código pertenezca a la categoría Marisquerías
     const esPlantilla = negocio.tipo_acceso === 'plantilla';

@@ -212,28 +212,7 @@ export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: Pane
     return Math.round((ok / entries.length) * 100);
   };
 
-  usePuenteAccionesFlotantes({
-    enabled: viewMode === 'items_container' && !!selectedContainerId,
-    initialKey: 'main',
-    items:
-      viewMode === 'items_container' && selectedContainerId
-        ? [
-            {
-              key: 'main',
-              label: 'Acciones',
-              icon: <Ionicons name="add" size={30} color="white" />,
-              onPress: () => setShowItemModal(true),
-            },
-            {
-              key: 'add_item',
-              label: 'Nuevo Item',
-              icon: <Ionicons name="cube-outline" size={22} color="white" />,
-              onPress: () => setShowItemModal(true),
-            },
-          ]
-        : [],
-    position: 'bottom-right',
-  });
+  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   // --- RENDER ---
 

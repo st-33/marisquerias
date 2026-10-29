@@ -52,6 +52,32 @@ describe('useFuncionalidadesAdmin — Lectura de EstadoEncendido (NPB 00)', () =
     expect(isEnabled('admin_repart')).toBe(false);
   });
 
+  it('permite acceso a admin_dashboard aun cuando NO tiene la capacidad metricas_y_cierres', () => {
+    (useStore as unknown as jest.Mock).mockImplementation((selector) =>
+      selector({
+        estadoEncendido: {
+          activos: {
+            roles: ['administrador'],
+            capacidades: ['control_mesas', 'comanda_cocina'],
+            cajones: ['mesas'],
+          },
+          roles_activos: ['administrador'],
+          capacidades_activas: ['control_mesas', 'comanda_cocina'],
+        },
+      })
+    );
+
+    const { features, isEnabled } = useFuncionalidadesAdmin();
+
+    expect(features.admin).toBe(true);
+    expect(features.admin_dashboard).toBe(true);
+    expect(features.metricas_y_cierres).toBe(false);
+    expect(features.admin_tables).toBe(true);
+    expect(features.admin_menu).toBe(false);
+    expect(isEnabled('admin_dashboard')).toBe(true);
+    expect(isEnabled('metricas_y_cierres')).toBe(false);
+  });
+
   it('deshabilita todos los módulos admin si el rol administrador no está activo', () => {
     (useStore as unknown as jest.Mock).mockImplementation((selector) =>
       selector({

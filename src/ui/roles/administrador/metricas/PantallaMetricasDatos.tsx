@@ -193,7 +193,7 @@ export function PantallaMetricasDatos() {
     [navItems]
   );
 
-  usePuenteAccionesFlotantes(fabConfig);
+  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   if (loading || !metrics) {
     return (

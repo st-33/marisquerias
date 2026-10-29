@@ -88,8 +88,8 @@ export function useLogicaSelectorRoles() {
       const nombres: Record<string, string> = {
         administrador: 'Administrador',
         mesero: 'Mesero',
-        cocina: 'Cocina (KDS)',
-        mostrador: 'Venta Mostrador',
+        cocina: 'Cocina',
+        mostrador: 'Mostrador',
         cajero: 'Cajero / Cobro',
         repartidor: 'Repartidor',
         barman: 'Barra / Barman',

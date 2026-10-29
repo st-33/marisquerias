@@ -88,9 +88,9 @@ export class RepositorioRegistroVentas {
     private readonly db: Database,
     private readonly rutaNegocio: string
   ) {
-    assertValidRutaNegocio(rutaNegocio);
+    assertValidRutaNegocio(rutaNegocio, { permitirRaiz: true });
     const identidad = descomponer_ruta_negocio(rutaNegocio);
-    this.negocioId = identidad?.negocio_id || rutaNegocio;
+    this.negocioId = identidad?.negocio_id || (rutaNegocio ? rutaNegocio : 'unidad_operativa');
   }
 
   async registrar(entrada: EntradaRegistroVenta): Promise<RegistroVenta> {

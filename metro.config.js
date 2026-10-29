@@ -51,8 +51,16 @@ const config = getDefaultConfig(__dirname);
 // 🔥 FIX: Firebase requires 'cjs' extension support
 config.resolver.sourceExts.push('cjs');
 
-// Resolver Zustand a su variante CommonJS/normal en web para evitar import.meta.env en bundles clásicos
+const path = require('path');
+
+// Resolver Zustand y AsyncStorage para plataforma web (aislamiento por pestaña con sessionStorage)
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform === 'web' && moduleName === '@react-native-async-storage/async-storage') {
+    return {
+      type: 'sourceFile',
+      filePath: path.resolve(__dirname, 'src/sistema/almacenamiento/asyncStorageWeb.ts'),
+    };
+  }
   if (platform === 'web' && (moduleName === 'zustand' || moduleName.startsWith('zustand/'))) {
     try {
       return {
