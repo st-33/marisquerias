@@ -236,7 +236,24 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       if (inventoryAutoDiscount) {
         try {
           const areas = await inventoryRepo.obtenerAreas();
-          const areaId = Object.entries(areas).find(([, a]) => a?.hubId === 'venta_crudo')?.[0];
+          let areaId = Object.entries(areas).find(
+            ([, a]) => a?.hubId === 'venta_crudo' || a?.hubId === 'mostrador' || a?.hubId === 'tienda'
+          )?.[0];
+          if (!areaId) {
+            const def = Object.entries(areas).find(([, a]) => (a as any)?.metadata?.isDefault === true);
+            areaId = def?.[0] || Object.keys(areas)[0] || null;
+          }
+          if (!areaId) {
+            try {
+              areaId = await inventoryRepo.crearArea({
+                nombre: 'Mostrador Principal',
+                hubId: 'venta_crudo',
+                metadata: { isDefault: true },
+              });
+            } catch {
+              areaId = null;
+            }
+          }
           if (areaId) {
             const inventoryItems = safeItems.filter((i) => typeof i?.productoId === 'string');
             if (inventoryItems.length > 0) {

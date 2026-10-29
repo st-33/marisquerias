@@ -1,9 +1,26 @@
-import { ref, push } from 'firebase/database';
+import { ref, push, set } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio } from '../rtdb/guards';
-import { descomponer_ruta_negocio } from '../rtdb/rutas/ruta_negocio';
+import { descomponer_ruta_negocio, resolver_ruta_cajon } from '../rtdb/rutas/ruta_negocio';
 import { SQLiteStorageAdapter, type HistorialVenta } from '../sin_conexion';
 import type { Pedido } from './pedidos.repositorio';
+
+function stripUndefinedDeep<T>(input: T): T {
+  if (input === undefined) return null as any;
+  if (input === null) return input;
+  if (Array.isArray(input)) {
+    return input.map((v) => stripUndefinedDeep(v)) as any;
+  }
+  if (typeof input === 'object') {
+    const out: any = {};
+    for (const [k, v] of Object.entries(input as any)) {
+      if (v === undefined) continue;
+      out[k] = stripUndefinedDeep(v);
+    }
+    return out;
+  }
+  return input;
+}
 
 export interface VentaMostrador {
   id?: string;
@@ -115,6 +132,18 @@ export class RepositorioRegistroVentas {
       numero,
     };
 
+    let sincronizado = 0;
+    try {
+      if (this.db && typeof (this.db as any).app !== 'undefined') {
+        const rutaVenta = `${resolver_ruta_cajon(this.rutaNegocio, 'ventas')}/${entrada.origenId}`;
+        const sanitizado = stripUndefinedDeep(registro);
+        await set(ref(this.db, rutaVenta), sanitizado);
+        sincronizado = 1;
+      }
+    } catch {
+      sincronizado = 0;
+    }
+
     const historial: HistorialVenta = {
       id: entrada.origenId,
       negocio_id: this.negocioId,
@@ -124,7 +153,7 @@ export class RepositorioRegistroVentas {
       total: entrada.total,
       metodo_pago: entrada.metodoPago || null,
       datos_json: JSON.stringify(registro),
-      sincronizado: 1,
+      sincronizado,
     };
 
     await SQLiteStorageAdapter.guardarHistorialVenta(historial);
@@ -149,9 +178,23 @@ export class RepositorioRegistroVentas {
   }
 
   async registrarVenta(venta: VentaMostrador): Promise<string> {
+    const rutaSecuencias =
+      this.rutaNegocio === '/' || !this.rutaNegocio
+        ? 'secuencias/ventas'
+        : `${this.rutaNegocio.replace(/\/+$/, '')}/secuencias/ventas`;
+
+    let pushKey: string | null = null;
+    try {
+      if (this.db && typeof (this.db as any).app !== 'undefined') {
+        pushKey = push(ref(this.db, rutaSecuencias)).key;
+      }
+    } catch {
+      pushKey = null;
+    }
+
     const ventaId =
       venta.id ||
-      push(ref(this.db, this.rutaNegocio + '/secuencias/ventas')).key ||
+      pushKey ||
       'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
 
     await this.registrarMostrador({

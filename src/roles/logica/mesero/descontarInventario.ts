@@ -126,11 +126,19 @@ export function useDescontarInventario({
             });
             const def = entries.find(([, a]) => (a as any)?.metadata?.isDefault === true);
             areaId = def?.[0] || entries?.[0]?.[0] || null;
-            inventarioV2AreaRestauranteRef.current = areaId;
-          }
 
-          if (!areaId) {
-            throw new Error('No hay área de inventario V2 configurada para hubId=restaurante');
+            if (!areaId) {
+              try {
+                areaId = await inventarioV2Repo.crearArea({
+                  nombre: 'Cocina Principal',
+                  hubId: 'restaurante',
+                  metadata: { isDefault: true },
+                });
+              } catch {
+                areaId = 'area_restaurante_default';
+              }
+            }
+            inventarioV2AreaRestauranteRef.current = areaId;
           }
 
           const finalAreaId = preferredAreaId || areaId;
