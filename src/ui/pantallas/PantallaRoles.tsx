@@ -14,22 +14,25 @@ export function PantallaRoles() {
   const negocioId = useStore((s) => s.sesion.negocioId);
 
   // Gobernanza de estilos por configuración o NPB 00:
-  // 'orbes' | 'pastillas' | 'conmutable' (por defecto conmutable con vista inicial 'orbes')
+  // 'orbes' | 'pastillas' | 'clasico' | 'conmutable' (por defecto conmutable con vista inicial 'orbes')
   const estiloConfigurado = useStore(
     (s) =>
       (s.negocio?.configuracion?.estilo_selector_roles as string | undefined) ||
       (s.negocio?.features?.['selector_roles']?.config?.estilo as string | undefined)
   );
 
-  const modoFijo = estiloConfigurado === 'orbes' || estiloConfigurado === 'pastillas';
-  const estiloInicial = estiloConfigurado === 'pastillas' ? 'pastillas' : 'orbes';
+  const esPastillasOClasico = estiloConfigurado === 'pastillas' || estiloConfigurado === 'clasico';
+  const modoFijo = estiloConfigurado === 'orbes' || esPastillasOClasico;
+  const estiloInicial = esPastillasOClasico ? 'pastillas' : 'orbes';
   const [estiloVisual, setEstiloVisual] = useState<'orbes' | 'pastillas'>(estiloInicial);
 
   useEffect(() => {
-    if (estiloConfigurado === 'pastillas' || estiloConfigurado === 'orbes') {
-      setEstiloVisual(estiloConfigurado);
+    if (esPastillasOClasico) {
+      setEstiloVisual('pastillas');
+    } else if (estiloConfigurado === 'orbes') {
+      setEstiloVisual('orbes');
     }
-  }, [estiloConfigurado]);
+  }, [estiloConfigurado, esPastillasOClasico]);
 
   if (!rutaNegocio || !negocioId) {
     return (

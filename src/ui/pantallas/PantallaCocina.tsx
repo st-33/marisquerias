@@ -6,7 +6,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useStore, useProductos } from '../../sistema/store';
+import { useStore, useProductos, useNegocioNombre, useNegocioId } from '../../sistema/store';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0f172a',
+    overflow: 'hidden',
   },
   loadingContainer: {
     flex: 1,
@@ -46,6 +47,12 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 22,
     fontWeight: '900',
+  },
+  subtituloNegocio: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
   },
   statsRow: {
     flexDirection: 'row',
@@ -104,6 +111,8 @@ export interface PantallaCocinaProps {
 }
 
 export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
+  const negocioNombre = useNegocioNombre();
+  const negocioId = useNegocioId();
   const productos = useProductos();
   const inventoryAutoDiscount =
     useStore((s) => s.negocio.features?.inventory_auto_discount?.enabled) === true;
@@ -165,7 +174,12 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name="restaurant" size={24} color="#ffffff" />
-          <Text style={styles.title}>{tituloHeader}</Text>
+          <View>
+            <Text style={styles.title}>{tituloHeader}</Text>
+            <Text style={styles.subtituloNegocio}>
+              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+            </Text>
+          </View>
         </View>
         <View style={styles.statsRow}>
           <View style={styles.statBadge}>

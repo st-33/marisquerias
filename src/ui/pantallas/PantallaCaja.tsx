@@ -24,10 +24,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useCajaCobro, type MetodoPagoCaja } from '../../roles/logica/caja';
+import { useNegocioNombre, useNegocioId } from '../../sistema/store';
 
 export function PantallaCaja() {
   const { width } = useWindowDimensions();
   const esPantallaAmplia = width >= 768;
+  const negocioNombre = useNegocioNombre();
+  const negocioId = useNegocioId();
 
   const {
     loading,
@@ -90,7 +93,12 @@ export function PantallaCaja() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name="card-outline" size={24} color="#60a5fa" />
-          <Text style={styles.headerTitle}>Terminal de Cobro</Text>
+          <View>
+            <Text style={styles.headerTitle}>Terminal de Cobro</Text>
+            <Text style={styles.headerSubtitle}>
+              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+            </Text>
+          </View>
         </View>
         <View style={styles.headerRight}>
           {ticketsImpresionActivo ? (
@@ -406,6 +414,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0f1d',
+    overflow: 'hidden',
   },
   centerContainer: {
     flex: 1,
@@ -438,6 +447,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#f8fafc',
     letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
   },
   headerRight: {
     flexDirection: 'row',

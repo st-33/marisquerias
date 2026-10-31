@@ -4,10 +4,10 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, StatusBar, View } from 'react-native';
+import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
 import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionAvisoEmergente';
 import { useModoInmersivo as useImmersiveMode } from '../../sistema/navegacion/ModoInmersivo';
-import { useStore } from '../../sistema/store';
+import { useStore, useNegocioNombre, useNegocioId } from '../../sistema/store';
 import { useFierros } from '../../sistema/impresion/fierros';
 import { useEscuchaEstadoPartida as useItemStatusListener } from '../../compartido/hooks/useEscuchaEstadoPartida';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
@@ -22,6 +22,8 @@ import {
 } from '../../roles/logica/mesero';
 
 function MeseroScreenContent() {
+  const negocioNombre = useNegocioNombre();
+  const negocioId = useNegocioId();
   // 🖨️ Conexión con el proveedor canónico de fierros
   const { estaConectado, dispositivoActivo } = useFierros();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
@@ -228,8 +230,60 @@ function MeseroScreenContent() {
   });
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, overflow: 'hidden', backgroundColor: '#0f172a' }}>
       <StatusBar barStyle="light-content" />
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          backgroundColor: '#111827',
+          borderBottomWidth: 1,
+          borderBottomColor: '#1f2937',
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontSize: 16 }}>🍽️</Text>
+          <View>
+            <Text style={{ color: '#f9fafb', fontSize: 14, fontWeight: '800' }}>
+              Mesero / Salón
+            </Text>
+            <Text style={{ color: '#9ca3af', fontSize: 11, fontWeight: '600' }}>
+              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          onPress={() => setShowPrinterModal(true)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 6,
+            backgroundColor: estaConectado
+              ? 'rgba(16, 185, 129, 0.15)'
+              : 'rgba(107, 114, 128, 0.15)',
+            borderWidth: 1,
+            borderColor: estaConectado
+              ? 'rgba(16, 185, 129, 0.3)'
+              : 'rgba(107, 114, 128, 0.3)',
+          }}
+        >
+          <Text
+            style={{
+              color: estaConectado ? '#34d399' : '#9ca3af',
+              fontSize: 11,
+              fontWeight: '700',
+            }}
+          >
+            {estaConectado ? '🖨️ Conectada' : '🖨️ Sin impresora'}
+          </Text>
+        </Pressable>
+      </View>
       <PuestoMando
         mesas={tables}
         mesaSeleccionada={selectedTable}

@@ -151,6 +151,10 @@ export async function ejecutarArranqueO1(
       rol: destinoRol.rol,
     });
 
+    if (negocio.nombre_comercial) {
+      store.updateConfiguracion({ nombre: negocio.nombre_comercial });
+    }
+
     // 6. Persistir en AsyncStorage (únicamente tras validar cada paso sin excepción)
     await guardarSesionO1({
       negocio_id: negocio.negocio_id,
@@ -161,6 +165,7 @@ export async function ejecutarArranqueO1(
       estadoEncendido,
       db_url_operativa,
       tipo_acceso: estadoEncendido.tipo_acceso,
+      nombre_comercial: negocio.nombre_comercial,
     });
 
     logger.info('ARRANQUE_O1', 'Arranque O(1) completado con éxito', {
@@ -278,6 +283,10 @@ export function useArranqueSistema(): boolean {
             ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
             rol: (sesion.rol_activo as any) || 'mesero',
           });
+
+          if (sesion.nombre_comercial) {
+            store.updateConfiguracion({ nombre: sesion.nombre_comercial });
+          }
 
           // Activar monitor de reconexión / revalidación en segundo plano usando Unidad Secundaria
           try {

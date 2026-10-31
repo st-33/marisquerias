@@ -104,6 +104,14 @@ export const useEstaAutenticado = () =>
 // Negocio
 export const useFeatures = () => useStore((s) => s.negocio.features);
 export const useNegocioConfig = () => useStore((s) => s.negocio.configuracion);
+export const useNegocioNombre = () =>
+  useStore(
+    (s) =>
+      s.negocio.configuracion?.nombre ||
+      s.sesion.negocio_id ||
+      s.sesion.negocioId ||
+      'Marisquería'
+  );
 
 // UI
 export const useUI = () => useStore((s) => s.ui);

@@ -23,6 +23,7 @@ export const CLAVES_SESION_O1 = {
   ESTADO_ENCENDIDO: '@sesion:estado_encendido',
   DB_URL_OPERATIVA: '@sesion:db_url_operativa',
   TIPO_ACCESO: '@sesion:tipo_acceso',
+  NOMBRE_COMERCIAL: '@sesion:nombre_comercial',
 } as const;
 
 export const DURACION_MAXIMA_SESION_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
@@ -51,6 +52,7 @@ export interface DatosSesionO1 {
   estadoEncendido: EstadoEncendido | null;
   db_url_operativa?: string;
   tipo_acceso?: 'plantilla' | 'negocio' | 'negocio_real';
+  nombre_comercial?: string;
   [key: string]: unknown;
 }
 
@@ -70,6 +72,7 @@ export interface GuardarSesionO1Params {
   estadoEncendido: EstadoEncendido;
   db_url_operativa?: string;
   tipo_acceso?: 'plantilla' | 'negocio' | 'negocio_real';
+  nombre_comercial?: string;
   timestamp?: number;
 }
 
@@ -92,6 +95,10 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
     [CLAVES_SESION_O1.ESTADO_ENCENDIDO, estadoJson],
     [CLAVES_SESION_O1.TIPO_ACCESO, tipoAcceso],
   ];
+
+  if (params.nombre_comercial) {
+    pares.push([CLAVES_SESION_O1.NOMBRE_COMERCIAL, params.nombre_comercial]);
+  }
 
   if (params.db_url_operativa) {
     pares.push([CLAVES_SESION_O1.DB_URL_OPERATIVA, params.db_url_operativa]);
@@ -176,6 +183,7 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
       estadoEncendido,
       db_url_operativa: mapa[CLAVES_SESION_O1.DB_URL_OPERATIVA] || undefined,
       tipo_acceso,
+      nombre_comercial: mapa[CLAVES_SESION_O1.NOMBRE_COMERCIAL] || undefined,
     };
 
     return {

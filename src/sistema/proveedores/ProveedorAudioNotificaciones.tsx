@@ -23,8 +23,34 @@ type NotificationsAudioContextType = {
 const NotificationsAudioContext = createContext<NotificationsAudioContextType | null>(null);
 
 function ProveedorAudioNotificacionesWeb({ children }: { children: React.ReactNode }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    try {
+      if (typeof Audio !== 'undefined') {
+        const audio = new Audio('/assets/sounds/huge.wav');
+        audio.preload = 'auto';
+        audioRef.current = audio;
+      }
+    } catch {
+      // Entornos web restringidos o SSR
+    }
+  }, []);
+
   const playNotificationSound = () => {
-    return;
+    try {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Silencioso ante restricciones de autoplay del navegador
+          });
+        }
+      }
+    } catch {
+      // Ignorar de forma resiliente
+    }
   };
 
   return (
@@ -97,6 +123,9 @@ function ProveedorAudioNotificacionesNative({ children }: { children: React.Reac
 }
 
 export function ProveedorAudioNotificaciones({ children }: { children: React.ReactNode }) {
+  if (Platform.OS === 'web') {
+    return <ProveedorAudioNotificacionesWeb>{children}</ProveedorAudioNotificacionesWeb>;
+  }
   return <ProveedorAudioNotificacionesNative>{children}</ProveedorAudioNotificacionesNative>;
 }
 

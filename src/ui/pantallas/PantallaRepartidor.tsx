@@ -21,11 +21,14 @@ import {
   View,
 } from 'react-native';
 import { useOperacionRepartidor } from '../../roles/logica/repartidor';
+import { useNegocioNombre, useNegocioId } from '../../sistema/store';
 import type { MisionDelivery } from '../../sistema/persistencia/reparto.repositorio';
 
 type PestanaRepartidor = 'asignados' | 'disponibles' | 'historial';
 
 export function PantallaRepartidor() {
+  const negocioNombre = useNegocioNombre();
+  const negocioId = useNegocioId();
   const {
     loading,
     repartidorActual,
@@ -93,7 +96,9 @@ export function PantallaRepartidor() {
           <Ionicons name="bicycle" size={26} color="#60a5fa" />
           <View>
             <Text style={styles.headerNombre}>{repartidorActual.nombre}</Text>
-            <Text style={styles.headerSub}>Despacho y Logística</Text>
+            <Text style={styles.headerSub}>
+              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''} · Despacho
+            </Text>
           </View>
         </View>
 
@@ -293,6 +298,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0f1d',
+    overflow: 'hidden',
   },
   center: {
     flex: 1,
