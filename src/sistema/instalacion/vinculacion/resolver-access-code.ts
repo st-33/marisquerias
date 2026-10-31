@@ -56,7 +56,7 @@ export async function resolverNegocioPorCodigo(codigo: string, db: any): Promise
  *
  * Reglas O(1):
  * - Verifica que el código no esté expirado ni revocado.
- * - Retorna NegocioReal + db_url_operativa.
+ * - Retorna ConfiguracionNegocio + db_url_operativa.
  * - Guarda sesión local en AsyncStorage.
  */
 export async function resolverAccessCode(
