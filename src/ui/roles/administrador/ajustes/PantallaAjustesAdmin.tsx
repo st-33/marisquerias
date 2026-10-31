@@ -22,6 +22,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLogicaAjustesAdmin, type EstiloSelector } from '../../../../roles/logica/administrador';
 import { useAppTheme } from '../../../../compartido/temas';
 
+import { AvatarUsuario } from '../../../pantallas/registro_usuario/AvatarUsuario';
+
 export function PantallaAjustesAdmin() {
   const { colors, isElite } = useAppTheme();
   const {
@@ -34,11 +36,15 @@ export function PantallaAjustesAdmin() {
     cargando,
     guardadoExitoso,
     error,
+    usuarios,
+    cargandoUsuarios,
+    capacidadesActivas,
     setNombre,
     setLogoUrl,
     setEstiloSelector,
     guardarCambios,
     probarEstiloEnRoles,
+    eliminarUsuario,
   } = useLogicaAjustesAdmin();
 
   return (
@@ -259,6 +265,70 @@ export function PantallaAjustesAdmin() {
           </View>
         </View>
 
+        {/* ─── SECCIÓN 4: PERSONAL Y OPERADORES REGISTRADOS ───────────── */}
+        <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
+          <View style={estilos.tarjetaCabecera}>
+            <Ionicons name="people-outline" size={20} color="#38BDF8" />
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Personal y Operadores</Text>
+          </View>
+          <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
+            Operadores autorizados para comandas y terminales de piso.
+          </Text>
+
+          {cargandoUsuarios ? (
+            <ActivityIndicator size="small" color="#38BDF8" style={{ marginVertical: 12 }} />
+          ) : usuarios.length === 0 ? (
+            <View style={estilos.cajaVaciaStaff}>
+              <Text style={estilos.textoVacioStaff}>No hay operadores registrados aún en esta Unidad.</Text>
+            </View>
+          ) : (
+            <View style={estilos.listaStaff}>
+              {usuarios.map((u) => (
+                <View key={u.id} style={estilos.filaStaff}>
+                  <AvatarUsuario sexo={u.sexo} size={42} />
+                  <View style={estilos.datosStaff}>
+                    <Text style={[estilos.nombreStaff, { color: colors.text }]}>{u.nombre}</Text>
+                    <View style={estilos.subDatosStaff}>
+                      <Text style={estilos.claveStaff}>Clave: {u.clave}</Text>
+                      <Text style={estilos.puntoStaff}>•</Text>
+                      <Text style={estilos.cargoStaff}>{u.perfil.cargo.toUpperCase()}</Text>
+                      <Text style={estilos.puntoStaff}>•</Text>
+                      <Text style={estilos.edadStaff}>{u.edad} años</Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => eliminarUsuario(u.id)}
+                    style={estilos.botonEliminarStaff}
+                    accessibilityLabel={`Eliminar operador ${u.nombre}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* ─── SECCIÓN 5: CAPACIDADES AUTORIZADAS ACTIVAS ──────────────── */}
+        <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
+          <View style={estilos.tarjetaCabecera}>
+            <Ionicons name="flash-outline" size={20} color="#F59E0B" />
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Capacidades Autorizadas Activas</Text>
+          </View>
+          <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
+            Gobernadas por la Plantilla Base (NPB 00) y autorizadas por el Ecosistema.
+          </Text>
+
+          <View style={estilos.grillaCapacidades}>
+            {capacidadesActivas.map((capId: string) => (
+              <View key={capId} style={estilos.badgeCapacidad}>
+                <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                <Text style={estilos.textoBadgeCapacidad}>{capId.replace(/_/g, ' ').toUpperCase()}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
         {/* ─── BOTÓN PRINCIPAL DE GUARDADO ───────────────────────────── */}
         <Pressable
           onPress={guardarCambios}
@@ -470,6 +540,85 @@ const estilos = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  cajaVaciaStaff: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  textoVacioStaff: {
+    color: '#64748B',
+    fontSize: 13,
+  },
+  listaStaff: {
+    gap: 10,
+  },
+  filaStaff: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  datosStaff: {
+    flex: 1,
+    gap: 3,
+  },
+  nombreStaff: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  subDatosStaff: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  claveStaff: {
+    color: '#38BDF8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  puntoStaff: {
+    color: '#64748B',
+    fontSize: 10,
+  },
+  cargoStaff: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  edadStaff: {
+    color: '#64748B',
+    fontSize: 11,
+  },
+  botonEliminarStaff: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  grillaCapacidades: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  badgeCapacidad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  textoBadgeCapacidad: {
+    color: '#E2E8F0',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });
 

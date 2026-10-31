@@ -33,6 +33,63 @@ export function useLogicaAjustesAdmin() {
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Gestión de usuarios y operadores
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [cargandoUsuarios, setCargandoUsuarios] = useState(true);
+
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const rolesActivos = estadoEncendido?.roles_activos || [];
+  const capacidadesActivas = estadoEncendido?.capacidades_activas || [];
+
+  // Sincronización de usuarios de la Unidad Operativa
+  useEffect(() => {
+    let montado = true;
+    async function sincronizarUsuarios() {
+      try {
+        const { getOperacionRtdb } = await import('../../../sistema/firebase');
+        const { onValue, ref: dbRef } = await import('firebase/database');
+        const dbOperativa = getOperacionRtdb();
+
+        const unsub = onValue(
+          dbRef(dbOperativa, 'usuario'),
+          (snap) => {
+            if (!montado) return;
+            if (snap.exists()) {
+              const val = snap.val();
+              const lista = Object.entries(val || {}).map(([id, u]: [string, any]) => ({
+                id,
+                nombre: u.nombre || '',
+                clave: u.clave || '',
+                edad: u.edad || 0,
+                sexo: u.sexo || 'H',
+                perfil: {
+                  cargo: u.perfil?.cargo || u.cargo || '',
+                  sueldo: u.perfil?.sueldo,
+                },
+              }));
+              setUsuarios(lista.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10)));
+            } else {
+              setUsuarios([]);
+            }
+            setCargandoUsuarios(false);
+          },
+          () => {
+            if (montado) setCargandoUsuarios(false);
+          }
+        );
+
+        return () => unsub();
+      } catch {
+        if (montado) setCargandoUsuarios(false);
+      }
+    }
+
+    sincronizarUsuarios();
+    return () => {
+      montado = false;
+    };
+  }, []);
+
   // Sincronización en tiempo real desde RTDB si existen valores remotos
   useEffect(() => {
     if (!rutaNegocio) return;
@@ -108,6 +165,18 @@ export function useLogicaAjustesAdmin() {
     router.push('/_role/roles');
   }, [router]);
 
+  const eliminarUsuario = useCallback(async (usuarioId: string) => {
+    try {
+      const { getOperacionRtdb } = await import('../../../sistema/firebase');
+      const { eliminarUsuario: eliminar } = await import('../../../sistema/usuarios');
+      const dbOperativa = getOperacionRtdb();
+      await eliminar(dbOperativa, usuarioId);
+    } catch (e: any) {
+      logger.error('AJUSTES_ADMIN', 'Error al eliminar usuario', e);
+      setError(e?.message || 'Error al eliminar usuario');
+    }
+  }, []);
+
   return {
     nombre,
     logoUrl,
@@ -118,10 +187,15 @@ export function useLogicaAjustesAdmin() {
     cargando,
     guardadoExitoso,
     error,
+    usuarios,
+    cargandoUsuarios,
+    rolesActivos,
+    capacidadesActivas,
     setNombre,
     setLogoUrl,
     setEstiloSelector,
     guardarCambios,
     probarEstiloEnRoles,
+    eliminarUsuario,
   };
 }

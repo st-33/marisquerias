@@ -32,6 +32,8 @@ export function sanitizarCodigoInput(valor: string): string {
 
 export function PantallaVinculacion() {
   const [codigo, setCodigo] = useState("");
+  const [paso, setPaso] = useState<"codigo" | "usuario">("codigo");
+  const [resultadoArranque, setResultadoArranque] = useState<any>(null);
   const { loading, errorInfo, arrancar, resetError } = useArranqueO1();
 
   const esValidoParaEnviar = useMemo(() => {
@@ -55,10 +57,28 @@ export function PantallaVinculacion() {
       const resultado = await arrancar(db, codigo);
 
       if (resultado.ok) {
-        if (resultado.requiereSeleccionRol) {
-          router.replace("/_role/roles");
+        if (Platform.OS === "web") {
+          if (resultado.requiereSeleccionRol) {
+            router.replace("/_role/roles");
+          } else {
+            router.replace(resultado.rutaPorDefecto as any);
+          }
         } else {
-          router.replace(resultado.rutaPorDefecto as any);
+          // Nativo: verificar si ya existe una sesión operativa de usuario local
+          const { obtenerSesionOperativaLocal } = await import(
+            "../../sistema/usuarios/servicio_sesion_dispositivo"
+          );
+          const sesionLocal = await obtenerSesionOperativaLocal();
+          if (sesionLocal && sesionLocal.usuario_id) {
+            if (resultado.requiereSeleccionRol) {
+              router.replace("/_role/roles");
+            } else {
+              router.replace(resultado.rutaPorDefecto as any);
+            }
+          } else {
+            setResultadoArranque(resultado);
+            setPaso("usuario");
+          }
         }
       }
     } catch {
@@ -74,6 +94,24 @@ export function PantallaVinculacion() {
     resetError();
     setCodigo("");
   };
+
+  if (paso === "usuario") {
+    const { PantallaRegistroUsuario } = require("./registro_usuario/PantallaRegistroUsuario");
+    return (
+      <PantallaRegistroUsuario
+        onRegistroCompletado={(usuario: any) => {
+          if (resultadoArranque?.requiereSeleccionRol) {
+            router.replace("/_role/roles");
+          } else if (resultadoArranque?.rutaPorDefecto) {
+            router.replace(resultadoArranque.rutaPorDefecto as any);
+          } else {
+            router.replace("/_role/roles");
+          }
+        }}
+        onCancelar={() => setPaso("codigo")}
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView

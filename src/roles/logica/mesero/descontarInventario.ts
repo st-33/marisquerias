@@ -132,7 +132,7 @@ export function useDescontarInventario({
                 areaId = await inventarioV2Repo.crearArea({
                   nombre: 'Cocina Principal',
                   hubId: 'restaurante',
-                  metadata: { isDefault: true },
+                  ...({ metadata: { isDefault: true } } as any),
                 });
               } catch {
                 areaId = 'area_restaurante_default';

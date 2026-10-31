@@ -237,21 +237,21 @@ export function useMostradorPro(props?: UseMostradorProProps) {
         try {
           const areas = await inventoryRepo.obtenerAreas();
           let areaId = Object.entries(areas).find(
-            ([, a]) => a?.hubId === 'venta_crudo' || a?.hubId === 'mostrador' || a?.hubId === 'tienda'
+            ([, a]) => (a?.hubId as string) === 'venta_crudo' || (a?.hubId as string) === 'mostrador' || (a?.hubId as string) === 'tienda'
           )?.[0];
           if (!areaId) {
             const def = Object.entries(areas).find(([, a]) => (a as any)?.metadata?.isDefault === true);
-            areaId = def?.[0] || Object.keys(areas)[0] || null;
+            areaId = def?.[0] || Object.keys(areas)[0] || undefined;
           }
           if (!areaId) {
             try {
               areaId = await inventoryRepo.crearArea({
                 nombre: 'Mostrador Principal',
                 hubId: 'venta_crudo',
-                metadata: { isDefault: true },
+                ...({ metadata: { isDefault: true } } as any),
               });
             } catch {
-              areaId = null;
+              areaId = undefined;
             }
           }
           if (areaId) {

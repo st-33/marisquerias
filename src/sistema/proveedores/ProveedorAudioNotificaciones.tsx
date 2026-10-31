@@ -97,9 +97,6 @@ function ProveedorAudioNotificacionesNative({ children }: { children: React.Reac
 }
 
 export function ProveedorAudioNotificaciones({ children }: { children: React.ReactNode }) {
-  if (Platform.OS === 'web') {
-    return <ProveedorAudioNotificacionesWeb>{children}</ProveedorAudioNotificacionesWeb>;
-  }
   return <ProveedorAudioNotificacionesNative>{children}</ProveedorAudioNotificacionesNative>;
 }
 
