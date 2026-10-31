@@ -15,7 +15,7 @@ import {
   type CapacidadCanonica,
   type NegocioPlantillaBase,
 } from './tiposNPB';
-import type { NegocioReal, TipoAccesoCodigo } from './tiposNegocioReal';
+import type { ConfiguracionNegocio, TipoAccesoCodigo } from './tiposNegocio';
 
 export interface AutorizacionesNegocio {
   tipo_acceso?: TipoAccesoCodigo;
@@ -61,13 +61,13 @@ export interface EstadoEncendido {
  * Si es una plantilla de pruebas (tipo_acceso === 'plantilla' o negocio_id === '00'):
  *   Enciende todas las capacidades disponibles en el NPB.
  *
- * Para un negocio real:
+ * Para una instancia de negocio:
  *   Enciende únicamente lo autorizado contractualmente para esa instancia.
  *   Los cajones y roles se subordinan estrictamente a las capacidades activas.
  */
 export function encenderCapacidades(
   npb: NegocioPlantillaBase,
-  negocio?: NegocioReal | AutorizacionesNegocio
+  negocio?: ConfiguracionNegocio | AutorizacionesNegocio
 ): EstadoEncendido {
   const capacidadesDisponiblesNPB = new Set(
     (npb.capacidades || []).map((c) => c.id as CapacidadCanonica)
@@ -85,7 +85,7 @@ export function encenderCapacidades(
     // Modo Plantilla Base: el techo máximo disponible en la categoría
     idsCapacidadesActivas = new Set(capacidadesDisponiblesNPB);
   } else {
-    // Modo Negocio Real:
+    // Modo Negocio:
     if (Array.isArray(negocio.capacidades_autorizadas)) {
       // Intersección estricta si se especificaron capacidades autorizadas
       for (const cap of negocio.capacidades_autorizadas) {
@@ -94,7 +94,7 @@ export function encenderCapacidades(
         }
       }
     } else {
-      // Si el negocio real no tiene capacidades_autorizadas explícitas en el payload
+      // Si el negocio no tiene capacidades_autorizadas explícitas en el payload
       // (ej. códigos provisionados estándar o heredados), adopta las del NPB
       idsCapacidadesActivas = new Set(capacidadesDisponiblesNPB);
     }
@@ -224,7 +224,7 @@ export function encenderCapacidades(
     version_npb: npb.version_npb,
     categoria_id: npb.categoria_id,
     slug_categoria: npb.slug_categoria,
-    tipo_acceso: esPlantilla ? 'plantilla' : 'negocio_real',
+    tipo_acceso: esPlantilla ? 'plantilla' : (negocio?.tipo_acceso === 'negocio_real' ? 'negocio_real' : 'negocio'),
     negocio_id: negocio?.negocio_id,
     timestamp: Date.now(),
   };

@@ -423,14 +423,27 @@ export function PantallaRegistroUsuario({
                           color={esActivo ? '#38BDF8' : '#64748B'}
                         />
                       </View>
-                      <Text
-                        style={[
-                          estilos.textoCargo,
-                          esActivo && estilos.textoCargoActivo,
-                        ]}
-                      >
-                        {nombreCargo}
-                      </Text>
+                      <View style={estilos.columnaTextoCargo}>
+                        <Text
+                          style={[
+                            estilos.textoCargo,
+                            esActivo && estilos.textoCargoActivo,
+                          ]}
+                        >
+                          {nombreCargo}
+                        </Text>
+                        {def?.descripcion ? (
+                          <Text
+                            style={[
+                              estilos.descCargo,
+                              esActivo && estilos.descCargoActivo,
+                            ]}
+                            numberOfLines={2}
+                          >
+                            {def.descripcion}
+                          </Text>
+                        ) : null}
+                      </View>
                     </Pressable>
                   );
                 })}
@@ -680,6 +693,10 @@ const estilos = StyleSheet.create({
     width: 20,
     alignItems: 'center',
   },
+  columnaTextoCargo: {
+    flex: 1,
+    gap: 2,
+  },
   textoCargo: {
     color: '#94A3B8',
     fontSize: 13,
@@ -688,6 +705,14 @@ const estilos = StyleSheet.create({
   textoCargoActivo: {
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  descCargo: {
+    color: '#64748B',
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  descCargoActivo: {
+    color: '#94A3B8',
   },
   botonListo: {
     backgroundColor: '#38BDF8',

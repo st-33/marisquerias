@@ -1,4 +1,5 @@
 export * from './tiposNPB';
+export * from './tiposNegocio';
 export * from './tiposNegocioReal';
 export * from './validarCompatibilidadNPB';
 export * from './cargarNPB';

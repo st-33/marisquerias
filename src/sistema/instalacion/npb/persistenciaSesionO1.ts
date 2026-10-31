@@ -8,7 +8,7 @@
  * - Desvinculación atómica bajo confirmación explícita 'DESVINCULAR'.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storageSesion from '../../almacenamiento/storageSesion';
 import type { EstadoEncendido } from './encenderCapacidades';
 import { useStore } from '../../store';
 import { logger } from '../../monitoreo';
@@ -50,7 +50,7 @@ export interface DatosSesionO1 {
   timestamp_arranque: number;
   estadoEncendido: EstadoEncendido | null;
   db_url_operativa?: string;
-  tipo_acceso?: 'plantilla' | 'negocio_real';
+  tipo_acceso?: 'plantilla' | 'negocio' | 'negocio_real';
   [key: string]: unknown;
 }
 
@@ -69,7 +69,7 @@ export interface GuardarSesionO1Params {
   rol_activo: string | null;
   estadoEncendido: EstadoEncendido;
   db_url_operativa?: string;
-  tipo_acceso?: 'plantilla' | 'negocio_real';
+  tipo_acceso?: 'plantilla' | 'negocio' | 'negocio_real';
   timestamp?: number;
 }
 
@@ -80,7 +80,7 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
   const timestamp = params.timestamp ?? Date.now();
   const codigoHash = hashCodigoAcceso(params.codigo_acceso);
   const estadoJson = JSON.stringify(params.estadoEncendido);
-  const tipoAcceso = params.tipo_acceso || params.estadoEncendido?.tipo_acceso || 'negocio_real';
+  const tipoAcceso = params.tipo_acceso || params.estadoEncendido?.tipo_acceso || 'negocio';
 
   const pares: [string, string][] = [
     [CLAVES_SESION_O1.NEGOCIO_ID, params.negocio_id],
@@ -98,11 +98,11 @@ export async function guardarSesionO1(params: GuardarSesionO1Params): Promise<vo
   }
 
   try {
-    if (typeof AsyncStorage.multiSet === 'function') {
-      await AsyncStorage.multiSet(pares);
+    if (typeof storageSesion.multiSet === 'function') {
+      await storageSesion.multiSet(pares);
     } else {
       for (const [k, v] of pares) {
-        await AsyncStorage.setItem(k, v);
+        await storageSesion.setItem(k, v);
       }
     }
   } catch (error) {
@@ -122,12 +122,12 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
     const keys = Object.values(CLAVES_SESION_O1);
     let mapa: Record<string, string | null> = {};
 
-    if (typeof AsyncStorage.multiGet === 'function') {
-      const res = await AsyncStorage.multiGet(keys);
+    if (typeof storageSesion.multiGet === 'function') {
+      const res = await storageSesion.multiGet(keys);
       mapa = Object.fromEntries(res);
     } else {
       for (const k of keys) {
-        mapa[k] = await AsyncStorage.getItem(k);
+        mapa[k] = await storageSesion.getItem(k);
       }
     }
 
@@ -160,10 +160,11 @@ export async function leerSesionO1(): Promise<ResultadoLecturaSesionO1> {
       }
     }
 
-    const tipo_acceso =
-      (mapa[CLAVES_SESION_O1.TIPO_ACCESO] as 'plantilla' | 'negocio_real' | null) ||
-      estadoEncendido?.tipo_acceso ||
-      'negocio_real';
+    const rawTipo = mapa[CLAVES_SESION_O1.TIPO_ACCESO];
+    const tipo_acceso: 'plantilla' | 'negocio' =
+      rawTipo === 'plantilla' || estadoEncendido?.tipo_acceso === 'plantilla'
+        ? 'plantilla'
+        : 'negocio';
 
     const sesion: DatosSesionO1 = {
       negocio_id,
@@ -204,11 +205,11 @@ export async function desvincularNegocioO1(confirmacion: string): Promise<boolea
 
   try {
     const keys = Object.values(CLAVES_SESION_O1);
-    if (typeof AsyncStorage.multiRemove === 'function') {
-      await AsyncStorage.multiRemove(keys);
+    if (typeof storageSesion.multiRemove === 'function') {
+      await storageSesion.multiRemove(keys);
     } else {
       for (const k of keys) {
-        await AsyncStorage.removeItem(k);
+        await storageSesion.removeItem(k);
       }
     }
 
@@ -220,7 +221,7 @@ export async function desvincularNegocioO1(confirmacion: string): Promise<boolea
       '@db_url_operativa',
     ];
     for (const k of legacyKeys) {
-      await AsyncStorage.removeItem(k);
+      await storageSesion.removeItem(k);
     }
 
     // Purgar estado del store global

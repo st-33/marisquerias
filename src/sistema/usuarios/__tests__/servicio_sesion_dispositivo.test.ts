@@ -177,6 +177,45 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       expect(res3.admitido).toBe(false);
       expect(res3.error).toContain('Límite de terminales simultáneas alcanzado');
     });
+
+    it('4b. Latido oportunista: Reclama slot huérfano si una terminal previa superó los 120s de inactividad', async () => {
+      const haceTresMinutos = Date.now() - 180_000;
+      // Simular que el slot 01 tiene una terminal apagada/huérfana hace 3 minutos
+      mockRtdb['monitoreo/dispositivos/01'] = {
+        estado: 'activo',
+        dispositivo_id: 'tablet-apagada-sin-bateria',
+        rol: 'mesero',
+        usuario_id: '01',
+        usuario_nombre: 'Ana',
+        ultima_actividad: haceTresMinutos,
+      };
+
+      // Simular slot 02 activo y transmitiendo
+      mockRtdb['monitoreo/dispositivos/02'] = {
+        estado: 'activo',
+        dispositivo_id: 'tablet-cocina-viva',
+        rol: 'cocina',
+        usuario_id: '02',
+        usuario_nombre: 'Carlos',
+        ultima_actividad: Date.now(),
+      };
+
+      // Límite de 2 terminales simultáneas
+      const resNuevaTerminal = await admitirSesionDispositivo(dbMock, {
+        deviceId: 'tablet-nueva-reemplazo',
+        usuarioId: '03',
+        usuarioNombre: 'Elena',
+        cargo: 'mesero',
+        limiteDispositivos: 2,
+        esWebForzado: false,
+      });
+
+      // Debe haber reclamado oportunistamente el slot 01
+      expect(resNuevaTerminal.admitido).toBe(true);
+      expect(resNuevaTerminal.slotId).toBe('01');
+      expect(mockRtdb['monitoreo/dispositivos/01'].dispositivo_id).toBe('tablet-nueva-reemplazo');
+      expect(mockRtdb['monitoreo/dispositivos/01'].usuario_nombre).toBe('Elena');
+    });
   });
 
   describe('Instalaciones Compartidas y Cambio de Operador', () => {

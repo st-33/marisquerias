@@ -5,11 +5,12 @@
  * Dogma ADI: Cero llamadas directas a Firebase. Toda mutación pasa por useLogicaAjustesAdmin.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -45,7 +46,90 @@ export function PantallaAjustesAdmin() {
     guardarCambios,
     probarEstiloEnRoles,
     eliminarUsuario,
+    actualizarPerfilOperador,
+    altaOperadorDirecta,
   } = useLogicaAjustesAdmin();
+
+  // Estados locales para gestión de Personal
+  const [operadorEditando, setOperadorEditando] = useState<any | null>(null);
+  const [cargoEdit, setCargoEdit] = useState('');
+  const [sueldoEdit, setSueldoEdit] = useState('');
+  const [horarioEntradaEdit, setHorarioEntradaEdit] = useState('');
+  const [horarioSalidaEdit, setHorarioSalidaEdit] = useState('');
+  const [guardandoOperador, setGuardandoOperador] = useState(false);
+
+  const [modalAltaOperador, setModalAltaOperador] = useState(false);
+  const [altaNombre, setAltaNombre] = useState('');
+  const [altaEdad, setAltaEdad] = useState('24');
+  const [altaSexo, setAltaSexo] = useState<'H' | 'M'>('H');
+  const [altaCargo, setAltaCargo] = useState('mesero');
+  const [altaSueldo, setAltaSueldo] = useState('');
+  const [altaHorarioEntrada, setAltaHorarioEntrada] = useState('');
+  const [altaHorarioSalida, setAltaHorarioSalida] = useState('');
+  const [guardandoAltaOperador, setGuardandoAltaOperador] = useState(false);
+  const [errorOperador, setErrorOperador] = useState<string | null>(null);
+
+  const abrirEdicionOperador = (u: any) => {
+    setOperadorEditando(u);
+    setCargoEdit(u.perfil?.cargo || '');
+    setSueldoEdit(u.perfil?.sueldo !== undefined ? String(u.perfil.sueldo) : '');
+    setHorarioEntradaEdit(u.perfil?.horario_entrada || '');
+    setHorarioSalidaEdit(u.perfil?.horario_salida || '');
+    setErrorOperador(null);
+  };
+
+  const ejecutarGuardarEdicionOperador = async () => {
+    if (!operadorEditando) return;
+    setGuardandoOperador(true);
+    setErrorOperador(null);
+
+    const sueldoNum = sueldoEdit.trim() ? parseFloat(sueldoEdit.trim()) : undefined;
+    const ok = await actualizarPerfilOperador(operadorEditando.id, {
+      cargo: cargoEdit.trim() || undefined,
+      sueldo: isNaN(sueldoNum as number) ? undefined : sueldoNum,
+      horario_entrada: horarioEntradaEdit.trim() || undefined,
+      horario_salida: horarioSalidaEdit.trim() || undefined,
+    });
+
+    setGuardandoOperador(false);
+    if (ok) {
+      setOperadorEditando(null);
+    }
+  };
+
+  const ejecutarAltaDirectaOperador = async () => {
+    if (!altaNombre.trim()) {
+      setErrorOperador('El nombre completo es obligatorio');
+      return;
+    }
+    const edadNum = parseInt(altaEdad.trim(), 10);
+    if (isNaN(edadNum) || edadNum < 14 || edadNum > 99) {
+      setErrorOperador('La edad debe ser un número entre 14 y 99 años');
+      return;
+    }
+    setGuardandoAltaOperador(true);
+    setErrorOperador(null);
+
+    const sueldoNum = altaSueldo.trim() ? parseFloat(altaSueldo.trim()) : undefined;
+    const ok = await altaOperadorDirecta({
+      nombre: altaNombre.trim(),
+      edad: edadNum,
+      sexo: altaSexo,
+      cargo: altaCargo.trim() || 'mesero',
+      sueldo: isNaN(sueldoNum as number) ? undefined : sueldoNum,
+      horario_entrada: altaHorarioEntrada.trim() || undefined,
+      horario_salida: altaHorarioSalida.trim() || undefined,
+    });
+
+    setGuardandoAltaOperador(false);
+    if (ok) {
+      setModalAltaOperador(false);
+      setAltaNombre('');
+      setAltaSueldo('');
+      setAltaHorarioEntrada('');
+      setAltaHorarioSalida('');
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -267,44 +351,108 @@ export function PantallaAjustesAdmin() {
 
         {/* ─── SECCIÓN 4: PERSONAL Y OPERADORES REGISTRADOS ───────────── */}
         <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
-          <View style={estilos.tarjetaCabecera}>
-            <Ionicons name="people-outline" size={20} color="#38BDF8" />
-            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Personal y Operadores</Text>
+          <View style={estilos.tarjetaCabeceraConAccion}>
+            <View style={estilos.tarjetaCabecera}>
+              <Ionicons name="people-outline" size={20} color="#38BDF8" />
+              <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Personal y Operadores</Text>
+            </View>
+            {usuarios.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  setErrorOperador(null);
+                  setModalAltaOperador(true);
+                }}
+                style={estilos.botonAltaStaffHeader}
+                accessibilityLabel="Dar de alta nuevo operador"
+              >
+                <Ionicons name="person-add-outline" size={14} color="#38BDF8" />
+                <Text style={estilos.textoBotonAltaStaff}>+ Alta Operador</Text>
+              </Pressable>
+            )}
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
-            Operadores autorizados para comandas y terminales de piso.
+            Gobernanza de operadores autorizados para comandas y terminales de piso. El Administrador asigna condiciones laborales (sueldos y horarios).
           </Text>
 
           {cargandoUsuarios ? (
             <ActivityIndicator size="small" color="#38BDF8" style={{ marginVertical: 12 }} />
           ) : usuarios.length === 0 ? (
             <View style={estilos.cajaVaciaStaff}>
+              <Ionicons name="people-outline" size={36} color="#64748B" />
               <Text style={estilos.textoVacioStaff}>No hay operadores registrados aún en esta Unidad.</Text>
+              <Text style={estilos.subtextoVacioStaff}>
+                Puedes precargar el primer operador desde aquí o permitir el auto-registro en piso.
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setErrorOperador(null);
+                  setModalAltaOperador(true);
+                }}
+                style={estilos.botonAltaStaffVacio}
+              >
+                <Ionicons name="person-add-outline" size={16} color="#0F172A" />
+                <Text style={estilos.textoBotonAltaStaffVacio}>Registrar Primer Operador</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={estilos.listaStaff}>
-              {usuarios.map((u) => (
-                <View key={u.id} style={estilos.filaStaff}>
-                  <AvatarUsuario sexo={u.sexo} size={42} />
-                  <View style={estilos.datosStaff}>
-                    <Text style={[estilos.nombreStaff, { color: colors.text }]}>{u.nombre}</Text>
-                    <View style={estilos.subDatosStaff}>
-                      <Text style={estilos.claveStaff}>Clave: {u.clave}</Text>
-                      <Text style={estilos.puntoStaff}>•</Text>
-                      <Text style={estilos.cargoStaff}>{u.perfil.cargo.toUpperCase()}</Text>
-                      <Text style={estilos.puntoStaff}>•</Text>
-                      <Text style={estilos.edadStaff}>{u.edad} años</Text>
+              {usuarios.map((u) => {
+                const tieneLaboral =
+                  u.perfil?.sueldo !== undefined ||
+                  u.perfil?.horario_entrada ||
+                  u.perfil?.horario_salida;
+
+                return (
+                  <View key={u.id} style={estilos.filaStaff}>
+                    <AvatarUsuario sexo={u.sexo} size={42} />
+                    <View style={estilos.datosStaff}>
+                      <Text style={[estilos.nombreStaff, { color: colors.text }]}>{u.nombre}</Text>
+                      <View style={estilos.subDatosStaff}>
+                        <Text style={estilos.claveStaff}>Clave: {u.clave}</Text>
+                        <Text style={estilos.puntoStaff}>•</Text>
+                        <Text style={estilos.cargoStaff}>{u.perfil.cargo.toUpperCase()}</Text>
+                        <Text style={estilos.puntoStaff}>•</Text>
+                        <Text style={estilos.edadStaff}>{u.edad} años</Text>
+                      </View>
+                      {tieneLaboral ? (
+                        <View style={estilos.filaDatosLaborales}>
+                          {u.perfil?.sueldo !== undefined ? (
+                            <Text style={estilos.badgeLaboral}>
+                              💵 ${u.perfil.sueldo}
+                            </Text>
+                          ) : null}
+                          {u.perfil?.horario_entrada || u.perfil?.horario_salida ? (
+                            <Text style={estilos.badgeLaboral}>
+                              ⏰ {u.perfil?.horario_entrada || '--'} a {u.perfil?.horario_salida || '--'}
+                            </Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={estilos.textoLaboralPendiente}>
+                          Condiciones laborales sin asignar
+                        </Text>
+                      )}
+                    </View>
+
+                    <View style={estilos.accionesStaff}>
+                      <Pressable
+                        onPress={() => abrirEdicionOperador(u)}
+                        style={estilos.botonEditarStaff}
+                        accessibilityLabel={`Editar perfil laboral de ${u.nombre}`}
+                      >
+                        <Ionicons name="create-outline" size={16} color="#38BDF8" />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => eliminarUsuario(u.id)}
+                        style={estilos.botonEliminarStaff}
+                        accessibilityLabel={`Eliminar operador ${u.nombre}`}
+                      >
+                        <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                      </Pressable>
                     </View>
                   </View>
-                  <Pressable
-                    onPress={() => eliminarUsuario(u.id)}
-                    style={estilos.botonEliminarStaff}
-                    accessibilityLabel={`Eliminar operador ${u.nombre}`}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                  </Pressable>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
         </View>
@@ -351,6 +499,260 @@ export function PantallaAjustesAdmin() {
 
         <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* ─── MODAL 1: EDICIÓN DE PERFIL LABORAL ─────────────────────── */}
+      <Modal
+        visible={Boolean(operadorEditando)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOperadorEditando(null)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={estilos.modalOverlay}
+        >
+          <View style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}>
+            <View style={estilos.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={estilos.modalTitulo}>Editar Perfil Laboral</Text>
+                <Text style={estilos.modalSubtitulo}>
+                  Operador: {operadorEditando?.nombre} (ID: {operadorEditando?.id})
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setOperadorEditando(null)}
+                style={estilos.modalCerrar}
+                accessibilityLabel="Cerrar modal"
+              >
+                <Ionicons name="close" size={20} color="#94A3B8" />
+              </Pressable>
+            </View>
+
+            {errorOperador ? (
+              <View style={estilos.errorModalCaja}>
+                <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                <Text style={estilos.errorModalTexto}>{errorOperador}</Text>
+              </View>
+            ) : null}
+
+            <ScrollView style={estilos.modalCuerpo} keyboardShouldPersistTaps="handled">
+              <View style={estilos.campo}>
+                <Text style={[estilos.label, { color: colors.text }]}>Cargo / Responsabilidad</Text>
+                <TextInput
+                  style={[estilos.input, { color: colors.text }]}
+                  value={cargoEdit}
+                  onChangeText={setCargoEdit}
+                  placeholder="Ej: mesero, cocina, cajero, admin"
+                  placeholderTextColor="#64748B"
+                />
+              </View>
+
+              <View style={estilos.campo}>
+                <Text style={[estilos.label, { color: colors.text }]}>Sueldo Mensual / Base ($)</Text>
+                <TextInput
+                  style={[estilos.input, { color: colors.text }]}
+                  value={sueldoEdit}
+                  onChangeText={setSueldoEdit}
+                  placeholder="Ej: 12000"
+                  placeholderTextColor="#64748B"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Horario Entrada</Text>
+                  <TextInput
+                    style={[estilos.input, { color: colors.text }]}
+                    value={horarioEntradaEdit}
+                    onChangeText={setHorarioEntradaEdit}
+                    placeholder="Ej: 09:00"
+                    placeholderTextColor="#64748B"
+                  />
+                </View>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Horario Salida</Text>
+                  <TextInput
+                    style={[estilos.input, { color: colors.text }]}
+                    value={horarioSalidaEdit}
+                    onChangeText={setHorarioSalidaEdit}
+                    placeholder="Ej: 18:00"
+                    placeholderTextColor="#64748B"
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={estilos.modalFooter}>
+              <Pressable
+                onPress={() => setOperadorEditando(null)}
+                style={estilos.botonModalCancelar}
+              >
+                <Text style={estilos.textoModalCancelar}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                onPress={ejecutarGuardarEdicionOperador}
+                disabled={guardandoOperador}
+                style={[estilos.botonModalGuardar, guardandoOperador && { opacity: 0.6 }]}
+              >
+                {guardandoOperador ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={estilos.textoModalGuardar}>Guardar Condiciones</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ─── MODAL 2: ALTA ANTICIPADA DE OPERADOR ────────────────────── */}
+      <Modal
+        visible={modalAltaOperador}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalAltaOperador(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={estilos.modalOverlay}
+        >
+          <View style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}>
+            <View style={estilos.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={estilos.modalTitulo}>Alta Anticipada de Operador</Text>
+                <Text style={estilos.modalSubtitulo}>
+                  Precarga identidad y condiciones laborales antes del primer acceso en piso.
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setModalAltaOperador(false)}
+                style={estilos.modalCerrar}
+                accessibilityLabel="Cerrar modal"
+              >
+                <Ionicons name="close" size={20} color="#94A3B8" />
+              </Pressable>
+            </View>
+
+            {errorOperador ? (
+              <View style={estilos.errorModalCaja}>
+                <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                <Text style={estilos.errorModalTexto}>{errorOperador}</Text>
+              </View>
+            ) : null}
+
+            <ScrollView style={estilos.modalCuerpo} keyboardShouldPersistTaps="handled">
+              <View style={estilos.campo}>
+                <Text style={[estilos.label, { color: colors.text }]}>Nombre Completo *</Text>
+                <TextInput
+                  style={[estilos.input, { color: colors.text }]}
+                  value={altaNombre}
+                  onChangeText={setAltaNombre}
+                  placeholder="Ej: Laura Martínez Reyes"
+                  placeholderTextColor="#64748B"
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Edad (14-99) *</Text>
+                  <TextInput
+                    style={[estilos.input, { color: colors.text }]}
+                    value={altaEdad}
+                    onChangeText={setAltaEdad}
+                    placeholder="25"
+                    placeholderTextColor="#64748B"
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Sexo *</Text>
+                  <View style={estilos.selectorSexo}>
+                    <Pressable
+                      onPress={() => setAltaSexo('H')}
+                      style={[estilos.botonSexo, altaSexo === 'H' && estilos.botonSexoActivo]}
+                    >
+                      <Text style={[estilos.textoSexo, altaSexo === 'H' && estilos.textoSexoActivo]}>Hombre</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setAltaSexo('M')}
+                      style={[estilos.botonSexo, altaSexo === 'M' && estilos.botonSexoActivo]}
+                    >
+                      <Text style={[estilos.textoSexo, altaSexo === 'M' && estilos.textoSexoActivo]}>Mujer</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
+
+              <View style={estilos.campo}>
+                <Text style={[estilos.label, { color: colors.text }]}>Cargo / Responsabilidad *</Text>
+                <TextInput
+                  style={[estilos.input, { color: colors.text }]}
+                  value={altaCargo}
+                  onChangeText={setAltaCargo}
+                  placeholder="Ej: mesero, cocina, cajero, admin"
+                  placeholderTextColor="#64748B"
+                />
+              </View>
+
+              <View style={estilos.campo}>
+                <Text style={[estilos.label, { color: colors.text }]}>Sueldo Mensual / Base ($)</Text>
+                <TextInput
+                  style={[estilos.input, { color: colors.text }]}
+                  value={altaSueldo}
+                  onChangeText={setAltaSueldo}
+                  placeholder="Ej: 14000 (opcional)"
+                  placeholderTextColor="#64748B"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Horario Entrada</Text>
+                  <TextInput
+                    style={[estilos.input, { color: colors.text }]}
+                    value={altaHorarioEntrada}
+                    onChangeText={setAltaHorarioEntrada}
+                    placeholder="Ej: 09:00"
+                    placeholderTextColor="#64748B"
+                  />
+                </View>
+                <View style={[estilos.campo, { flex: 1 }]}>
+                  <Text style={[estilos.label, { color: colors.text }]}>Horario Salida</Text>
+                  <TextInput
+                    style={[estilos.input, { color: colors.text }]}
+                    value={altaHorarioSalida}
+                    onChangeText={setAltaHorarioSalida}
+                    placeholder="Ej: 18:00"
+                    placeholderTextColor="#64748B"
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={estilos.modalFooter}>
+              <Pressable
+                onPress={() => setModalAltaOperador(false)}
+                style={estilos.botonModalCancelar}
+              >
+                <Text style={estilos.textoModalCancelar}>Cancelar</Text>
+              </Pressable>
+              <Pressable
+                onPress={ejecutarAltaDirectaOperador}
+                disabled={guardandoAltaOperador}
+                style={[estilos.botonModalGuardar, guardandoAltaOperador && { opacity: 0.6 }]}
+              >
+                {guardandoAltaOperador ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={estilos.textoModalGuardar}>Registrar Operador</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -619,6 +1021,200 @@ const estilos = StyleSheet.create({
     color: '#E2E8F0',
     fontSize: 11,
     fontWeight: '700',
+  },
+  tarjetaCabeceraConAccion: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  botonAltaStaffHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  textoBotonAltaStaff: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  subtextoVacioStaff: {
+    color: '#94A3B8',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+    maxWidth: 320,
+  },
+  botonAltaStaffVacio: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#38BDF8',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+  },
+  textoBotonAltaStaffVacio: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  filaDatosLaborales: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  badgeLaboral: {
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.2)',
+    color: '#7DD3FC',
+    fontSize: 11,
+    fontWeight: '600',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+  },
+  textoLaboralPendiente: {
+    color: '#64748B',
+    fontSize: 10,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  accionesStaff: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  botonEditarStaff: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 480,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalTitulo: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  modalSubtitulo: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  modalCerrar: {
+    padding: 4,
+  },
+  errorModalCaja: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    marginHorizontal: 18,
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+  },
+  errorModalTexto: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
+  },
+  modalCuerpo: {
+    padding: 18,
+    maxHeight: 380,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    padding: 18,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  botonModalCancelar: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  textoModalCancelar: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  botonModalGuardar: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#0284C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 140,
+  },
+  textoModalGuardar: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  selectorSexo: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  botonSexo: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+  },
+  botonSexoActivo: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38BDF8',
+  },
+  textoSexo: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  textoSexoActivo: {
+    color: '#38BDF8',
   },
 });
 

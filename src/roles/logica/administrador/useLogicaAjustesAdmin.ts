@@ -65,6 +65,8 @@ export function useLogicaAjustesAdmin() {
                 perfil: {
                   cargo: u.perfil?.cargo || u.cargo || '',
                   sueldo: u.perfil?.sueldo,
+                  horario_entrada: u.perfil?.horario_entrada,
+                  horario_salida: u.perfil?.horario_salida,
                 },
               }));
               setUsuarios(lista.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10)));
@@ -177,6 +179,56 @@ export function useLogicaAjustesAdmin() {
     }
   }, []);
 
+  const actualizarPerfilOperador = useCallback(
+    async (
+      usuarioId: string,
+      datos: {
+        cargo?: string;
+        sueldo?: number;
+        horario_entrada?: string;
+        horario_salida?: string;
+      }
+    ) => {
+      try {
+        const { getOperacionRtdb } = await import('../../../sistema/firebase');
+        const { actualizarUsuario } = await import('../../../sistema/usuarios');
+        const dbOperativa = getOperacionRtdb();
+        await actualizarUsuario(dbOperativa, usuarioId, datos);
+        return true;
+      } catch (e: any) {
+        logger.error('AJUSTES_ADMIN', 'Error al actualizar perfil de operador', e);
+        setError(e?.message || 'Error al actualizar perfil de operador');
+        return false;
+      }
+    },
+    []
+  );
+
+  const altaOperadorDirecta = useCallback(
+    async (datos: {
+      nombre: string;
+      edad: number;
+      sexo: 'H' | 'M';
+      cargo: string;
+      sueldo?: number;
+      horario_entrada?: string;
+      horario_salida?: string;
+    }) => {
+      try {
+        const { getOperacionRtdb } = await import('../../../sistema/firebase');
+        const { crearUsuario } = await import('../../../sistema/usuarios');
+        const dbOperativa = getOperacionRtdb();
+        await crearUsuario(dbOperativa, datos);
+        return true;
+      } catch (e: any) {
+        logger.error('AJUSTES_ADMIN', 'Error al crear operador directo', e);
+        setError(e?.message || 'Error al crear operador');
+        return false;
+      }
+    },
+    []
+  );
+
   return {
     nombre,
     logoUrl,
@@ -197,5 +249,7 @@ export function useLogicaAjustesAdmin() {
     guardarCambios,
     probarEstiloEnRoles,
     eliminarUsuario,
+    actualizarPerfilOperador,
+    altaOperadorDirecta,
   };
 }

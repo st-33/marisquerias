@@ -8,7 +8,7 @@
  * - Terminal compartida: Cambiar de operador actualiza el slot existente sin consumir un cupo extra.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storageSesion from '../almacenamiento/storageSesion';
 import { get, ref, set, update } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { Platform } from 'react-native';
@@ -152,11 +152,32 @@ export async function admitirSesionDispositivo(
     }
   }
 
+  // 2b.1. Protocolo de Latido Oportunista: Reclamar slots huérfanos (> 120 segundos sin actividad)
+  const TTL_SLOT_HUERFANO_MS = 120_000;
+  if (!slotAsignadoId) {
+    for (let i = 1; i <= limite; i++) {
+      const idCandidato = formatearSlotId(i);
+      const slotData = slotsActuales[idCandidato];
+      const ultimaActividad =
+        typeof slotData === 'object' && typeof slotData?.ultima_actividad === 'number'
+          ? slotData.ultima_actividad
+          : 0;
+
+      if (ultimaActividad > 0 && timestamp - ultimaActividad > TTL_SLOT_HUERFANO_MS) {
+        slotAsignadoId = idCandidato;
+        console.warn(
+          `[SesionDispositivo] Reclamación oportunista de slot huérfano ${idCandidato} (inactivo desde hace ${Math.round((timestamp - ultimaActividad) / 1000)}s)`
+        );
+        break;
+      }
+    }
+  }
+
   if (!slotAsignadoId) {
     return {
       admitido: false,
       esWeb: false,
-      error: `Límite de terminales simultáneas alcanzado (${limite} permitidas). Libere una terminal para continuar.`,
+      error: `Límite de terminales simultáneas alcanzado (${limite} permitidas). Todas las terminales están activas y transmitiendo latido.`,
     };
   }
 
@@ -284,12 +305,12 @@ export async function liberarSesionDispositivo(
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// PERSISTENCIA LOCAL (AsyncStorage)
+// PERSISTENCIA LOCAL (storageSesion con aislamiento multi-pestaña)
 // ═══════════════════════════════════════════════════════════════════
 
 export async function obtenerSesionOperativaLocal(): Promise<SesionOperativaLocal | null> {
   try {
-    const raw = await AsyncStorage.getItem(CLAVE_STORAGE_SESION);
+    const raw = await storageSesion.getItem(CLAVE_STORAGE_SESION);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -298,7 +319,7 @@ export async function obtenerSesionOperativaLocal(): Promise<SesionOperativaLoca
 
 export async function guardarSesionOperativaLocal(sesion: SesionOperativaLocal): Promise<void> {
   try {
-    await AsyncStorage.setItem(CLAVE_STORAGE_SESION, JSON.stringify(sesion));
+    await storageSesion.setItem(CLAVE_STORAGE_SESION, JSON.stringify(sesion));
   } catch (err) {
     console.warn('[SesionDispositivo] Error al guardar sesión local', err);
   }
@@ -306,7 +327,7 @@ export async function guardarSesionOperativaLocal(sesion: SesionOperativaLocal):
 
 export async function limpiarSesionOperativaLocal(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(CLAVE_STORAGE_SESION);
+    await storageSesion.removeItem(CLAVE_STORAGE_SESION);
   } catch (err) {
     console.warn('[SesionDispositivo] Error al limpiar sesión local', err);
   }
@@ -314,7 +335,7 @@ export async function limpiarSesionOperativaLocal(): Promise<void> {
 
 export async function listarAuditoriaOperadores(): Promise<RegistroAuditoriaOperador[]> {
   try {
-    const raw = await AsyncStorage.getItem(CLAVE_STORAGE_AUDITORIA);
+    const raw = await storageSesion.getItem(CLAVE_STORAGE_AUDITORIA);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -327,7 +348,7 @@ async function agregarRegistroAuditoriaLocal(registro: RegistroAuditoriaOperador
     lista.unshift(registro);
     // Conservar máximo los últimos 100 eventos
     const recortada = lista.slice(0, 100);
-    await AsyncStorage.setItem(CLAVE_STORAGE_AUDITORIA, JSON.stringify(recortada));
+    await storageSesion.setItem(CLAVE_STORAGE_AUDITORIA, JSON.stringify(recortada));
   } catch (err) {
     console.warn('[SesionDispositivo] Error al registrar auditoría de operador', err);
   }

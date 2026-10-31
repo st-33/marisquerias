@@ -3,7 +3,7 @@
  *
  * Flujo canónico:
  * a) Leer código de acceso (6-8 caracteres).
- * b) resolver-access-code → NegocioReal + db_url_operativa.
+ * b) resolver-access-code → ConfiguracionNegocio + db_url_operativa.
  * c) cargarNPB → NegocioPlantillaBase validado.
  * d) encenderCapacidades → EstadoEncendido.
  * e) Guardar EstadoEncendido en el store global.
@@ -19,7 +19,7 @@ import { resolverAccessCodeO1 } from './vinculacion/resolver-access-code';
 import { cargarNPB } from './npb/cargarNPB';
 import { encenderCapacidades, type EstadoEncendido } from './npb/encenderCapacidades';
 import type { NegocioPlantillaBase } from './npb/tiposNPB';
-import type { NegocioReal } from './npb/tiposNegocioReal';
+import type { ConfiguracionNegocio } from './npb/tiposNegocio';
 import type { RolDispositivoCanonico } from '../../negocio/roles/catalogoRoles';
 import { resolverRolPorDefecto } from '../../negocio/roles/redireccionRol';
 import { guardarSesionO1, leerSesionO1 } from './npb/persistenciaSesionO1';
@@ -32,7 +32,7 @@ import { RUTA_RAIZ_UNIDAD_OPERATIVA } from '../rtdb/rutas/ruta_negocio';
 
 export interface ResultadoArranqueO1Exitoso {
   ok: true;
-  negocio: NegocioReal;
+  negocio: ConfiguracionNegocio;
   npb: NegocioPlantillaBase;
   estadoEncendido: EstadoEncendido;
   rolPorDefecto: RolDispositivoCanonico;
@@ -113,17 +113,17 @@ export async function ejecutarArranqueO1(
       );
     }
 
-    // 1c. Validar asignación de Unidad Operativa para negocio real
+    // 1c. Validar asignación de Unidad Operativa para el negocio
     if (!esPlantilla && (!db_url_operativa || !db_url_operativa.trim().startsWith('http'))) {
       throw new Error(
-        'El negocio real no tiene asignada una Unidad Operativa válida en Unidad Secundaria.'
+        'El negocio no tiene asignada una Unidad Operativa válida en Unidad Secundaria.'
       );
     }
 
     // 2. Cargar NPB 00 y validar compatibilidad
     const npb = await cargarNPB(db, negocio.slug_categoria, negocio.version_npb_origen);
 
-    // 3. Encender capacidades y roles (intersección NPB ∩ Negocio Real)
+    // 3. Encender capacidades y roles (intersección NPB ∩ Negocio)
     const estadoEncendido = encenderCapacidades(npb, negocio);
 
     // 4. Guardar EstadoEncendido en el store global

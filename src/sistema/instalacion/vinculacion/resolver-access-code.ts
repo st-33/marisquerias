@@ -1,12 +1,12 @@
 import { get, ref } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storageSesion from '../../almacenamiento/storageSesion';
 import {
   descomponer_ruta_negocio,
   es_ruta_legacy,
   type IdentidadNegocio,
 } from '../../rtdb/rutas/ruta_negocio';
-import type { NegocioReal, RespuestaAccessCode } from '../npb/tiposNegocioReal';
+import type { ConfiguracionNegocio, RespuestaAccessCode } from '../npb/tiposNegocio';
 
 export interface InfoAccessCode extends IdentidadNegocio {
   accessCode: string;
@@ -18,7 +18,7 @@ export interface InfoAccessCode extends IdentidadNegocio {
   usadoPorDeviceIds?: string[];
   rolesPermitidos?: string[];
   modulosPermitidos?: string[];
-  negocio: NegocioReal;
+  negocio: ConfiguracionNegocio;
   db_url_operativa: string;
   version_npb_origen: number;
   nodoPath: string;
@@ -194,7 +194,11 @@ export async function resolverAccessCode(
     identidad.negocio_id === '00' ||
     identidad.negocio_id === '__plantilla_base';
 
-  const tipo_acceso = esPlantillaAcceso ? 'plantilla' : 'negocio_real';
+  const tipo_acceso = esPlantillaAcceso
+    ? 'plantilla'
+    : (val as any)?.tipo_acceso === 'negocio_real'
+    ? 'negocio_real'
+    : 'negocio';
 
   const capacidadesRaw =
     typeof val === 'object' && val !== null
@@ -222,7 +226,7 @@ export async function resolverAccessCode(
       ? (val as any).nombre_comercial || (val as any).nombreComercial || (val as any).nombre
       : undefined;
 
-  const negocio: NegocioReal = {
+  const negocio: ConfiguracionNegocio = {
     negocio_id:
       (typeof val === 'object' &&
         val !== null &&
@@ -250,23 +254,23 @@ export async function resolverAccessCode(
     ruta_negocio: rutaNegocio,
   };
 
-  // Guardar sesión local en AsyncStorage
+  // Guardar sesión local en storageSesion
   try {
-    if (typeof AsyncStorage.multiSet === 'function') {
-      await AsyncStorage.multiSet([
+    if (typeof storageSesion.multiSet === 'function') {
+      await storageSesion.multiSet([
         ['@negocio_id', negocio.negocio_id],
         ['@slug_categoria', negocio.slug_categoria],
         ['@version_npb_origen', String(negocio.version_npb_origen)],
         ['@db_url_operativa', db_url_operativa],
       ]);
-    } else if (typeof AsyncStorage.setItem === 'function') {
-      await AsyncStorage.setItem('@negocio_id', negocio.negocio_id);
-      await AsyncStorage.setItem('@slug_categoria', negocio.slug_categoria);
-      await AsyncStorage.setItem('@version_npb_origen', String(negocio.version_npb_origen));
-      await AsyncStorage.setItem('@db_url_operativa', db_url_operativa);
+    } else if (typeof storageSesion.setItem === 'function') {
+      await storageSesion.setItem('@negocio_id', negocio.negocio_id);
+      await storageSesion.setItem('@slug_categoria', negocio.slug_categoria);
+      await storageSesion.setItem('@version_npb_origen', String(negocio.version_npb_origen));
+      await storageSesion.setItem('@db_url_operativa', db_url_operativa);
     }
   } catch (error) {
-    console.warn('[resolverAccessCode] No se pudo guardar la sesión en AsyncStorage', error);
+    console.warn('[resolverAccessCode] No se pudo guardar la sesión en storageSesion', error);
   }
 
   return {
