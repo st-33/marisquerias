@@ -137,6 +137,21 @@
         ".read": "auth != null",
         ".write": "auth != null"
       }
+    },
+
+    "usuario": {
+      ".read": "auth != null",
+      "$usuarioId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['nombre', 'clave', 'edad', 'sexo', 'perfil'])"
+      }
+    },
+
+    "monitoreo": {
+      ".read": "auth != null",
+      "dispositivos": {
+        ".write": "auth != null"
+      }
     }
   }
 }

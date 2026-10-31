@@ -27,6 +27,24 @@ export function formatearSlotId(numero: number): string {
   return numero < 10 ? `0${numero}` : `${numero}`;
 }
 
+export function esSlotActivo(slotData: any): boolean {
+  if (!slotData) return false;
+  if (typeof slotData === 'string') {
+    return slotData.trim().toLowerCase() === 'activo';
+  }
+  if (typeof slotData === 'object') {
+    return slotData.estado === 'activo';
+  }
+  return false;
+}
+
+export function extraerDispositivoIdDeSlot(slotData: any): string | null {
+  if (slotData && typeof slotData === 'object' && typeof slotData.dispositivo_id === 'string') {
+    return slotData.dispositivo_id;
+  }
+  return null;
+}
+
 export async function admitirSesionDispositivo(
   db: Database,
   params: {
@@ -71,17 +89,16 @@ export async function admitirSesionDispositivo(
     : 'monitoreo/dispositivos';
 
   const snapshot = await get(ref(db, rutaBaseMonitoreo));
-  const slotsActuales: Record<string, SlotMonitoreoDispositivo> = snapshot.exists()
-    ? (snapshot.val() as Record<string, SlotMonitoreoDispositivo>) || {}
+  const slotsActuales: Record<string, any> = snapshot.exists()
+    ? (snapshot.val() as Record<string, any>) || {}
     : {};
 
   // 2a. Verificar si este dispositivo ya tiene un slot asignado activo
   let slotExistenteId: string | null = null;
   for (const [idSlot, dataSlot] of Object.entries(slotsActuales)) {
     if (
-      dataSlot &&
-      dataSlot.estado === 'activo' &&
-      dataSlot.dispositivo_id === params.deviceId
+      esSlotActivo(dataSlot) &&
+      extraerDispositivoIdDeSlot(dataSlot) === params.deviceId
     ) {
       slotExistenteId = idSlot;
       break;
@@ -93,6 +110,7 @@ export async function admitirSesionDispositivo(
   if (slotExistenteId) {
     // Ya tiene slot asignado: refrescar actividad y actualizar operador responsable
     const payloadActualizacion: Record<string, any> = {
+      estado: 'activo',
       ultima_actividad: timestamp,
       usuario_id: params.usuarioId || '',
       usuario_nombre: params.usuarioNombre || '',
@@ -128,7 +146,7 @@ export async function admitirSesionDispositivo(
   for (let i = 1; i <= limite; i++) {
     const idCandidato = formatearSlotId(i);
     const slotData = slotsActuales[idCandidato];
-    if (!slotData || slotData.estado !== 'activo') {
+    if (!esSlotActivo(slotData)) {
       slotAsignadoId = idCandidato;
       break;
     }
