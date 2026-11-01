@@ -16,7 +16,7 @@ import type { FabConfig, FabItem } from '../../sistema/tipos/contratos';
 import { ejecutarAccionFab } from './accionFlotante';
 
 const BUBBLE_SIZE = 64;
-const MINI_BUBBLE_SIZE = 50;
+const MINI_BUBBLE_SIZE = 44;
 
 interface BubbleProps {
   item: FabItem;
@@ -41,9 +41,9 @@ const Bubble: React.FC<BubbleProps> = ({
     const angle =
       position === 'top-right'
         ? (Math.PI / 2) * (index / Math.max(total - 1, 1)) + Math.PI
-        : (Math.PI / 2) * (index / Math.max(total - 1, 1)) + Math.PI / 2;
+        : (Math.PI * 0.58) * (index / Math.max(total - 1, 1)) + Math.PI * 0.46;
 
-    const radius = 70; // Menos exagerado
+    const radius = 86; // Espaciado refinado y no amontonado
     const x = radius * Math.cos(angle);
     const y = radius * Math.sin(angle);
 

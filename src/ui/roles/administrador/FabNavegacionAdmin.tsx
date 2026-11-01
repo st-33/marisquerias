@@ -8,7 +8,7 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { AccionRadialFlotante } from '../../bloques/AccionRadialFlotante';
 import type { FabItem } from '../../../sistema/tipos/contratos';
 import { useStore } from '../../../sistema/store';
@@ -112,16 +112,6 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
       },
     });
 
-    // Acción permanente: Salir al selector de roles
-    list.push({
-      key: 'roles',
-      label: 'Salir a Roles',
-      icon: <Ionicons name="people" size={22} color="#FFFFFF" />,
-      onPress: () => {
-        router.replace('/_role/roles');
-      },
-    });
-
     return list;
   }, [pathname, estadoEncendido, router]);
 
@@ -137,7 +127,7 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
             pressed && { opacity: 0.7, transform: [{ scale: 0.96 }] },
           ]}
         >
-          <Ionicons name="arrow-back" size={16} color="#94A3B8" />
+          <MaterialIcons name="groups" size={18} color="#94A3B8" />
           <Text style={styles.regresoText}>Roles</Text>
         </Pressable>
       </View>
