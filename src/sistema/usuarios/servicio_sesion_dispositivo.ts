@@ -267,6 +267,25 @@ export async function admitirSesionDispositivo(
   };
   await guardarSesionOperativaLocal(nuevaSesion);
 
+  // 6. Asegurar flag de dispositivo vinculado para el guardia de autenticación
+  try {
+    const vinculo = {
+      deviceIdADI: params.deviceId,
+      estado: 'activo',
+      usuarioId: params.usuarioId,
+      usuarioNombre: params.usuarioNombre,
+      cargo: params.cargo,
+      slotId: slotAsignado,
+      vinculadoEn: ahora,
+      actualizadoEn: ahora,
+    };
+    await storageSesion.setItem('adi_dispositivo_vinculado', JSON.stringify(vinculo));
+    await storageSesion.setItem('device_registered', 'true');
+    await storageSesion.setItem('adi_device_id_persistent', params.deviceId);
+  } catch (err) {
+    console.warn('[SesionDispositivo] Error al persistir vínculo de dispositivo:', err);
+  }
+
   return {
     admitido: true,
     esWeb: false,

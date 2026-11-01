@@ -7,7 +7,7 @@
  * 3. Tarjeta compacta y legible sin cortes de texto.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,43 @@ export function PantallaVinculacion() {
   const [paso, setPaso] = useState<'codigo' | 'usuario'>('codigo');
   const [resultadoArranque, setResultadoArranque] = useState<any>(null);
   const { loading, errorInfo, arrancar, resetError } = useArranqueO1();
+
+  // Auto-detección: si el dispositivo ya cuenta con sesión O1 válida, no volver a pedir el código
+  useEffect(() => {
+    let montado = true;
+    async function verificarSesionExistente() {
+      try {
+        const { leerSesionO1 } = await import('../../sistema/instalacion/npb/persistenciaSesionO1');
+        const sesionO1 = await leerSesionO1();
+        if (!montado) return;
+
+        if (sesionO1.valida && sesionO1.sesion) {
+          if (Platform.OS === 'web') {
+            router.replace('/_role/roles');
+            return;
+          }
+
+          const { obtenerSesionOperativaLocal } =
+            await import('../../sistema/usuarios/servicio_sesion_dispositivo');
+          const sesionLocal = await obtenerSesionOperativaLocal();
+          if (sesionLocal && sesionLocal.usuario_id && sesionLocal.estado === 'activa') {
+            router.replace('/_role/roles');
+            return;
+          }
+
+          // Si el negocio está vinculado pero no tiene usuario de piso, ir directo a paso usuario
+          setPaso('usuario');
+        }
+      } catch {
+        // En caso de fallo de lectura, permanecer en pantalla de código
+      }
+    }
+
+    void verificarSesionExistente();
+    return () => {
+      montado = false;
+    };
+  }, []);
 
   const esValidoParaEnviar = useMemo(() => {
     return codigo.trim().length >= 4;

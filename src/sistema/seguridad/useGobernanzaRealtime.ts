@@ -33,6 +33,8 @@ export function useGobernanzaRealtime(isReady: boolean) {
     let devLegacyCallback: any = null;
     let bloqueadosRef: any = null;
     let bloqueadosCallback: any = null;
+    let sesionRef: any = null;
+    let sesionCallback: any = null;
 
     const iniciarGobernanza = async () => {
       try {
@@ -94,6 +96,42 @@ export function useGobernanzaRealtime(isReady: boolean) {
           }
         });
 
+        // 2.2 Desvinculación remota de plaza operativa: Escuchar sesiones/{slot_id}
+        try {
+          const { obtenerSesionOperativaLocal } =
+            await import('../usuarios/servicio_sesion_dispositivo');
+          const sesionLocal = await obtenerSesionOperativaLocal();
+          if (sesionLocal && sesionLocal.slot_id) {
+            sesionRef = ref(db, `sesiones/${sesionLocal.slot_id}`);
+            sesionCallback = onValue(sesionRef, (snapshot) => {
+              if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (
+                  data &&
+                  (data.estado === 'revocada' ||
+                    data.estado === 'inactiva' ||
+                    (data.dispositivo_id && data.dispositivo_id !== deviceId))
+                ) {
+                  logger.warn(
+                    'GOBERNANZA',
+                    `🚨 Terminal revocada remotamente en plaza ${sesionLocal.slot_id} por el Ecosistema`
+                  );
+                  setEstadoInstalacion('BLOQUEADA');
+                  void clearSession().then(async () => {
+                    const { desvincularNegocioO1 } = await import(
+                      '../instalacion/npb/persistenciaSesionO1'
+                    );
+                    await desvincularNegocioO1('DESVINCULAR');
+                    router.replace(RUTAS.AUTH.LOGIN);
+                  });
+                }
+              }
+            });
+          }
+        } catch {
+          // Sin sesión local asignada aún
+        }
+
         // 3. Escuchar {tenantPath}/bloqueados (Módulos bloqueados en tiempo real)
         bloqueadosRef = ref(db, `${tenantPath}/bloqueados`);
         bloqueadosCallback = onValue(bloqueadosRef, (snapshot) => {
@@ -127,6 +165,7 @@ export function useGobernanzaRealtime(isReady: boolean) {
       if (activoRef && activoCallback) off(activoRef, 'value', activoCallback);
       if (devRef && devCallback) off(devRef, 'value', devCallback);
       if (devLegacyRef && devLegacyCallback) off(devLegacyRef, 'value', devLegacyCallback);
+      if (sesionRef && sesionCallback) off(sesionRef, 'value', sesionCallback);
       if (bloqueadosRef && bloqueadosCallback) off(bloqueadosRef, 'value', bloqueadosCallback);
     };
   }, [isReady, tenantPath, router, clearSession, setModulosBloqueados, setEstadoInstalacion]);

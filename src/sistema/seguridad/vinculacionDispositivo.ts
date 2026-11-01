@@ -110,9 +110,59 @@ export async function getDeviceInfo(): Promise<DeviceInfoData> {
 export async function isDeviceRegistered(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem('adi_dispositivo_vinculado');
-    if (!raw) return false;
-    const dispositivo = JSON.parse(raw);
-    return dispositivo && dispositivo.estado === 'activo' && !!dispositivo.deviceIdADI;
+    if (raw) {
+      try {
+        const dispositivo = JSON.parse(raw);
+        if (dispositivo && dispositivo.estado === 'activo' && !!dispositivo.deviceIdADI) {
+          return true;
+        }
+      } catch {
+        // Fallback a verificaciones de resiliencia
+      }
+    }
+
+    // Comprobación de resiliencia con sesión O(1) persistida
+    try {
+      const { leerSesionO1 } = await import('../instalacion/npb/persistenciaSesionO1');
+      const sesionO1 = await leerSesionO1();
+      if (sesionO1.valida && sesionO1.sesion && sesionO1.sesion.negocio_id) {
+        const { resolverDeviceIdADI } = await import('../instalacion/vinculacion/generar-device-id-adi');
+        const deviceIdADI = await resolverDeviceIdADI().catch(() => 'ADI-DISPOSITIVO-VINCULADO');
+        const autoVinculo = {
+          deviceIdADI,
+          negocioId: sesionO1.sesion.negocio_id,
+          estado: 'activo',
+          vinculadoEn: sesionO1.sesion.timestamp_arranque || Date.now(),
+        };
+        await AsyncStorage.setItem('adi_dispositivo_vinculado', JSON.stringify(autoVinculo));
+        await AsyncStorage.setItem(STORAGE_KEY, 'true');
+        return true;
+      }
+    } catch {
+      // Continuar al siguiente fallback
+    }
+
+    // Comprobación de resiliencia con sesión operativa local de usuario
+    try {
+      const { obtenerSesionOperativaLocal } = await import('../usuarios/servicio_sesion_dispositivo');
+      const sesionLocal = await obtenerSesionOperativaLocal();
+      if (sesionLocal && sesionLocal.estado === 'activa' && sesionLocal.dispositivo_id) {
+        const autoVinculo = {
+          deviceIdADI: sesionLocal.dispositivo_id,
+          estado: 'activo',
+          usuarioId: sesionLocal.usuario_id,
+          slotId: sesionLocal.slot_id,
+          vinculadoEn: sesionLocal.fecha_inicio || Date.now(),
+        };
+        await AsyncStorage.setItem('adi_dispositivo_vinculado', JSON.stringify(autoVinculo));
+        await AsyncStorage.setItem(STORAGE_KEY, 'true');
+        return true;
+      }
+    } catch {
+      // No hay sesión
+    }
+
+    return false;
   } catch (error) {
     logger.error('SECURITY', 'Error al verificar registro de dispositivo', error as Error);
     return false;

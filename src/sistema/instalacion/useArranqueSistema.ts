@@ -177,6 +177,28 @@ export async function ejecutarArranqueO1(
       nombre_comercial: negocio.nombre_comercial,
     });
 
+    try {
+      const { storageSesion } = await import('../almacenamiento/storageSesion');
+      const { resolverDeviceIdADI } = await import('./vinculacion/generar-device-id-adi');
+      const deviceIdADI = await resolverDeviceIdADI().catch(() => 'ADI-DISPOSITIVO');
+      const vinculo = {
+        deviceIdADI,
+        negocioId: negocio.negocio_id,
+        slugCategoria: negocio.slug_categoria,
+        codigoAcceso: cleanCode,
+        estado: 'activo',
+        vinculadoEn: Date.now(),
+        actualizadoEn: Date.now(),
+      };
+      await storageSesion.setItem('adi_dispositivo_vinculado', JSON.stringify(vinculo));
+      await storageSesion.setItem('device_registered', 'true');
+      await storageSesion.setItem('adi_device_id_persistent', deviceIdADI);
+    } catch (errVinculo) {
+      logger.warn('ARRANQUE_O1', 'No se pudo guardar flag adi_dispositivo_vinculado', {
+        error: (errVinculo as Error).message,
+      });
+    }
+
     logger.info('ARRANQUE_O1', 'Arranque O(1) completado con éxito', {
       negocioId: negocio.negocio_id,
       categoria: negocio.slug_categoria,
