@@ -43,6 +43,7 @@ export const ItemInventarioV2Schema = z.object({
   minStock: z.number().default(0),
   costo: z.number().optional(),
   proveedor: z.string().optional(),
+  precio_negocio: z.number().optional(),
   metadata: z.record(z.string(), z.any()).optional(),
   updatedAt: z.number(),
 });

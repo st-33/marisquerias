@@ -25,7 +25,7 @@ export function PantallaRoles() {
   const modoFijo = estiloConfigurado === 'orbes' || esPastillasOClasico;
   const estiloInicial = esPastillasOClasico ? 'pastillas' : 'orbes';
   const [estiloManual, setEstiloManual] = useState<'orbes' | 'pastillas' | null>(null);
-  const estiloVisual = modoFijo ? estiloInicial : estiloManual ?? estiloInicial;
+  const estiloVisual = modoFijo ? estiloInicial : (estiloManual ?? estiloInicial);
 
   if (!rutaNegocio || !negocioId) {
     return (

@@ -14,17 +14,14 @@
  * gráficas (antes en compartido/componentes/charts).
  */
 
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../../../sistema/store';
-import type { FabItem } from '../../../../sistema/tipos/contratos';
-import { useNotifications } from '../../../../compartido/hooks/useNotificaciones';
-import { useStoreNotifications } from '../../../../compartido/hooks/useNotificacionesAlmacen';
 import { logger } from '../../../../sistema/monitoreo';
+import { useNotificaciones as useNotifications } from '../../../../compartido/hooks/useNotificaciones';
+import { useNotificacionesAlmacen as useStoreNotifications } from '../../../../compartido/hooks/useNotificacionesAlmacen';
 import { DisenoAdministrador as AdminLayout } from '../../../../compartido/componentes/layouts/DisenoAdministrador';
-import { usePuenteAccionesFlotantes } from '../../../../capacidades/admin';
 import {
   useAlertasInteligentes,
   useLogicaMetricas,
@@ -85,16 +82,16 @@ export function PantallaMetricasDatos() {
   useStoreNotifications({
     enabled: true,
     onNotification: React.useCallback(
-      ({ mesaId, type }) => {
+      ({ mesaId, type }: { mesaId?: string; type: any }) => {
         logger.debug('[admin/metricas]', '🔔 Notificación', { mesaId, type });
-        notify({ type, mesaId }, 'admin');
+        notify({ type, mesaId: mesaId || '' }, 'admin');
       },
       [notify]
     ),
   });
 
   // 🧠 Lógica del módulo
-  const { metrics, loading, actions, features, dateFilter } = useLogicaMetricas();
+  const { metrics, loading, actions, dateFilter } = useLogicaMetricas();
   const fechaDelDia = useMemo(() => {
     const fecha = new Date();
     fecha.setHours(12, 0, 0, 0);
@@ -108,83 +105,6 @@ export function PantallaMetricasDatos() {
   } = useRegistroVentasDelDia({ timestamp: fechaDelDia });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
-
-  const navItems = useMemo<FabItem[]>(() => {
-    const items: FabItem[] = [];
-
-    if (features?.admin_dashboard !== false) {
-      items.push({
-        key: 'metricas-home',
-        label: 'Métricas',
-        icon: <Ionicons name="stats-chart" size={26} color="white" />,
-        onPress: () => router.replace('/_role/admin/dashboard'),
-      });
-    }
-
-    if (features?.admin_menu !== false) {
-      items.push({
-        key: 'menu',
-        label: 'Menú',
-        icon: <Ionicons name="restaurant" size={24} color="white" />,
-        onPress: () => router.push('/_role/admin/menu'),
-      });
-    }
-
-    if (features?.admin_inventory !== false) {
-      items.push({
-        key: 'inventory',
-        label: 'Inventario',
-        icon: <Ionicons name="cube" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/inventario'),
-      });
-    }
-
-    if (features?.admin_tables !== false) {
-      items.push({
-        key: 'tables',
-        label: 'Mesas',
-        icon: <Ionicons name="grid" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/mesas'),
-      });
-    }
-
-    if (features?.admin_devices !== false) {
-      items.push({
-        key: 'devices',
-        label: 'Dispositivos',
-        icon: <Ionicons name="hardware-chip" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/dispositivos'),
-      });
-    }
-
-    if (features?.admin_repart !== false) {
-      items.push({
-        key: 'repart',
-        label: 'ADI Repart',
-        icon: <Ionicons name="car" size={20} color="white" />,
-        onPress: () => router.push('/_role/admin/reparto'),
-      });
-    }
-
-    // Nodo burbuja para regresar a la pantalla de selector de roles
-    items.push({
-      key: 'selector-roles',
-      label: 'Selector de Roles',
-      icon: <Ionicons name="people" size={22} color="white" />,
-      onPress: () => router.replace('/_role/roles'),
-    });
-
-    return items;
-  }, [features]);
-
-  const fabConfig = useMemo(
-    () => ({
-      items: navItems,
-      initialKey: navItems[0]?.key ?? null,
-      position: 'bottom-right' as const,
-    }),
-    [navItems]
-  );
 
   // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 

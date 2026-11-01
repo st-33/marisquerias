@@ -4,8 +4,7 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   PanResponder,
@@ -19,8 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './estilos';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { TarjetaResumen } from './componentes/TarjetaResumen';
-import { useGestionMesas, usePuenteAccionesFlotantes } from '../../../../capacidades';
-import type { FabItem } from '../../../../sistema/tipos/contratos';
+import { useGestionMesas } from '../../../../capacidades';
 
 // --- COMPONENTS ---
 
@@ -121,45 +119,6 @@ export function PantallaMesas() {
     }
   };
 
-  // --- FAB ITEMS ---
-  const fabItems = useMemo<FabItem[]>(() => {
-    if (editMode) {
-      return [
-        {
-          key: 'save-layout',
-          label: 'Guardar Distribución',
-          icon: <Ionicons name="checkmark" size={24} color={'#FFFFFF'} />,
-          onPress: handleSaveLayout,
-        },
-        {
-          key: 'cancel-layout',
-          label: 'Cancelar',
-          icon: <Ionicons name="close" size={24} color={'#FFFFFF'} />,
-          onPress: () => {
-            setEditMode(false);
-            setLayoutDirty(false);
-            setDraftLayout({});
-          },
-        },
-      ];
-    }
-
-    return [
-      {
-        key: 'edit-layout',
-        label: 'Modificar Distribución',
-        icon: <Ionicons name="create-outline" size={20} color={'#FFFFFF'} />,
-        onPress: () => setEditMode(true),
-      },
-      {
-        key: 'selector-roles',
-        label: 'Selector de Roles',
-        icon: <Ionicons name="people" size={20} color={'#FFFFFF'} />,
-        onPress: () => router.replace('/_role/roles'),
-      },
-    ];
-  }, [editMode, handleSaveLayout]);
-
   // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   if (loading) {
@@ -183,28 +142,57 @@ export function PantallaMesas() {
 
         <View style={[styles.headerActions, isCompactLayout && styles.headerActionsCompact]}>
           {editMode ? (
-            <View style={styles.editBadge}>
-              <Ionicons name="pencil-outline" size={16} color="#f59e0b" />
-              <Text style={styles.editBadgeText}>Arrastra las mesas para reubicarlas</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={styles.editBadge}>
+                <Ionicons name="pencil-outline" size={16} color="#f59e0b" />
+                <Text style={styles.editBadgeText}>Arrastra las mesas</Text>
+              </View>
+              <Pressable style={styles.btnApply} onPress={handleSaveLayout}>
+                <Text style={styles.btnApplyText}>Guardar</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.btnApply, { backgroundColor: '#475569' }]}
+                onPress={() => {
+                  setEditMode(false);
+                  setLayoutDirty(false);
+                  setDraftLayout({});
+                }}
+              >
+                <Text style={styles.btnApplyText}>Cancelar</Text>
+              </Pressable>
             </View>
           ) : (
-            <View style={styles.quantityControl}>
-              <Text style={styles.quantityLabel}>Mesas Totales:</Text>
-              <Pressable
-                style={styles.btnQty}
-                onPress={() => setQuantityOverride(Math.max(1, newQuantity - 1))}
-              >
-                <Ionicons name="remove" size={16} color="white" />
-              </Pressable>
-              <Text style={styles.quantityValue}>{newQuantity}</Text>
-              <Pressable style={styles.btnQty} onPress={() => setQuantityOverride(newQuantity + 1)}>
-                <Ionicons name="add" size={16} color="white" />
-              </Pressable>
-              {newQuantity !== cantidad && (
-                <Pressable style={styles.btnApply} onPress={handleUpdateQuantity}>
-                  <Text style={styles.btnApplyText}>Aplicar</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={styles.quantityControl}>
+                <Text style={styles.quantityLabel}>Mesas Totales:</Text>
+                <Pressable
+                  style={styles.btnQty}
+                  onPress={() => setQuantityOverride(Math.max(1, newQuantity - 1))}
+                >
+                  <Ionicons name="remove" size={16} color="white" />
                 </Pressable>
-              )}
+                <Text style={styles.quantityValue}>{newQuantity}</Text>
+                <Pressable
+                  style={styles.btnQty}
+                  onPress={() => setQuantityOverride(newQuantity + 1)}
+                >
+                  <Ionicons name="add" size={16} color="white" />
+                </Pressable>
+                {newQuantity !== cantidad && (
+                  <Pressable style={styles.btnApply} onPress={handleUpdateQuantity}>
+                    <Text style={styles.btnApplyText}>Aplicar</Text>
+                  </Pressable>
+                )}
+              </View>
+              <Pressable
+                style={[
+                  styles.btnApply,
+                  { backgroundColor: '#0284c7', paddingVertical: 8, paddingHorizontal: 12 },
+                ]}
+                onPress={() => setEditMode(true)}
+              >
+                <Text style={styles.btnApplyText}>Editar Plano</Text>
+              </Pressable>
             </View>
           )}
         </View>

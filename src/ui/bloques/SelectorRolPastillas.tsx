@@ -14,7 +14,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import { ThemeToggle, useAppTheme } from '../../compartido/temas';
@@ -44,8 +43,7 @@ export function SelectorRolPastillas({
   onAlternarEstilo,
   estiloActivo = 'pastillas',
 }: SelectorRolPastillasProps) {
-  const { colors, theme, isElite } = useAppTheme();
-  const { width: screenWidth } = useWindowDimensions();
+  const { colors, isElite } = useAppTheme();
 
   const {
     loading,
@@ -210,7 +208,7 @@ export function SelectorRolPastillas({
           textTransform: 'uppercase',
         },
       }),
-    [colors, isElite, theme.scale, screenWidth]
+    [colors, isElite]
   );
 
   if (loading) {

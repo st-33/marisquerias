@@ -3,7 +3,7 @@
  * Componente visual puro para alimentos y bebidas
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
 import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionAvisoEmergente';
 import { useModoInmersivo as useImmersiveMode } from '../../sistema/navegacion/ModoInmersivo';

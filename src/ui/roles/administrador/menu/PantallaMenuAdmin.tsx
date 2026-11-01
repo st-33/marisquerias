@@ -13,7 +13,6 @@
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -28,13 +27,8 @@ import { BarraCategorias } from './bloques/BarraCategorias';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { theme } from '@/compartido/temas';
 import type { Producto } from '../../../../sistema/persistencia';
-import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
-import type { FabItem } from '../../../../sistema/tipos/contratos';
-import {
-  useFuncionalidadesAdmin,
-  useGestionMenu,
-  usePuenteAccionesFlotantes,
-} from '../../../../capacidades';
+import { useInventoryAreas, useInventoryCatalog } from '../../../../sistema/store';
+import { useFuncionalidadesAdmin, useGestionMenu } from '../../../../capacidades';
 import { ListaProductos } from './componentes/ListaProductos';
 import { ModalNuevaCategoria } from './componentes/ModalNuevaCategoria';
 import { ModalProducto, type PestanaProducto } from './componentes/ModalProducto';
@@ -123,47 +117,6 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     }
     return categorias.length > 0 ? categorias[0].id : null;
   }, [selectedCat, categorias]);
-
-  const fabItems = useMemo<FabItem[]>(() => {
-    const items: FabItem[] = [
-      {
-        key: 'add-product',
-        label: 'Nuevo Producto',
-        icon: <Ionicons name="add" size={24} color={'#FFFFFF'} />,
-        onPress: () => {
-          if (!activeCat) {
-            showToast('Selecciona una categoría primero', 'error');
-            return;
-          }
-          setFormData({ ...crearFormularioVacio(), categoriaId: activeCat });
-          actions.setRecetaEnEdicion(null);
-          setEditingTab('basico');
-          setShowModal('addProd');
-        },
-      },
-    ];
-
-    if (featureEnabled('admin_menu_add_category')) {
-      items.push({
-        key: 'add-category',
-        label: 'Nueva Categoría',
-        icon: <Ionicons name="folder-outline" size={20} color={'#FFFFFF'} />,
-        onPress: () => {
-          setCatNombre('');
-          setShowModal('addCat');
-        },
-      });
-    }
-
-    items.push({
-      key: 'selector-roles',
-      label: 'Selector de Roles',
-      icon: <Ionicons name="people" size={22} color={'#FFFFFF'} />,
-      onPress: () => router.replace('/_role/roles'),
-    });
-
-    return items;
-  }, [activeCat, featureEnabled, showToast, actions]);
 
   // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 

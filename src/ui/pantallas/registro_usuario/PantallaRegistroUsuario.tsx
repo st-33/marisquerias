@@ -89,9 +89,6 @@ export function PantallaRegistroUsuario({
         const lista = await listarUsuarios(db);
         if (montado) {
           setUsuariosExistentes(lista);
-          if (lista.length > 0 && modo === 'nuevo') {
-            // Si ya hay usuarios, dejamos la opción abierta para seleccionar
-          }
         }
       } catch (err) {
         console.warn('[RegistroUsuario] No se pudo cargar lista inicial de usuarios', err);
@@ -105,11 +102,12 @@ export function PantallaRegistroUsuario({
     };
   }, []);
 
-  // Asegurar que el cargo seleccionado sea uno de los disponibles
-  useEffect(() => {
+  // Asegurar que el cargo efectivo sea uno de los disponibles sin efecto colateral
+  const cargoEfectivo = useMemo(() => {
     if (rolesDisponibles.length > 0 && !rolesDisponibles.includes(cargoSeleccionado as any)) {
-      setCargoSeleccionado(rolesDisponibles[0]);
+      return rolesDisponibles[0];
     }
+    return cargoSeleccionado;
   }, [rolesDisponibles, cargoSeleccionado]);
 
   const edadNumero = useMemo(() => {
@@ -120,9 +118,9 @@ export function PantallaRegistroUsuario({
   const esFormularioValido = useMemo(() => {
     const nombreValido = nombre.trim().length >= 2;
     const edadValida = edadNumero >= 14 && edadNumero <= 99;
-    const cargoValido = !!cargoSeleccionado;
+    const cargoValido = !!cargoEfectivo;
     return nombreValido && edadValida && cargoValido;
-  }, [nombre, edadNumero, cargoSeleccionado]);
+  }, [nombre, edadNumero, cargoEfectivo]);
 
   const handlePresionarListo = () => {
     setErrorValidacion(null);
@@ -134,7 +132,7 @@ export function PantallaRegistroUsuario({
       setErrorValidacion('Ingresa una edad válida de 2 dígitos (14 a 99 años).');
       return;
     }
-    if (!cargoSeleccionado) {
+    if (!cargoEfectivo) {
       setErrorValidacion('Selecciona tu cargo o responsabilidad.');
       return;
     }
@@ -152,7 +150,7 @@ export function PantallaRegistroUsuario({
         nombre: nombre.trim(),
         edad: edadNumero,
         sexo,
-        cargo: cargoSeleccionado,
+        cargo: cargoEfectivo,
       });
 
       // Si es nativo, admitir slot en monitoreo/dispositivos
@@ -378,7 +376,7 @@ export function PantallaRegistroUsuario({
               <View style={estilos.grillaCargos}>
                 {rolesDisponibles.map((rolId) => {
                   const def = CATALOGO_ROLES_DISPOSITIVO[rolId];
-                  const esActivo = cargoSeleccionado === rolId;
+                  const esActivo = cargoEfectivo === rolId;
                   const nombreCargo = def ? def.nombre : rolId;
 
                   return (
@@ -483,7 +481,7 @@ export function PantallaRegistroUsuario({
           nombre={nombre.trim()}
           edad={edadNumero}
           sexo={sexo}
-          cargo={cargoSeleccionado}
+          cargo={cargoEfectivo}
           cargando={guardando}
           onConfirmar={handleConfirmarRegistro}
           onEditar={() => setMostrarConfirmacion(false)}

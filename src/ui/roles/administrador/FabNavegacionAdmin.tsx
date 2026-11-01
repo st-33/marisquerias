@@ -13,7 +13,7 @@ import { AccionRadialFlotante } from '../../bloques/AccionRadialFlotante';
 import type { FabItem } from '../../../sistema/tipos/contratos';
 import { useStore } from '../../../sistema/store';
 
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export interface FabNavegacionAdminProps {
   pathname: string;
@@ -22,7 +22,6 @@ export interface FabNavegacionAdminProps {
 export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
   const router = useRouter();
   const estadoEncendido = useStore((s) => s.estadoEncendido);
-  const caps = estadoEncendido?.activos?.capacidades || estadoEncendido?.capacidades_activas || [];
 
   const activeKey = useMemo(() => {
     if (pathname.startsWith('/_role/admin/menu')) return 'menu';
@@ -34,6 +33,8 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
   }, [pathname]);
 
   const items = useMemo<FabItem[]>(() => {
+    const caps =
+      estadoEncendido?.activos?.capacidades || estadoEncendido?.capacidades_activas || [];
     const list: FabItem[] = [
       {
         key: 'metricas',
@@ -122,7 +123,7 @@ export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
     });
 
     return list;
-  }, [pathname, caps, estadoEncendido, router]);
+  }, [pathname, estadoEncendido, router]);
 
   return (
     <>

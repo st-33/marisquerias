@@ -23,6 +23,7 @@ import { useArranqueO1 } from '../../sistema/instalacion/useArranqueSistema';
 import { getSecundariaRtdb } from '../../sistema/firebase';
 import { ErrorArranque } from '../bloques/ErrorArranque';
 import { CATEGORIA_APP } from '../../sistema/identidad_categoria';
+import { PantallaRegistroUsuario } from './registro_usuario/PantallaRegistroUsuario';
 
 export function sanitizarCodigoInput(valor: string): string {
   return valor
@@ -96,7 +97,6 @@ export function PantallaVinculacion() {
   };
 
   if (paso === 'usuario') {
-    const { PantallaRegistroUsuario } = require('./registro_usuario/PantallaRegistroUsuario');
     return (
       <PantallaRegistroUsuario
         onRegistroCompletado={(usuario: any) => {
