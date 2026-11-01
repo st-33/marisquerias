@@ -50,6 +50,7 @@ export function SelectorRolPastillas({
     roles,
     nombreNegocio,
     logoUrl,
+    puedeCambiarPerfil,
     handleRolPress,
     handleMenuCliente,
     handleLogout,
@@ -258,10 +259,12 @@ export function SelectorRolPastillas({
             <View />
           )}
 
-          <Pressable onPress={confirmarSalida} style={dynamicStyles.botonDesvincular}>
-            <Ionicons name="log-out-outline" size={14} color={colors.textMuted} />
-            <Text style={dynamicStyles.botonDesvincularTexto}>Desvincular</Text>
-          </Pressable>
+          {puedeCambiarPerfil ? (
+            <Pressable onPress={confirmarSalida} style={dynamicStyles.botonDesvincular}>
+              <Ionicons name="log-out-outline" size={14} color={colors.textMuted} />
+              <Text style={dynamicStyles.botonDesvincularTexto}>Desvincular</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Marca del negocio y logo */}

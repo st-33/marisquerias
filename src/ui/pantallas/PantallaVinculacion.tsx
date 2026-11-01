@@ -57,7 +57,16 @@ export function PantallaVinculacion() {
             await import('../../sistema/usuarios/servicio_sesion_dispositivo');
           const sesionLocal = await obtenerSesionOperativaLocal();
           if (sesionLocal && sesionLocal.usuario_id && sesionLocal.estado === 'activa') {
-            router.replace('/_role/roles');
+            const cargo = sesionLocal.cargo;
+            if (cargo === 'administrador') {
+              router.replace('/_role/roles');
+            } else if (cargo) {
+              const { obtenerRutaPorRol } = await import('../../negocio/roles/redireccionRol');
+              const rutaDirecta = obtenerRutaPorRol(cargo as any);
+              router.replace(rutaDirecta as any);
+            } else {
+              router.replace('/_role/roles');
+            }
             return;
           }
 
@@ -137,7 +146,15 @@ export function PantallaVinculacion() {
     return (
       <PantallaRegistroUsuario
         onRegistroCompletado={(usuario: any) => {
-          if (resultadoArranque?.requiereSeleccionRol) {
+          const cargo = usuario?.perfil?.cargo;
+          if (cargo === 'administrador') {
+            router.replace('/_role/roles');
+          } else if (cargo) {
+            void import('../../negocio/roles/redireccionRol').then(({ obtenerRutaPorRol }) => {
+              const rutaDirecta = obtenerRutaPorRol(cargo);
+              router.replace(rutaDirecta as any);
+            });
+          } else if (resultadoArranque?.requiereSeleccionRol) {
             router.replace('/_role/roles');
           } else if (resultadoArranque?.rutaPorDefecto) {
             router.replace(resultadoArranque.rutaPorDefecto as any);

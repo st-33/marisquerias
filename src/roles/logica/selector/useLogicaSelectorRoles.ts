@@ -177,6 +177,17 @@ export function useLogicaSelectorRoles() {
     console.log('[RoleSelector] Menú cliente');
   }, [playFeedback]);
 
+  const rolSesion = useStore((s) => s.sesion.rol);
+  const puedeCambiarPerfil = useMemo(() => {
+    if (rolSesion === 'administrador') return true;
+    const caps = estadoEncendido?.capacidades_activas || [];
+    return (
+      caps.includes('cambiar_perfil' as any) ||
+      caps.includes('cambiar_usuario' as any) ||
+      (estadoEncendido as any)?.puede_cambiar_usuario === true
+    );
+  }, [rolSesion, estadoEncendido]);
+
   // Manejar logout
   const handleLogout = useCallback(async () => {
     await playFeedback();
@@ -191,6 +202,7 @@ export function useLogicaSelectorRoles() {
     roles,
     nombreNegocio,
     logoUrl,
+    puedeCambiarPerfil,
     handleRolPress,
     handleMenuCliente,
     handleLogout,

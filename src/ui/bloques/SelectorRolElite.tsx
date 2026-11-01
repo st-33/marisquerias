@@ -40,6 +40,7 @@ export function SelectorRolElite({
     roles,
     nombreNegocio,
     logoUrl,
+    puedeCambiarPerfil,
     handleRolPress,
     handleMenuCliente,
     handleLogout,
@@ -225,10 +226,12 @@ export function SelectorRolElite({
               <View />
             )}
 
-            <Pressable onPress={confirmarSalida} style={dynamicStyles.botonDesvincularTop}>
-              <Ionicons name="log-out-outline" size={14} color={colors.textMuted} />
-              <Text style={dynamicStyles.botonDesvincularTopTexto}>Desvincular</Text>
-            </Pressable>
+            {puedeCambiarPerfil ? (
+              <Pressable onPress={confirmarSalida} style={dynamicStyles.botonDesvincularTop}>
+                <Ionicons name="log-out-outline" size={14} color={colors.textMuted} />
+                <Text style={dynamicStyles.botonDesvincularTopTexto}>Desvincular</Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Nombre del negocio y logo */}

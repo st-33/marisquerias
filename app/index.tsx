@@ -31,7 +31,16 @@ export default function Index() {
           sesionOperativa.usuario_id &&
           sesionOperativa.estado === 'activa'
         ) {
-          if (montado) router.replace('/_role/roles');
+          const cargo = sesionOperativa.cargo;
+          if (cargo === 'administrador') {
+            if (montado) router.replace('/_role/roles');
+          } else if (cargo) {
+            const { obtenerRutaPorRol } = await import('../src/negocio/roles/redireccionRol');
+            const rutaDirecta = obtenerRutaPorRol(cargo as any);
+            if (montado) router.replace(rutaDirecta as any);
+          } else {
+            if (montado) router.replace('/_role/roles');
+          }
         } else {
           // Si el negocio ya está vinculado pero falta el perfil de piso, enviar a access (que saltará a registro)
           if (montado) router.replace('/access');

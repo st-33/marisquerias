@@ -74,11 +74,13 @@ describe('vinculacionDispositivo - Resiliencia y Auto-reparación', () => {
 
     jest.spyOn(servicioSesion, 'obtenerSesionOperativaLocal').mockResolvedValueOnce({
       dispositivo_id: 'ADI-DEV-5678',
+      instalacion_id: 'ADI-DEV-5678',
       usuario_id: 'usr_alan',
       usuario_nombre: 'Alan',
       cargo: 'administrador',
       slot_id: '01',
       token_sesion: 'tok_123',
+      plataforma: 'native',
       estado: 'activa',
       fecha_inicio: Date.now(),
       ultima_actividad: Date.now(),
