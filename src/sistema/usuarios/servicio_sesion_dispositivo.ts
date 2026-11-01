@@ -1,30 +1,47 @@
 /**
  * 📱 SERVICIO DE SESIÓN OPERATIVA Y ADMISIÓN DE TERMINALES
- * Control de cuotas de terminales simultáneas en `/monitoreo/dispositivos`.
+ * Control de cuotas de terminales simultáneas y vigencia de sesiones.
  *
- * Reglas de Arquitectura:
- * - Web: Acceso directo, no requiere registro de usuario obligatorio y no consume cupo de terminales.
- * - Nativo (Android/iOS): Requiere vinculación, usuario responsable y cupo de terminales (slots 01..N).
- * - Terminal compartida: Cambiar de operador actualiza el slot existente sin consumir un cupo extra.
+ * ARQUITECTURA DE DATOS:
+ * - Unidad Operativa (/sesiones/{plaza}): Fuente única de sesiones vivas con
+ *   token_sesion, dispositivo_id, instalacion_id, operador, timestamps y estado ('activa'|'inactiva'|'drenando').
+ * - Unidad Secundaria (/monitoreo/dispositivos/{plaza}): Proyección visual de solo lectura
+ *   restringida estrictamente a string 'activo' | 'inactivo'.
+ *
+ * Reglas de Admisión y Presencia:
+ * - Web: Acceso directo sin consumir cupo de terminales (salvo simulacionNativo explícito).
+ * - Nativo (Android/iOS): Admisión atómica mediante runTransaction sobre /sesiones.
+ * - Heartbeat Técnico (30s): Mantiene viva la plaza independientemente de taps humanos.
+ * - Abandono Técnico (180s): Solo tras 180s sin latido técnico se autoriza la reclamación de plaza.
+ * - Desplazamiento por Token: Cada nueva asignación genera un token_sesion único;
+ *   si la terminal previa despierta, su token queda revocado.
  */
 
 import storageSesion from '../almacenamiento/storageSesion';
-import { get, ref, set, update } from 'firebase/database';
+import { get, ref, set, update, runTransaction } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { Platform } from 'react-native';
 import type {
   EstadoAdmisionSesion,
   RegistroAuditoriaOperador,
   SesionOperativaLocal,
-  SlotMonitoreoDispositivo,
+  SesionOperativaRemota,
 } from './tipos';
 
 const CLAVE_STORAGE_SESION = 'adi_sesion_operativa_local';
 const CLAVE_STORAGE_AUDITORIA = 'adi_auditoria_operadores';
-const LIMITE_DEFAULT_TERMINALES = 3;
+export const LIMITE_DEFAULT_TERMINALES = 3;
+export const TTL_ABANDONO_TECNICO_MS = 180_000; // 180 segundos (3 minutos)
+export const INTERVALO_LATIDO_PRESENCIA_MS = 30_000; // 30 segundos
 
 export function formatearSlotId(numero: number): string {
   return numero < 10 ? `0${numero}` : `${numero}`;
+}
+
+export function generarTokenSesion(): string {
+  const rand = Math.random().toString(36).substring(2, 10);
+  const time = Date.now().toString(36);
+  return `tok_${time}_${rand}`;
 }
 
 export function esSlotActivo(slotData: any): boolean {
@@ -33,7 +50,7 @@ export function esSlotActivo(slotData: any): boolean {
     return slotData.trim().toLowerCase() === 'activo';
   }
   if (typeof slotData === 'object') {
-    return slotData.estado === 'activo';
+    return slotData.estado === 'activo' || slotData.estado === 'activa';
   }
   return false;
 }
@@ -57,12 +74,15 @@ export async function admitirSesionDispositivo(
     limiteDispositivos?: number;
     rutaRaizOperativa?: string;
     esWebForzado?: boolean;
+    simulacionNativo?: boolean;
+    dbSecundaria?: Database;
+    rutaSecundariaMonitoreo?: string;
   }
 ): Promise<EstadoAdmisionSesion> {
-  const esWeb = params.esWebForzado ?? Platform.OS === 'web';
+  const esWebPuro = (params.esWebForzado ?? Platform.OS === 'web') && !params.simulacionNativo;
 
-  // 1. En Web el acceso es directo y no consume slots de monitoreo
-  if (esWeb) {
+  // 1. En Web puro el acceso es directo y no consume plazas de terminales
+  if (esWebPuro) {
     const sesionWeb: SesionOperativaLocal = {
       dispositivo_id: params.deviceId,
       instalacionId: params.instalacionId || 'web-browser',
@@ -74,145 +94,236 @@ export async function admitirSesionDispositivo(
       plataforma: 'web',
       fecha_inicio: Date.now(),
       ultima_actividad: Date.now(),
+      estado: 'activa',
     };
     await guardarSesionOperativaLocal(sesionWeb);
     return {
       admitido: true,
       esWeb: true,
+      estado: 'activa',
     };
   }
 
-  // 2. En Nativo validamos y consumimos un slot en `/monitoreo/dispositivos`
-  const limite = Math.max(1, params.limiteDispositivos ?? LIMITE_DEFAULT_TERMINALES);
+  // 2. Determinar límite aplicable (autoridad de Central)
+  let limite = params.limiteDispositivos;
+  if (!limite || limite < 1) {
+    try {
+      const snapCupo = await get(ref(db, 'configuracion/cupo_operativo/limite_aplicado'));
+      if (snapCupo.exists() && typeof snapCupo.val() === 'number') {
+        limite = snapCupo.val();
+      } else {
+        const snapDispositivos = await get(ref(db, 'configuracion/dispositivos'));
+        if (snapDispositivos.exists() && typeof snapDispositivos.val() === 'number') {
+          limite = snapDispositivos.val();
+        }
+      }
+    } catch {
+      // Fallback a default si no hay red o ruta no existe aún
+    }
+  }
+  const limiteEfectivo = Math.max(1, limite ?? LIMITE_DEFAULT_TERMINALES);
+
+  const rutaBaseSesiones = params.rutaRaizOperativa
+    ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/sesiones`
+    : 'sesiones';
   const rutaBaseMonitoreo = params.rutaRaizOperativa
     ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/monitoreo/dispositivos`
     : 'monitoreo/dispositivos';
 
-  const snapshot = await get(ref(db, rutaBaseMonitoreo));
-  const slotsActuales: Record<string, any> = snapshot.exists()
-    ? (snapshot.val() as Record<string, any>) || {}
-    : {};
+  let slotAsignado: string | null = null;
+  let tokenAsignado: string | null = null;
+  let estadoAsignado: 'activa' | 'drenando' = 'activa';
+  let esReingreso = false;
 
-  // 2a. Verificar si este dispositivo ya tiene un slot asignado activo
-  let slotExistenteId: string | null = null;
-  for (const [idSlot, dataSlot] of Object.entries(slotsActuales)) {
-    if (
-      esSlotActivo(dataSlot) &&
-      extraerDispositivoIdDeSlot(dataSlot) === params.deviceId
-    ) {
-      slotExistenteId = idSlot;
-      break;
-    }
-  }
+  const ahora = Date.now();
 
-  const timestamp = Date.now();
+  // 3. Ejecutar runTransaction atómica para garantizar que no existan colisiones en la última plaza
+  const resultadoTx = await runTransaction(ref(db, rutaBaseSesiones), (sesionesRaw) => {
+    const sesiones: Record<string, any> = sesionesRaw || {};
+    slotAsignado = null;
+    tokenAsignado = null;
+    esReingreso = false;
 
-  if (slotExistenteId) {
-    // Ya tiene slot asignado: refrescar actividad y actualizar operador responsable
-    const payloadActualizacion: Record<string, any> = {
-      estado: 'activo',
-      ultima_actividad: timestamp,
-      usuario_id: params.usuarioId || '',
-      usuario_nombre: params.usuarioNombre || '',
-      rol: params.cargo || '',
-    };
+    // 3a. ¿Este dispositivo ya posee una plaza asignada?
+    for (let i = 1; i <= limiteEfectivo; i++) {
+      const slotKey = formatearSlotId(i);
+      const ses = sesiones[slotKey];
+      if (
+        ses &&
+        ses.dispositivo_id === params.deviceId &&
+        (ses.estado === 'activa' || ses.estado === 'drenando')
+      ) {
+        slotAsignado = slotKey;
+        tokenAsignado = ses.token_sesion || generarTokenSesion();
+        estadoAsignado = ses.estado;
+        esReingreso = true;
 
-    await update(ref(db, `${rutaBaseMonitoreo}/${slotExistenteId}`), payloadActualizacion);
-
-    const sesion: SesionOperativaLocal = {
-      dispositivo_id: params.deviceId,
-      instalacionId: params.instalacionId || params.deviceId,
-      instalacion_id: params.instalacionId || params.deviceId,
-      slot_id: slotExistenteId,
-      usuario_id: params.usuarioId,
-      usuario_nombre: params.usuarioNombre,
-      usuario_clave: params.usuarioClave,
-      cargo: params.cargo,
-      plataforma: 'native',
-      fecha_inicio: timestamp,
-      ultima_actividad: timestamp,
-    };
-    await guardarSesionOperativaLocal(sesion);
-
-    return {
-      admitido: true,
-      esWeb: false,
-      slotId: slotExistenteId,
-    };
-  }
-
-  // 2b. Buscar primer slot libre disponible dentro del límite
-  let slotAsignadoId: string | null = null;
-  for (let i = 1; i <= limite; i++) {
-    const idCandidato = formatearSlotId(i);
-    const slotData = slotsActuales[idCandidato];
-    if (!esSlotActivo(slotData)) {
-      slotAsignadoId = idCandidato;
-      break;
-    }
-  }
-
-  // 2b.1. Protocolo de Latido Oportunista: Reclamar slots huérfanos (> 120 segundos sin actividad)
-  const TTL_SLOT_HUERFANO_MS = 120_000;
-  if (!slotAsignadoId) {
-    for (let i = 1; i <= limite; i++) {
-      const idCandidato = formatearSlotId(i);
-      const slotData = slotsActuales[idCandidato];
-      const ultimaActividad =
-        typeof slotData === 'object' && typeof slotData?.ultima_actividad === 'number'
-          ? slotData.ultima_actividad
-          : 0;
-
-      if (ultimaActividad > 0 && timestamp - ultimaActividad > TTL_SLOT_HUERFANO_MS) {
-        slotAsignadoId = idCandidato;
-        console.warn(
-          `[SesionDispositivo] Reclamación oportunista de slot huérfano ${idCandidato} (inactivo desde hace ${Math.round((timestamp - ultimaActividad) / 1000)}s)`
-        );
-        break;
+        ses.token_sesion = tokenAsignado;
+        ses.operador_id = params.usuarioId || ses.operador_id || '';
+        ses.operador_nombre = params.usuarioNombre || ses.operador_nombre || '';
+        ses.rol_activo = params.cargo || ses.rol_activo || 'operador';
+        ses.ultimo_latido_presencia = ahora;
+        ses.ultima_interaccion_humana = ahora;
+        return sesiones;
       }
     }
-  }
 
-  if (!slotAsignadoId) {
+    // 3b. Buscar primer slot libre dentro del cupo
+    for (let i = 1; i <= limiteEfectivo; i++) {
+      const slotKey = formatearSlotId(i);
+      const ses = sesiones[slotKey];
+      if (!ses || ses.estado === 'inactiva' || ses.estado === 'inactivo' || !ses.estado) {
+        slotAsignado = slotKey;
+        tokenAsignado = generarTokenSesion();
+        estadoAsignado = 'activa';
+
+        sesiones[slotKey] = {
+          plaza_id: slotKey,
+          estado: 'activa',
+          token_sesion: tokenAsignado,
+          dispositivo_id: params.deviceId,
+          instalacion_id: params.instalacionId || params.deviceId,
+          operador_id: params.usuarioId || '',
+          operador_nombre: params.usuarioNombre || '',
+          rol_activo: params.cargo || 'operador',
+          inicio: ahora,
+          ultimo_latido_presencia: ahora,
+          ultima_interaccion_humana: ahora,
+        };
+        return sesiones;
+      }
+    }
+
+    // 3c. Reclamación oportunista de plaza huérfana (> 180s sin latido técnico de fondo)
+    for (let i = 1; i <= limiteEfectivo; i++) {
+      const slotKey = formatearSlotId(i);
+      const ses = sesiones[slotKey];
+      const ultimoLatido = ses?.ultimo_latido_presencia || ses?.ultima_actividad || 0;
+
+      if (
+        ses &&
+        (ses.estado === 'activa' || ses.estado === 'drenando' || ses.estado === 'activo') &&
+        ahora - ultimoLatido > TTL_ABANDONO_TECNICO_MS
+      ) {
+        slotAsignado = slotKey;
+        tokenAsignado = generarTokenSesion(); // Nuevo token invalida terminal anterior
+        estadoAsignado = 'activa';
+
+        sesiones[slotKey] = {
+          plaza_id: slotKey,
+          estado: 'activa',
+          token_sesion: tokenAsignado,
+          dispositivo_id: params.deviceId,
+          instalacion_id: params.instalacionId || params.deviceId,
+          operador_id: params.usuarioId || '',
+          operador_nombre: params.usuarioNombre || '',
+          rol_activo: params.cargo || 'operador',
+          inicio: ahora,
+          ultimo_latido_presencia: ahora,
+          ultima_interaccion_humana: ahora,
+          reclamada_de_dispositivo: ses.dispositivo_id,
+        };
+        return sesiones;
+      }
+    }
+
+    // 3d. Cupo agotado y sin abandono técnico: abortar transacción
+    return undefined;
+  });
+
+  if (!resultadoTx.committed || !slotAsignado || !tokenAsignado) {
     return {
       admitido: false,
       esWeb: false,
-      error: `Límite de terminales simultáneas alcanzado (${limite} permitidas). Todas las terminales están activas y transmitiendo latido.`,
+      error: `Límite de terminales simultáneas alcanzado (${limiteEfectivo} permitidas). Todas las terminales están activas y transmitiendo latido.`,
     };
   }
 
-  // 2c. Asignar el nuevo slot
-  const nuevoSlot: SlotMonitoreoDispositivo = {
-    estado: 'activo',
-    dispositivo_id: params.deviceId,
-    rol: params.cargo || 'operador',
-    usuario_id: params.usuarioId || '',
-    usuario_nombre: params.usuarioNombre || '',
-    ultima_actividad: timestamp,
-  };
+  // 4. Sincronizar proyección string puro 'activo' en monitoreo/dispositivos (Secundaria / Operativa)
+  try {
+    await set(ref(db, `${rutaBaseMonitoreo}/${slotAsignado}`), 'activo');
+    if (params.dbSecundaria && params.rutaSecundariaMonitoreo) {
+      await set(ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotAsignado}`), 'activo');
+    }
+  } catch (err) {
+    console.warn('[SesionDispositivo] Error al sincronizar proyección string en monitoreo:', err);
+  }
 
-  await set(ref(db, `${rutaBaseMonitoreo}/${slotAsignadoId}`), nuevoSlot);
-
+  // 5. Guardar sesión operativa local
   const nuevaSesion: SesionOperativaLocal = {
     dispositivo_id: params.deviceId,
     instalacionId: params.instalacionId || params.deviceId,
     instalacion_id: params.instalacionId || params.deviceId,
-    slot_id: slotAsignadoId,
+    slot_id: slotAsignado,
+    token_sesion: tokenAsignado,
     usuario_id: params.usuarioId,
     usuario_nombre: params.usuarioNombre,
     usuario_clave: params.usuarioClave,
     cargo: params.cargo,
-    plataforma: 'native',
-    fecha_inicio: timestamp,
-    ultima_actividad: timestamp,
+    plataforma: params.simulacionNativo ? 'native' : Platform.OS === 'web' ? 'web' : 'native',
+    fecha_inicio: ahora,
+    ultima_actividad: ahora,
+    estado: estadoAsignado,
   };
   await guardarSesionOperativaLocal(nuevaSesion);
 
   return {
     admitido: true,
     esWeb: false,
-    slotId: slotAsignadoId,
+    slotId: slotAsignado,
+    tokenSesion: tokenAsignado,
+    estado: estadoAsignado,
   };
+}
+
+export async function registrarLatidoPresencia(
+  db: Database,
+  params: {
+    slotId: string;
+    tokenSesion: string;
+    rutaRaizOperativa?: string;
+  }
+): Promise<{ ok: boolean; revocada?: boolean }> {
+  const rutaSesion = params.rutaRaizOperativa
+    ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/sesiones/${params.slotId}`
+    : `sesiones/${params.slotId}`;
+
+  try {
+    const snap = await get(ref(db, rutaSesion));
+    if (!snap.exists()) {
+      return { ok: false, revocada: true };
+    }
+    const remota = snap.val() as SesionOperativaRemota;
+    if (remota.token_sesion !== params.tokenSesion || remota.estado === 'inactiva') {
+      return { ok: false, revocada: true };
+    }
+
+    await update(ref(db, rutaSesion), {
+      ultimo_latido_presencia: Date.now(),
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export async function validarTokenSesion(
+  db: Database,
+  slotId: string,
+  tokenSesion: string,
+  rutaRaizOperativa?: string
+): Promise<boolean> {
+  try {
+    const rutaSesion = rutaRaizOperativa
+      ? `${rutaRaizOperativa.replace(/\/+$/, '')}/sesiones/${slotId}`
+      : `sesiones/${slotId}`;
+    const snap = await get(ref(db, rutaSesion));
+    if (!snap.exists()) return false;
+    const ses = snap.val();
+    return ses.token_sesion === tokenSesion && ses.estado !== 'inactiva';
+  } catch {
+    return false;
+  }
 }
 
 export async function cambiarOperadorResponsable(
@@ -231,18 +342,36 @@ export async function cambiarOperadorResponsable(
   const slotId = params.slotId || sesionActual?.slot_id;
   const timestamp = Date.now();
 
-  // 1. Si estamos en nativo y tenemos slotId, actualizar en Firebase RTDB
+  // 1. Si tenemos slotId, actualizar en Firebase RTDB Operativa
   if (slotId) {
-    const rutaSlot = params.rutaRaizOperativa
-      ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/monitoreo/dispositivos/${slotId}`
-      : `monitoreo/dispositivos/${slotId}`;
+    const rutaSesion = params.rutaRaizOperativa
+      ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/sesiones/${slotId}`
+      : `sesiones/${slotId}`;
 
-    await update(ref(db, rutaSlot), {
-      usuario_id: params.nuevoUsuarioId,
-      usuario_nombre: params.nuevoUsuarioNombre,
-      rol: params.nuevoCargo,
-      ultima_actividad: timestamp,
+    await update(ref(db, rutaSesion), {
+      operador_id: params.nuevoUsuarioId,
+      operador_nombre: params.nuevoUsuarioNombre,
+      rol_activo: params.nuevoCargo,
+      ultima_interaccion_humana: timestamp,
     });
+
+    // Registrar en bitácora operativa si existe la ruta
+    try {
+      const rutaBitacora = params.rutaRaizOperativa
+        ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/bitacora_sesiones`
+        : 'bitacora_sesiones';
+      await update(ref(db, `${rutaBitacora}/${timestamp}`), {
+        tipo: 'cambio_operador',
+        slot_id: slotId,
+        usuario_anterior: sesionActual?.usuario_id || '',
+        usuario_nuevo: params.nuevoUsuarioId,
+        nombre_nuevo: params.nuevoUsuarioNombre,
+        cargo_nuevo: params.nuevoCargo,
+        timestamp,
+      });
+    } catch {
+      // No bloqueante
+    }
   }
 
   // 2. Registrar en la bitácora local de auditoría de operadores
@@ -261,7 +390,7 @@ export async function cambiarOperadorResponsable(
 
   await agregarRegistroAuditoriaLocal(registroAuditoria);
 
-  // 3. Actualizar la sesión operativa local conservando el slot y dispositivo
+  // 3. Actualizar la sesión operativa local conservando el slot, token y dispositivo
   const sesionActualizada: SesionOperativaLocal = {
     ...(sesionActual || {
       dispositivo_id: params.deviceId,
@@ -285,20 +414,34 @@ export async function liberarSesionDispositivo(
   params: {
     slotId?: string;
     rutaRaizOperativa?: string;
+    dbSecundaria?: Database;
+    rutaSecundariaMonitoreo?: string;
   }
 ): Promise<void> {
   const sesionActual = await obtenerSesionOperativaLocal();
   const slotId = params.slotId || sesionActual?.slot_id;
 
   if (slotId) {
-    const rutaSlot = params.rutaRaizOperativa
+    const rutaSesion = params.rutaRaizOperativa
+      ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/sesiones/${slotId}`
+      : `sesiones/${slotId}`;
+    const rutaMonitoreo = params.rutaRaizOperativa
       ? `${params.rutaRaizOperativa.replace(/\/+$/, '')}/monitoreo/dispositivos/${slotId}`
       : `monitoreo/dispositivos/${slotId}`;
 
-    await update(ref(db, rutaSlot), {
-      estado: 'inactivo',
-      ultima_actividad: Date.now(),
+    await update(ref(db, rutaSesion), {
+      estado: 'inactiva',
+      ultimo_latido_presencia: Date.now(),
     });
+
+    try {
+      await set(ref(db, rutaMonitoreo), 'inactivo');
+      if (params.dbSecundaria && params.rutaSecundariaMonitoreo) {
+        await set(ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotId}`), 'inactivo');
+      }
+    } catch {
+      // Ignorar si no hay conexión
+    }
   }
 
   await limpiarSesionOperativaLocal();
@@ -346,7 +489,6 @@ async function agregarRegistroAuditoriaLocal(registro: RegistroAuditoriaOperador
   try {
     const lista = await listarAuditoriaOperadores();
     lista.unshift(registro);
-    // Conservar máximo los últimos 100 eventos
     const recortada = lista.slice(0, 100);
     await storageSesion.setItem(CLAVE_STORAGE_AUDITORIA, JSON.stringify(recortada));
   } catch (err) {

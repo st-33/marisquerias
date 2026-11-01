@@ -40,11 +40,28 @@ export interface SlotMonitoreoDispositivo {
   ultima_actividad?: number;
 }
 
+export interface SesionOperativaRemota {
+  plaza_id: string; // "01", "02", etc.
+  estado: 'activa' | 'inactiva' | 'drenando';
+  token_sesion: string;
+  dispositivo_id: string;
+  instalacion_id: string;
+  operador_id?: string;
+  operador_nombre?: string;
+  rol_activo?: string;
+  inicio: number;
+  ultimo_latido_presencia: number;
+  ultima_interaccion_humana?: number;
+  reclamada_de_dispositivo?: string;
+}
+
 export interface SesionOperativaLocal {
   dispositivo_id: string;
   instalacion_id: string;
   instalacionId?: string;
   slot_id?: string; // "01", "02", etc.
+  token_sesion?: string;
+  estado?: 'activa' | 'inactiva' | 'drenando';
   usuario_id?: string;
   usuario_nombre?: string;
   usuario_clave?: string;
@@ -71,5 +88,7 @@ export interface EstadoAdmisionSesion {
   admitido: boolean;
   esWeb: boolean;
   slotId?: string;
+  tokenSesion?: string;
+  estado?: 'activa' | 'drenando';
   error?: string;
 }

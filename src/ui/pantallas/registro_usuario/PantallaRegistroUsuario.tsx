@@ -163,7 +163,6 @@ export function PantallaRegistroUsuario({
         usuarioNombre: nuevoUsuario.clave,
         usuarioClave: nuevoUsuario.clave,
         cargo: nuevoUsuario.perfil.cargo,
-        limiteDispositivos: 3,
       });
 
       if (!resultadoAdmision.admitido && !resultadoAdmision.esWeb) {
@@ -198,7 +197,6 @@ export function PantallaRegistroUsuario({
         usuarioNombre: usuario.clave,
         usuarioClave: usuario.clave,
         cargo: usuario.perfil.cargo,
-        limiteDispositivos: 3,
       });
 
       if (!resultadoAdmision.admitido && !resultadoAdmision.esWeb) {

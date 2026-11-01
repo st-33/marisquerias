@@ -6,6 +6,8 @@ import {
   liberarSesionDispositivo,
   obtenerSesionOperativaLocal,
   listarAuditoriaOperadores,
+  registrarLatidoPresencia,
+  validarTokenSesion,
 } from '../servicio_sesion_dispositivo';
 
 // Memoria local para simular AsyncStorage
@@ -55,6 +57,16 @@ jest.mock('firebase/database', () => ({
       };
     }
   }),
+  runTransaction: jest.fn(async (refObj: { path: string }, updateFn: (curr: any) => any) => {
+    const clean = (refObj.path || '').replace(/^\/+|\/+$/g, '');
+    const currentVal = mockRtdb[clean] ? JSON.parse(JSON.stringify(mockRtdb[clean])) : {};
+    const newVal = updateFn(currentVal);
+    if (newVal === undefined) {
+      return { committed: false, snapshot: { val: () => currentVal } };
+    }
+    mockRtdb[clean] = JSON.parse(JSON.stringify(newVal));
+    return { committed: true, snapshot: { val: () => newVal } };
+  }),
 }));
 
 const dbMock = {} as Database;
@@ -68,7 +80,7 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
   });
 
   describe('Separación Web vs Nativo', () => {
-    it('1. Web se admite directamente sin consumir cupo en monitoreo/dispositivos', async () => {
+    it('1. Web se admite directamente sin consumir cupo en sesiones', async () => {
       const res = await admitirSesionDispositivo(dbMock, {
         deviceId: 'browser-tab-xyz',
         usuarioId: '01',
@@ -81,8 +93,8 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       expect(res.esWeb).toBe(true);
       expect(res.slotId).toBeUndefined();
 
-      // Confirma que NO escribió ningún slot en monitoreo/dispositivos
-      expect(mockRtdb['monitoreo/dispositivos']).toBeUndefined();
+      // Confirma que NO escribió ninguna plaza en sesiones
+      expect(mockRtdb['sesiones']).toBeUndefined();
 
       // Pero sí guardó sesión operativa local
       const sesionLocal = await obtenerSesionOperativaLocal();
@@ -91,7 +103,7 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       expect(sesionLocal?.dispositivo_id).toBe('browser-tab-xyz');
     });
 
-    it('2. Nativo consume slots consecutivos en monitoreo/dispositivos (01, 02...)', async () => {
+    it('2. Nativo consume plazas atómicas en /sesiones (01, 02...) con token_sesion y proyecta string en monitoreo', async () => {
       const res1 = await admitirSesionDispositivo(dbMock, {
         deviceId: 'tablet-piso-01',
         usuarioId: '01',
@@ -104,9 +116,17 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       expect(res1.admitido).toBe(true);
       expect(res1.esWeb).toBe(false);
       expect(res1.slotId).toBe('01');
-      expect(mockRtdb['monitoreo/dispositivos/01']).toBeDefined();
-      expect(mockRtdb['monitoreo/dispositivos/01'].estado).toBe('activo');
-      expect(mockRtdb['monitoreo/dispositivos/01'].dispositivo_id).toBe('tablet-piso-01');
+      expect(res1.tokenSesion).toBeDefined();
+
+      // Unidad Operativa: nodo rico en /sesiones/01
+      const ses1 = mockRtdb['sesiones']['01'];
+      expect(ses1).toBeDefined();
+      expect(ses1.estado).toBe('activa');
+      expect(ses1.dispositivo_id).toBe('tablet-piso-01');
+      expect(ses1.token_sesion).toBe(res1.tokenSesion);
+
+      // Proyección en monitoreo/dispositivos: string estricto 'activo'
+      expect(mockRtdb['monitoreo/dispositivos/01']).toBe('activo');
 
       // Segunda terminal nativa
       const res2 = await admitirSesionDispositivo(dbMock, {
@@ -120,11 +140,12 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
 
       expect(res2.admitido).toBe(true);
       expect(res2.slotId).toBe('02');
-      expect(mockRtdb['monitoreo/dispositivos/02'].dispositivo_id).toBe('tablet-cocina-02');
+      expect(mockRtdb['sesiones']['02'].dispositivo_id).toBe('tablet-cocina-02');
+      expect(mockRtdb['monitoreo/dispositivos/02']).toBe('activo');
     });
 
-    it('3. Nativo: Reingreso del mismo dispositivo reutiliza su slot sin crear uno nuevo', async () => {
-      await admitirSesionDispositivo(dbMock, {
+    it('3. Nativo: Reingreso del mismo dispositivo reutiliza su plaza sin crear una nueva', async () => {
+      const p1 = await admitirSesionDispositivo(dbMock, {
         deviceId: 'tablet-piso-01',
         usuarioId: '01',
         usuarioNombre: 'Ana',
@@ -144,12 +165,13 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       });
 
       expect(reingreso.admitido).toBe(true);
-      expect(reingreso.slotId).toBe('01'); // Mismo slot conservado
-      expect(mockRtdb['monitoreo/dispositivos/02']).toBeUndefined(); // NO consumió un segundo slot
+      expect(reingreso.slotId).toBe('01');
+      expect(reingreso.tokenSesion).toBe(p1.tokenSesion); // Mismo token conservado
+      expect(mockRtdb['sesiones']['02']).toBeUndefined(); // NO consumió segunda plaza
     });
 
-    it('4. Nativo: Rechaza la admisión si se agotan los slots disponibles', async () => {
-      // Consumir 2 de 2 slots
+    it('4. Nativo: Rechaza la admisión si se agotan las plazas disponibles', async () => {
+      // Consumir 2 de 2 plazas
       await admitirSesionDispositivo(dbMock, {
         deviceId: 'dev-1',
         usuarioId: '01',
@@ -178,49 +200,82 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
       expect(res3.error).toContain('Límite de terminales simultáneas alcanzado');
     });
 
-    it('4b. Latido oportunista: Reclama slot huérfano si una terminal previa superó los 120s de inactividad', async () => {
-      const haceTresMinutos = Date.now() - 180_000;
-      // Simular que el slot 01 tiene una terminal apagada/huérfana hace 3 minutos
-      mockRtdb['monitoreo/dispositivos/01'] = {
-        estado: 'activo',
-        dispositivo_id: 'tablet-apagada-sin-bateria',
-        rol: 'mesero',
-        usuario_id: '01',
-        usuario_nombre: 'Ana',
-        ultima_actividad: haceTresMinutos,
+    it('4b. Presencia técnica vs Taps humanos: 45 min sin tocar pantalla NO desaloja si hay ping técnico', async () => {
+      const ahora = Date.now();
+      // Simular que el mesero no tocó la pantalla por 45 minutos (interacción humana vieja),
+      // pero el latido técnico de fondo se envió hace 10 segundos.
+      mockRtdb['sesiones'] = {
+        '01': {
+          plaza_id: '01',
+          estado: 'activa',
+          token_sesion: 'tok-mesero-vivo',
+          dispositivo_id: 'tablet-mesero-vivo',
+          operador_nombre: 'Ana',
+          inicio: ahora - 45 * 60 * 1000,
+          ultima_interaccion_humana: ahora - 45 * 60 * 1000,
+          ultimo_latido_presencia: ahora - 10_000, // Ping hace 10s
+        },
       };
 
-      // Simular slot 02 activo y transmitiendo
-      mockRtdb['monitoreo/dispositivos/02'] = {
-        estado: 'activo',
-        dispositivo_id: 'tablet-cocina-viva',
-        rol: 'cocina',
-        usuario_id: '02',
-        usuario_nombre: 'Carlos',
-        ultima_actividad: Date.now(),
+      // Intentar admitir nueva terminal con límite 1
+      const resNueva = await admitirSesionDispositivo(dbMock, {
+        deviceId: 'tablet-intrusa',
+        usuarioId: '02',
+        cargo: 'mesero',
+        limiteDispositivos: 1,
+        esWebForzado: false,
+      });
+
+      // No debe desalojar: el mesero sigue en turno aunque no haya órdenes
+      expect(resNueva.admitido).toBe(false);
+      expect(mockRtdb['sesiones']['01'].dispositivo_id).toBe('tablet-mesero-vivo');
+    });
+
+    it('4c. Abandono Técnico prolongado (> 180s): Reclama plaza y nuevo token invalida al anterior', async () => {
+      const ahora = Date.now();
+      const haceCuatroMinutos = ahora - 240_000; // 240s sin ping técnico (> 180s)
+
+      mockRtdb['sesiones'] = {
+        '01': {
+          plaza_id: '01',
+          estado: 'activa',
+          token_sesion: 'tok-antiguo-apagado',
+          dispositivo_id: 'tablet-apagada-sin-bateria',
+          operador_nombre: 'Ana',
+          ultimo_latido_presencia: haceCuatroMinutos,
+        },
       };
 
-      // Límite de 2 terminales simultáneas
-      const resNuevaTerminal = await admitirSesionDispositivo(dbMock, {
+      const resNueva = await admitirSesionDispositivo(dbMock, {
         deviceId: 'tablet-nueva-reemplazo',
         usuarioId: '03',
         usuarioNombre: 'Elena',
         cargo: 'mesero',
-        limiteDispositivos: 2,
+        limiteDispositivos: 1,
         esWebForzado: false,
       });
 
-      // Debe haber reclamado oportunistamente el slot 01
-      expect(resNuevaTerminal.admitido).toBe(true);
-      expect(resNuevaTerminal.slotId).toBe('01');
-      expect(mockRtdb['monitoreo/dispositivos/01'].dispositivo_id).toBe('tablet-nueva-reemplazo');
-      expect(mockRtdb['monitoreo/dispositivos/01'].usuario_nombre).toBe('Elena');
+      expect(resNueva.admitido).toBe(true);
+      expect(resNueva.slotId).toBe('01');
+      expect(resNueva.tokenSesion).not.toBe('tok-antiguo-apagado');
+
+      const plazaActualizada = mockRtdb['sesiones']['01'];
+      expect(plazaActualizada.dispositivo_id).toBe('tablet-nueva-reemplazo');
+      expect(plazaActualizada.reclamada_de_dispositivo).toBe('tablet-apagada-sin-bateria');
+
+      // Si la terminal antigua despierta y valida su token, es rechazada
+      mockRtdb['sesiones/01'] = plazaActualizada;
+      const sigueValido = await validarTokenSesion(dbMock, '01', 'tok-antiguo-apagado');
+      expect(sigueValido).toBe(false);
+
+      // El nuevo token sí es válido
+      const nuevoEsValido = await validarTokenSesion(dbMock, '01', resNueva.tokenSesion!);
+      expect(nuevoEsValido).toBe(true);
     });
   });
 
   describe('Instalaciones Compartidas y Cambio de Operador', () => {
-    it('5. Cambiar operador en la misma terminal no consume un nuevo slot y registra auditoría', async () => {
-      // 1. Ana inicia turno en la tablet
+    it('5. Cambiar operador en la misma terminal conserva la plaza y registra auditoría', async () => {
       await admitirSesionDispositivo(dbMock, {
         deviceId: 'tablet-compartida-barra',
         usuarioId: '01',
@@ -230,9 +285,9 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
         esWebForzado: false,
       });
 
-      expect(mockRtdb['monitoreo/dispositivos/01'].usuario_nombre).toBe('Ana');
+      expect(mockRtdb['sesiones']['01'].operador_nombre).toBe('Ana');
 
-      // 2. Beto toma la misma tablet (cambio de operador)
+      // Beto toma la misma tablet
       await cambiarOperadorResponsable(dbMock, {
         deviceId: 'tablet-compartida-barra',
         slotId: '01',
@@ -242,24 +297,19 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
         motivo: 'Cambio de turno vespertino',
       });
 
-      // Confirma que el slot 01 se actualizó con los datos de Beto
-      expect(mockRtdb['monitoreo/dispositivos/01'].usuario_id).toBe('02');
-      expect(mockRtdb['monitoreo/dispositivos/01'].usuario_nombre).toBe('Beto');
-      expect(mockRtdb['monitoreo/dispositivos/01'].rol).toBe('cajero');
+      // Se actualizó en /sesiones/01
+      expect(mockRtdb['sesiones/01'].operador_id).toBe('02');
+      expect(mockRtdb['sesiones/01'].operador_nombre).toBe('Beto');
+      expect(mockRtdb['sesiones/01'].rol_activo).toBe('cajero');
 
-      // Confirma que NO se creó un slot 02
-      expect(mockRtdb['monitoreo/dispositivos/02']).toBeUndefined();
-
-      // Confirma que se registró la auditoría local con el historial
+      // Auditoría local
       const auditoria = await listarAuditoriaOperadores();
       expect(auditoria.length).toBe(1);
       expect(auditoria[0].usuario_nombre_anterior).toBe('Ana');
       expect(auditoria[0].usuario_nombre_nuevo).toBe('Beto');
-      expect(auditoria[0].cargo_nuevo).toBe('cajero');
-      expect(auditoria[0].dispositivo_id).toBe('tablet-compartida-barra');
     });
 
-    it('6. Liberar sesión marca el slot como inactivo y limpia almacenamiento local', async () => {
+    it('6. Liberar sesión marca la plaza inactiva en Operativa y string inactivo en monitoreo', async () => {
       await admitirSesionDispositivo(dbMock, {
         deviceId: 'tablet-01',
         usuarioId: '01',
@@ -271,7 +321,8 @@ describe('Servicio de Sesión de Dispositivo y Admisión (servicio_sesion_dispos
 
       await liberarSesionDispositivo(dbMock, { slotId: '01' });
 
-      expect(mockRtdb['monitoreo/dispositivos/01'].estado).toBe('inactivo');
+      expect(mockRtdb['sesiones/01'].estado).toBe('inactiva');
+      expect(mockRtdb['monitoreo/dispositivos/01']).toBe('inactivo');
 
       const sesionLocal = await obtenerSesionOperativaLocal();
       expect(sesionLocal).toBeNull();
