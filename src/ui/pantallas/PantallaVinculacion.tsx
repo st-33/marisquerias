@@ -22,6 +22,7 @@ import { router } from "expo-router";
 import { useArranqueO1 } from "../../sistema/instalacion/useArranqueSistema";
 import { getSecundariaRtdb } from "../../sistema/firebase";
 import { ErrorArranque } from "../bloques/ErrorArranque";
+import { CATEGORIA_APP } from "../../sistema/identidad_categoria";
 
 export function sanitizarCodigoInput(valor: string): string {
   return valor
@@ -125,7 +126,7 @@ export function PantallaVinculacion() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.marcaHeader}>MARISQUERÍAS</Text>
+          <Text style={styles.marcaHeader}>{CATEGORIA_APP.nombre.toUpperCase()}</Text>
           <Text style={styles.titulo}>Vincular Dispositivo</Text>
 
           {errorInfo ? (

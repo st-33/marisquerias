@@ -33,6 +33,7 @@ import { getOperacionRtdb } from '../../../sistema/firebase';
 import { useStore } from '../../../sistema/store';
 import { useAppTheme } from '../../../compartido/temas';
 import { CATALOGO_ROLES_DISPOSITIVO, type RolDispositivoCanonico } from '../../../negocio/roles/catalogoRoles';
+import { CATEGORIA_APP } from '../../../sistema/identidad_categoria';
 
 interface PantallaRegistroUsuarioProps {
   onRegistroCompletado: (usuario: UsuarioNegocio, slotId?: string) => void;
@@ -51,7 +52,7 @@ export function PantallaRegistroUsuario({
   const [sexo, setSexo] = useState<SexoUsuario>('H');
   const [nombre, setNombre] = useState('');
   const [edad, setEdad] = useState('');
-  const [cargoSeleccionado, setCargoSeleccionado] = useState<string>('mesero');
+  const [cargoSeleccionado, setCargoSeleccionado] = useState<string>('mostrador');
 
   // Estados de vista y control
   const [modo, setModo] = useState<'nuevo' | 'existente'>('nuevo');
@@ -65,7 +66,7 @@ export function PantallaRegistroUsuario({
     (session as any).nombre_comercial ||
     (session as any).nombreComercial ||
     session.niche ||
-    'Marisquerías';
+    CATEGORIA_APP.nombre;
 
   // Roles disponibles según capacidades encendidas
   const rolesDisponibles = useMemo(() => {
@@ -73,7 +74,7 @@ export function PantallaRegistroUsuario({
     if (activos && activos.length > 0) {
       return activos;
     }
-    return ['mesero', 'cocina', 'mostrador', 'cajero', 'administrador'] as RolDispositivoCanonico[];
+    return ['mostrador', 'administrador'] as RolDispositivoCanonico[];
   }, [estadoEncendido]);
 
   // Cargar lista de usuarios existentes al montar

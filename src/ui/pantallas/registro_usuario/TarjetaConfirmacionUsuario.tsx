@@ -78,7 +78,7 @@ export function TarjetaConfirmacionUsuario({
               ]}
               numberOfLines={1}
             >
-              {nombreNegocio || 'MARISQUERÍAS'}
+              {nombreNegocio || 'NEGOCIO OPERATIVO'}
             </Text>
           </View>
 
