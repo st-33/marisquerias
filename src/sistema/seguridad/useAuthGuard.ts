@@ -58,12 +58,11 @@ export function useAuthGuard(isSystemReady: boolean) {
   useEffect(() => {
     if (!isSystemReady || !deviceChecked) return;
 
-    // Identificar zona pública / auth (si es raíz, access, (auth) o vinculacion)
+    // Identificar zona pública / auth (si es raíz, access o vinculacion)
     const primerSegmento = segments[0] as string | undefined;
     const inAuthGroup =
       !primerSegmento ||
       primerSegmento === 'access' ||
-      primerSegmento === '(auth)' ||
       primerSegmento === 'vinculacion' ||
       primerSegmento === 'index';
 

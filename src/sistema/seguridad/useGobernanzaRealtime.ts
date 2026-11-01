@@ -4,173 +4,81 @@ import { useRouter } from 'expo-router';
 import { useStore } from '../store';
 import { logger } from '../monitoreo';
 import { RUTAS } from '../rtdb/rutas/ruta_negocio';
-import { resolverDeviceIdADI } from '../instalacion/vinculacion/generar-device-id-adi';
 
 /**
- * 🛰️ HOOK DE GOBERNANZA Y SUSPENSIÓN EN TIEMPO REAL (Torre de Control)
+ * 🛰️ HOOK DE GOBERNANZA Y REVOCACIÓN EN TIEMPO REAL (Reglas 9, 22, 23 y 24)
  *
- * Contrato de Gobernanza:
- * 1. Escucha `Marisquerias/{idNegocio}/activo`: si cambia a `false`, bloquea la operativa inmediatamente.
- * 2. Escucha `Marisquerias/{idNegocio}/dispositivos/{deviceId}/estado`: reacciona si el dispositivo pasa a "bloqueado".
- * 3. Respeta los módulos en `Marisquerias/{idNegocio}/bloqueados` (Caja, Cocina, Mesero, Reparto).
- * 4. La aplicación opera como cliente operativo puro.
+ * Contrato Canónico:
+ * 1. La Unidad Operativa tiene raíz dedicada; los cajones residen en su raíz (/sesiones/{plaza}).
+ * 2. Escucha `sesiones/{plaza}` en tiempo real.
+ * 3. Si `estado === 'revocada'`, ejecuta la revocación remota gobernada.
+ * 4. Si la plaza es relevada técnicamente por otra terminal, reasigna operador al selector de roles
+ *    sin destruir la vinculación física del dispositivo ni adi_device_id_persistent.
  */
 export function useGobernanzaRealtime(isReady: boolean) {
   const router = useRouter();
-  const tenantPath = useStore((s) => s.sesion.rutaNegocio);
   const clearSession = useStore((s) => s.clearSession);
-  const setModulosBloqueados = useStore((s) => s.setModulosBloqueados);
   const setEstadoInstalacion = useStore((s) => s.setEstadoInstalacion);
 
   useEffect(() => {
-    if (!isReady || !tenantPath) return;
+    if (!isReady) return;
 
-    let activoRef: any = null;
-    let activoCallback: any = null;
-    let devRef: any = null;
-    let devCallback: any = null;
-    let devLegacyRef: any = null;
-    let devLegacyCallback: any = null;
-    let bloqueadosRef: any = null;
-    let bloqueadosCallback: any = null;
     let sesionRef: any = null;
     let sesionCallback: any = null;
 
     const iniciarGobernanza = async () => {
       try {
-        const { getRtdb } = await import('../firebase');
-        const db = getRtdb();
-        const deviceId = await resolverDeviceIdADI();
+        const { getOperacionRtdb } = await import('../firebase');
+        const db = getOperacionRtdb();
 
-        // 1. Escuchar {tenantPath}/activo (Suspensión total del negocio)
-        activoRef = ref(db, `${tenantPath}/activo`);
-        activoCallback = onValue(activoRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const activo = snapshot.val();
-            if (activo === false || activo === 'false' || activo === 0) {
-              logger.warn(
-                'GOBERNANZA',
-                `🚨 Negocio suspendido por Torre de Control: ${tenantPath}`
-              );
-              setEstadoInstalacion('BLOQUEADA');
-              void clearSession().then(() => {
-                router.replace(RUTAS.AUTH.LOGIN);
-              });
-            }
-          }
-        });
+        const { obtenerSesionOperativaLocal } =
+          await import('../usuarios/servicio_sesion_dispositivo');
+        const sesionLocal = await obtenerSesionOperativaLocal();
 
-        // 2. Escuchar {tenantPath}/dispositivos/{deviceId}/estado (Bloqueo de terminal)
-        devRef = ref(db, `${tenantPath}/dispositivos/${deviceId}/estado`);
-        devCallback = onValue(devRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const estado = snapshot.val();
-            if (estado === 'bloqueado' || estado === 'inactivo' || estado === 'revocado') {
-              logger.warn(
-                'GOBERNANZA',
-                `🚨 Dispositivo ${deviceId} marcado como ${estado} por Torre de Control`
-              );
-              setEstadoInstalacion('BLOQUEADA');
-              void clearSession().then(() => {
-                router.replace(RUTAS.AUTH.LOGIN);
-              });
-            }
-          }
-        });
+        if (sesionLocal && sesionLocal.slot_id) {
+          sesionRef = ref(db, `sesiones/${sesionLocal.slot_id}`);
+          sesionCallback = onValue(sesionRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
 
-        // 2.1 Compatibilidad: Escuchar {tenantPath}/dispositivos_autorizados/{deviceId}/estado
-        devLegacyRef = ref(db, `${tenantPath}/dispositivos_autorizados/${deviceId}/estado`);
-        devLegacyCallback = onValue(devLegacyRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const estado = snapshot.val();
-            if (estado === 'bloqueado' || estado === 'inactivo' || estado === 'revocado') {
-              logger.warn(
-                'GOBERNANZA',
-                `🚨 Dispositivo ${deviceId} bloqueado en dispositivos_autorizados`
-              );
-              setEstadoInstalacion('BLOQUEADA');
-              void clearSession().then(() => {
-                router.replace(RUTAS.AUTH.LOGIN);
-              });
-            }
-          }
-        });
-
-        // 2.2 Desvinculación remota de plaza operativa: Escuchar sesiones/{slot_id}
-        try {
-          const { obtenerSesionOperativaLocal } =
-            await import('../usuarios/servicio_sesion_dispositivo');
-          const sesionLocal = await obtenerSesionOperativaLocal();
-          if (sesionLocal && sesionLocal.slot_id) {
-            sesionRef = ref(db, `sesiones/${sesionLocal.slot_id}`);
-            sesionCallback = onValue(sesionRef, (snapshot) => {
-              if (snapshot.exists()) {
-                const data = snapshot.val();
-                // 🛡️ REGLA 23: Solo reaccionar si la plaza fue explícitamente marcada como revocada
-                if (data && data.estado === 'revocada') {
-                  logger.warn(
-                    'GOBERNANZA',
-                    `🚨 Terminal revocada remotamente en plaza ${sesionLocal.slot_id} por Torre de Control`
-                  );
-                  setEstadoInstalacion('BLOQUEADA');
-                  void clearSession().then(() => {
-                    router.replace(RUTAS.AUTH.LOGIN);
-                  });
-                } else if (
-                  data &&
-                  data.token_sesion &&
-                  sesionLocal.token_sesion &&
-                  data.token_sesion !== sesionLocal.token_sesion
-                ) {
-                  // Relevo operativo: otra terminal reclamó la plaza por abandono técnico
-                  logger.warn(
-                    'GOBERNANZA',
-                    `⚠️ Plaza ${sesionLocal.slot_id} relevada por otra terminal. Reasignando operador.`
-                  );
-                  router.replace(RUTAS.ROLES.SELECTOR);
-                }
+              // 🛡️ REGLA 23: Revocación remota explícita desde Torre de Control/Monitoreo
+              if (data && data.estado === 'revocada') {
+                logger.warn(
+                  'GOBERNANZA',
+                  `🚨 Terminal revocada remotamente en plaza ${sesionLocal.slot_id} por Torre de Control`
+                );
+                setEstadoInstalacion('BLOQUEADA');
+                void clearSession().then(() => {
+                  router.replace(RUTAS.AUTH.LOGIN);
+                });
+              } else if (
+                data &&
+                data.token_sesion &&
+                sesionLocal.token_sesion &&
+                data.token_sesion !== sesionLocal.token_sesion
+              ) {
+                // Relevo operativo: otra terminal reclamó la plaza por abandono técnico
+                logger.warn(
+                  'GOBERNANZA',
+                  `⚠️ Plaza ${sesionLocal.slot_id} relevada por otra terminal. Reasignando operador.`
+                );
+                router.replace(RUTAS.ROLES.SELECTOR);
               }
-            });
-          }
-        } catch {
-          // Sin sesión local asignada aún
-        }
-
-        // 3. Escuchar {tenantPath}/bloqueados (Módulos bloqueados en tiempo real)
-        bloqueadosRef = ref(db, `${tenantPath}/bloqueados`);
-        bloqueadosCallback = onValue(bloqueadosRef, (snapshot) => {
-          let listaBloqueados: string[] = [];
-          if (snapshot.exists()) {
-            const val = snapshot.val();
-            if (Array.isArray(val)) {
-              listaBloqueados = val.map((v) => String(v));
-            } else if (val && typeof val === 'object') {
-              listaBloqueados = Object.entries(val)
-                .filter(([_, activo]) => activo === true || activo === 'true' || activo === 1)
-                .map(([k]) => k);
-            } else if (typeof val === 'string') {
-              listaBloqueados = val.split(',').map((s) => s.trim());
             }
-          }
-          setModulosBloqueados(listaBloqueados);
-          logger.info(
-            'GOBERNANZA',
-            `Módulos bloqueados actualizados: [${listaBloqueados.join(', ')}]`
-          );
-        });
+          });
+        }
       } catch (error) {
-        logger.error('GOBERNANZA', 'Error iniciando listeners de gobernanza', error as Error);
+        logger.error('GOBERNANZA', 'Error iniciando listener de plaza operativa', error as Error);
       }
     };
 
-    iniciarGobernanza();
+    void iniciarGobernanza();
 
     return () => {
-      if (activoRef && activoCallback) off(activoRef, 'value', activoCallback);
-      if (devRef && devCallback) off(devRef, 'value', devCallback);
-      if (devLegacyRef && devLegacyCallback) off(devLegacyRef, 'value', devLegacyCallback);
-      if (sesionRef && sesionCallback) off(sesionRef, 'value', sesionCallback);
-      if (bloqueadosRef && bloqueadosCallback) off(bloqueadosRef, 'value', bloqueadosCallback);
+      if (sesionRef && sesionCallback) {
+        off(sesionRef, 'value', sesionCallback);
+      }
     };
-  }, [isReady, tenantPath, router, clearSession, setModulosBloqueados, setEstadoInstalacion]);
+  }, [isReady, router, clearSession, setEstadoInstalacion]);
 }
+

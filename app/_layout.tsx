@@ -32,7 +32,7 @@ import { getRtdb } from '../src/sistema/firebase';
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
-const PUBLIC_ROUTES = ['/', '/index', '/access', '/(auth)/access', '/vinculacion'];
+const PUBLIC_ROUTES = ['/', '/index', '/access', '/vinculacion'];
 
 export function esRutaPublica(rawPathname?: string | null): boolean {
   const norm = normalizePathname(rawPathname);
@@ -40,9 +40,7 @@ export function esRutaPublica(rawPathname?: string | null): boolean {
     norm === '/' ||
     norm === '/index' ||
     norm === '/access' ||
-    norm === '/(auth)/access' ||
     norm.startsWith('/access') ||
-    norm.startsWith('/(auth)') ||
     norm === '/vinculacion'
   );
 }
@@ -237,7 +235,6 @@ function RootLayoutContent({
               >
                 <Stack.Screen name="index" options={{ title: 'Inicio' }} />
                 <Stack.Screen name="access" options={{ title: 'Acceso' }} />
-                <Stack.Screen name="(auth)/access" options={{ title: 'Acceso' }} />
                 <Stack.Screen name="_role/roles" />
                 <Stack.Screen name="_role/admin/dashboard" />
                 <Stack.Screen name="_role/venta-crudo" />
