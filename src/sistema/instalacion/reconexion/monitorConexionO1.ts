@@ -11,7 +11,7 @@
 import type { Database } from 'firebase/database';
 import { get, ref } from 'firebase/database';
 import { leerSesionO1 } from '../npb/persistenciaSesionO1';
-import { ejecutarArranqueO1, type ResultadoArranqueO1 } from '../useArranqueSistema';
+import type { ResultadoArranqueO1 } from '../useArranqueSistema';
 import { clasificarErrorArranque } from '../npb/erroresArranque';
 import { logger } from '../../monitoreo';
 
@@ -96,6 +96,7 @@ export async function arrancarConDegradacionOffline(
   }
 
   try {
+    const { ejecutarArranqueO1 } = await import('../useArranqueSistema');
     const resultado = await ejecutarArranqueO1(db, codigoAcceso);
     if (!resultado.ok) {
       const rawError = resultado.error.toLowerCase();
