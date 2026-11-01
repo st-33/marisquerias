@@ -95,4 +95,10 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 
 ### 22. Gobierno de Cupo de Terminales en Central
 
-- El límite de terminales autorizadas simultáneas (`limite_dispositivos`) reside soberanamente en la Unidad Central bajo `/negocio/{id}/limite_dispositivos`. Toda terminal física o web debe validar este cupo antes de operar en piso.
+- El límite de terminales autorizadas simultáneas (`limite_dispositivos`) reside soberanamente en la Unidad Central bajo `/negocio/{id}/configuracion/dispositivos`. Toda terminal física o web debe validar este cupo antes de operar en piso.
+
+### 23. Persistencia Inmutable de Vinculación Física de Dispositivos Nativos
+
+- Una vez autorizada la terminal mediante resolución O(1) y admitido el operador responsable en la Unidad Operativa, el estado de vinculación (`adi_dispositivo_vinculado`, `device_registered` y sesión operativa local) es permanente e inmutable en el almacenamiento local del dispositivo.
+- Queda terminantemente prohibido re-presentar la pantalla de código de acceso (`/access`) o expulsar al operador en reinicios, aperturas frías o cambios de ruta interna.
+- La pantalla de acceso únicamente volverá a presentarse ante desinstalación completa de la app, limpieza manual de datos, o revocación remota explícita desde la Torre de Control/Monitoreo bajo `sesiones/{plaza}`.
