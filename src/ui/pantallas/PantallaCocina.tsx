@@ -6,7 +6,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useStore, useProductos, useNegocioNombre, useNegocioId } from '../../sistema/store';
+import { useStore, useProductos, useNegocioNombre } from '../../sistema/store';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
 import { TarjetaComanda } from '../bloques/TarjetaComanda';
@@ -112,7 +112,6 @@ export interface PantallaCocinaProps {
 
 export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
   const negocioNombre = useNegocioNombre();
-  const negocioId = useNegocioId();
   const productos = useProductos();
   const inventoryAutoDiscount =
     useStore((s) => s.negocio.features?.inventory_auto_discount?.enabled) === true;
@@ -176,10 +175,7 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
           <Ionicons name="restaurant" size={24} color="#ffffff" />
           <View>
             <Text style={styles.title}>{tituloHeader}</Text>
-            <Text style={styles.subtituloNegocio}>
-              {negocioNombre}
-              {negocioId ? ` · ${negocioId}` : ''}
-            </Text>
+            <Text style={styles.subtituloNegocio}>{negocioNombre}</Text>
           </View>
         </View>
         <View style={styles.statsRow}>

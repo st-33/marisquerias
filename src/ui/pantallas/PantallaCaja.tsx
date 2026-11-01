@@ -24,13 +24,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useCajaCobro, type MetodoPagoCaja } from '../../roles/logica/caja';
-import { useNegocioNombre, useNegocioId } from '../../sistema/store';
+import { useNegocioNombre } from '../../sistema/store';
 
 export function PantallaCaja() {
   const { width } = useWindowDimensions();
   const esPantallaAmplia = width >= 768;
   const negocioNombre = useNegocioNombre();
-  const negocioId = useNegocioId();
 
   const {
     loading,
@@ -95,10 +94,7 @@ export function PantallaCaja() {
           <Ionicons name="card-outline" size={24} color="#60a5fa" />
           <View>
             <Text style={styles.headerTitle}>Terminal de Cobro</Text>
-            <Text style={styles.headerSubtitle}>
-              {negocioNombre}
-              {negocioId ? ` · ${negocioId}` : ''}
-            </Text>
+            <Text style={styles.headerSubtitle}>{negocioNombre}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
