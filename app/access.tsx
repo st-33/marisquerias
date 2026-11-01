@@ -1,6 +1,6 @@
 import React from 'react';
 import { PantallaVinculacion } from '../src/ui/pantallas/PantallaVinculacion';
 
-export default function VinculacionScreen() {
+export default function AccessScreen() {
   return <PantallaVinculacion />;
 }

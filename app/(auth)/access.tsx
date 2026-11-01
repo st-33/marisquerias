@@ -1,6 +1,3 @@
-import React from 'react';
-import { PantallaVinculacion } from '../../src/ui/pantallas/PantallaVinculacion';
+import AccessScreen from '../access';
 
-export default function Access() {
-  return <PantallaVinculacion />;
-}
+export default AccessScreen;

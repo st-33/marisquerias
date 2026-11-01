@@ -187,11 +187,9 @@ export const createSesionSlice: StateCreator<SesionSlice, [], [], SesionSlice> =
       await storage.removeItem('dataSources');
       await storage.multiRemove(negocioKeys);
 
-      const { deviceBinding } = await import('../../seguridad');
-      await deviceBinding.unregisterDevice();
-
-      await storage.removeItem('adi_dispositivo_vinculado');
-      logger.info('STORE_SESION', 'Dispositivo desvinculado y estado negocio purgado en logout');
+      // 🛡️ REGLA 23: La identidad y vinculación física del dispositivo son permanentes.
+      // clearSession purga la sesión activa del usuario/operador, pero NUNCA desvincula el hardware.
+      logger.info('STORE_SESION', 'Sesión de usuario purgada (vínculo de dispositivo preservado)');
     } catch (error) {
       logger.error('STORE_SESION', 'Error al limpiar sesión', error as Error);
     }

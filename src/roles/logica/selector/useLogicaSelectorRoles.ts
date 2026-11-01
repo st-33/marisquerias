@@ -17,7 +17,7 @@ import { SoundBank } from '../../../sistema/audio/bancoSonidos';
 
 import { useStore } from '../../../sistema/store';
 import { useEmpaquetadorRoles } from '../../../negocio/roles/empaquetadorRoles';
-import { resolver_nombre_negocio } from '../../../sistema/rtdb/rutas/ruta_negocio';
+import { resolver_nombre_negocio, RUTAS } from '../../../sistema/rtdb/rutas/ruta_negocio';
 import { getRtdb } from '../../../sistema/firebase';
 import { actualizarRolActivoO1 } from '../../../sistema/instalacion/npb/persistenciaSesionO1';
 
@@ -192,7 +192,7 @@ export function useLogicaSelectorRoles() {
   const handleLogout = useCallback(async () => {
     await playFeedback();
     await clearSession();
-    router.replace('/(auth)/access');
+    router.replace(RUTAS.AUTH.LOGIN);
   }, [clearSession, playFeedback]);
 
   const logoUrl = logoRemoto || logoConfigStore || '';

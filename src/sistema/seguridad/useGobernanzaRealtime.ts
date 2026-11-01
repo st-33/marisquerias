@@ -106,24 +106,28 @@ export function useGobernanzaRealtime(isReady: boolean) {
             sesionCallback = onValue(sesionRef, (snapshot) => {
               if (snapshot.exists()) {
                 const data = snapshot.val();
-                if (
-                  data &&
-                  (data.estado === 'revocada' ||
-                    data.estado === 'inactiva' ||
-                    (data.dispositivo_id && data.dispositivo_id !== deviceId))
-                ) {
+                // 🛡️ REGLA 23: Solo reaccionar si la plaza fue explícitamente marcada como revocada
+                if (data && data.estado === 'revocada') {
                   logger.warn(
                     'GOBERNANZA',
-                    `🚨 Terminal revocada remotamente en plaza ${sesionLocal.slot_id} por el Ecosistema`
+                    `🚨 Terminal revocada remotamente en plaza ${sesionLocal.slot_id} por Torre de Control`
                   );
                   setEstadoInstalacion('BLOQUEADA');
-                  void clearSession().then(async () => {
-                    const { desvincularNegocioO1 } = await import(
-                      '../instalacion/npb/persistenciaSesionO1'
-                    );
-                    await desvincularNegocioO1('DESVINCULAR');
+                  void clearSession().then(() => {
                     router.replace(RUTAS.AUTH.LOGIN);
                   });
+                } else if (
+                  data &&
+                  data.token_sesion &&
+                  sesionLocal.token_sesion &&
+                  data.token_sesion !== sesionLocal.token_sesion
+                ) {
+                  // Relevo operativo: otra terminal reclamó la plaza por abandono técnico
+                  logger.warn(
+                    'GOBERNANZA',
+                    `⚠️ Plaza ${sesionLocal.slot_id} relevada por otra terminal. Reasignando operador.`
+                  );
+                  router.replace(RUTAS.ROLES.SELECTOR);
                 }
               }
             });

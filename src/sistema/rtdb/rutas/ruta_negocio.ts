@@ -349,8 +349,8 @@ export const rutaDispositivos = (rutaNegocio: string, sub?: string) =>
 
 export const RUTAS = {
   AUTH: {
-    LOGIN: '/(auth)/access',
-    RECOVERY: '/(auth)/recovery',
+    LOGIN: '/access',
+    RECOVERY: '/access',
   },
   ROLES: {
     SELECTOR: '/_role/roles',

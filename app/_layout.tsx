@@ -32,7 +32,20 @@ import { getRtdb } from '../src/sistema/firebase';
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
-const PUBLIC_ROUTES = ['/', '/index', '/access', '/vinculacion'];
+const PUBLIC_ROUTES = ['/', '/index', '/access', '/(auth)/access', '/vinculacion'];
+
+export function esRutaPublica(rawPathname?: string | null): boolean {
+  const norm = normalizePathname(rawPathname);
+  return (
+    norm === '/' ||
+    norm === '/index' ||
+    norm === '/access' ||
+    norm === '/(auth)/access' ||
+    norm.startsWith('/access') ||
+    norm.startsWith('/(auth)') ||
+    norm === '/vinculacion'
+  );
+}
 
 const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/venta-crudo': { generic: 'venta_crudo' },
@@ -55,7 +68,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isPublicRoute = esRutaPublica(pathname);
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
@@ -223,7 +236,8 @@ function RootLayoutContent({
                 }}
               >
                 <Stack.Screen name="index" options={{ title: 'Inicio' }} />
-                <Stack.Screen name="(auth)/access" />
+                <Stack.Screen name="access" options={{ title: 'Acceso' }} />
+                <Stack.Screen name="(auth)/access" options={{ title: 'Acceso' }} />
                 <Stack.Screen name="_role/roles" />
                 <Stack.Screen name="_role/admin/dashboard" />
                 <Stack.Screen name="_role/venta-crudo" />

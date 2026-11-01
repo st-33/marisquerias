@@ -58,8 +58,14 @@ export function useAuthGuard(isSystemReady: boolean) {
   useEffect(() => {
     if (!isSystemReady || !deviceChecked) return;
 
-    // Identificar zona actual (si empieza con (auth) o vinculacion)
-    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'vinculacion';
+    // Identificar zona pública / auth (si es raíz, access, (auth) o vinculacion)
+    const primerSegmento = segments[0] as string | undefined;
+    const inAuthGroup =
+      !primerSegmento ||
+      primerSegmento === 'access' ||
+      primerSegmento === '(auth)' ||
+      primerSegmento === 'vinculacion' ||
+      primerSegmento === 'index';
 
     const esDispositivoValido = Platform.OS === 'web' || isDeviceRegisteredState;
 
@@ -67,23 +73,20 @@ export function useAuthGuard(isSystemReady: boolean) {
     if ((!negocioId || !esDispositivoValido) && !inAuthGroup) {
       logger.warn(
         'AUTH',
-        '⛔ Intrusión o desvinculación detectada. Limpiando sesión y expulsando a Login.'
+        '⛔ Dispositivo no enlazado físicamente o sin sesión activa. Redirigiendo a Acceso.'
       );
-      void clearSession().then(() => {
-        router.replace(RUTAS.AUTH.LOGIN);
-      });
+      router.replace(RUTAS.AUTH.LOGIN);
       return;
     }
 
     // 2. Sesión activa: verificar consistencia de EstadoEncendido y rol activo
     if (negocioId && esDispositivoValido) {
       void import('./guardiaArranqueO1').then(async ({ evaluarGuardiaArranque }) => {
-        const { getRtdb } = await import('../firebase');
-        const evaluacion = await evaluarGuardiaArranque(getRtdb());
+        const { getSecundariaRtdb } = await import('../firebase');
+        const evaluacion = await evaluarGuardiaArranque(getSecundariaRtdb());
 
         if (evaluacion.estado === 'sin_sesion' || evaluacion.estado === 'sesion_expirada') {
           if (!inAuthGroup) {
-            await clearSession();
             router.replace(RUTAS.AUTH.LOGIN);
           }
           return;

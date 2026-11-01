@@ -309,7 +309,7 @@ export async function unregisterDevice(): Promise<void> {
     await AsyncStorage.removeItem(STORAGE_KEY);
     await AsyncStorage.removeItem(STORAGE_KEY_DEVICE_ID);
     await AsyncStorage.removeItem('adi_dispositivo_vinculado');
-    await AsyncStorage.removeItem('adi_device_id_persistent');
+    // adi_device_id_persistent es inmutable y representa la identidad física del fierro
 
     logger.info('SECURITY', 'Dispositivo desregistrado');
   } catch (error) {
