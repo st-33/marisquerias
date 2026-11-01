@@ -8,21 +8,35 @@
 
 ```typescript
 type OrderStatus =
-  | 'creado' | 'enviado_cocina' | 'en_preparacion'
-  | 'listo_para_entregar' | 'entregado' | 'cerrado';
+  | 'creado'
+  | 'enviado_cocina'
+  | 'en_preparacion'
+  | 'listo_para_entregar'
+  | 'entregado'
+  | 'cerrado';
 
 type ItemStatus = 'nuevo' | 'en_preparacion' | 'listo' | 'entregado';
 type TableState = 'libre' | 'ocupada' | 'cuenta';
 
 type ItemPendiente = {
-  itemId: string; draftId: string; productoId: string;
-  nombre: string; precio: number; cantidad: number;
-  tamano?: Record<string, string>; preparacion?: Record<string, string>;
-  precioBase?: number; deltaPrecio?: number; prepMinutos?: number;
+  itemId: string;
+  draftId: string;
+  productoId: string;
+  nombre: string;
+  precio: number;
+  cantidad: number;
+  tamano?: Record<string, string>;
+  preparacion?: Record<string, string>;
+  precioBase?: number;
+  deltaPrecio?: number;
+  prepMinutos?: number;
 };
 
 type ItemPedido = {
-  id: string; nombre: string; precio: number; cantidad: number;
+  id: string;
+  nombre: string;
+  precio: number;
+  cantidad: number;
   estado: 'nuevo' | 'preparando' | 'listo' | 'entregado';
   variantes?: Record<string, string | string[]>;
   variantLabels?: string[];

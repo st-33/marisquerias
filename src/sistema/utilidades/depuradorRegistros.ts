@@ -82,7 +82,7 @@ export function registrarCondicional(
 export const shouldLog = (modulo: string, nivel: 'error' | 'warn' | 'info' | 'debug') =>
   debeRegistrar(
     modulo,
-    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : nivel as any
+    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : (nivel as any)
   );
 
 /** @deprecated Usar registrarCondicional() */
@@ -94,7 +94,7 @@ export const conditionalLog = (
 ) =>
   registrarCondicional(
     modulo,
-    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : nivel as any,
+    nivel === 'warn' ? 'aviso' : nivel === 'debug' ? 'depuracion' : (nivel as any),
     mensaje,
     ...args
   );

@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: METRICAS Y CIERRES
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

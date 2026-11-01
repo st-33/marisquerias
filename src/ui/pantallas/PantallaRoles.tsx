@@ -3,7 +3,7 @@
  * Componente visual para alimentos y bebidas
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useStore } from '../../sistema/store';
 import { SelectorRolElite } from '../bloques/SelectorRolElite';
@@ -24,15 +24,8 @@ export function PantallaRoles() {
   const esPastillasOClasico = estiloConfigurado === 'pastillas' || estiloConfigurado === 'clasico';
   const modoFijo = estiloConfigurado === 'orbes' || esPastillasOClasico;
   const estiloInicial = esPastillasOClasico ? 'pastillas' : 'orbes';
-  const [estiloVisual, setEstiloVisual] = useState<'orbes' | 'pastillas'>(estiloInicial);
-
-  useEffect(() => {
-    if (esPastillasOClasico) {
-      setEstiloVisual('pastillas');
-    } else if (estiloConfigurado === 'orbes') {
-      setEstiloVisual('orbes');
-    }
-  }, [estiloConfigurado, esPastillasOClasico]);
+  const [estiloManual, setEstiloManual] = useState<'orbes' | 'pastillas' | null>(null);
+  const estiloVisual = modoFijo ? estiloInicial : estiloManual ?? estiloInicial;
 
   if (!rutaNegocio || !negocioId) {
     return (
@@ -52,24 +45,14 @@ export function PantallaRoles() {
   const alternarEstilo = modoFijo
     ? undefined
     : () => {
-        setEstiloVisual((prev) => (prev === 'orbes' ? 'pastillas' : 'orbes'));
+        setEstiloManual((prev) => ((prev ?? estiloInicial) === 'orbes' ? 'pastillas' : 'orbes'));
       };
 
   if (estiloVisual === 'pastillas') {
-    return (
-      <SelectorRolPastillas
-        onAlternarEstilo={alternarEstilo}
-        estiloActivo="pastillas"
-      />
-    );
+    return <SelectorRolPastillas onAlternarEstilo={alternarEstilo} estiloActivo="pastillas" />;
   }
 
-  return (
-    <SelectorRolElite
-      onAlternarEstilo={alternarEstilo}
-      estiloActivo="orbes"
-    />
-  );
+  return <SelectorRolElite onAlternarEstilo={alternarEstilo} estiloActivo="orbes" />;
 }
 
 export default PantallaRoles;

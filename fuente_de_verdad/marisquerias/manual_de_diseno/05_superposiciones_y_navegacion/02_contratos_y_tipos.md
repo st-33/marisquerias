@@ -8,11 +8,11 @@
 
 ```typescript
 const duraciones = {
-  press_release:  '100-200 ms',
-  cambio_estado:  '180-280 ms',
-  entrada_modal:  '220-320 ms',
-  exito:          '<= 500 ms',
-  error:          'sin rebote agresivo',
+  press_release: '100-200 ms',
+  cambio_estado: '180-280 ms',
+  entrada_modal: '220-320 ms',
+  exito: '<= 500 ms',
+  error: 'sin rebote agresivo',
 };
 ```
 

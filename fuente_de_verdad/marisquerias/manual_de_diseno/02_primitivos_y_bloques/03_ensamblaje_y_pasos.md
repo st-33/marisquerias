@@ -1,4 +1,5 @@
 # ENSAMBLAJE Y PASOS: PRIMITIVOS Y BLOQUES
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
@@ -10,6 +11,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 01: Montar los primitivos mínimos
 
 ### ESPECIFICACION
+
 - Se construyen las piezas indivisibles en `src/ui/primitivos/` (sección 3),
   empezando por el `AtmosphereLayer` que aplica el fondo profundo del
   subsistema de fundamentos.
@@ -21,6 +23,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 02: Armar los bloques sobre los primitivos
 
 ### ESPECIFICACION
+
 - Se agrupan primitivos en bloques funcionales dentro de `src/ui/bloques/`
   (sección 3): `ActionArea`, `Badge`, `FabRadial`, `OrderItemCard`,
   `TarjetaComanda`, `MostradorPro`, `VariantsModal`.
@@ -32,6 +35,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 03: Elevar bloques a componentes compartidos
 
 ### ESPECIFICACION
+
 - Se elevan a estándar reutilizable los componentes de
   `src/compartido/componentes/ui/` (sección 3): `AnimatedButton`, `Card`,
   `ModernAlert`, `PulsingCard`, `TableBadge`, `Toast`.
@@ -44,6 +48,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 04: Definir botones y campos con sus estados
 
 ### ESPECIFICACION
+
 - El botón primario implementa los seis estados del contrato (sección 1):
   `normal`, `pressed`, `loading`, `disabled`, `success`, `error`.
 - El botón secundario implementa tres estados: `normal`, `pressed`, `disabled`.
@@ -56,6 +61,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 05: Definir tarjetas y badges por contexto
 
 ### ESPECIFICACION
+
 - El `Badge` implementa cinco estados `info`, `success`, `warning`, `danger`,
   `neutral`, con texto + icono para que el significado nunca dependa solo del
   color (fundamentos, invariante 4).
@@ -72,6 +78,7 @@ pequeño (primitivo) al más completo (componente), reutilizando lo ya aprobado.
 ## PASO 06: Verificar el mapa de archivos y las invariantes
 
 ### ESPECIFICACION
+
 - Se comprueba que los tres niveles existen en sus rutas reales: primitivos en
   `src/ui/primitivos/`, bloques en `src/ui/bloques/`, componentes compartidos en
   `src/compartido/componentes/ui/` (sección 3).

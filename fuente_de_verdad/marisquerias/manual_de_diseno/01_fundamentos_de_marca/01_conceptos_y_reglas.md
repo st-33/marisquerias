@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: FUNDAMENTOS DE MARCA
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

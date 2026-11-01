@@ -9,18 +9,25 @@
 ```typescript
 const VERSION_ESQUEMA_MOTOR = 1 as const;
 
-type TipoActor =
-  | 'negocio' | 'publico' | 'central' | 'repartidor' | 'sistema' | 'automatizacion';
+type TipoActor = 'negocio' | 'publico' | 'central' | 'repartidor' | 'sistema' | 'automatizacion';
 
 type Actor = { tipo: TipoActor; id: string };
 
 type IdentidadNegocio = {
-  rutaNegocio: string; negocioId: string; categoriaId: string;
+  rutaNegocio: string;
+  negocioId: string;
+  categoriaId: string;
 };
 
 type OrigenSenal =
-  | 'negocio' | 'publico' | 'llamada' | 'mensajeria'
-  | 'redes' | 'sistema' | 'automatizacion' | 'servicio_domicilio';
+  | 'negocio'
+  | 'publico'
+  | 'llamada'
+  | 'mensajeria'
+  | 'redes'
+  | 'sistema'
+  | 'automatizacion'
+  | 'servicio_domicilio';
 ```
 
 ## 2. COMPOSICION DE PANTALLAS

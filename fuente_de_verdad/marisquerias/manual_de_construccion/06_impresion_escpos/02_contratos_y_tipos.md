@@ -23,8 +23,11 @@ imprimirPrueba(mensaje?): Promise<PrintResult>;
 
 ```typescript
 type SpoolStatus =
-  | 'pendiente_aprobacion' | 'pendiente_impresion'
-  | 'impresion_enviada' | 'exito' | 'fallo';
+  | 'pendiente_aprobacion'
+  | 'pendiente_impresion'
+  | 'impresion_enviada'
+  | 'exito'
+  | 'fallo';
 ```
 
 ## 3. COLA Y DESPACHO

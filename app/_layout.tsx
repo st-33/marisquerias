@@ -18,7 +18,7 @@ import { FabNavegacionAdmin } from '../src/ui/roles/administrador/FabNavegacionA
 import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useArranqueSistema } from '../src/sistema/instalacion/useArranqueSistema';
-import { useAppListeners, useFabForRoute, useStore } from '../src/sistema/store';
+import { useAppListeners, useStore } from '../src/sistema/store';
 import { normalizePathname } from '../src/sistema/navegacion/normalizePathname';
 import { ProveedorFierros } from '../src/sistema/impresion/fierros';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -55,18 +55,19 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute = pathname === '/' || PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicRoute =
+    pathname === '/' || PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
 
   const rutaNegocio = useStore((state) => state.sesion.rutaNegocio);
   const negocioId = useStore((state) => state.sesion.negocioId);
-  const dataSources = useStore((state) => state.dataSources);
+  const operacionUrl = useStore((state) => state.dataSources?.operacionUrl);
   const estadoInstalacion = useStore((state) => state.estadoInstalacion);
   const operacionDb = useMemo(
-    () => (isReady && dataSources?.operacionUrl ? getRtdb(dataSources.operacionUrl) : null),
-    [dataSources?.operacionUrl, isReady]
+    () => (isReady && operacionUrl ? getRtdb(operacionUrl) : null),
+    [operacionUrl, isReady]
   );
   useSincronizarPedidosLogistica({
     db: operacionDb,
@@ -151,7 +152,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider rutaNegocio={rutaNegocio || ''}>
-        <RootLayoutContent isReady={isReady} pathname={pathname} rutaNegocio={rutaNegocio || null} />
+        <RootLayoutContent
+          isReady={isReady}
+          pathname={pathname}
+          rutaNegocio={rutaNegocio || null}
+        />
       </ThemeProvider>
     </SafeAreaProvider>
   );

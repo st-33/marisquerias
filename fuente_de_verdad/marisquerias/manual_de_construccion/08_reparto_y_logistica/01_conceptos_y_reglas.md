@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: REPARTO Y LOGISTICA
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

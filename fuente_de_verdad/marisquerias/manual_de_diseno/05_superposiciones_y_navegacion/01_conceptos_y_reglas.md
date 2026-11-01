@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: SUPERPOSICIONES Y NAVEGACION
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

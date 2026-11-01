@@ -224,7 +224,11 @@ export function encenderCapacidades(
     version_npb: npb.version_npb,
     categoria_id: npb.categoria_id,
     slug_categoria: npb.slug_categoria,
-    tipo_acceso: esPlantilla ? 'plantilla' : (negocio?.tipo_acceso === 'negocio_real' ? 'negocio_real' : 'negocio'),
+    tipo_acceso: esPlantilla
+      ? 'plantilla'
+      : negocio?.tipo_acceso === 'negocio_real'
+        ? 'negocio_real'
+        : 'negocio',
     negocio_id: negocio?.negocio_id,
     timestamp: Date.now(),
   };

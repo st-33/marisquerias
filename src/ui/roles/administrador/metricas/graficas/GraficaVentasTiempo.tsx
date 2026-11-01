@@ -109,7 +109,9 @@ function generarCurvaOndaSinRebote(puntos: PuntoGrafica[], baseline: number): st
       const cp1y = baseline;
       const cp2x = p2.x - dx * 0.35;
       const cp2y = p2.y;
-      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(
+        1
+      )} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
       continue;
     }
 
@@ -118,7 +120,9 @@ function generarCurvaOndaSinRebote(puntos: PuntoGrafica[], baseline: number): st
       const cp1y = p1.y;
       const cp2x = p2.x - dx * 0.45;
       const cp2y = baseline;
-      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${baseline.toFixed(1)}`;
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(
+        1
+      )} ${p2.x.toFixed(1)},${baseline.toFixed(1)}`;
       continue;
     }
 
@@ -133,7 +137,9 @@ function generarCurvaOndaSinRebote(puntos: PuntoGrafica[], baseline: number): st
     const cp2x = p2.x - dx * 0.35;
     const cp2y = Math.min(baseline, Math.max(MARGEN_SUPERIOR, p2.y - dy2));
 
-    d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(
+      1
+    )} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
   }
 
   return d;
@@ -210,7 +216,9 @@ function generarDiasDelRango(rangoInicio: number, rangoFin: number): Date[] {
 }
 
 function claveYMD(fecha: Date): string {
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(
+    fecha.getDate()
+  ).padStart(2, '0')}`;
 }
 
 function agruparPorDia(
@@ -331,7 +339,9 @@ export function GraficaVentasTiempo({
     if (!linePath) return '';
     const primerX = MARGEN_IZQUIERDO;
     const ultimoX = MARGEN_IZQUIERDO + plotWidth;
-    return `${linePath} L ${ultimoX.toFixed(1)},${baseline.toFixed(1)} L ${primerX.toFixed(1)},${baseline.toFixed(1)} Z`;
+    return `${linePath} L ${ultimoX.toFixed(1)},${baseline.toFixed(1)} L ${primerX.toFixed(
+      1
+    )},${baseline.toFixed(1)} Z`;
   }, [linePath, plotWidth, baseline]);
 
   return (

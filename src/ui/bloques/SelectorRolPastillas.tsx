@@ -47,8 +47,15 @@ export function SelectorRolPastillas({
   const { colors, theme, isElite } = useAppTheme();
   const { width: screenWidth } = useWindowDimensions();
 
-  const { loading, roles, nombreNegocio, logoUrl, handleRolPress, handleMenuCliente, handleLogout } =
-    useLogicaSelectorRoles();
+  const {
+    loading,
+    roles,
+    nombreNegocio,
+    logoUrl,
+    handleRolPress,
+    handleMenuCliente,
+    handleLogout,
+  } = useLogicaSelectorRoles();
 
   const confirmarSalida = () => {
     if (Platform.OS === 'web') {
@@ -244,11 +251,7 @@ export function SelectorRolPastillas({
         <View style={dynamicStyles.headerContainer}>
           {onAlternarEstilo ? (
             <Pressable onPress={onAlternarEstilo} style={dynamicStyles.switchPill}>
-              <Ionicons
-                name="shapes-outline"
-                size={14}
-                color={colors.primary}
-              />
+              <Ionicons name="shapes-outline" size={14} color={colors.primary} />
               <Text style={dynamicStyles.switchText}>
                 {estiloActivo === 'pastillas' ? 'Ver Orbes' : 'Ver Pastillas'}
               </Text>
@@ -270,8 +273,7 @@ export function SelectorRolPastillas({
         <View style={dynamicStyles.deckWrapper}>
           {roles.map((rol) => {
             const claveRol = rol.id.toLowerCase();
-            const descripcion =
-              DESCRIPCIONES_ROL[claveRol] || 'Módulo operativo de piso';
+            const descripcion = DESCRIPCIONES_ROL[claveRol] || 'Módulo operativo de piso';
 
             return (
               <Pressable
@@ -310,10 +312,7 @@ export function SelectorRolPastillas({
         <View style={dynamicStyles.footerAcciones}>
           <Pressable
             onPress={handleMenuCliente}
-            style={({ pressed }) => [
-              dynamicStyles.botonMenuCliente,
-              pressed && { opacity: 0.7 },
-            ]}
+            style={({ pressed }) => [dynamicStyles.botonMenuCliente, pressed && { opacity: 0.7 }]}
           >
             <Text style={dynamicStyles.botonMenuClienteTexto}>Menú Cliente</Text>
           </Pressable>

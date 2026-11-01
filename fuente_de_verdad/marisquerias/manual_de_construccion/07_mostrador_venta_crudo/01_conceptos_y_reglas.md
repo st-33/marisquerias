@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: MOSTRADOR Y VENTA EN CRUDO
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

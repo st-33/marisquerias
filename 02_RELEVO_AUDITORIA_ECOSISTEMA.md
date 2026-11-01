@@ -75,12 +75,12 @@ La orden `01_ORDEN_MARISCAL_MARISQUERIAS.md` establece subordinación al contrat
 
 Clasificación inicial: 3 reportes de mecanismo incierto (E) y 1 grupo de requisitos futuros (D). No se han demostrado causas comunes.
 
-| ID | Reporte | Clasificación | Responsable |
-|---|---|---|---|
-| ECO-01 | Monitoreo no refleja operación/dispositivos | E; vinculado a INC-002 | Ecosistema + Marisquerías |
-| ECO-02 | Acciones o datos no se actualizan como se espera | E; falta enumerar acciones y reproducir | Ecosistema |
-| DAT-01 | Nodos aparentemente improcedentes en unidades | E; faltan exportaciones y trazas | Datos |
-| FUT-01 | Suscripciones, pagos por cliente y timbrado | D; alcance y estado por verificar | Ecosistema, etapa posterior |
+| ID     | Reporte                                          | Clasificación                           | Responsable                 |
+| ------ | ------------------------------------------------ | --------------------------------------- | --------------------------- |
+| ECO-01 | Monitoreo no refleja operación/dispositivos      | E; vinculado a INC-002                  | Ecosistema + Marisquerías   |
+| ECO-02 | Acciones o datos no se actualizan como se espera | E; falta enumerar acciones y reproducir | Ecosistema                  |
+| DAT-01 | Nodos aparentemente improcedentes en unidades    | E; faltan exportaciones y trazas        | Datos                       |
+| FUT-01 | Suscripciones, pagos por cliente y timbrado      | D; alcance y estado por verificar       | Ecosistema, etapa posterior |
 
 Urgente para la auditoría: comprobar aislamiento y autoridad sobre precios y escrituras. Es un riesgo a investigar, no una filtración o alteración confirmada.
 

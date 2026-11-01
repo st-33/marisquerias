@@ -152,9 +152,7 @@ export async function actualizarUsuario(
   datos: Partial<DatosCrearUsuario>,
   rutaRaiz: string = ''
 ): Promise<void> {
-  const rutaUsuario = rutaRaiz
-    ? `${rutaRaiz.replace(/\/+$/, '')}/usuario/${id}`
-    : `usuario/${id}`;
+  const rutaUsuario = rutaRaiz ? `${rutaRaiz.replace(/\/+$/, '')}/usuario/${id}` : `usuario/${id}`;
 
   const payload: Record<string, any> = {
     actualizado_en: Date.now(),
@@ -190,9 +188,7 @@ export async function eliminarUsuario(
   id: string,
   rutaRaiz: string = ''
 ): Promise<void> {
-  const rutaUsuario = rutaRaiz
-    ? `${rutaRaiz.replace(/\/+$/, '')}/usuario/${id}`
-    : `usuario/${id}`;
+  const rutaUsuario = rutaRaiz ? `${rutaRaiz.replace(/\/+$/, '')}/usuario/${id}` : `usuario/${id}`;
 
   await remove(ref(db, rutaUsuario));
 }

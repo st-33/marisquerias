@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: ROLES Y PERMISOS
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

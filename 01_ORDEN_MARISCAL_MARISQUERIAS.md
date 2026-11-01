@@ -14,20 +14,20 @@ indiscriminadamente código del Ecosistema.
 
 ## 2. Reglas de categoría
 
--   El slug esperado de la aplicación es `marisquerias`.
--   El código `MARISQUERIAS-00` corresponde a la plantilla base/entorno
-    de pruebas, no a un negocio comercial.
--   Los negocios reales usan `id` de dominio `"01"`, `"02"`, etc.
--   El diseño visual existente debe preservarse salvo orden explícita de
-    cambio.
--   Los roles conocidos de Marisquerías son administrador, cocina,
-    mesera, menú digital y mostrador. No asumir que todos los negocios
-    tienen todos los roles: Puerto Libres no tiene mostrador; El
-    Arrecife sí.
--   Servicio a Domicilio/ADIRepart es una categoría/ámbito separado. No
-    incrustar sus pantallas o roles en Marisquerías; solo activar una
-    capacidad de reparto si el contrato de ese negocio la autoriza y la
-    categoría define su comportamiento.
+- El slug esperado de la aplicación es `marisquerias`.
+- El código `MARISQUERIAS-00` corresponde a la plantilla base/entorno
+  de pruebas, no a un negocio comercial.
+- Los negocios reales usan `id` de dominio `"01"`, `"02"`, etc.
+- El diseño visual existente debe preservarse salvo orden explícita de
+  cambio.
+- Los roles conocidos de Marisquerías son administrador, cocina,
+  mesera, menú digital y mostrador. No asumir que todos los negocios
+  tienen todos los roles: Puerto Libres no tiene mostrador; El
+  Arrecife sí.
+- Servicio a Domicilio/ADIRepart es una categoría/ámbito separado. No
+  incrustar sus pantallas o roles en Marisquerías; solo activar una
+  capacidad de reparto si el contrato de ese negocio la autoriza y la
+  categoría define su comportamiento.
 
 ## 3. Trabajo requerido
 
@@ -64,14 +64,14 @@ indiscriminadamente código del Ecosistema.
 
 ### C. Sesión y operación sin conexión
 
--   Documentar el uso de `deviceIdADI`, la persistencia de sesión y la
-    expiración.
--   Al revocar código o negocio, bloquear nuevas operaciones remotas y
-    cerrar la sesión conforme a la política aprobada.
--   No borrar pedidos, ventas ni otra información local pendiente de
-    sincronización por una revocación.
--   Distinguir datos locales pendientes de datos confirmados en RTDB.
--   Liberar listeners al cerrar sesión o desmontar la aplicación.
+- Documentar el uso de `deviceIdADI`, la persistencia de sesión y la
+  expiración.
+- Al revocar código o negocio, bloquear nuevas operaciones remotas y
+  cerrar la sesión conforme a la política aprobada.
+- No borrar pedidos, ventas ni otra información local pendiente de
+  sincronización por una revocación.
+- Distinguir datos locales pendientes de datos confirmados en RTDB.
+- Liberar listeners al cerrar sesión o desmontar la aplicación.
 
 ### D. Unidad Operativa
 
@@ -91,37 +91,37 @@ sus consumidores.
 
 ## 4. Pruebas obligatorias
 
--   `MARISQUERIAS-00` abre solo el contexto de plantilla/pruebas.
--   Un código válido de Marisquerías entra al negocio correcto.
--   Un código de otra categoría se rechaza antes de conectar la Unidad
-    Operativa.
--   Un código inexistente, revocado o suspendido se rechaza.
--   Capacidades no autorizadas no habilitan pantallas, roles ni
-    operaciones.
--   Puerto Libres no muestra mostrador si no está
-    autorizado/configurado.
--   El Arrecife conserva mostrador cuando corresponde.
--   La pérdida de red conserva pedidos/ventas locales pendientes.
--   La revocación libera listeners y no borra datos locales pendientes.
--   Fallo de lectura de Secundaria no provoca fallback a una búsqueda
-    global no acotada.
--   Reglas de Firebase impiden acceder a la Unidad Operativa de otro
-    negocio.
--   Alta y eliminación coordinadas cubren fallos parciales y
-    recuperación.
+- `MARISQUERIAS-00` abre solo el contexto de plantilla/pruebas.
+- Un código válido de Marisquerías entra al negocio correcto.
+- Un código de otra categoría se rechaza antes de conectar la Unidad
+  Operativa.
+- Un código inexistente, revocado o suspendido se rechaza.
+- Capacidades no autorizadas no habilitan pantallas, roles ni
+  operaciones.
+- Puerto Libres no muestra mostrador si no está
+  autorizado/configurado.
+- El Arrecife conserva mostrador cuando corresponde.
+- La pérdida de red conserva pedidos/ventas locales pendientes.
+- La revocación libera listeners y no borra datos locales pendientes.
+- Fallo de lectura de Secundaria no provoca fallback a una búsqueda
+  global no acotada.
+- Reglas de Firebase impiden acceder a la Unidad Operativa de otro
+  negocio.
+- Alta y eliminación coordinadas cubren fallos parciales y
+  recuperación.
 
 ## 5. No hacer
 
--   No cambiar el diseño visual por conveniencia de la integración.
--   No copiar grandes bloques desde el proyecto histórico
-    `mi-ecosistema-adi`.
--   No crear otra clase con el mismo propósito que
-    `ConectorCategoriaCliente`.
--   No inventar campos para "hacer más explícito" algo que ya tiene una
-    fuente canónica.
--   No purgar rutas antiguas ni datos de Firebase sin inventario de
-    consumidores, respaldo/plan de recuperación y autorización.
--   No declarar pruebas de integración real si solo se usaron mocks.
+- No cambiar el diseño visual por conveniencia de la integración.
+- No copiar grandes bloques desde el proyecto histórico
+  `mi-ecosistema-adi`.
+- No crear otra clase con el mismo propósito que
+  `ConectorCategoriaCliente`.
+- No inventar campos para "hacer más explícito" algo que ya tiene una
+  fuente canónica.
+- No purgar rutas antiguas ni datos de Firebase sin inventario de
+  consumidores, respaldo/plan de recuperación y autorización.
+- No declarar pruebas de integración real si solo se usaron mocks.
 
 ## 6. Entrega del Mariscal
 

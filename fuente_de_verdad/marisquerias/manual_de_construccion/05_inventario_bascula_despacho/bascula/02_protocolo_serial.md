@@ -10,13 +10,13 @@
 type OpcionesLecturaPeso = {
   aplicarTara?: boolean;
   esperarEstabilidad?: boolean;
-  timeout?: number;        // ms; default 5000
+  timeout?: number; // ms; default 5000
 };
 
 type ResultadoPeso = {
   exito: boolean;
   peso?: number;
-  unidad: string;          // 'kg' por defecto
+  unidad: string; // 'kg' por defecto
   mensaje?: string;
 };
 

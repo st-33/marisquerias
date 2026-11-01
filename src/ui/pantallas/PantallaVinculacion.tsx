@@ -7,7 +7,7 @@
  * 3. Tarjeta compacta y legible sin cortes de texto.
  */
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,23 +17,23 @@ import {
   Platform,
   ActivityIndicator,
   StyleSheet,
-} from "react-native";
-import { router } from "expo-router";
-import { useArranqueO1 } from "../../sistema/instalacion/useArranqueSistema";
-import { getSecundariaRtdb } from "../../sistema/firebase";
-import { ErrorArranque } from "../bloques/ErrorArranque";
-import { CATEGORIA_APP } from "../../sistema/identidad_categoria";
+} from 'react-native';
+import { router } from 'expo-router';
+import { useArranqueO1 } from '../../sistema/instalacion/useArranqueSistema';
+import { getSecundariaRtdb } from '../../sistema/firebase';
+import { ErrorArranque } from '../bloques/ErrorArranque';
+import { CATEGORIA_APP } from '../../sistema/identidad_categoria';
 
 export function sanitizarCodigoInput(valor: string): string {
   return valor
     .toUpperCase()
-    .replace(/[^A-Z0-9-]/g, "")
+    .replace(/[^A-Z0-9-]/g, '')
     .slice(0, 20);
 }
 
 export function PantallaVinculacion() {
-  const [codigo, setCodigo] = useState("");
-  const [paso, setPaso] = useState<"codigo" | "usuario">("codigo");
+  const [codigo, setCodigo] = useState('');
+  const [paso, setPaso] = useState<'codigo' | 'usuario'>('codigo');
   const [resultadoArranque, setResultadoArranque] = useState<any>(null);
   const { loading, errorInfo, arrancar, resetError } = useArranqueO1();
 
@@ -42,7 +42,7 @@ export function PantallaVinculacion() {
   }, [codigo]);
 
   const esModoPlantilla = useMemo(() => {
-    return codigo.startsWith("NPB") || codigo.includes("00");
+    return codigo.startsWith('NPB') || codigo.includes('00');
   }, [codigo]);
 
   const handleCambioTexto = (texto: string) => {
@@ -58,27 +58,26 @@ export function PantallaVinculacion() {
       const resultado = await arrancar(db, codigo);
 
       if (resultado.ok) {
-        if (Platform.OS === "web") {
+        if (Platform.OS === 'web') {
           if (resultado.requiereSeleccionRol) {
-            router.replace("/_role/roles");
+            router.replace('/_role/roles');
           } else {
             router.replace(resultado.rutaPorDefecto as any);
           }
         } else {
           // Nativo: verificar si ya existe una sesión operativa de usuario local
-          const { obtenerSesionOperativaLocal } = await import(
-            "../../sistema/usuarios/servicio_sesion_dispositivo"
-          );
+          const { obtenerSesionOperativaLocal } =
+            await import('../../sistema/usuarios/servicio_sesion_dispositivo');
           const sesionLocal = await obtenerSesionOperativaLocal();
           if (sesionLocal && sesionLocal.usuario_id) {
             if (resultado.requiereSeleccionRol) {
-              router.replace("/_role/roles");
+              router.replace('/_role/roles');
             } else {
               router.replace(resultado.rutaPorDefecto as any);
             }
           } else {
             setResultadoArranque(resultado);
-            setPaso("usuario");
+            setPaso('usuario');
           }
         }
       }
@@ -93,30 +92,30 @@ export function PantallaVinculacion() {
 
   const handleSalir = () => {
     resetError();
-    setCodigo("");
+    setCodigo('');
   };
 
-  if (paso === "usuario") {
-    const { PantallaRegistroUsuario } = require("./registro_usuario/PantallaRegistroUsuario");
+  if (paso === 'usuario') {
+    const { PantallaRegistroUsuario } = require('./registro_usuario/PantallaRegistroUsuario');
     return (
       <PantallaRegistroUsuario
         onRegistroCompletado={(usuario: any) => {
           if (resultadoArranque?.requiereSeleccionRol) {
-            router.replace("/_role/roles");
+            router.replace('/_role/roles');
           } else if (resultadoArranque?.rutaPorDefecto) {
             router.replace(resultadoArranque.rutaPorDefecto as any);
           } else {
-            router.replace("/_role/roles");
+            router.replace('/_role/roles');
           }
         }}
-        onCancelar={() => setPaso("codigo")}
+        onCancelar={() => setPaso('codigo')}
       />
     );
   }
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardContainer}
     >
       <View style={styles.container}>
@@ -178,7 +177,7 @@ export function PantallaVinculacion() {
                   </View>
                 ) : (
                   <Text style={styles.textoBoton}>
-                    {esModoPlantilla ? "Abrir Plantilla Base (NPB 00)" : "Vincular Negocio"}
+                    {esModoPlantilla ? 'Abrir Plantilla Base (NPB 00)' : 'Vincular Negocio'}
                   </Text>
                 )}
               </Pressable>
@@ -195,42 +194,42 @@ export default PantallaVinculacion;
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: "#070b14",
+    backgroundColor: '#070b14',
   },
   container: {
     flex: 1,
     padding: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#070b14",
-    position: "relative",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#070b14',
+    position: 'relative',
   },
   fondoTextoWrapper: {
-    position: "absolute",
-    top: "14%",
-    width: "100%",
-    alignItems: "center",
+    position: 'absolute',
+    top: '14%',
+    width: '100%',
+    alignItems: 'center',
     zIndex: 0,
     opacity: 0.07,
   },
   fondoTexto: {
-    color: "#ffffff",
+    color: '#ffffff',
     fontSize: 56,
-    fontWeight: "900",
+    fontWeight: '900',
     letterSpacing: 4,
-    textAlign: "center",
-    textTransform: "uppercase",
+    textAlign: 'center',
+    textTransform: 'uppercase',
   },
   card: {
-    width: "100%",
+    width: '100%',
     maxWidth: 420,
-    backgroundColor: "rgba(17, 24, 39, 0.92)",
+    backgroundColor: 'rgba(17, 24, 39, 0.92)',
     paddingVertical: 28,
     paddingHorizontal: 24,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-    shadowColor: "#000",
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
     shadowOpacity: 0.6,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
@@ -238,19 +237,19 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   marcaHeader: {
-    color: "#ffffff",
+    color: '#ffffff',
     fontSize: 28,
-    fontWeight: "900",
-    textAlign: "center",
+    fontWeight: '900',
+    textAlign: 'center',
     letterSpacing: 3,
     marginBottom: 6,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
   },
   titulo: {
-    color: "#94a3b8",
+    color: '#94a3b8',
     fontSize: 14,
-    fontWeight: "600",
-    textAlign: "center",
+    fontWeight: '600',
+    textAlign: 'center',
     marginBottom: 24,
     letterSpacing: 0.5,
   },
@@ -258,51 +257,51 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    backgroundColor: "#030712",
+    backgroundColor: '#030712',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#334155",
-    color: "#ffffff",
+    borderColor: '#334155',
+    color: '#ffffff',
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: '800',
     letterSpacing: 3,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    textAlign: "center",
+    textAlign: 'center',
   },
   badgePlantilla: {
     marginTop: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    backgroundColor: "rgba(56, 189, 248, 0.15)",
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
     borderRadius: 6,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
   textoBadgePlantilla: {
-    color: "#38bdf8",
+    color: '#38bdf8',
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   botonVincular: {
-    backgroundColor: "#0284c7",
+    backgroundColor: '#0284c7',
     borderRadius: 12,
     paddingVertical: 14,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   botonDeshabilitado: {
-    backgroundColor: "#1e293b",
+    backgroundColor: '#1e293b',
     opacity: 0.6,
   },
   cargandoWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   textoBoton: {
-    color: "#ffffff",
+    color: '#ffffff',
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
 });

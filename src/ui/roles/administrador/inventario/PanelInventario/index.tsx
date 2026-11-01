@@ -31,7 +31,11 @@ type PanelInventarioProps = {
 
 type ViewMode = 'areas' | 'containers' | 'items_section' | 'items_area' | 'items_container';
 
-export function PanelInventario({ db, rutaNegocio, niche = 'restaurante' }: PanelInventarioProps = {}) {
+export function PanelInventario({
+  db,
+  rutaNegocio,
+  niche = 'restaurante',
+}: PanelInventarioProps = {}) {
   const { width } = useWindowDimensions();
   const isLarge = width > 800;
 

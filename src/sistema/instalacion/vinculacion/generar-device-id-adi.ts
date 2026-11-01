@@ -14,8 +14,8 @@ export function obtenerDeviceIdResiliente(): string {
     typeof window !== 'undefined' && window.sessionStorage
       ? window.sessionStorage
       : typeof sessionStorage !== 'undefined'
-      ? sessionStorage
-      : null;
+        ? sessionStorage
+        : null;
 
   if (storage) {
     try {

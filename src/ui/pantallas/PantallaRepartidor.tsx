@@ -97,7 +97,8 @@ export function PantallaRepartidor() {
           <View>
             <Text style={styles.headerNombre}>{repartidorActual.nombre}</Text>
             <Text style={styles.headerSub}>
-              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''} · Despacho
+              {negocioNombre}
+              {negocioId ? ` · ${negocioId}` : ''} · Despacho
             </Text>
           </View>
         </View>

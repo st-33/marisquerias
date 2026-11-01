@@ -11,14 +11,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Modal,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, Pressable, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AvatarUsuario } from './AvatarUsuario';
 import type { SexoUsuario } from '../../../sistema/usuarios/tipos';
@@ -50,12 +43,7 @@ export function TarjetaConfirmacionUsuario({
   const { colors, isElite } = useAppTheme();
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onEditar}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onEditar}>
       <View style={estilos.overlay}>
         <View
           style={[
@@ -72,10 +60,7 @@ export function TarjetaConfirmacionUsuario({
               <Ionicons name="storefront" size={14} color="#C5A059" />
             </View>
             <Text
-              style={[
-                estilos.textoNombreNegocio,
-                { color: isElite ? '#E5C07B' : colors.text },
-              ]}
+              style={[estilos.textoNombreNegocio, { color: isElite ? '#E5C07B' : colors.text }]}
               numberOfLines={1}
             >
               {nombreNegocio || 'NEGOCIO OPERATIVO'}
@@ -89,13 +74,7 @@ export function TarjetaConfirmacionUsuario({
             </View>
 
             <View style={estilos.columnaDatos}>
-              <Text
-                style={[
-                  estilos.textoNombreCompleto,
-                  { color: colors.text },
-                ]}
-                numberOfLines={2}
-              >
+              <Text style={[estilos.textoNombreCompleto, { color: colors.text }]} numberOfLines={2}>
                 {nombre}
               </Text>
 
@@ -147,10 +126,7 @@ export function TarjetaConfirmacionUsuario({
             <Pressable
               onPress={onEditar}
               disabled={cargando}
-              style={({ pressed }) => [
-                estilos.botonModificar,
-                pressed && { opacity: 0.7 },
-              ]}
+              style={({ pressed }) => [estilos.botonModificar, pressed && { opacity: 0.7 }]}
             >
               <Ionicons name="create-outline" size={15} color="#94A3B8" />
               <Text style={estilos.textoBotonModificar}>Modificar datos</Text>

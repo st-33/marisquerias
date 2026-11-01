@@ -197,12 +197,12 @@ export async function resolverAccessCode(
   const tipo_acceso = esPlantillaAcceso
     ? 'plantilla'
     : (val as any)?.tipo_acceso === 'negocio_real'
-    ? 'negocio_real'
-    : 'negocio';
+      ? 'negocio_real'
+      : 'negocio';
 
   const capacidadesRaw =
     typeof val === 'object' && val !== null
-      ? (val as any).capacidades_autorizadas ?? (val as any).capacidadesAutorizadas
+      ? ((val as any).capacidades_autorizadas ?? (val as any).capacidadesAutorizadas)
       : undefined;
   const capacidades_autorizadas = Array.isArray(capacidadesRaw)
     ? (capacidadesRaw as any)

@@ -232,7 +232,11 @@ export function PantallaMetricasDatos() {
           >
             <PanelVentasResumen
               dateFilter={dateFilter}
-              monto={`$${(metrics?.vendedorHero?.ventasHero ?? metrics?.ventasFiltradas ?? 0).toFixed(2)}`}
+              monto={`$${(
+                metrics?.vendedorHero?.ventasHero ??
+                metrics?.ventasFiltradas ??
+                0
+              ).toFixed(2)}`}
               datos={(metrics?.eventosVentas ?? []).map((evento: any) => ({
                 timestamp: evento.timestamp,
                 total: evento.total,

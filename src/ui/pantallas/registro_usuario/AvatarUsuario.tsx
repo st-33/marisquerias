@@ -23,8 +23,12 @@ export function AvatarUsuario({ sexo, size = 80, activo = false }: AvatarUsuario
     : 'rgba(244, 114, 182, 0.15)'; // Rose / Magenta
 
   const colorBorde = esHombre
-    ? (activo ? '#38BDF8' : 'rgba(56, 189, 248, 0.4)')
-    : (activo ? '#F472B6' : 'rgba(244, 114, 182, 0.4)');
+    ? activo
+      ? '#38BDF8'
+      : 'rgba(56, 189, 248, 0.4)'
+    : activo
+      ? '#F472B6'
+      : 'rgba(244, 114, 182, 0.4)';
 
   const colorIcono = esHombre ? '#38BDF8' : '#F472B6';
 
@@ -42,11 +46,7 @@ export function AvatarUsuario({ sexo, size = 80, activo = false }: AvatarUsuario
         },
       ]}
     >
-      <Ionicons
-        name={esHombre ? 'person' : 'person'}
-        size={iconSize}
-        color={colorIcono}
-      />
+      <Ionicons name={esHombre ? 'person' : 'person'} size={iconSize} color={colorIcono} />
       <View
         style={[
           estilos.badgeSexo,

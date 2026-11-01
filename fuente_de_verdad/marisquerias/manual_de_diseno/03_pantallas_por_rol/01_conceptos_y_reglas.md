@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: PANTALLAS POR ROL
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

@@ -32,7 +32,10 @@ import { admitirSesionDispositivo } from '../../../sistema/usuarios/servicio_ses
 import { getOperacionRtdb } from '../../../sistema/firebase';
 import { useStore } from '../../../sistema/store';
 import { useAppTheme } from '../../../compartido/temas';
-import { CATALOGO_ROLES_DISPOSITIVO, type RolDispositivoCanonico } from '../../../negocio/roles/catalogoRoles';
+import {
+  CATALOGO_ROLES_DISPOSITIVO,
+  type RolDispositivoCanonico,
+} from '../../../negocio/roles/catalogoRoles';
 import { CATEGORIA_APP } from '../../../sistema/identidad_categoria';
 
 interface PantallaRegistroUsuarioProps {
@@ -153,9 +156,8 @@ export function PantallaRegistroUsuario({
       });
 
       // Si es nativo, admitir slot en monitoreo/dispositivos
-      const { resolverDeviceIdADI } = await import(
-        '../../../sistema/instalacion/vinculacion/generar-device-id-adi'
-      );
+      const { resolverDeviceIdADI } =
+        await import('../../../sistema/instalacion/vinculacion/generar-device-id-adi');
       const deviceId = await resolverDeviceIdADI();
 
       const resultadoAdmision = await admitirSesionDispositivo(db, {
@@ -167,7 +169,9 @@ export function PantallaRegistroUsuario({
       });
 
       if (!resultadoAdmision.admitido && !resultadoAdmision.esWeb) {
-        throw new Error(resultadoAdmision.error || 'No se pudo admitir el dispositivo en el cupo operativo.');
+        throw new Error(
+          resultadoAdmision.error || 'No se pudo admitir el dispositivo en el cupo operativo.'
+        );
       }
 
       setMostrarConfirmacion(false);
@@ -187,9 +191,8 @@ export function PantallaRegistroUsuario({
 
     try {
       const db = getOperacionRtdb();
-      const { resolverDeviceIdADI } = await import(
-        '../../../sistema/instalacion/vinculacion/generar-device-id-adi'
-      );
+      const { resolverDeviceIdADI } =
+        await import('../../../sistema/instalacion/vinculacion/generar-device-id-adi');
       const deviceId = await resolverDeviceIdADI();
 
       const resultadoAdmision = await admitirSesionDispositivo(db, {
@@ -243,22 +246,14 @@ export function PantallaRegistroUsuario({
                 setModo('nuevo');
                 setErrorValidacion(null);
               }}
-              style={[
-                estilos.tabModo,
-                modo === 'nuevo' && estilos.tabModoActivo,
-              ]}
+              style={[estilos.tabModo, modo === 'nuevo' && estilos.tabModoActivo]}
             >
               <Ionicons
                 name="person-add-outline"
                 size={16}
                 color={modo === 'nuevo' ? '#38BDF8' : '#64748B'}
               />
-              <Text
-                style={[
-                  estilos.textoTabModo,
-                  modo === 'nuevo' && estilos.textoTabModoActivo,
-                ]}
-              >
+              <Text style={[estilos.textoTabModo, modo === 'nuevo' && estilos.textoTabModoActivo]}>
                 Nuevo Operador
               </Text>
             </Pressable>
@@ -268,10 +263,7 @@ export function PantallaRegistroUsuario({
                 setModo('existente');
                 setErrorValidacion(null);
               }}
-              style={[
-                estilos.tabModo,
-                modo === 'existente' && estilos.tabModoActivo,
-              ]}
+              style={[estilos.tabModo, modo === 'existente' && estilos.tabModoActivo]}
             >
               <Ionicons
                 name="people-outline"
@@ -279,10 +271,7 @@ export function PantallaRegistroUsuario({
                 color={modo === 'existente' ? '#38BDF8' : '#64748B'}
               />
               <Text
-                style={[
-                  estilos.textoTabModo,
-                  modo === 'existente' && estilos.textoTabModoActivo,
-                ]}
+                style={[estilos.textoTabModo, modo === 'existente' && estilos.textoTabModoActivo]}
               >
                 Personal Registrado ({usuariosExistentes.length})
               </Text>
@@ -315,16 +304,11 @@ export function PantallaRegistroUsuario({
 
             {/* 2) Selector rápido H ♂ / M ♀ */}
             <View style={estilos.campo}>
-              <Text style={[estilos.etiquetaCampo, { color: colors.textMuted }]}>
-                Perfil
-              </Text>
+              <Text style={[estilos.etiquetaCampo, { color: colors.textMuted }]}>Perfil</Text>
               <View style={estilos.selectorSexo}>
                 <Pressable
                   onPress={() => setSexo('H')}
-                  style={[
-                    estilos.botonSexo,
-                    sexo === 'H' && estilos.botonSexoHombreActivo,
-                  ]}
+                  style={[estilos.botonSexo, sexo === 'H' && estilos.botonSexoHombreActivo]}
                   testID="selector-sexo-hombre"
                 >
                   <Text style={[estilos.textoBotonSexo, sexo === 'H' && estilos.textoSexoActivo]}>
@@ -334,10 +318,7 @@ export function PantallaRegistroUsuario({
 
                 <Pressable
                   onPress={() => setSexo('M')}
-                  style={[
-                    estilos.botonSexo,
-                    sexo === 'M' && estilos.botonSexoMujerActivo,
-                  ]}
+                  style={[estilos.botonSexo, sexo === 'M' && estilos.botonSexoMujerActivo]}
                   testID="selector-sexo-mujer"
                 >
                   <Text style={[estilos.textoBotonSexo, sexo === 'M' && estilos.textoSexoActivo]}>
@@ -360,10 +341,7 @@ export function PantallaRegistroUsuario({
                 }}
                 placeholder="Ej: Ana Isabel López"
                 placeholderTextColor="#64748B"
-                style={[
-                  estilos.inputTexto,
-                  { color: colors.text, borderColor: colors.border },
-                ]}
+                style={[estilos.inputTexto, { color: colors.text, borderColor: colors.border }]}
                 autoCapitalize="words"
                 autoCorrect={false}
                 testID="input-nombre-usuario"
@@ -372,9 +350,7 @@ export function PantallaRegistroUsuario({
 
             {/* 4) Edad de 2 dígitos */}
             <View style={estilos.campo}>
-              <Text style={[estilos.etiquetaCampo, { color: colors.textMuted }]}>
-                Edad
-              </Text>
+              <Text style={[estilos.etiquetaCampo, { color: colors.textMuted }]}>Edad</Text>
               <TextInput
                 value={edad}
                 onChangeText={(t) => {
@@ -409,10 +385,7 @@ export function PantallaRegistroUsuario({
                     <Pressable
                       key={rolId}
                       onPress={() => setCargoSeleccionado(rolId)}
-                      style={[
-                        estilos.itemCargo,
-                        esActivo && estilos.itemCargoActivo,
-                      ]}
+                      style={[estilos.itemCargo, esActivo && estilos.itemCargoActivo]}
                       testID={`cargo-${rolId}`}
                     >
                       <View style={estilos.radioIndicador}>
@@ -423,20 +396,12 @@ export function PantallaRegistroUsuario({
                         />
                       </View>
                       <View style={estilos.columnaTextoCargo}>
-                        <Text
-                          style={[
-                            estilos.textoCargo,
-                            esActivo && estilos.textoCargoActivo,
-                          ]}
-                        >
+                        <Text style={[estilos.textoCargo, esActivo && estilos.textoCargoActivo]}>
                           {nombreCargo}
                         </Text>
                         {def?.descripcion ? (
                           <Text
-                            style={[
-                              estilos.descCargo,
-                              esActivo && estilos.descCargoActivo,
-                            ]}
+                            style={[estilos.descCargo, esActivo && estilos.descCargoActivo]}
                             numberOfLines={2}
                           >
                             {def.descripcion}
@@ -472,10 +437,7 @@ export function PantallaRegistroUsuario({
             ) : usuariosExistentes.length === 0 ? (
               <View style={estilos.cajaVacia}>
                 <Text style={estilos.textoVacio}>No hay personal registrado aún.</Text>
-                <Pressable
-                  onPress={() => setModo('nuevo')}
-                  style={estilos.botonCrearPrimero}
-                >
+                <Pressable onPress={() => setModo('nuevo')} style={estilos.botonCrearPrimero}>
                   <Text style={estilos.textoBotonCrearPrimero}>Registrar Primer Operador</Text>
                 </Pressable>
               </View>

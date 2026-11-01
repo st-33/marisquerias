@@ -96,7 +96,8 @@ export function PantallaCaja() {
           <View>
             <Text style={styles.headerTitle}>Terminal de Cobro</Text>
             <Text style={styles.headerSubtitle}>
-              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+              {negocioNombre}
+              {negocioId ? ` · ${negocioId}` : ''}
             </Text>
           </View>
         </View>

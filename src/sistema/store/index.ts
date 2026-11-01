@@ -107,10 +107,7 @@ export const useNegocioConfig = () => useStore((s) => s.negocio.configuracion);
 export const useNegocioNombre = () =>
   useStore(
     (s) =>
-      s.negocio.configuracion?.nombre ||
-      s.sesion.negocio_id ||
-      s.sesion.negocioId ||
-      'Marisquería'
+      s.negocio.configuracion?.nombre || s.sesion.negocio_id || s.sesion.negocioId || 'Marisquería'
   );
 
 // UI

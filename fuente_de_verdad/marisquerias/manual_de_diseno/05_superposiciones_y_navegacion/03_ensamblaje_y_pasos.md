@@ -1,4 +1,5 @@
 # ENSAMBLAJE Y PASOS: SUPERPOSICIONES Y NAVEGACION
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
@@ -11,6 +12,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 01: Construir superposiciones y modales
 
 ### ESPECIFICACION
+
 - Se construye el modal respetando las reglas del contrato (sección 2): cierre
   con gesto o botón visible, y foco contenido en el diálogo.
 - El modal usa el radio 20-24 y el scrim con media de elevación definidos en
@@ -24,6 +26,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 02: Aplicar las duraciones canónicas de transición
 
 ### ESPECIFICACION
+
 - Se aplican las duraciones exactas del contrato (sección 1): `press_release`
   100-200 ms, `cambio_estado` 180-280 ms, `entrada_modal` 220-320 ms, `exito`
   ≤ 500 ms, `error` sin rebote agresivo.
@@ -37,6 +40,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 03: Coordinar sonido y háptica
 
 ### ESPECIFICACION
+
 - La retroalimentación háptica/sonora acompaña los hitos críticos (pago
   confirmado, pedido enviado a cocina, cobro exitoso) alineada con las
   duraciones canónicas de la sección 1.
@@ -48,6 +52,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 04: Garantizar la accesibilidad
 
 ### ESPECIFICACION
+
 - Todo objetivo táctil mide **≥ 44×44 px** (sección 4); el foco es visible en
   web y con teclado.
 - El dato importante se transmite con texto + posición + forma, además de color;
@@ -60,6 +65,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 05: Componer los 4 contextos responsive
 
 ### ESPECIFICACION
+
 - Se aplican los 4 contextos del contrato (sección 3): teléfono vertical (una
   columna, CTA accesible, resumen anclado), tablet (panel de trabajo + detalle),
   web (navegación lateral + tablas) y offline (lectura y captura local con cola
@@ -72,6 +78,7 @@ al usuario y jamás pongan en riesgo una venta en curso.
 ## PASO 06: Verificar las reglas de navegación
 
 ### ESPECIFICACION
+
 - Se verifican las dos reglas de navegación: respetar el movimiento reducido y
   que la navegación **nunca** oculta una venta en curso (sección 4 y reglas de
   concepto).

@@ -82,13 +82,20 @@ export async function ejecutarArranqueO1(
           const cfg = snapNegocio.val();
           if (cfg && typeof cfg === 'object') {
             if (!db_url_operativa) {
-              db_url_operativa = cfg.db_url_operativa || cfg.url_unidad || cfg.operacionUrl || cfg.operacion_url || '';
+              db_url_operativa =
+                cfg.db_url_operativa ||
+                cfg.url_unidad ||
+                cfg.operacionUrl ||
+                cfg.operacion_url ||
+                '';
             }
             if (cfg.capacidades_autorizadas && !negocio.capacidades_autorizadas) {
               const caps = cfg.capacidades_autorizadas;
               negocio.capacidades_autorizadas = Array.isArray(caps)
                 ? caps
-                : Object.entries(caps).filter(([, v]) => v === true).map(([k]) => k as any);
+                : Object.entries(caps)
+                    .filter(([, v]) => v === true)
+                    .map(([k]) => k as any);
             }
             if (cfg.nombre_comercial && !negocio.nombre_comercial) {
               negocio.nombre_comercial = cfg.nombre_comercial;
@@ -99,7 +106,9 @@ export async function ejecutarArranqueO1(
           }
         }
       } catch (err) {
-        logger.warn('ARRANQUE_O1', 'No se pudo leer la configuración remota en rutaNegocio', { error: err });
+        logger.warn('ARRANQUE_O1', 'No se pudo leer la configuración remota en rutaNegocio', {
+          error: err,
+        });
       }
     }
 

@@ -1,4 +1,5 @@
 # ENSAMBLAJE Y PASOS: FUNDAMENTOS DE MARCA
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
@@ -11,6 +12,7 @@ en cualquier bloque o pantalla.
 ## PASO 01: Consolidar el origen único de tokens
 
 ### ESPECIFICACION
+
 - Se crea un solo módulo o hoja de tokens que repite, **sin variaciones**, el
   objeto `paleta` del contrato (sección 1). Ningún color se declara "suelto" en
   otra parte.
@@ -23,6 +25,7 @@ en cualquier bloque o pantalla.
 ## PASO 02: Fijar la paleta semántica con roles no decorativos
 
 ### ESPECIFICACION
+
 - Cada token se asigna a un **significado fijo** y no a un adorno: coral =
   acción principal, dorado = administración, azul (`info`) = conectividad,
   verde (`success`) = éxito, amarillo (`warning`) = advertencia, rojo
@@ -36,6 +39,7 @@ en cualquier bloque o pantalla.
 ## PASO 03: Verificar contraste sobre el fondo oscuro
 
 ### ESPECIFICACION
+
 - Cada combinación texto/fondo cumple un contraste legible sobre la "noche
   marina": `texto.primary` (#F4F7F6) sobre `fondo.canvas` (#07131A) es la pareja
   de lectura por defecto; los acentos solo se usan con tamaño y peso suficientes
@@ -48,6 +52,7 @@ en cualquier bloque o pantalla.
 ## PASO 04: Aplicar la escala tipográfica de niveles
 
 ### ESPECIFICACION
+
 - Se mapean los niveles de la tabla de la sección 2 a la interfaz, respetando
   rango y peso: Display 32-40/700, Titulo pantalla 24-28/700, Titulo seccion
   18-20/700, Cuerpo 16/400-500, Etiqueta 12-14/600, Auxiliar ≥12/400, KPI
@@ -60,6 +65,7 @@ en cualquier bloque o pantalla.
 ## PASO 05: Aplicar la escala de 8 puntos y los radios
 
 ### ESPECIFICACION
+
 - Todo espaciado (márgenes, padding, gaps) sale de la escala 8 puntos:
   `4, 8, 12, 16, 24, 32, 40 px` (sección 3).
 - Los radios se asignan por tipo de pieza: campo/botón 10-12, tarjeta 16, modal
@@ -73,6 +79,7 @@ en cualquier bloque o pantalla.
 ## PASO 06: Verificar las invariantes de fundamentos
 
 ### ESPECIFICACION
+
 - Antes de dar por terminado el subsistema se comprueban las invariantes
   (sección 4): ningún estilo fuera de la paleta; color por significado, no
   decoración; el significado nunca depende solo del color (badge con texto +

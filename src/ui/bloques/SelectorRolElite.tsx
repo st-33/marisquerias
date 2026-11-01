@@ -35,8 +35,15 @@ export function SelectorRolElite({
   const { colors, theme, isElite } = useAppTheme();
   const { height: screenHeight } = useWindowDimensions();
 
-  const { loading, roles, nombreNegocio, logoUrl, handleRolPress, handleMenuCliente, handleLogout } =
-    useLogicaSelectorRoles();
+  const {
+    loading,
+    roles,
+    nombreNegocio,
+    logoUrl,
+    handleRolPress,
+    handleMenuCliente,
+    handleLogout,
+  } = useLogicaSelectorRoles();
 
   const confirmarSalida = () => {
     if (Platform.OS === 'web') {

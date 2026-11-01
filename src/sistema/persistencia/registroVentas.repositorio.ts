@@ -193,9 +193,7 @@ export class RepositorioRegistroVentas {
     }
 
     const ventaId =
-      venta.id ||
-      pushKey ||
-      'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      venta.id || pushKey || 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
 
     await this.registrarMostrador({
       id: ventaId,

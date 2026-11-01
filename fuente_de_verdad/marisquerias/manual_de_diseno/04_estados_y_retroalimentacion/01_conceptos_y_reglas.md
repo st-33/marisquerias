@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: ESTADOS Y RETROALIMENTACION
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

@@ -1,7 +1,4 @@
-import {
-  obtenerDeviceIdResiliente,
-  resolverDeviceIdADI,
-} from '../generar-device-id-adi';
+import { obtenerDeviceIdResiliente, resolverDeviceIdADI } from '../generar-device-id-adi';
 
 describe('generar-device-id-adi', () => {
   const originalWindow = (global as any).window;

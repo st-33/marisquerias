@@ -92,13 +92,8 @@ const Bubble: React.FC<BubbleProps> = ({
 
 const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-right' }) => {
   const COLORS = useThemedColors();
-  const [activeKey, setActiveKey] = useState(initialKey ?? items[0]?.key);
-
-  useEffect(() => {
-    if (initialKey) {
-      setActiveKey(initialKey);
-    }
-  }, [initialKey]);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const activeKey = initialKey ?? selectedKey ?? items[0]?.key;
 
   const isOpen = useSharedValue(0);
   const pulse = useSharedValue(1);
@@ -129,7 +124,7 @@ const FabRadial: React.FC<FabConfig> = ({ items, initialKey, position = 'bottom-
   };
 
   const handleChildPress = (item: FabItem) => {
-    setActiveKey(item.key);
+    setSelectedKey(item.key);
     ejecutarAccionFab(item);
     isOpen.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
   };

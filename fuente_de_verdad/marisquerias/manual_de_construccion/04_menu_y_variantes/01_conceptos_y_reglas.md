@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: MENU Y VARIANTES
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 

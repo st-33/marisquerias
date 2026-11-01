@@ -268,9 +268,7 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
 
     it('resuelve los cajones directamente en la raíz de la Unidad Operativa', () => {
       expect(rutaMenu(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe('menu');
-      expect(rutaPedidos(RUTA_RAIZ_UNIDAD_OPERATIVA, 'pedido-01')).toBe(
-        'pedidos/pedido-01'
-      );
+      expect(rutaPedidos(RUTA_RAIZ_UNIDAD_OPERATIVA, 'pedido-01')).toBe('pedidos/pedido-01');
       expect(rutaDispositivos(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe('dispositivos');
     });
 

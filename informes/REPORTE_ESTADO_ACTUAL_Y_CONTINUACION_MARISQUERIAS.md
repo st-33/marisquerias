@@ -10,6 +10,7 @@
 ## 1. Lo más reciente que se estuvo haciendo (Prioridad Alta)
 
 ### 1.1 Cierre del Circuito Operativo de Ventas e Inventario en Tiempo Real (`85fe96c`, `a4602f0`)
+
 1. **Visibilidad de Productos en Mostrador (`src/capacidades/pos/useMostradorPro.ts`):**
    - Anteriormente, `useMostradorPro` filtraba productos exigiendo `visible?.ventaCrudo === true`, lo que ocultaba productos recién creados desde el menú estándar si no tenían esa bandera explícita.
    - Se corrigió para que todo producto activo sea visible en Mostrador salvo que tenga explícitamente `visible?.ventaCrudo === false`.
@@ -21,6 +22,7 @@
    - Se verificó en `unidad-01` la apertura de `Mesa 1`, envío de comanda a cocina (`pedido_1761741530872`) y descuento en `inventario/areas/area_cocina/stock`.
 
 ### 1.2 Módulo de Ajustes de Administrador, Dispositivos y Selector de Roles (`4033a55`, `6d5e56e`)
+
 1. **Nuevo Módulo de Ajustes (`/_role/admin/ajustes`):**
    - Se creó `src/ui/roles/administrador/ajustes/PantallaAjustesAdmin.tsx` y se integró al FAB radial del Administrador con el ícono de engranaje (`settings-outline`).
    - Permite configurar **Identidad de Marca** (nombre comercial y URL de logotipo sin fondo en tiempo real hacia RTDB `configuracion/nombre` y `configuracion/logo_url`), **Estilo del Selector de Roles** (Tarjetas Clásicas vs Pastillas Compactas) y **Tema Visual**.
@@ -50,15 +52,19 @@
 ## 3. Instrucciones Exactas para Continuar en Otra Sesión
 
 ### Paso 1: Verificar los 3 Negocios de Marisquerías en Navegador
+
 Con el servidor en el puerto `8081` (`npx expo start --web --port 8081`):
+
 1. **Pestaña 1 (`PUERTO-265316` -> `unidad-01`):** Verificar roles `Administrador`, `Mesero`, `Cocina`, `Mostrador`.
 2. **Pestaña 2 (`ARRECIFE-02` -> `unidad-02`):** Verificar que solo aparezcan `Administrador` y `Mostrador` (sin `Mesero` ni `Cocina`).
 3. **Pestaña 3 (`MAZATLAN-03` -> `unidad-03`):** Verificar operación de salón/mesas.
 
 ### Paso 2: Completar Prueba de Cierre de Mesa y Corte de Caja
+
 - Revisar `src/ui/pantallas/PantallaCaja.tsx` y `src/roles/logica/caja/` para asegurar que el cobro de una comanda abierta en `unidad-01` o `unidad-03` registre la venta en `/ventas` y cambie `mesas/{mesaId}/estado` a `'libre'`.
 
 ### Paso 3: Ejecutar Validación de Tipos y Pruebas Unitarias
+
 ```bash
 cd /home/st/Escritorio/marisquerias
 npx tsc --noEmit

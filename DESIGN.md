@@ -250,7 +250,5 @@ Antes de considerar terminada una pantalla, el equipo debe poder responder afirm
 ## Referencias
 
 [^1]: [Ecosistema Marisquerías — visión y clasificación de capacidades](docs/vision/ecosistema_marisquerias.md).
-
 [^2]: [Ruta de producto funcional — flujos, estados y orden de evolución](docs/planes/ruta_producto_funcional.md).
-
 [^3]: [Auditoría visual recalibrada — hallazgos y orden recomendado](docs/auditorias/auditoria_visual_recalibrada_2026-08-21.md).

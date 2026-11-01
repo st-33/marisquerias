@@ -243,7 +243,10 @@ export async function admitirSesionDispositivo(
   try {
     await set(ref(db, `${rutaBaseMonitoreo}/${slotAsignado}`), 'activo');
     if (params.dbSecundaria && params.rutaSecundariaMonitoreo) {
-      await set(ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotAsignado}`), 'activo');
+      await set(
+        ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotAsignado}`),
+        'activo'
+      );
     }
   } catch (err) {
     console.warn('[SesionDispositivo] Error al sincronizar proyección string en monitoreo:', err);
@@ -437,7 +440,10 @@ export async function liberarSesionDispositivo(
     try {
       await set(ref(db, rutaMonitoreo), 'inactivo');
       if (params.dbSecundaria && params.rutaSecundariaMonitoreo) {
-        await set(ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotId}`), 'inactivo');
+        await set(
+          ref(params.dbSecundaria, `${params.rutaSecundariaMonitoreo}/${slotId}`),
+          'inactivo'
+        );
       }
     } catch {
       // Ignorar si no hay conexión

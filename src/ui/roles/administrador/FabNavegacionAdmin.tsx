@@ -13,11 +13,11 @@ import { AccionRadialFlotante } from '../../bloques/AccionRadialFlotante';
 import type { FabItem } from '../../../sistema/tipos/contratos';
 import { useStore } from '../../../sistema/store';
 
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+
 export interface FabNavegacionAdminProps {
   pathname: string;
 }
-
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export function FabNavegacionAdmin({ pathname }: FabNavegacionAdminProps) {
   const router = useRouter();

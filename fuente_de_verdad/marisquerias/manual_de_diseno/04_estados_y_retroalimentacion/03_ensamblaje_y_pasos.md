@@ -1,4 +1,5 @@
 # ENSAMBLAJE Y PASOS: ESTADOS Y RETROALIMENTACION
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
@@ -11,6 +12,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 01: Implementar el contrato de estados de sistema
 
 ### ESPECIFICACION
+
 - Se construye un bloque de estado reutilizable que cubre los 8 estados de la
   tabla (sección 1): cargando, vacío_inicial, sin_coincidencias, offline,
   error_recuperable, permiso_insuficiente, éxito, pendiente.
@@ -22,6 +24,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 02: Aplicar los 8 estados a toda pantalla de datos
 
 ### ESPECIFICACION
+
 - Toda pantalla que muestra datos integra los 8 estados; **ninguno puede
   omitirse** (invariante 2). Se recorren cargando, vacío, sin coincidencias,
   offline, error recuperable, permiso insuficiente, éxito y pendiente.
@@ -34,6 +37,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 03: Construir la retroalimentación de campo
 
 ### ESPECIFICACION
+
 - Se aplican las composiciones del contrato (sección 2):
   `formulario + validacion_visual = formulario_cerrado`;
   `campo_de_entrada_visual + estado_visual = retroalimentacion_campo`.
@@ -45,6 +49,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 04: Definir mensajes y notificaciones temporales
 
 ### ESPECIFICACION
+
 - Se aplica `mensaje_visual + duracion_visual = notificacion_temporal`
   (sección 2), usando el componente `Toast` del subsistema de primitivos.
 - Éxito y error se diferencian de "pendiente": se distingue siempre entre
@@ -55,6 +60,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 05: Construir estados vacíos y conservar contexto
 
 ### ESPECIFICACION
+
 - Cada estado vacío ("No encontramos resultados con estos filtros.", offline,
   vacío inicial) ofrece su acción correspondiente (limpiar filtros, ver
   pendientes/reintentar, crear/agregar) según la tabla (sección 1).
@@ -68,6 +74,7 @@ inesperado, y que el contexto de una venta nunca se pierda.
 ## PASO 06: Verificar las invariantes de estados
 
 ### ESPECIFICACION
+
 - Se comprueban las tres invariantes (sección 3): cobertura de los 8 estados,
   contexto de venta intacto ante errores, y la distinción "no guardado /
   guardado pendiente / guardado confirmado".

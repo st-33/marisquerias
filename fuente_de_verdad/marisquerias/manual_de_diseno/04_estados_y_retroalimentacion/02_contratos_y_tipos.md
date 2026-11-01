@@ -6,16 +6,16 @@
 
 ## 1. CONTRATO DE ESTADOS DE SISTEMA
 
-| Estado | Mensaje esperado | Accion posible |
-| --- | --- | --- |
-| cargando | "Cargando [contenido]..." | Cancelar si la operacion lo permite |
-| vacio_inicial | Explicacion breve del contexto | Crear, agregar o cambiar periodo |
-| sin_coincidencias | "No encontramos resultados con estos filtros." | Limpiar filtros |
-| offline | "Sin conexion. Los cambios quedaran pendientes." | Ver pendientes / reintentar |
-| error_recuperable | Que fallo y por que importa | Reintentar o alternativa segura |
-| permiso_insuficiente | Que rol puede ejecutar la accion | Volver o solicitar autorizacion |
-| exito | Que quedo hecho | Continuar; consultar comprobante |
-| pendiente | Que se guardo localmente o espera dispositivo | Ver estado, reintentar, cancelar |
+| Estado               | Mensaje esperado                                 | Accion posible                      |
+| -------------------- | ------------------------------------------------ | ----------------------------------- |
+| cargando             | "Cargando [contenido]..."                        | Cancelar si la operacion lo permite |
+| vacio_inicial        | Explicacion breve del contexto                   | Crear, agregar o cambiar periodo    |
+| sin_coincidencias    | "No encontramos resultados con estos filtros."   | Limpiar filtros                     |
+| offline              | "Sin conexion. Los cambios quedaran pendientes." | Ver pendientes / reintentar         |
+| error_recuperable    | Que fallo y por que importa                      | Reintentar o alternativa segura     |
+| permiso_insuficiente | Que rol puede ejecutar la accion                 | Volver o solicitar autorizacion     |
+| exito                | Que quedo hecho                                  | Continuar; consultar comprobante    |
+| pendiente            | Que se guardo localmente o espera dispositivo    | Ver estado, reintentar, cancelar    |
 
 ## 2. RETROALIMENTACION DE CAMPO
 

@@ -9,6 +9,7 @@
 ## LOTE 1 (Archivos 1 - 15)
 
 ### Archivos purgados / eliminados por duplicidad y basura documental:
+
 1. `src/compartido/utils/logger.ts` -> **ELIMINADO**. Redundante con núcleo `src/sistema/monitoreo/logger.ts`.
 2. `src/sistema/utilidades/logger.ts` -> **ELIMINADO**. Redundante con núcleo `src/sistema/monitoreo/logger.ts`.
 3. `app/_role/admin/MIGRACION.md` -> **ELIMINADO**. Huella histórica local consolidada aquí.
@@ -18,6 +19,7 @@
 7. `src/ui/bloques/MIGRACION.md` -> **ELIMINADO**. Huella histórica local consolidada aquí.
 
 ### Archivos renombrados / purgados de Spanglish (Bloques Visuales):
+
 8. `src/ui/bloques/LiquidBackground.tsx` ➔ `src/ui/bloques/FondoLiquido.tsx`
 9. `src/ui/bloques/BrandSeal.tsx` ➔ `src/ui/bloques/SelloMarca.tsx`
 10. `src/ui/bloques/OrbButton.tsx` ➔ `src/ui/bloques/BotonOrbe.tsx`
@@ -32,9 +34,11 @@
 ## LOTE 2 Y 3 (Archivos 16 - 45: Capacidades, Componentes Compartidos y Sistema)
 
 ### Archivos purgados / eliminados:
+
 16. `src/capacidades/pos/usePOS.ts` -> **ELIMINADO**. Redundante y obsoleto frente a `useMostradorPro`.
 
 ### Capacidades (`src/capacidades/**`):
+
 17. `src/capacidades/ui/useActionAreaCollapse.ts` ➔ `src/capacidades/ui/useColapsoAreaAccion.ts` (alias: `useActionAreaCollapse`).
 18. `src/capacidades/ui/useAlternatingSounds.ts` ➔ `src/capacidades/ui/useSonidosAlternados.ts` (alias: `useAlternatingSounds`).
 19. `src/capacidades/ui/useFabRadial.ts` ➔ `src/capacidades/ui/useAccionRadialFlotante.ts` (alias: `useFabRadial`).
@@ -45,6 +49,7 @@
 24. `src/capacidades/mostrador/usePosConfig.ts` ➔ `src/capacidades/mostrador/useConfiguracionCaja.ts` (alias: `usePosConfig`).
 
 ### Componentes Compartidos (`src/compartido/componentes/**` y temas):
+
 25. `src/compartido/componentes/NotificationToast.tsx` ➔ `src/compartido/componentes/NotificacionToast.tsx` (alias: `NotificationToast`).
 26. `src/compartido/componentes/SyncStatusPanel.tsx` ➔ `src/compartido/componentes/PanelEstadoSincronizacion.tsx` (alias: `SyncStatusPanel`).
 27. `src/compartido/componentes/devices/TicketActionsConfigurator.tsx` ➔ `src/compartido/componentes/devices/ConfiguradorAccionesTicket.tsx` (alias: `TicketActionsConfigurator`).
@@ -63,6 +68,7 @@
 40. `src/compartido/temas/components/ThemeToggle.tsx` ➔ `src/compartido/temas/components/ConmutadorTema.tsx` (alias: `ThemeToggle`).
 
 ### Sistema y Sincronización (`src/sistema/**`):
+
 41. `src/sistema/sincronizacion/SyncMetrics.ts` ➔ `src/sistema/sincronizacion/MetricasSincronizacion.ts` (alias: `syncMetrics`).
 42. `src/sistema/sincronizacion/SynchronizationService.ts` ➔ `src/sistema/sincronizacion/ServicioSincronizacion.ts` (alias: `SynchronizationService`).
 43. `src/sistema/sincronizacion/useSynchronizedArray.ts` ➔ `src/sistema/sincronizacion/useArregloSincronizado.ts` (alias: `useSynchronizedArray`).
@@ -74,6 +80,7 @@
 ## LOTES 4, 5 Y 6 (Archivos 46 - 90: Hooks, Dominio, Primitivos, Roles, Audio, Ciclo de Vida y Servicios)
 
 ### Ganchos Compartidos y Utilidades (`src/compartido/**`):
+
 46. `src/compartido/hooks/useItemStatusListener.ts` ➔ `src/compartido/hooks/useEscuchaEstadoPartida.ts` (alias: `useItemStatusListener`).
 47. `src/compartido/hooks/useNotifications.ts` ➔ `src/compartido/hooks/useNotificaciones.ts` (alias: `useNotifications`).
 48. `src/compartido/hooks/useStoreNotifications.ts` ➔ `src/compartido/hooks/useNotificacionesAlmacen.ts` (alias: `useStoreNotifications`).
@@ -85,12 +92,14 @@
 54. `src/compartido/componentes/ui/Toast.tsx` ➔ `src/compartido/componentes/ui/AvisoEmergente.tsx` (alias: `Toast`).
 
 ### Lógica de Dominio (`src/logica/dominio/**`):
+
 55. `src/logica/dominio/itemCanonical.ts` ➔ `src/logica/dominio/partidaCanonica.ts`.
 56. `src/logica/dominio/normalizers.ts` ➔ `src/logica/dominio/normalizadores.ts`.
 57. `src/logica/dominio/status.ts` ➔ `src/logica/dominio/estados.ts`.
 58. `src/logica/dominio/__tests__/status.test.ts` ➔ `src/logica/dominio/__tests__/estados.test.ts`.
 
 ### Primitivos y Bloques Visuales (`src/ui/**`):
+
 59. `src/ui/primitivos/AtmosphereLayer.tsx` ➔ `src/ui/primitivos/CapaAtmosfera.tsx` (alias: `AtmosphereLayer`).
 60. `src/ui/bloques/Badge.tsx` ➔ `src/ui/bloques/Insignia.tsx` (alias: `Badge`).
 61. `src/ui/bloques/fabAction.ts` ➔ `src/ui/bloques/accionFlotante.ts`.
@@ -102,6 +111,7 @@
 67. `src/ui/pantallas/CocinaScreen.tsx` ➔ `src/ui/pantallas/PantallaCocina.tsx` (alias: `CocinaScreen`).
 
 ### Lógica de Roles (`src/roles/logica/**`):
+
 68. `src/roles/logica/mesero/rules.ts` ➔ `src/roles/logica/mesero/reglas.ts`.
 69. `src/roles/logica/mesero/inventoryErrors.ts` ➔ `src/roles/logica/mesero/erroresInventario.ts`.
 70. `src/roles/logica/mesero/usePrintPolicies.ts` ➔ `src/roles/logica/mesero/usePoliticasImpresion.ts` (alias: `usePrintPolicies`).
@@ -112,12 +122,14 @@
 75. `src/roles/logica/selector/useRoleSelectorLogic.ts` ➔ `src/roles/logica/selector/useLogicaSelectorRoles.ts` (alias: `useRoleSelectorLogic`).
 
 ### Audio y Monitoreo (`src/sistema/audio/**`, `src/sistema/monitoreo/**`):
+
 76. `src/sistema/audio/soundBank.ts` ➔ `src/sistema/audio/bancoSonidos.ts` (alias: `SoundBank`).
 77. `src/sistema/audio/soundNotifications.ts` ➔ `src/sistema/audio/notificacionesSonoras.ts` (alias: `playSoundEvent`, etc.).
 78. `src/sistema/monitoreo/observabilidad/audit.ts` ➔ `src/sistema/monitoreo/observabilidad/auditoria.ts`.
 79. `src/sistema/monitoreo/__mocks__/sentry.mock.ts` ➔ `src/sistema/monitoreo/__mocks__/simuladorSentry.ts`.
 
 ### Navegación y Ciclo de Vida (`src/sistema/navegacion/**`, `src/sistema/ciclo_de_vida/**`):
+
 80. `src/sistema/navegacion/GestureHandler.ts` ➔ `src/sistema/navegacion/ManejadorGestos.ts`.
 81. `src/sistema/navegacion/ImmersiveMode.ts` ➔ `src/sistema/navegacion/ModoInmersivo.ts` (alias: `useImmersiveMode`).
 82. `src/sistema/ciclo_de_vida/ensureNegocio.ts` ➔ `src/sistema/ciclo_de_vida/asegurarNegocio.ts`.
@@ -125,6 +137,7 @@
 84. `src/sistema/ciclo_de_vida/useAppStateSync.ts` ➔ `src/sistema/ciclo_de_vida/useSincronizacionEstadoApp.ts` (alias: `useAppStateSync`).
 
 ### Servicios, Motores y Seguridad (`src/sistema/servicios/**`, `src/sistema/motores/**`, `src/sistema/seguridad/**`):
+
 85. `src/sistema/servicios/OfflineInventorySync.ts` ➔ `src/sistema/servicios/SincronizacionInventarioOffline.ts`.
 86. `src/sistema/servicios/OfflinePrintFallback.ts` ➔ `src/sistema/servicios/RespaldoImpresionOffline.ts`.
 87. `src/sistema/servicios/OfflineSalesSync.ts` ➔ `src/sistema/servicios/SincronizacionVentasOffline.ts`.
@@ -137,6 +150,7 @@
 ## ALIMENTACIÓN A LA FUENTE DE VERDAD
 
 ### En `fuente_de_verdad/terminos.md`:
+
 - `156.- REGISTRO DE OBSERVABILIDAD` (Lote 1)
 - `157.- METRICAS DE SINCRONIZACION` (Lotes 2 y 3)
 - `158.- SERVICIO DE SINCRONIZACION` (Lotes 2 y 3)
@@ -148,6 +162,7 @@
 - `164.- RESPALDO DE IMPRESION OFFLINE` (Lotes 4, 5 y 6)
 
 ### En `fuente_de_verdad/terminos_diseno.md`:
+
 - `42.- FONDO LIQUIDO` (Lote 1)
 - `43.- SELLO DE MARCA` (Lote 1)
 - `44.- CONMUTADOR DE TEMA` (Lotes 2 y 3)
@@ -184,6 +199,7 @@ Commit de sellado: `81bfc85 refactor(sistema): sellar linea base verde del Lote 
 ## LOTE 7 — AVANCE DE RENOMBRADOS (Archivos 91–135)
 
 ### Rebautizados con `git mv` + puente (0 roturas):
+
 1. `src/compartido/temas/ThemeContext.tsx` ➔ `ContextoTema.tsx` (puente: `ThemeContext.tsx`).
 2. `src/sistema/central/CentralListener.ts` ➔ `OyenteCentral.ts` (puente: `CentralListener.ts`).
 3. **Sufijo de persistencia** `.repo` ➔ `.repositorio` en 12 repositorios canónicos:
@@ -198,6 +214,7 @@ Commit de sellado: `81bfc85 refactor(sistema): sellar linea base verde del Lote 
 Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repositorio`).
 
 ### Mutación profunda de identificadores (clases y tipos del dominio de persistencia):
+
 - **9 clases `*Repository`** rebautizadas a `*Repositorio` con alias inglés conservado:
   - `MenuRepository`→`RepositorioMenu`, `MesasRepository`→`RepositorioMesas`,
     `NegocioRepository`→`RepositorioNegocio`, `PedidosRepository`→`RepositorioPedidos`,
@@ -210,6 +227,7 @@ Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repo
   con alias inglés `Offline*` preservados en el barril `sin_conexion`.
 
 **Alimentación a la Fuente de Verdad**:
+
 - `165.- ADAPTADOR DE ALMACENAMIENTO SQLITE`.
 - `166.- REPOSITORIO DE CAPA DE PERSISTENCIA`.
 
@@ -217,6 +235,7 @@ Commits: `becf430` (ThemeContext/CentralListener), `bf20c27` (`.repo` ➔ `.repo
 Commits: `716f5b7` (clases Repositorio), `3495876` (tipos SinConexion), `a437c06` (Fuente).
 
 ### Hispianización de motores, sincronización, audio y servicios offline:
+
 - `CentralListener` → `OyenteCentral` (interfases `OyenteCentralCallbacks`, `OpcionesOyenteCentral`).
 - `KitchenQueueEngine` → `MotorColaCocina`; singleton `motorColaCocina`.
 - `SynchronizationService` → `ServicioSincronizacion`; singleton `servicioSincronizacion`.
@@ -229,9 +248,10 @@ Commits: `716f5b7` (clases Repositorio), `3495876` (tipos SinConexion), `a437c06
 
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 Commits: `a3c9c1a` (OyenteCentral), `a29606e` (MotorColaCocina), `a2390ed` (ServicioSincronizacion),
-`0d58e97` (SyncDebugger/SyncMetrics), `e894e33` (SoundBank/Offline*).
+`0d58e97` (SyncDebugger/SyncMetrics), `e894e33` (SoundBank/Offline\*).
 
 ### Hispianización de arranque de app y tipos de inventario:
+
 - `useBootstrapper.ts` → `useArranqueSistema.ts` (función `useArranqueSistema`, alias `useBootstrapper`).
 - `InventorySectionV2` → `SeccionInventarioV2`, `InventoryItemV2` → `ItemInventarioV2`,
   `InventoryAreaV2` → `AreaInventarioV2`, `InventoryMovementV2` → `MovimientoInventarioV2`,
@@ -242,6 +262,7 @@ Commits: `a3c9c1a` (OyenteCentral), `a29606e` (MotorColaCocina), `a2390ed` (Serv
 Commits: `c3b3e00` (useArranqueSistema), `c5d8b0f` (InventarioV2).
 
 ### Consolidación Canónica y Purga de Cascarones (Mesero, Cocina, Selector y UI):
+
 - **Purga y migración directa de 16 archivos puente/cascarón eliminados con `git rm`**:
   - `src/roles/logica/mesero/rules.ts` ➔ Consumidores migrados a `reglas.ts`.
   - `src/roles/logica/mesero/inventoryErrors.ts` ➔ Consumidores migrados a `erroresInventario.ts`.
@@ -269,22 +290,24 @@ Commits: `c3b3e00` (useArranqueSistema), `c5d8b0f` (InventarioV2).
 
 **Barrera binaria**: `npx tsc --noEmit` = 0 errores · `npm test` = 23/23 (147 tests).
 
-
 ---
 
 ## FASE 1 COMPLETADA: ERRADICACIÓN DE LA COLA LARGA (Lote Final de Puentes)
 
-Se ejecutó la purga definitiva de los últimos archivos puente (exportaciones vacías y re-exportaciones de retrocompatibilidad) en el núcleo de la aplicación (`src/compartido/`, `src/logica/dominio/` y `src/sistema/`). 
+Se ejecutó la purga definitiva de los últimos archivos puente (exportaciones vacías y re-exportaciones de retrocompatibilidad) en el núcleo de la aplicación (`src/compartido/`, `src/logica/dominio/` y `src/sistema/`).
 
 ### Detalles de la Purga y Erradicación:
+
 - **41 archivos eliminados con `git rm`**.
 - Se actualizaron más de 60 referencias en importaciones cruzadas y relativas para apuntar directamente a los nombres canónicos en español.
 - **Archivos eliminados incluyen**: `ThemeContext.tsx`, `useItemStatusListener.ts`, `OfflineSalesSync.ts`, `TicketFormatter.ts`, `status.ts`, `normalizers.ts`, `sounds.ts`, `theme.ts`, `GestureHandler.ts`, `ImmersiveMode.ts`, `KitchenQueueEngine.ts`, `audit.ts`, `sentry.mock.ts`, `useBootstrapper.ts`, `soundNotifications.ts`, `soundBank.ts`, `NegocioLifecycleController.ts`, `useAppStateSync.ts`, `ensureNegocio.ts`, `SimpleSalesRepo.ts`, `devices.repo.ts`, `drafts.repo.ts`, `CentralListener.ts`, `deviceBinding.ts`, `offline/index.ts`, `SQLiteStorageAdapter/index.*`, `policies.ts`, `EstadoHub.ts`, `IControladorFierros.ts`, `GestorHub.tsx` (y varios más de esta misma índole).
 
-**Excepción Estratégica Conservada**: 
+**Excepción Estratégica Conservada**:
+
 - `src/sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite/index.ts` fue conservado al identificar que cumple una función activa de resolución del empaquetador Metro (`index.native` vs `index.web`), no siendo un cascarón muerto.
 
 **Impacto Arquitectónico**:
+
 - Desacoplamiento total del spanglish residual.
 - Reducción del árbol de trabajo eliminando el "ruido de retrocompatibilidad".
 - Importaciones 100% directas sobre la nomenclatura hispanizada de los dominios (ej. `AdaptadorAlmacenamientoSQLite`, `RespaldoImpresionOffline`, `MotorColaCocina`, `ContextoTema`).
@@ -293,5 +316,6 @@ Se ejecutó la purga definitiva de los últimos archivos puente (exportaciones v
 Commits: `5806f12` (lote 1 de puentes en compartido, dominio y servicios), `861b70b` (lote 2 de puentes en sistema y compartido).
 
 ### Purga de Soberanía Estructural RTDB (Fase 4 - Exterminio)
+
 - **Eliminación de Escrituras Estructurales**: Se refactorizó por completo el archivo `src/sistema/ciclo_de_vida/asegurarNegocio.ts` para eliminar la creación por defecto de la estructura base (políticas de impresión, mesas, configuraciones de reparto y características). El sistema ahora únicamente lee el nodo `caracteristicas` y arroja una excepción si la Torre de Control no ha aprovisionado el negocio, respetando la Ley de Soberanía Estructural RTDB.
 - **Modificaciones Complementarias**: Se reescribieron los tests en `ruta_negocio.test.ts` para validar exclusivamente el comportamiento de lectura/excepción sin invocar mocks de escritura (`set` / `update`). Las escrituras transaccionales (tickets, pedidos, etc.) permanecen intactas en repositorios operativos.

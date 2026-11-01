@@ -20,7 +20,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLogicaAjustesAdmin, type EstiloSelector } from '../../../../roles/logica/administrador';
+import { useLogicaAjustesAdmin } from '../../../../roles/logica/administrador';
 import { useAppTheme } from '../../../../compartido/temas';
 
 import { AvatarUsuario } from '../../../pantallas/registro_usuario/AvatarUsuario';
@@ -176,10 +176,13 @@ export function PantallaAjustesAdmin() {
         <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
           <View style={estilos.tarjetaCabecera}>
             <Ionicons name="storefront-outline" size={20} color="#C5A059" />
-            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Identidad y Logotipo</Text>
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>
+              Identidad y Logotipo
+            </Text>
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
-            El nombre y logotipo aparecen en la portada de selección de roles y en los tickets impresos.
+            El nombre y logotipo aparecen en la portada de selección de roles y en los tickets
+            impresos.
           </Text>
 
           <View style={estilos.campo}>
@@ -187,7 +190,10 @@ export function PantallaAjustesAdmin() {
             <TextInput
               style={[
                 estilos.input,
-                { color: colors.text, borderColor: isElite ? 'rgba(197, 160, 89, 0.25)' : colors.border },
+                {
+                  color: colors.text,
+                  borderColor: isElite ? 'rgba(197, 160, 89, 0.25)' : colors.border,
+                },
               ]}
               value={nombre}
               onChangeText={setNombre}
@@ -197,11 +203,16 @@ export function PantallaAjustesAdmin() {
           </View>
 
           <View style={estilos.campo}>
-            <Text style={[estilos.label, { color: colors.text }]}>URL del Logotipo (PNG transparente)</Text>
+            <Text style={[estilos.label, { color: colors.text }]}>
+              URL del Logotipo (PNG transparente)
+            </Text>
             <TextInput
               style={[
                 estilos.input,
-                { color: colors.text, borderColor: isElite ? 'rgba(197, 160, 89, 0.25)' : colors.border },
+                {
+                  color: colors.text,
+                  borderColor: isElite ? 'rgba(197, 160, 89, 0.25)' : colors.border,
+                },
               ]}
               value={logoUrl}
               onChangeText={setLogoUrl}
@@ -217,11 +228,7 @@ export function PantallaAjustesAdmin() {
             <Text style={estilos.vistaPreviaEtiqueta}>VISTA PREVIA EN PORTADA</Text>
             <View style={estilos.vistaPreviaContenido}>
               {logoUrl ? (
-                <Image
-                  source={{ uri: logoUrl }}
-                  style={estilos.logoPreview}
-                  resizeMode="contain"
-                />
+                <Image source={{ uri: logoUrl }} style={estilos.logoPreview} resizeMode="contain" />
               ) : (
                 <View style={estilos.logoPlaceholder}>
                   <Ionicons name="image-outline" size={32} color="#64748B" />
@@ -238,20 +245,20 @@ export function PantallaAjustesAdmin() {
         <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
           <View style={estilos.tarjetaCabecera}>
             <Ionicons name="shapes-outline" size={20} color="#38BDF8" />
-            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Estilo del Selector de Roles</Text>
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>
+              Estilo del Selector de Roles
+            </Text>
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
-            Gobernado por la Plantilla Base (NPB 00). Puedes fijar la experiencia táctil óptima para tus terminales.
+            Gobernado por la Plantilla Base (NPB 00). Puedes fijar la experiencia táctil óptima para
+            tus terminales.
           </Text>
 
           <View style={estilos.opcionesEstilo}>
             {/* Opción 1: Orbes */}
             <Pressable
               onPress={() => setEstiloSelector('orbes')}
-              style={[
-                estilos.opcionCard,
-                estiloSelector === 'orbes' && estilos.opcionCardActiva,
-              ]}
+              style={[estilos.opcionCard, estiloSelector === 'orbes' && estilos.opcionCardActiva]}
             >
               <View style={estilos.opcionRadio}>
                 <Ionicons
@@ -262,7 +269,8 @@ export function PantallaAjustesAdmin() {
                 <Text style={estilos.opcionTitulo}>🪐 Orbes Flotantes</Text>
               </View>
               <Text style={estilos.opcionDesc}>
-                Diseño esférico interactivo con halo luminoso y ambientación líquida. Recomendado para pantallas grandes y tablets fijas en barra.
+                Diseño esférico interactivo con halo luminoso y ambientación líquida. Recomendado
+                para pantallas grandes y tablets fijas en barra.
               </Text>
             </Pressable>
 
@@ -283,7 +291,8 @@ export function PantallaAjustesAdmin() {
                 <Text style={estilos.opcionTitulo}>📱 Pastillas Táctiles</Text>
               </View>
               <Text style={estilos.opcionDesc}>
-                Baraja vertical ergonómica con tarjetas táctiles de un solo pulgar. Ideal para comandas de mesero y terminales POS móviles de 5.5"-6.5".
+                Baraja vertical ergonómica con tarjetas táctiles de un solo pulgar. Ideal para
+                comandas de mesero y terminales POS móviles de {'5.5"-6.5"'}.
               </Text>
             </Pressable>
 
@@ -304,7 +313,8 @@ export function PantallaAjustesAdmin() {
                 <Text style={estilos.opcionTitulo}>🔀 Conmutable / Dinámico</Text>
               </View>
               <Text style={estilos.opcionDesc}>
-                Permite al operador alternar libremente entre Orbes y Pastillas con el botón de cabecera. Modo flexible para capacitación y pruebas.
+                Permite al operador alternar libremente entre Orbes y Pastillas con el botón de
+                cabecera. Modo flexible para capacitación y pruebas.
               </Text>
             </Pressable>
           </View>
@@ -320,7 +330,9 @@ export function PantallaAjustesAdmin() {
         <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
           <View style={estilos.tarjetaCabecera}>
             <Ionicons name="server-outline" size={20} color="#10B981" />
-            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Enlace y Soberanía Operativa</Text>
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>
+              Enlace y Soberanía Operativa
+            </Text>
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
             Parámetros de resolución gobernados por la Unidad Central y Secundaria.
@@ -333,7 +345,9 @@ export function PantallaAjustesAdmin() {
 
           <View style={estilos.infoFila}>
             <Text style={estilos.infoClave}>Ruta Secundaria:</Text>
-            <Text style={estilos.infoValor}>{rutaNegocio || 'alimentos-y-bebidas/marisquerias/negocio/...'}</Text>
+            <Text style={estilos.infoValor}>
+              {rutaNegocio || 'alimentos-y-bebidas/marisquerias/negocio/...'}
+            </Text>
           </View>
 
           <View style={estilos.infoFila}>
@@ -354,7 +368,9 @@ export function PantallaAjustesAdmin() {
           <View style={estilos.tarjetaCabeceraConAccion}>
             <View style={estilos.tarjetaCabecera}>
               <Ionicons name="people-outline" size={20} color="#38BDF8" />
-              <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Personal y Operadores</Text>
+              <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>
+                Personal y Operadores
+              </Text>
             </View>
             {usuarios.length > 0 && (
               <Pressable
@@ -371,7 +387,8 @@ export function PantallaAjustesAdmin() {
             )}
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
-            Gobernanza de operadores autorizados para comandas y terminales de piso. El Administrador asigna condiciones laborales (sueldos y horarios).
+            Gobernanza de operadores autorizados para comandas y terminales de piso. El
+            Administrador asigna condiciones laborales (sueldos y horarios).
           </Text>
 
           {cargandoUsuarios ? (
@@ -379,7 +396,9 @@ export function PantallaAjustesAdmin() {
           ) : usuarios.length === 0 ? (
             <View style={estilos.cajaVaciaStaff}>
               <Ionicons name="people-outline" size={36} color="#64748B" />
-              <Text style={estilos.textoVacioStaff}>No hay operadores registrados aún en esta Unidad.</Text>
+              <Text style={estilos.textoVacioStaff}>
+                No hay operadores registrados aún en esta Unidad.
+              </Text>
               <Text style={estilos.subtextoVacioStaff}>
                 Puedes precargar el primer operador desde aquí o permitir el auto-registro en piso.
               </Text>
@@ -417,13 +436,12 @@ export function PantallaAjustesAdmin() {
                       {tieneLaboral ? (
                         <View style={estilos.filaDatosLaborales}>
                           {u.perfil?.sueldo !== undefined ? (
-                            <Text style={estilos.badgeLaboral}>
-                              💵 ${u.perfil.sueldo}
-                            </Text>
+                            <Text style={estilos.badgeLaboral}>💵 ${u.perfil.sueldo}</Text>
                           ) : null}
                           {u.perfil?.horario_entrada || u.perfil?.horario_salida ? (
                             <Text style={estilos.badgeLaboral}>
-                              ⏰ {u.perfil?.horario_entrada || '--'} a {u.perfil?.horario_salida || '--'}
+                              ⏰ {u.perfil?.horario_entrada || '--'} a{' '}
+                              {u.perfil?.horario_salida || '--'}
                             </Text>
                           ) : null}
                         </View>
@@ -461,7 +479,9 @@ export function PantallaAjustesAdmin() {
         <View style={[estilos.tarjeta, { backgroundColor: isElite ? '#0F1218' : colors.card }]}>
           <View style={estilos.tarjetaCabecera}>
             <Ionicons name="flash-outline" size={20} color="#F59E0B" />
-            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>Capacidades Autorizadas Activas</Text>
+            <Text style={[estilos.tarjetaTitulo, { color: colors.text }]}>
+              Capacidades Autorizadas Activas
+            </Text>
           </View>
           <Text style={[estilos.tarjetaDesc, { color: colors.textMuted }]}>
             Gobernadas por la Plantilla Base (NPB 00) y autorizadas por el Ecosistema.
@@ -471,7 +491,9 @@ export function PantallaAjustesAdmin() {
             {capacidadesActivas.map((capId: string) => (
               <View key={capId} style={estilos.badgeCapacidad}>
                 <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                <Text style={estilos.textoBadgeCapacidad}>{capId.replace(/_/g, ' ').toUpperCase()}</Text>
+                <Text style={estilos.textoBadgeCapacidad}>
+                  {capId.replace(/_/g, ' ').toUpperCase()}
+                </Text>
               </View>
             ))}
           </View>
@@ -511,7 +533,9 @@ export function PantallaAjustesAdmin() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={estilos.modalOverlay}
         >
-          <View style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}>
+          <View
+            style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}
+          >
             <View style={estilos.modalHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={estilos.modalTitulo}>Editar Perfil Laboral</Text>
@@ -548,7 +572,9 @@ export function PantallaAjustesAdmin() {
               </View>
 
               <View style={estilos.campo}>
-                <Text style={[estilos.label, { color: colors.text }]}>Sueldo Mensual / Base ($)</Text>
+                <Text style={[estilos.label, { color: colors.text }]}>
+                  Sueldo Mensual / Base ($)
+                </Text>
                 <TextInput
                   style={[estilos.input, { color: colors.text }]}
                   value={sueldoEdit}
@@ -617,7 +643,9 @@ export function PantallaAjustesAdmin() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={estilos.modalOverlay}
         >
-          <View style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}>
+          <View
+            style={[estilos.modalContainer, { backgroundColor: isElite ? '#0F1218' : '#1E293B' }]}
+          >
             <View style={estilos.modalHeader}>
               <View style={{ flex: 1 }}>
                 <Text style={estilos.modalTitulo}>Alta Anticipada de Operador</Text>
@@ -672,20 +700,30 @@ export function PantallaAjustesAdmin() {
                       onPress={() => setAltaSexo('H')}
                       style={[estilos.botonSexo, altaSexo === 'H' && estilos.botonSexoActivo]}
                     >
-                      <Text style={[estilos.textoSexo, altaSexo === 'H' && estilos.textoSexoActivo]}>Hombre</Text>
+                      <Text
+                        style={[estilos.textoSexo, altaSexo === 'H' && estilos.textoSexoActivo]}
+                      >
+                        Hombre
+                      </Text>
                     </Pressable>
                     <Pressable
                       onPress={() => setAltaSexo('M')}
                       style={[estilos.botonSexo, altaSexo === 'M' && estilos.botonSexoActivo]}
                     >
-                      <Text style={[estilos.textoSexo, altaSexo === 'M' && estilos.textoSexoActivo]}>Mujer</Text>
+                      <Text
+                        style={[estilos.textoSexo, altaSexo === 'M' && estilos.textoSexoActivo]}
+                      >
+                        Mujer
+                      </Text>
                     </Pressable>
                   </View>
                 </View>
               </View>
 
               <View style={estilos.campo}>
-                <Text style={[estilos.label, { color: colors.text }]}>Cargo / Responsabilidad *</Text>
+                <Text style={[estilos.label, { color: colors.text }]}>
+                  Cargo / Responsabilidad *
+                </Text>
                 <TextInput
                   style={[estilos.input, { color: colors.text }]}
                   value={altaCargo}
@@ -696,7 +734,9 @@ export function PantallaAjustesAdmin() {
               </View>
 
               <View style={estilos.campo}>
-                <Text style={[estilos.label, { color: colors.text }]}>Sueldo Mensual / Base ($)</Text>
+                <Text style={[estilos.label, { color: colors.text }]}>
+                  Sueldo Mensual / Base ($)
+                </Text>
                 <TextInput
                   style={[estilos.input, { color: colors.text }]}
                   value={altaSueldo}

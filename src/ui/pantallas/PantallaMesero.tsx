@@ -251,7 +251,8 @@ function MeseroScreenContent() {
               Mesero / Salón
             </Text>
             <Text style={{ color: '#9ca3af', fontSize: 11, fontWeight: '600' }}>
-              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+              {negocioNombre}
+              {negocioId ? ` · ${negocioId}` : ''}
             </Text>
           </View>
         </View>
@@ -268,9 +269,7 @@ function MeseroScreenContent() {
               ? 'rgba(16, 185, 129, 0.15)'
               : 'rgba(107, 114, 128, 0.15)',
             borderWidth: 1,
-            borderColor: estaConectado
-              ? 'rgba(16, 185, 129, 0.3)'
-              : 'rgba(107, 114, 128, 0.3)',
+            borderColor: estaConectado ? 'rgba(16, 185, 129, 0.3)' : 'rgba(107, 114, 128, 0.3)',
           }}
         >
           <Text

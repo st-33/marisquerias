@@ -1,4 +1,5 @@
 # ENSAMBLAJE Y PASOS: PANTALLAS POR ROL
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
@@ -10,6 +11,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 01: Montar el shell compartido con cabecera
 
 ### ESPECIFICACION
+
 - Se construye primero el shell común que envuelve todas las pantallas, con la
   cabecera que muestra: nombre de pantalla, contexto actual y estado de
   conectividad (invariante 3).
@@ -21,6 +23,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 02: Resolver cada rol a su pantalla inicial
 
 ### ESPECIFICACION
+
 - Se registra en `REGISTRO_PANTALLAS` (sección 2) cada clave con su `Screen`:
   `selector_roles`, `cocina`, `mesero`, `mostrador`, `admin_dashboard`,
   `admin_menu`, `admin_tables`, `admin_inventory`, `admin_repart`,
@@ -35,6 +38,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 03: Construir la pantalla del administrador
 
 ### ESPECIFICACION
+
 - Se ensambla el Resumen de operación con los datos siempre visibles del
   contrato (sección 1): negocio activo, ventas, alertas, permisos.
 - La acción dominante "Abrir módulo / revisar alerta" usa el acento dorado
@@ -45,6 +49,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 04: Construir mostrador, mesero y cocina
 
 ### ESPECIFICACION
+
 - Mostrador: Venta de mostrador con carrito, total, método de pago y pendientes
   siempre visibles; acción dominante "Agregar producto / cobrar" en coral
   (acción principal).
@@ -58,6 +63,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 05: Construir la pantalla del reparto
 
 ### ESPECIFICACION
+
 - Reparto: Pedidos de reparto con dirección, estado y responsable siempre
   visibles; acción dominante "Asignar / actualizar entrega".
 - Se usa la semántica de conectividad (`info`) para el estado de entrega y el
@@ -68,6 +74,7 @@ adapta a sus tareas sin información ni acciones que no le correspondan.
 ## PASO 06: Verificar el invariante de pantallas
 
 ### ESPECIFICACION
+
 - Se recorren las invariantes (sección 3): exactamente una pantalla inicial por
   rol; shell con cabecera en todas; la navegación no oculta una venta/comanda en
   curso sin advertencia; el dato crítico (totales, estados, peso, stock) tiene

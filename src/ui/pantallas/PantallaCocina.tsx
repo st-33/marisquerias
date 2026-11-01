@@ -177,7 +177,8 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
           <View>
             <Text style={styles.title}>{tituloHeader}</Text>
             <Text style={styles.subtituloNegocio}>
-              {negocioNombre}{negocioId ? ` · ${negocioId}` : ''}
+              {negocioNombre}
+              {negocioId ? ` · ${negocioId}` : ''}
             </Text>
           </View>
         </View>

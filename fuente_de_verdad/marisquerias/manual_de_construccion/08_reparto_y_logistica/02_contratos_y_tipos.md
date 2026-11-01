@@ -7,10 +7,30 @@
 ## 1. FIRMAS DEL MOTOR LOGISTICO
 
 ```typescript
-type OrigenSenal = 'negocio' | 'publico' | 'llamada' | 'mensajeria' | 'redes' | 'sistema' | 'automatizacion' | 'servicio_domicilio';
-type CanalEntrada = 'negocio' | 'publico' | 'llamada' | 'whatsapp' | 'mensajeria' | 'red_social' | 'sistema' | 'automatizacion';
+type OrigenSenal =
+  | 'negocio'
+  | 'publico'
+  | 'llamada'
+  | 'mensajeria'
+  | 'redes'
+  | 'sistema'
+  | 'automatizacion'
+  | 'servicio_domicilio';
+type CanalEntrada =
+  | 'negocio'
+  | 'publico'
+  | 'llamada'
+  | 'whatsapp'
+  | 'mensajeria'
+  | 'red_social'
+  | 'sistema'
+  | 'automatizacion';
 
-type CapacidadesLogisticas = { motorLogistico: boolean; delivery: boolean; solicitudesLogisticas: boolean };
+type CapacidadesLogisticas = {
+  motorLogistico: boolean;
+  delivery: boolean;
+  solicitudesLogisticas: boolean;
+};
 
 type ContextoOperativo = IdentidadNegocio & {
   negocioExiste: boolean;
@@ -34,7 +54,7 @@ type PedidoLogisticoEvent = {
   pedido_id: string;
   canal_origen: 'web' | 'whatsapp' | 'llamada' | 'red_social' | 'restaurante' | 'mesera';
   tipo_operacion: 'entrega_domicilio' | 'apoyo_logistico';
-  timestamp: string;       // ISO-8601
+  timestamp: string; // ISO-8601
   idempotencia_key: string;
 };
 ```

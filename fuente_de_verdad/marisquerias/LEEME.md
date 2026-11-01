@@ -30,28 +30,28 @@ Este archivo es el indice de orquestacion del aplicable Marisquerias: sistema de
 
 ### Manual de Construccion (10 subsistemas)
 
-| Subsistema | Depende de |
-| --- | --- |
-| 01_arranque_y_motor | — |
-| 02_roles_y_permisos | 01 |
-| 03_comandas_y_salon (incluye kds/) | 02 |
-| 04_menu_y_variantes | 02 |
-| 05_inventario_bascula_despacho (incluye bascula/) | 04 |
-| 06_impresion_escpos (incluye esc_pos/) | 03 |
-| 07_mostrador_venta_crudo | 05 |
-| 08_reparto_y_logistica | 02 |
-| 09_metricas_y_cierres | 03, 05 |
-| 10_persistencia_local (incluye sqlite/) | transversal |
+| Subsistema                                        | Depende de  |
+| ------------------------------------------------- | ----------- |
+| 01_arranque_y_motor                               | —           |
+| 02_roles_y_permisos                               | 01          |
+| 03_comandas_y_salon (incluye kds/)                | 02          |
+| 04_menu_y_variantes                               | 02          |
+| 05_inventario_bascula_despacho (incluye bascula/) | 04          |
+| 06_impresion_escpos (incluye esc_pos/)            | 03          |
+| 07_mostrador_venta_crudo                          | 05          |
+| 08_reparto_y_logistica                            | 02          |
+| 09_metricas_y_cierres                             | 03, 05      |
+| 10_persistencia_local (incluye sqlite/)           | transversal |
 
 ### Manual de Diseno (5 subsistemas)
 
-| Subsistema | Depende de |
-| --- | --- |
-| 01_fundamentos_de_marca | — |
-| 02_primitivos_y_bloques | 01 |
-| 03_pantallas_por_rol | 02 |
-| 04_estados_y_retroalimentacion | 02 |
-| 05_superposiciones_y_navegacion | 02, 03 |
+| Subsistema                      | Depende de |
+| ------------------------------- | ---------- |
+| 01_fundamentos_de_marca         | —          |
+| 02_primitivos_y_bloques         | 01         |
+| 03_pantallas_por_rol            | 02         |
+| 04_estados_y_retroalimentacion  | 02         |
+| 05_superposiciones_y_navegacion | 02, 03     |
 
 ### Doble nivel por subsistema
 

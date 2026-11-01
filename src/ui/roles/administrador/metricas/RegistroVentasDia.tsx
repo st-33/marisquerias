@@ -118,7 +118,9 @@ export function RegistroVentasDia({
             const estado = colorEstado(registro.estado);
             return (
               <View
-                key={`${registro.origen}-${registro.origenId || 'sin-id'}-${registro.numero}-${registro.timestamp}`}
+                key={`${registro.origen}-${registro.origenId || 'sin-id'}-${registro.numero}-${
+                  registro.timestamp
+                }`}
                 style={styles.row}
               >
                 <Text style={[styles.number, { color: estado }]}>{registro.numero}</Text>

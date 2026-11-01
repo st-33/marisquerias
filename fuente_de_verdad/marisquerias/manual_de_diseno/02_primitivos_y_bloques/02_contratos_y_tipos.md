@@ -7,13 +7,13 @@
 ## 1. ESTADOS DE COMPONENTES
 
 ```typescript
-type EstadosBotonPrimario   = 'normal'|'pressed'|'loading'|'disabled'|'success'|'error';
-type EstadosBotonSecundario = 'normal'|'pressed'|'disabled';
-type EstadosCampo           = 'empty'|'focused'|'filled'|'invalid'|'disabled';
-type EstadosBadge           = 'info'|'success'|'warning'|'danger'|'neutral';
-type EstadosModal           = 'abierto'|'cargando'|'error'|'cerrado';
-type EstadosEmptyState      = 'sin_datos'|'sin_conexion'|'filtro_sin_coincidencias';
-type EstadosBannerConexion  = 'conectado'|'reconectando'|'offline'|'pendiente';
+type EstadosBotonPrimario = 'normal' | 'pressed' | 'loading' | 'disabled' | 'success' | 'error';
+type EstadosBotonSecundario = 'normal' | 'pressed' | 'disabled';
+type EstadosCampo = 'empty' | 'focused' | 'filled' | 'invalid' | 'disabled';
+type EstadosBadge = 'info' | 'success' | 'warning' | 'danger' | 'neutral';
+type EstadosModal = 'abierto' | 'cargando' | 'error' | 'cerrado';
+type EstadosEmptyState = 'sin_datos' | 'sin_conexion' | 'filtro_sin_coincidencias';
+type EstadosBannerConexion = 'conectado' | 'reconectando' | 'offline' | 'pendiente';
 ```
 
 ## 2. TARJETAS POR CONTEXTO

@@ -1,4 +1,5 @@
 # CONCEPTOS Y REGLAS: PRIMITIVOS Y BLOQUES
+
 - Alcance: Categoria: Marisquerias
 - Fecha: 2026-10-09
 
