@@ -17,7 +17,7 @@
  *   si la terminal previa despierta, su token queda revocado.
  */
 
-import storageSesion from '../almacenamiento/storageSesion';
+import { storageSesion } from '../almacenamiento/storageSesion';
 import { get, ref, set, update, runTransaction } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { Platform } from 'react-native';
@@ -133,7 +133,6 @@ export async function admitirSesionDispositivo(
   let slotAsignado: string | null = null;
   let tokenAsignado: string | null = null;
   let estadoAsignado: 'activa' | 'drenando' = 'activa';
-  let esReingreso = false;
 
   const ahora = Date.now();
 
@@ -142,7 +141,6 @@ export async function admitirSesionDispositivo(
     const sesiones: Record<string, any> = sesionesRaw || {};
     slotAsignado = null;
     tokenAsignado = null;
-    esReingreso = false;
 
     // 3a. ¿Este dispositivo ya posee una plaza asignada?
     for (let i = 1; i <= limiteEfectivo; i++) {
@@ -156,7 +154,6 @@ export async function admitirSesionDispositivo(
         slotAsignado = slotKey;
         tokenAsignado = ses.token_sesion || generarTokenSesion();
         estadoAsignado = ses.estado;
-        esReingreso = true;
 
         ses.token_sesion = tokenAsignado;
         ses.operador_id = params.usuarioId || ses.operador_id || '';

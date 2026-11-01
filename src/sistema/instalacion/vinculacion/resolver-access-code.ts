@@ -1,6 +1,6 @@
 import { get, ref } from 'firebase/database';
 import type { Database } from 'firebase/database';
-import storageSesion from '../../almacenamiento/storageSesion';
+import { storageSesion } from '../../almacenamiento/storageSesion';
 import {
   descomponer_ruta_negocio,
   es_ruta_legacy,

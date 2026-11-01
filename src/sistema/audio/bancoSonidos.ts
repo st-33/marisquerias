@@ -44,7 +44,7 @@ class BancoSonidos {
       const clip = await this.load(key);
       try {
         await clip.player.seekTo(0);
-      } catch (error) {
+      } catch {
         // seek may not be ready or needed
       }
 

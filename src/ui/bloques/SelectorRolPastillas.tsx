@@ -276,7 +276,7 @@ export function SelectorRolPastillas({
             return (
               <Pressable
                 key={rol.id}
-                onPress={() => handleRolPress(rol.ruta)}
+                onPress={() => handleRolPress(rol.ruta, rol.id)}
                 style={({ pressed }) => [
                   dynamicStyles.cardPastilla,
                   pressed && dynamicStyles.cardPastillaPressed,

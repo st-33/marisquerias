@@ -1,12 +1,10 @@
 import type { Database } from 'firebase/database';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   admitirSesionDispositivo,
   cambiarOperadorResponsable,
   liberarSesionDispositivo,
   obtenerSesionOperativaLocal,
   listarAuditoriaOperadores,
-  registrarLatidoPresencia,
   validarTokenSesion,
 } from '../servicio_sesion_dispositivo';
 

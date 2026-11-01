@@ -11,6 +11,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -92,6 +93,15 @@ export function PantallaRepartidor() {
       {/* Header móvil */}
       <View style={styles.header}>
         <View style={styles.headerInfo}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver a selección de roles"
+            onPress={() => router.replace('/_role/roles')}
+            style={({ pressed }) => [styles.rolesBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="chevron-back" size={16} color="#94a3b8" />
+            <Text style={styles.rolesBtnText}>ROLES</Text>
+          </Pressable>
           <Ionicons name="bicycle" size={26} color="#60a5fa" />
           <View>
             <Text style={styles.headerNombre}>{repartidorActual.nombre}</Text>
@@ -322,6 +332,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  rolesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    marginRight: 4,
+  },
+  rolesBtnText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   headerNombre: {
     fontSize: 16,

@@ -19,6 +19,7 @@ import { useStore } from '../../../sistema/store';
 import { useEmpaquetadorRoles } from '../../../negocio/roles/empaquetadorRoles';
 import { resolver_nombre_negocio } from '../../../sistema/rtdb/rutas/ruta_negocio';
 import { getRtdb } from '../../../sistema/firebase';
+import { actualizarRolActivoO1 } from '../../../sistema/instalacion/npb/persistenciaSesionO1';
 
 export interface RolInfo {
   id: string;
@@ -154,13 +155,20 @@ export function useLogicaSelectorRoles() {
     await SoundBank.play('roleSelect');
   }, []);
 
+  const setRol = useStore((s) => s.setRol);
+
   // Manejar selección de rol
   const handleRolPress = useCallback(
-    async (ruta: string) => {
+    async (ruta: string, rolId?: string) => {
       await playFeedback();
+      const targetRol = rolId || roles.find((r) => r.ruta === ruta)?.id;
+      if (targetRol) {
+        setRol(targetRol);
+        void actualizarRolActivoO1(targetRol);
+      }
       router.push(ruta as any);
     },
-    [playFeedback]
+    [playFeedback, roles, setRol]
   );
 
   // Manejar menú cliente

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -160,9 +161,20 @@ export function MostradorPro() {
         <View style={styles.leftPanel}>
           {/* Header con Info & Status */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>MOSTRADOR</Text>
-              <Text style={styles.subtitle}>SISTEMA DE DESPACHO PROFESIONAL</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Volver a selección de roles"
+                onPress={() => router.replace('/_role/roles')}
+                style={({ pressed }) => [styles.rolesBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="chevron-back" size={16} color="#94a3b8" />
+                <Text style={styles.rolesBtnText}>ROLES</Text>
+              </Pressable>
+              <View>
+                <Text style={styles.title}>MOSTRADOR</Text>
+                <Text style={styles.subtitle}>SISTEMA DE DESPACHO PROFESIONAL</Text>
+              </View>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
               {/* Hub Status */}
@@ -598,6 +610,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 15,
+  },
+  rolesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  rolesBtnText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   title: {
     color: 'white',

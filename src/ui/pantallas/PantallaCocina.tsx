@@ -5,7 +5,8 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { useStore, useProductos, useNegocioNombre } from '../../sistema/store';
 import { useNotificaciones as useNotifications } from '../../compartido/hooks/useNotificaciones';
 import { useNotificacionesAlmacen as useStoreNotifications } from '../../compartido/hooks/useNotificacionesAlmacen';
@@ -42,6 +43,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginBottom: 12,
+  },
+  rolesBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    marginRight: 4,
+  },
+  rolesBtnText: {
+    color: '#94a3b8',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   title: {
     color: '#ffffff',
@@ -172,6 +191,15 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
       {/* Header con estadísticas */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver a selección de roles"
+            onPress={() => router.replace('/_role/roles')}
+            style={({ pressed }) => [styles.rolesBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="chevron-back" size={16} color="#94a3b8" />
+            <Text style={styles.rolesBtnText}>ROLES</Text>
+          </Pressable>
           <Ionicons name="restaurant" size={24} color="#ffffff" />
           <View>
             <Text style={styles.title}>{tituloHeader}</Text>

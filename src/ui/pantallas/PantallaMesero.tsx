@@ -5,6 +5,8 @@
 
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, StatusBar, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { NotificacionToast as NotificationToast } from '../../compartido/componentes/NotificacionAvisoEmergente';
 import { useModoInmersivo as useImmersiveMode } from '../../sistema/navegacion/ModoInmersivo';
 import { useStore, useNegocioNombre } from '../../sistema/store';
@@ -244,6 +246,30 @@ function MeseroScreenContent() {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver a selección de roles"
+            onPress={() => router.replace('/_role/roles')}
+            style={({ pressed }) => [
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                paddingVertical: 5,
+                paddingHorizontal: 9,
+                borderRadius: 8,
+                backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.12)',
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Ionicons name="chevron-back" size={16} color="#94a3b8" />
+            <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
+              ROLES
+            </Text>
+          </Pressable>
           <Text style={{ fontSize: 16 }}>🍽️</Text>
           <View>
             <Text style={{ color: '#f9fafb', fontSize: 14, fontWeight: '800' }}>

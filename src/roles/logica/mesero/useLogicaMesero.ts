@@ -73,12 +73,10 @@ export type UseMeseroLogicProps = UseLogicaMeseroProps;
 export function useLogicaMesero(props: UseMeseroLogicProps = {}) {
   const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
   const negocioIdStore = useStore((s) => s.sesion.negocioId) || '';
-  const accessCodeStore = useStore((s) => s.sesion.access_code) || '';
   const ds = useStore((s) => s.dataSources);
 
   const rutaNegocio = props.rutaNegocio || rutaNegocioStore;
   const negocioId = props.negocioId || negocioIdStore;
-  const accessCode = props.accessCode || accessCodeStore;
   const db = useMemo(
     () => props.db || getRtdb(ds?.operacionUrl || undefined),
     [props.db, ds?.operacionUrl]
@@ -360,6 +358,7 @@ export function useLogicaMesero(props: UseMeseroLogicProps = {}) {
     mesasRepo,
     onPrintBill,
     pedidoActivo,
+    ensureConnection,
   });
 
   // 5. Hook de Gestión de Inventario

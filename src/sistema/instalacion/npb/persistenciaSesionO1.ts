@@ -8,7 +8,7 @@
  * - Desvinculación atómica bajo confirmación explícita 'DESVINCULAR'.
  */
 
-import storageSesion from '../../almacenamiento/storageSesion';
+import { storageSesion } from '../../almacenamiento/storageSesion';
 import type { EstadoEncendido } from './encenderCapacidades';
 import { useStore } from '../../store';
 import { logger } from '../../monitoreo';
@@ -242,5 +242,17 @@ export async function desvincularNegocioO1(confirmacion: string): Promise<boolea
   } catch (error) {
     logger.error('PERSISTENCIA_SESION', 'Error al desvincular negocio', error as Error);
     return false;
+  }
+}
+
+/**
+ * Actualiza atómicamente el rol activo en storage y store global.
+ */
+export async function actualizarRolActivoO1(rol: string): Promise<void> {
+  try {
+    await storageSesion.setItem(CLAVES_SESION_O1.ROL_ACTIVO, rol);
+    useStore.getState().setRol(rol);
+  } catch (error) {
+    logger.error('PERSISTENCIA_SESION', 'Error al actualizar rol activo O(1)', error as Error);
   }
 }

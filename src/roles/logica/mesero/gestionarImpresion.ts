@@ -24,6 +24,7 @@ type GestionarImpresionProps = {
   mesasRepo: MesasRepository;
   onPrintBill?: (mesaId: string) => void;
   pedidoActivo: any;
+  ensureConnection?: () => boolean | Promise<boolean>;
 };
 
 const formatVariantsForPrint = (variants?: Record<string, string[]>) => {
@@ -53,6 +54,7 @@ export function useGestionarImpresion({
   mesasRepo,
   onPrintBill,
   pedidoActivo,
+  ensureConnection,
 }: GestionarImpresionProps) {
   const printPolicies = usePoliticasImpresion({ db, rutaNegocio });
   const printPoliciesRef = useRef(printPolicies);
@@ -192,6 +194,12 @@ export function useGestionarImpresion({
       requiresConnection?: boolean;
       jobId?: string;
     }> => {
+      if (ensureConnection) {
+        const connected = await ensureConnection();
+        if (!connected) {
+          return { success: false, requiresConnection: true, message: 'Impresora no conectada' };
+        }
+      }
       const isReprint = isReprintOverride ?? hasPrinted;
       const result = await printBill(isReprint);
       const res = result as any;
@@ -204,7 +212,7 @@ export function useGestionarImpresion({
       }
       return { success: false, error: 'Error desconocido' };
     },
-    [printBill, hasPrinted]
+    [ensureConnection, printBill, hasPrinted]
   );
 
   const requestBill = useCallback(async () => {
