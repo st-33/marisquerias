@@ -32,7 +32,7 @@ import { getRtdb } from '../src/sistema/firebase';
 LogBox.ignoreLogs(['Unable to activate keep awake']);
 console.info('[T046][MIGRACION_RTDB_AUTORIDAD]');
 
-const PUBLIC_ROUTES = ['/index', '/(auth)', '/vinculacion'];
+const PUBLIC_ROUTES = ['/', '/index', '/access', '/vinculacion'];
 
 const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/venta-crudo': { generic: 'venta_crudo' },
@@ -55,8 +55,7 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicRoute =
-    pathname === '/' || PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
