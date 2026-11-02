@@ -365,9 +365,13 @@ export default function AdminDeviceSettings() {
                 <View style={styles.connectedView}>
                   <View style={styles.connectedInfo}>
                     <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
-                    <View>
-                      <Text style={styles.successText}>{dispositivoActivo.nombre}</Text>
-                      <Text style={styles.deviceAddress}>{dispositivoActivo.direccion}</Text>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.successText} numberOfLines={1} ellipsizeMode="tail">
+                        {dispositivoActivo.nombre}
+                      </Text>
+                      <Text style={styles.deviceAddress} numberOfLines={1}>
+                        {dispositivoActivo.direccion}
+                      </Text>
                     </View>
                   </View>
                   <Pressable style={styles.buttonOutline} onPress={desconectar}>
@@ -514,7 +518,7 @@ export default function AdminDeviceSettings() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0f172a' },
   // Gap handling in ScrollView is better than padding everything
-  scrollContent: { padding: 16, paddingBottom: 100 },
+  scrollContent: { padding: 16, paddingBottom: 130 },
 
   // Header
   header: {
@@ -622,11 +626,12 @@ const styles = StyleSheet.create({
   buttonText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
   buttonDisabled: { backgroundColor: '#334155', opacity: 0.5 },
   buttonOutline: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ef4444',
+    flexShrink: 0,
   },
   buttonOutlineText: { color: '#ef4444', fontSize: 13, fontWeight: '600' },
 
@@ -641,6 +646,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#334155',
     marginTop: 10,
+    gap: 10,
   },
   deviceText: { color: '#f1f5f9', fontSize: 15, fontWeight: '500' },
   deviceAddress: { color: '#64748b', fontSize: 12, marginTop: 2 },
@@ -651,13 +657,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#0f172a',
-    padding: 16,
+    padding: 14,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#22c55e',
     marginBottom: 16,
+    gap: 12,
   },
-  connectedInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  connectedInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
   successText: { color: '#22c55e', fontSize: 16, fontWeight: '600' },
   errorText: { color: '#f87171', fontSize: 14, textAlign: 'center', marginBottom: 12 },
 
@@ -692,6 +705,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
+    paddingBottom: Platform.OS === 'android' ? 24 : 16,
     backgroundColor: '#1e293b',
     borderTopWidth: 1,
     borderTopColor: '#334155',
