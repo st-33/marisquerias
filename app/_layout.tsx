@@ -15,7 +15,7 @@ import { logger } from '../src/sistema/monitoreo';
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorConcentrador';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FabNavegacionAdmin } from '../src/ui/roles/administrador/FabNavegacionAdmin';
-import { useAuthGuard, useGobernanzaRealtime } from '../src/sistema/seguridad';
+import { useAuthGuard, useGobernanzaRealtime, useCapacidadesRealtime } from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useArranqueSistema } from '../src/sistema/instalacion/useArranqueSistema';
 import { useAppListeners, useStore } from '../src/sistema/store';
@@ -69,6 +69,7 @@ export default function RootLayout() {
   const isPublicRoute = esRutaPublica(pathname);
   useAuthGuard(isReady && !isPublicRoute);
   useGobernanzaRealtime(isReady && !isPublicRoute);
+  useCapacidadesRealtime(isReady && !isPublicRoute);
   useAppListeners(isReady);
 
   const rutaNegocio = useStore((state) => state.sesion.rutaNegocio);

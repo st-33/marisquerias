@@ -8,3 +8,4 @@ export { vinculacionDispositivo, deviceBinding } from './vinculacionDispositivo'
 export type { DeviceInfoData, InformacionDispositivo } from './vinculacionDispositivo';
 export { useAuthGuard } from './useAuthGuard';
 export { useGobernanzaRealtime } from './useGobernanzaRealtime';
+export { useCapacidadesRealtime } from './useCapacidadesRealtime';

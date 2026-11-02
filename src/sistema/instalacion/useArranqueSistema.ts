@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { get, ref } from 'firebase/database';
+import { get, ref, set } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { resolverAccessCodeO1 } from './vinculacion/resolver-access-code';
 import { cargarNPB } from './npb/cargarNPB';
@@ -193,6 +193,40 @@ export async function ejecutarArranqueO1(
       await storageSesion.setItem('adi_dispositivo_vinculado', JSON.stringify(vinculo));
       await storageSesion.setItem('device_registered', 'true');
       await storageSesion.setItem('adi_device_id_persistent', deviceIdADI);
+
+      // 📡 Registrar instalación en Unidad Secundaria si existe ruta_negocio
+      const rutaNegStr = typeof negocio.ruta_negocio === 'string' ? negocio.ruta_negocio : '';
+      if (rutaNegStr) {
+        try {
+          const { Platform } = await import('react-native');
+          const { getDeviceInfo } = await import('../seguridad/vinculacionDispositivo');
+          const devInfo = await getDeviceInfo();
+
+          const esWeb = Platform.OS === 'web';
+          const tipoDisp = esWeb
+            ? 'web_supervisor'
+            : devInfo.isEmulator
+              ? 'terminal'
+              : 'movil';
+
+          const rutaInstalacion = `${rutaNegStr.replace(/^\/+/, '')}/dispositivos_instalados/${deviceIdADI}`;
+          await set(ref(db, rutaInstalacion), {
+            deviceId: deviceIdADI,
+            plataforma: Platform.OS,
+            tipo_dispositivo: tipoDisp,
+            marca: devInfo.brand || (esWeb ? 'Web' : 'Desconocida'),
+            modelo: devInfo.model || (esWeb ? 'Navegador Web' : 'Dispositivo'),
+            fecha_instalacion: new Date().toISOString(),
+            ultima_conexion: new Date().toISOString(),
+            estado: 'activo',
+            codigo_acceso: cleanCode,
+          });
+        } catch (errInst) {
+          logger.warn('ARRANQUE_O1', 'No se pudo asentar registro de instalación en Secundaria', {
+            error: (errInst as Error).message,
+          });
+        }
+      }
     } catch (errVinculo) {
       logger.warn('ARRANQUE_O1', 'No se pudo guardar flag adi_dispositivo_vinculado', {
         error: (errVinculo as Error).message,
