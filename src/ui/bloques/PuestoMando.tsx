@@ -89,13 +89,15 @@ export type PuestoMandoProps = {
 const staticStyles = StyleSheet.create({
   layout: {
     flex: 1,
-    paddingTop: SPACING.sm,
-    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
     paddingBottom: SPACING.xs,
-    gap: SPACING.sm,
+    gap: SPACING.xs,
+    overflow: 'hidden',
   },
   orderContent: {
     flex: 1,
+    overflow: 'hidden',
   },
   orderLoadingOverlay: {
     ...StyleSheet.absoluteFill,
@@ -151,8 +153,38 @@ export function PuestoMando(props: PuestoMandoProps) {
 
   // 🎨 COLORES DINÁMICOS según tema activo
   const COLORS = useThemedColors();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWideLayout = width >= 900;
+
+  // Columnas dinámicas según tamaño de pantalla
+  // - Móviles: 3 a 5 columnas máximo
+  // - Tabletas: hasta 8 columnas
+  const numColumns = useMemo(() => {
+    if (width < 360) return 3;
+    if (width < 480) return 4;
+    if (width < 600) return 5;
+    if (width < 768) return 6;
+    if (width < 1024) return 7;
+    return 8;
+  }, [width]);
+
+  const totalTiles = (mesas?.length || 0) + 1; // Mesas + Para Llevar
+  const numRows = Math.ceil(totalTiles / numColumns);
+
+  // Proporción de altura dinámica:
+  // - 1 fila: ~18% - 20% de altura de pantalla
+  // - 2 filas: 25% - 28% de altura de pantalla
+  // - 3+ filas: capped a 28% (máx 30%) dejando 70%-80% para la comanda digital inferior
+  const calculatedGridHeight = useMemo(() => {
+    if (isWideLayout) return undefined;
+    if (numRows <= 1) {
+      return Math.max(90, Math.round(height * 0.20));
+    }
+    if (numRows === 2) {
+      return Math.max(140, Math.round(height * 0.26));
+    }
+    return Math.max(160, Math.round(height * 0.28));
+  }, [isWideLayout, numRows, height]);
 
   // Estilos que dependen del tema
   const themedStyles = useMemo(
@@ -161,9 +193,10 @@ export function PuestoMando(props: PuestoMandoProps) {
         container: {
           flex: 1,
           backgroundColor: COLORS.bg.primary,
+          overflow: 'hidden',
         },
         gridWrapper: {
-          flex: 3,
+          ...(isWideLayout ? { flex: 3 } : { flexGrow: 0, flexShrink: 0 }),
           backgroundColor: 'transparent',
           overflow: 'hidden',
         },
@@ -199,7 +232,7 @@ export function PuestoMando(props: PuestoMandoProps) {
         <View
           style={[
             themedStyles.gridWrapper,
-            !isWideLayout && { flex: 0, minHeight: 252, maxHeight: 320 },
+            !isWideLayout && { height: calculatedGridHeight },
           ]}
         >
           {showGridLoading ? (

@@ -95,6 +95,10 @@ export function useMetricasVentas({
         // 3. Estructuras de acumulación
         let totalVentas = 0;
         let totalOrdenes = 0;
+        let totalVentasRestaurante = 0;
+        let totalOrdenesRestaurante = 0;
+        let totalVentasMostrador = 0;
+        let totalOrdenesMostrador = 0;
         const mesasOcupadas = mesas.filter((m: any) => m.estado === 'ocupada').length;
 
         // Track estructuras de acumulación
@@ -128,6 +132,8 @@ export function useMetricasVentas({
 
             totalVentas += pedidoTotal;
             totalOrdenes++;
+            totalVentasRestaurante += pedidoTotal;
+            totalOrdenesRestaurante++;
             eventosVentas.push({ timestamp: ts, total: pedidoTotal });
 
             // Acumular por hora
@@ -179,6 +185,8 @@ export function useMetricasVentas({
                 const totalVenta = Number(h.total || 0);
                 totalVentas += totalVenta;
                 totalOrdenes++;
+                totalVentasMostrador += totalVenta;
+                totalOrdenesMostrador++;
                 eventosVentas.push({ timestamp: ts, total: totalVenta });
 
                 const hora = new Date(ts).getHours();
@@ -196,6 +204,8 @@ export function useMetricasVentas({
                 const totalVenta = Number(v.total || v.total_general || 0);
                 totalVentas += totalVenta;
                 totalOrdenes++;
+                totalVentasMostrador += totalVenta;
+                totalOrdenesMostrador++;
                 eventosVentas.push({ timestamp: ts, total: totalVenta });
 
                 const hora = new Date(ts).getHours();
@@ -257,6 +267,11 @@ export function useMetricasVentas({
 
         setMetrics({
           ventasHoy: totalVentas,
+          ventasRestaurante: totalVentasRestaurante,
+          ordenesRestaurante: totalOrdenesRestaurante,
+          ventasMostrador: totalVentasMostrador,
+          ordenesMostrador: totalOrdenesMostrador,
+          includeVentaCrudo: Boolean(includeVentaCrudo),
           ventasSemana: totalVentas,
           ventasMes: totalVentas,
           ordenesActivas: totalOrdenes,

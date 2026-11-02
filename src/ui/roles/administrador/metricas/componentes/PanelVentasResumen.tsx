@@ -14,6 +14,11 @@ type PanelVentasResumenProps = {
   monto: string;
   datos: DatoVenta[];
   dateFilter: DateFilter;
+  includeVentaCrudo?: boolean;
+  ventasRestaurante?: number;
+  ventasMostrador?: number;
+  ordenesRestaurante?: number;
+  ordenesMostrador?: number;
 };
 
 const TITULO_POR_FILTRO: Record<DateFilter, string> = {
@@ -62,7 +67,16 @@ function calcularModoYRango(dateFilter: DateFilter): {
   }
 }
 
-export function PanelVentasResumen({ monto, datos, dateFilter }: PanelVentasResumenProps) {
+export function PanelVentasResumen({
+  monto,
+  datos,
+  dateFilter,
+  includeVentaCrudo,
+  ventasRestaurante = 0,
+  ventasMostrador = 0,
+  ordenesRestaurante = 0,
+  ordenesMostrador = 0,
+}: PanelVentasResumenProps) {
   const titulo = TITULO_POR_FILTRO[dateFilter] || 'Registro de Ventas';
   const { modo, rangoInicio, rangoFin } = useMemo(
     () => calcularModoYRango(dateFilter),
@@ -72,9 +86,27 @@ export function PanelVentasResumen({ monto, datos, dateFilter }: PanelVentasResu
   return (
     <View style={styles.panel}>
       <View style={styles.encabezado}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.titulo}>{titulo}</Text>
           <Text style={styles.monto}>{monto}</Text>
+          {includeVentaCrudo ? (
+            <View style={styles.breakdownContainer}>
+              <View style={styles.breakdownPill}>
+                <Ionicons name="restaurant-outline" size={13} color="#5ED0B0" />
+                <Text style={styles.breakdownLabel}>Restaurante:</Text>
+                <Text style={styles.breakdownValue}>
+                  ${ventasRestaurante.toFixed(2)} ({ordenesRestaurante})
+                </Text>
+              </View>
+              <View style={styles.breakdownPill}>
+                <Ionicons name="scale-outline" size={13} color="#38BDF8" />
+                <Text style={styles.breakdownLabel}>Mostrador (Crudo):</Text>
+                <Text style={styles.breakdownValue}>
+                  ${ventasMostrador.toFixed(2)} ({ordenesMostrador})
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </View>
         <View style={styles.indicador}>
           <Ionicons name="trending-up" size={22} color="#5ED0B0" />
@@ -127,5 +159,32 @@ const styles = StyleSheet.create({
   indicador: {
     alignItems: 'flex-end',
     gap: 6,
+  },
+  breakdownContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  breakdownPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  breakdownLabel: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  breakdownValue: {
+    color: '#F8FAFC',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

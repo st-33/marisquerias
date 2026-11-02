@@ -157,6 +157,11 @@ export function PantallaMetricasDatos() {
                 metrics?.ventasFiltradas ??
                 0
               ).toFixed(2)}`}
+              includeVentaCrudo={metrics?.includeVentaCrudo}
+              ventasRestaurante={metrics?.ventasRestaurante}
+              ventasMostrador={metrics?.ventasMostrador}
+              ordenesRestaurante={metrics?.ordenesRestaurante}
+              ordenesMostrador={metrics?.ordenesMostrador}
               datos={(metrics?.eventosVentas ?? []).map((evento: any) => ({
                 timestamp: evento.timestamp,
                 total: evento.total,

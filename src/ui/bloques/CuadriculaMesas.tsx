@@ -50,25 +50,32 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
     layoutOptions,
   } = props;
 
-  const { minTileWidth = 76, gap = SPACING.sm } = layoutOptions ?? {};
+  const { minTileWidth = 64, gap = 6 } = layoutOptions ?? {};
   const [containerWidth, setContainerWidth] = useState<number>(0);
-  const tileHeight = layoutOptions?.tileHeight ?? (containerWidth > 500 ? 124 : 84);
+  const isTabletOrDesktop = containerWidth >= 600;
+  const tileHeight = layoutOptions?.tileHeight ?? (isTabletOrDesktop ? 78 : 66);
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
 
-  // 🎯 GRID RESPONSIVE: las mesas conservan un tamaño táctil cómodo en móvil,
-  // mientras que tablet y escritorio aprovechan el ancho disponible.
+  // 🎯 GRID RESPONSIVE:
+  // - Móviles (<600px): estrictamente 3 a 5 columnas (nunca más de 5 en móviles)
+  // - Tabletas / Escritorio (>=600px): 6 a 8 columnas según ancho
+  const numColumns = useMemo(() => {
+    if (containerWidth === 0) return 4;
+    if (containerWidth < 360) return 3;
+    if (containerWidth < 480) return 4;
+    if (containerWidth < 600) return 5;
+    if (containerWidth < 768) return 6;
+    if (containerWidth < 1024) return 7;
+    return 8;
+  }, [containerWidth]);
+
   const tileWidth = useMemo(() => {
     if (containerWidth === 0) return minTileWidth;
-
-    const numColumns =
-      containerWidth >= 1100 ? 6 : containerWidth >= 760 ? 5 : containerWidth >= 480 ? 4 : 3;
-
-    // Calcular ancho exacto para llenar el contenedor
     const totalGapSpace = (numColumns - 1) * gap;
     const availableSpace = containerWidth - totalGapSpace;
-    return Math.floor(availableSpace / numColumns);
-  }, [containerWidth, minTileWidth, gap]);
+    return Math.max(minTileWidth, Math.floor(availableSpace / numColumns));
+  }, [containerWidth, numColumns, gap, minTileWidth]);
 
   // ✅ Filtrar mesas válidas: excluir mesas con datos inconsistentes
   const validTables = useMemo(() => {
@@ -117,37 +124,35 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
         style={({ pressed }) => ({
           width: tileWidth,
           height: tileHeight,
-          borderRadius: RADIUS.xl,
+          borderRadius: RADIUS.lg,
           backgroundColor: bgColor,
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: gap,
           opacity: pressed ? 0.88 : 1,
           transform: [{ scale: pressed ? 0.97 : 1 }],
-          borderWidth: isSelected ? 3 : 0,
+          borderWidth: isSelected ? 2.5 : 0,
           borderColor: isSelected ? COLORS.primaryLight : 'transparent',
           ...(isSelected ? SHADOWS.primary : SHADOWS.sm),
         })}
       >
-        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', paddingHorizontal: 2 }}>
           {isTakeaway ? (
-            <MaterialCommunityIcons name="package-variant-closed" size={24} color={textColor} />
+            <MaterialCommunityIcons name="package-variant-closed" size={isTabletOrDesktop ? 20 : 16} color={textColor} />
           ) : (
-            <Ionicons name="people" size={18} color={textColor} />
+            <Ionicons name="people" size={isTabletOrDesktop ? 18 : 15} color={textColor} />
           )}
 
           <Text
             style={{
               color: textColor,
               fontWeight: TYPOGRAPHY.weights.black,
-              fontSize: isTakeaway ? TYPOGRAPHY.sizes.sm : TYPOGRAPHY.sizes.xl,
-              marginTop: 4,
+              fontSize: isTakeaway ? (isTabletOrDesktop ? 12 : 10) : (isTabletOrDesktop ? 14 : 12),
+              marginTop: 2,
               textAlign: 'center',
               flexShrink: 1,
               width: '100%',
-              paddingHorizontal: 4,
             }}
-            numberOfLines={2}
+            numberOfLines={1}
           >
             {isTakeaway ? 'Para Llevar' : id}
           </Text>
@@ -156,11 +161,12 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
             <Text
               style={{
                 color: textColor,
-                fontSize: 10,
+                fontSize: 9,
                 opacity: 0.8,
-                fontWeight: '600',
+                fontWeight: '700',
                 flexShrink: 1,
                 textAlign: 'center',
+                marginTop: 1,
               }}
               numberOfLines={1}
             >
@@ -182,19 +188,15 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
     );
   };
 
-  // 🎯 Calcular altura mínima para 2 filas completas
-  const minHeightFor2Rows = tileHeight * 2 + gap * 1 + SPACING.xl + SPACING.xs;
-
   return (
     <View
       style={{
-        flex: 2,
+        flex: 1,
         width: '100%',
-        minHeight: minHeightFor2Rows, // 🔥 Asegura que 2 filas sean visibles
       }}
       onLayout={(e) => {
         const w = e.nativeEvent.layout.width;
-        if (Math.abs(containerWidth - w) > 10) {
+        if (Math.abs(containerWidth - w) > 5) {
           setContainerWidth(w);
         }
       }}
@@ -202,16 +204,15 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: SPACING.xl,
-          paddingTop: SPACING.xs,
+          paddingBottom: 4,
+          paddingTop: 2,
         }}
       >
         <View
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            justifyContent: 'space-between', // Distribución fractal
-            gap: 0, // Usamos marginBottom en los tiles y justifyContent para el gap horizontal
+            gap,
           }}
         >
           {/* 1. Renderizar Mesas */}
