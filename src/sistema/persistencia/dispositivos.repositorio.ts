@@ -142,37 +142,103 @@ export class RepositorioDispositivos {
     await set(r, sanitizeRtdbPayload(config));
   }
 
-  private getConfiguracionHubPath() {
+  private getConfiguracionHubPath(destino?: 'restaurante' | 'venta_crudo') {
+    if (destino) {
+      return `${this.rutaNegocio}/impresion/hubs/${destino}`;
+    }
     return `${this.rutaNegocio}/impresion/hubs`;
   }
 
   /**
-   * Suscribirse a la configuración de Hub Central
+   * Suscribirse a la configuración de Hub Central.
+   * Admite tanto el nodo particionado (restaurante / venta_crudo) como el nodo plano legacy.
    */
   suscribirConfiguracionHub(
-    callback: (config: Partial<ConfiguracionHub> | null) => void
+    callback: (config: Partial<ConfiguracionHub> | null, hubs?: Record<string, ConfiguracionHub>) => void,
+    filtroDestino?: 'restaurante' | 'venta_crudo'
   ): () => void {
     const r = ref(this.db, this.getConfiguracionHubPath());
     const cb = onValue(r, (snap) => {
-      callback(snap.exists() ? (snap.val() as Partial<ConfiguracionHub>) : null);
+      if (!snap.exists()) {
+        callback(null, {});
+        return;
+      }
+      const val = snap.val();
+      // Si tiene enabled directo a nivel raíz, es el formato plano anterior
+      if (typeof val.enabled === 'boolean') {
+        const destino = val.destination || 'restaurante';
+        const hubsMap: Record<string, ConfiguracionHub> = { [destino]: val as ConfiguracionHub };
+        if (filtroDestino && filtroDestino !== destino) {
+          callback(null, hubsMap);
+        } else {
+          callback(val as ConfiguracionHub, hubsMap);
+        }
+        return;
+      }
+
+      // Formato particionado
+      const hubsMap: Record<string, ConfiguracionHub> = {};
+      if (val.restaurante && typeof val.restaurante === 'object') {
+        hubsMap.restaurante = val.restaurante;
+      }
+      if (val.venta_crudo && typeof val.venta_crudo === 'object') {
+        hubsMap.venta_crudo = val.venta_crudo;
+      }
+
+      if (filtroDestino) {
+        callback(hubsMap[filtroDestino] || null, hubsMap);
+      } else {
+        // Priorizar el activo o el primero existente
+        const activo =
+          Object.values(hubsMap).find((h) => h.enabled) ||
+          hubsMap.restaurante ||
+          hubsMap.venta_crudo ||
+          null;
+        callback(activo, hubsMap);
+      }
     });
     return () => off(r, 'value', cb as any);
   }
 
   /**
-   * Establecer configuración de Hub Central (reemplazo completo)
+   * Establecer configuración de Hub Central
+   * Escribe en `${rutaNegocio}/impresion/hubs/${destino}` y actualiza `${rutaNegocio}/impresion/hubs`
+   * para conservar compatibilidad hacia atrás sin pisar el otro rol.
    */
   async establecerConfiguracionHub(config: ConfiguracionHub): Promise<void> {
-    const r = ref(this.db, this.getConfiguracionHubPath());
-    await set(r, sanitizeRtdbPayload(config));
+    const destino = config.destination || 'restaurante';
+    const rDestino = ref(this.db, `${this.rutaNegocio}/impresion/hubs/${destino}`);
+    const rRaiz = ref(this.db, `${this.rutaNegocio}/impresion/hubs`);
+
+    const sanitizado = sanitizeRtdbPayload(config);
+    await set(rDestino, sanitizado);
+    await update(rRaiz, {
+      [destino]: sanitizado,
+      enabled: config.enabled,
+      destination: config.destination,
+      updatedAt: config.updatedAt,
+      deviceId: config.deviceId,
+    });
   }
 
   /**
-   * Actualizar configuración de Hub Central (actualización parcial)
+   * Actualizar configuración de Hub Central
    */
   async actualizarConfiguracionHub(updates: Partial<ConfiguracionHub>): Promise<void> {
-    const r = ref(this.db, this.getConfiguracionHubPath());
-    await update(r, sanitizeRtdbPayload(updates));
+    const destino = updates.destination || 'restaurante';
+    const rDestino = ref(this.db, `${this.rutaNegocio}/impresion/hubs/${destino}`);
+    const rRaiz = ref(this.db, `${this.rutaNegocio}/impresion/hubs`);
+
+    const sanitizado = sanitizeRtdbPayload(updates);
+    await update(rDestino, sanitizado);
+    await update(rRaiz, {
+      [destino]: sanitizado,
+      ...sanitizado,
+    });
+  }
+
+  async actualizarHubConfig(updates: Partial<ConfiguracionHub>): Promise<void> {
+    return this.actualizarConfiguracionHub(updates);
   }
 }
 

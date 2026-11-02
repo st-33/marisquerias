@@ -161,18 +161,40 @@ class ServicioFierros implements ControladorFierros {
     try {
       if (apiLevel >= 31) {
         // Android 12+
-        const resultado = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]);
+        // 1. Verificar si ya tenemos permiso de conexión
+        const yaTieneConnect = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT
+        ).catch(() => false);
 
+        const yaTieneScan = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN
+        ).catch(() => false);
+
+        if (yaTieneConnect && yaTieneScan) {
+          return true;
+        }
+
+        const permisosRequeridos = [
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        ];
+
+        const resultado = await PermissionsAndroid.requestMultiple(permisosRequeridos);
+
+        // BLUETOOTH_CONNECT es el requisito mandatorio para imprimir en dispositivos emparejados
         return (
-          resultado['android.permission.BLUETOOTH_SCAN'] === 'granted' &&
-          resultado['android.permission.BLUETOOTH_CONNECT'] === 'granted'
+          resultado['android.permission.BLUETOOTH_CONNECT'] === 'granted' ||
+          resultado['android.permission.BLUETOOTH_CONNECT'] === 'never_ask_again' ||
+          yaTieneConnect
         );
       } else {
         // Android < 12
+        const yaTieneLocation = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        ).catch(() => false);
+
+        if (yaTieneLocation) return true;
+
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
         );
@@ -180,7 +202,7 @@ class ServicioFierros implements ControladorFierros {
       }
     } catch (e) {
       console.error('[ServicioFierros] Error en permisos:', e);
-      return false;
+      return true; // Intentar de todos modos con emparejados
     }
   }
 
@@ -191,20 +213,26 @@ class ServicioFierros implements ControladorFierros {
   async escanearDispositivos(): Promise<DispositivoFierro[]> {
     console.log('[ServicioFierros] 🔍 Iniciando escaneo...');
 
-    // Verificar permisos
-    const permisosOk = await this.solicitarPermisosAndroid();
-    if (!permisosOk) {
-      throw new Error('Permisos de Bluetooth denegados');
-    }
+    // Verificar permisos preventivamente
+    await this.solicitarPermisosAndroid().catch(() => {});
 
     this.actualizarEstado({ estaEscaneando: true, error: null });
 
     try {
-      const dispositivos = await this.adaptadorBT.escanear(10000);
+      const dispositivos = await this.adaptadorBT.escanear(3000);
       console.log(`[ServicioFierros] ✅ Encontrados ${dispositivos.length} dispositivos`);
       return dispositivos;
     } catch (e: any) {
       const mensaje = e?.message || 'Error al escanear';
+      console.warn('[ServicioFierros] Error en escaneo, intentando recuperar emparejados:', mensaje);
+      try {
+        const emparejados = await this.adaptadorBT.obtenerEmparejados();
+        if (emparejados.length > 0) {
+          return emparejados;
+        }
+      } catch {
+        // Fallback
+      }
       this.actualizarEstado({ error: mensaje });
       throw new Error(mensaje);
     } finally {

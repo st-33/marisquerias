@@ -9,6 +9,7 @@
  * puede activar ni sobrescribir la configuración remota.
  */
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useState } from 'react';
 import { getRtdb } from '../../../firebase';
@@ -21,38 +22,52 @@ interface PropiedadesGestorHub {
   rutaNegocio: string;
 }
 
-type ConfiguracionHubRuntime = {
-  rutaNegocio: string;
-  config: Partial<HubConfig> | null;
-};
-
 export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
-  // Estado local usado únicamente para conectividad del runtime.
   const { enLinea, setEnLinea } = useEstadoHub();
-  const [configuracionRuntime, setConfiguracionRuntime] = useState<ConfiguracionHubRuntime | null>(
-    null
-  );
+  const [hubsMap, setHubsMap] = useState<Record<string, HubConfig>>({});
+  const [localDeviceId, setLocalDeviceId] = useState<string>('');
 
-  const configuracionCloud =
-    configuracionRuntime?.rutaNegocio === rutaNegocio ? configuracionRuntime.config : null;
-  const habilitado = configuracionCloud?.enabled === true;
-  const destino = configuracionCloud?.destination ?? null;
-  const idDispositivo = configuracionCloud?.deviceId ?? null;
+  // Resolver ID del dispositivo local
+  useEffect(() => {
+    let activo = true;
+    const resolverId = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('adi_hub_device_id');
+        if (stored && activo) {
+          setLocalDeviceId(stored);
+          return;
+        }
+        const { resolverDeviceIdADI } = await import(
+          '../../../instalacion/vinculacion/generar-device-id-adi'
+        );
+        const devId = await resolverDeviceIdADI();
+        if (activo) {
+          setLocalDeviceId(devId);
+        }
+      } catch (e) {
+        console.warn('[GestorHub] Error resolviendo deviceId local:', e);
+      }
+    };
+    void resolverId();
+    return () => {
+      activo = false;
+    };
+  }, []);
 
-  // La configuración del Hub se lee desde RTDB; no se toma de AsyncStorage ni se escribe aquí.
+  // Escuchar configuración cloud de hubs
   useEffect(() => {
     if (!rutaNegocio) return;
 
     const db = getRtdb();
     const devicesRepo = new DevicesRepository(db, rutaNegocio);
-    const unsubscribe = devicesRepo.suscribirConfiguracionHub((config) => {
-      setConfiguracionRuntime({ rutaNegocio, config });
+    const unsubscribe = devicesRepo.suscribirConfiguracionHub((_config, hubs) => {
+      setHubsMap(hubs || {});
     });
 
     return unsubscribe;
   }, [rutaNegocio]);
 
-  // Listener de red: conectividad local, no autoridad de configuración.
+  // Listener de red
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const ahora = state.isConnected ?? false;
@@ -66,44 +81,50 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
     return unsubscribe;
   }, [setEnLinea]);
 
-  // Ciclo de vida del Hub gobernado por la configuración cloud.
+  // Ciclo de vida del Hub por rol asignado a ESTE dispositivo físico
   useEffect(() => {
-    if (habilitado && !idDispositivo) {
-      console.warn(
-        '[GestorHub] ⚠️ Hub habilitado en cloud pero sin deviceId válido; omitiendo activación.'
-      );
-    }
-
-    const debeActivar = Boolean(habilitado && rutaNegocio && enLinea && destino && idDispositivo);
-
-    if (!debeActivar || !idDispositivo || !rutaNegocio) {
-      console.log('[GestorHub] 🔴 Hub en standby según configuración cloud', {
-        habilitado,
-        rutaNegocio: Boolean(rutaNegocio),
-        enLinea,
-        destino,
-      });
-
-      if (rutaNegocio) {
-        DespachadorCola.destruirInstancia(rutaNegocio, 'hub');
-      }
-
+    if (!rutaNegocio || !enLinea || !localDeviceId) {
+      DespachadorCola.destruirInstancia(rutaNegocio, 'hub');
       return undefined;
     }
 
-    console.log('[GestorHub] 🟢 Activando modo HUB desde configuración cloud...');
+    // Identificar si este dispositivo es el Hub designado para restaurante o venta_crudo
+    const esHubRestaurante =
+      hubsMap.restaurante?.enabled === true &&
+      hubsMap.restaurante?.deviceId === localDeviceId;
 
-    const db = getRtdb();
-    if (!db) {
-      console.error('[GestorHub] ❌ Firebase RTDB no disponible');
-      return;
+    const esHubVentaCrudo =
+      hubsMap.venta_crudo?.enabled === true &&
+      hubsMap.venta_crudo?.deviceId === localDeviceId;
+
+    // Compatibilidad legacy si no hay partición
+    const configLegacy = Object.values(hubsMap)[0];
+    const esHubLegacy =
+      configLegacy?.enabled === true &&
+      (!configLegacy.deviceId || configLegacy.deviceId === localDeviceId);
+
+    const activoRestaurante = esHubRestaurante || (esHubLegacy && configLegacy?.destination !== 'venta_crudo');
+    const activoVentaCrudo = esHubVentaCrudo || (esHubLegacy && configLegacy?.destination === 'venta_crudo');
+
+    if (!activoRestaurante && !activoVentaCrudo) {
+      DespachadorCola.destruirInstancia(rutaNegocio, 'hub');
+      return undefined;
     }
 
-    const canal = destino === 'venta_crudo' ? 'venta_crudo' : 'standard';
+    console.log('[GestorHub] 🟢 Activando modo HUB para este dispositivo:', {
+      localDeviceId,
+      activoRestaurante,
+      activoVentaCrudo,
+    });
+
+    const db = getRtdb();
+    if (!db) return undefined;
+
+    const canal = activoVentaCrudo ? 'venta_crudo' : 'standard';
     const despachador = DespachadorCola.obtenerInstancia(
       db,
       rutaNegocio,
-      idDispositivo,
+      localDeviceId,
       {
         procesamientoAuto: true,
         maxReintentos: 1,
@@ -113,7 +134,7 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
     );
     despachador.iniciar();
 
-    console.log(`[GestorHub] ✅ Hub inicializado (canal: ${canal}, dispositivo: ${idDispositivo})`);
+    console.log(`[GestorHub] ✅ Hub activo (canal: ${canal}, dispositivo: ${localDeviceId})`);
 
     const heartbeatPath = `${rutaNegocio}/impresion/hubs/heartbeat`;
     const enviarHeartbeat = async () => {
@@ -134,7 +155,7 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
       clearInterval(heartbeat);
       DespachadorCola.destruirInstancia(rutaNegocio, 'hub');
     };
-  }, [habilitado, rutaNegocio, enLinea, destino, idDispositivo]);
+  }, [hubsMap, rutaNegocio, enLinea, localDeviceId]);
 
   return null;
 };

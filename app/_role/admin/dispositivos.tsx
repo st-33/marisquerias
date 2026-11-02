@@ -55,7 +55,8 @@ export default function AdminDeviceSettings() {
 
   const isHubEnabled = hubConfig?.enabled === true;
   const hubDestino: HubDestino = hubConfig?.destination ?? null;
-  const effectiveHubDeviceId = hubConfig?.deviceId || hubDeviceId || '';
+  const destinoSeleccionado: HubDestino = hubDestino || 'restaurante';
+  const effectiveHubDeviceId = hubDeviceId || hubConfig?.deviceId || '';
 
   // 📑 TABS
   const [tabActiva, setTabActiva] = useState<TabActiva>('impresoras');
@@ -66,27 +67,21 @@ export default function AdminDeviceSettings() {
     setIsScanning(false);
   };
 
-  // La configuración operativa del Hub vive en RTDB; AsyncStorage solo conserva una identidad local
-  // si el Hub todavía no tiene `deviceId` cloud.
+  // Cargar identidad persistente del dispositivo físico local
   useEffect(() => {
     let activo = true;
 
     const cargarIdentidadLocal = async () => {
       try {
-        if (hubConfig?.deviceId) return;
-        const storedDeviceId = await AsyncStorage.getItem('adi_hub_device_id');
-        let nextDeviceId = storedDeviceId;
-        if (!nextDeviceId) {
-          if (dispositivoActivo?.direccion) {
-            nextDeviceId = `hub_${dispositivoActivo.direccion}`;
-          } else {
-            const { resolverDeviceIdADI } =
-              await import('../../../src/sistema/instalacion/vinculacion/generar-device-id-adi');
-            nextDeviceId = await resolverDeviceIdADI();
-          }
-          await AsyncStorage.setItem('adi_hub_device_id', nextDeviceId);
+        let devId = await AsyncStorage.getItem('adi_hub_device_id');
+        if (!devId) {
+          const { resolverDeviceIdADI } = await import(
+            '../../../src/sistema/instalacion/vinculacion/generar-device-id-adi'
+          );
+          devId = await resolverDeviceIdADI();
+          await AsyncStorage.setItem('adi_hub_device_id', devId);
         }
-        if (activo) setHubDeviceId(nextDeviceId);
+        if (activo) setHubDeviceId(devId);
       } catch (e) {
         console.warn('No se pudo cargar identidad local de Hub', e);
       }
@@ -96,22 +91,32 @@ export default function AdminDeviceSettings() {
     return () => {
       activo = false;
     };
-  }, [dispositivoActivo?.direccion, hubConfig?.deviceId]);
+  }, []);
+
+  const handleScan = useCallback(async () => {
+    setIsScanning(true);
+    setScannedDevices([]);
+    try {
+      const devices = await escanear();
+      setScannedDevices(devices);
+    } catch (e: any) {
+      console.warn('Error al escanear dispositivos:', e.message);
+    } finally {
+      setIsScanning(false);
+    }
+  }, [escanear]);
+
+  // Escaneo automático al montar la pantalla para cargar emparejados al instante
+  useEffect(() => {
+    void handleScan();
+  }, [handleScan]);
 
   const toggleHubMode = async (value: boolean) => {
-    if (value && !hubDestino) {
-      Alert.alert(
-        'Selecciona destino',
-        'Primero debes elegir si este Hub es para Restaurante o Mostrador'
-      );
-      return;
-    }
-
+    const destinoFinal = destinoSeleccionado || 'restaurante';
     try {
-      // La nube es la única autoridad de habilitación, destino y timestamp del Hub.
       await deviceActions.establecerHubConfig({
         enabled: value,
-        destination: hubDestino,
+        destination: destinoFinal,
         updatedAt: Date.now(),
         deviceId: effectiveHubDeviceId,
       });
@@ -121,27 +126,16 @@ export default function AdminDeviceSettings() {
   };
 
   const selectHubDestino = async (destino: HubDestino) => {
-    if (isHubEnabled) {
-      Alert.alert('Hub activo', 'Desactiva el Hub Central antes de cambiar el destino');
-      return;
-    }
-    await deviceActions.actualizarHubConfig({
-      destination: destino,
-      deviceId: effectiveHubDeviceId,
-      updatedAt: Date.now(),
-    });
-  };
-
-  const handleScan = async () => {
-    setIsScanning(true);
-    setScannedDevices([]);
+    if (!destino) return;
     try {
-      const devices = await escanear();
-      setScannedDevices(devices);
+      await deviceActions.actualizarHubConfig({
+        destination: destino,
+        deviceId: effectiveHubDeviceId,
+        updatedAt: Date.now(),
+        ...(isHubEnabled ? { enabled: true } : {}),
+      });
     } catch (e: any) {
-      Alert.alert('Error al escanear', e.message);
-    } finally {
-      setIsScanning(false);
+      console.warn('Error al cambiar destino de Hub:', e);
     }
   };
 
@@ -285,21 +279,19 @@ export default function AdminDeviceSettings() {
                   <Pressable
                     style={[
                       styles.destinoBtn,
-                      hubDestino === 'restaurante' && styles.destinoBtnActive,
-                      isHubEnabled && styles.destinoBtnDisabled,
+                      destinoSeleccionado === 'restaurante' && styles.destinoBtnActive,
                     ]}
                     onPress={() => selectHubDestino('restaurante')}
-                    disabled={isHubEnabled}
                   >
                     <Ionicons
                       name="restaurant"
                       size={24}
-                      color={hubDestino === 'restaurante' ? '#fff' : '#64748b'}
+                      color={destinoSeleccionado === 'restaurante' ? '#fff' : '#64748b'}
                     />
                     <Text
                       style={[
                         styles.destinoText,
-                        hubDestino === 'restaurante' && styles.destinoTextActive,
+                        destinoSeleccionado === 'restaurante' && styles.destinoTextActive,
                       ]}
                     >
                       Restaurante
@@ -310,21 +302,19 @@ export default function AdminDeviceSettings() {
                     <Pressable
                       style={[
                         styles.destinoBtn,
-                        hubDestino === 'venta_crudo' && styles.destinoBtnActive,
-                        isHubEnabled && styles.destinoBtnDisabled,
+                        destinoSeleccionado === 'venta_crudo' && styles.destinoBtnActive,
                       ]}
                       onPress={() => selectHubDestino('venta_crudo')}
-                      disabled={isHubEnabled}
                     >
                       <Ionicons
                         name="storefront"
                         size={24}
-                        color={hubDestino === 'venta_crudo' ? '#fff' : '#64748b'}
+                        color={destinoSeleccionado === 'venta_crudo' ? '#fff' : '#64748b'}
                       />
                       <Text
                         style={[
                           styles.destinoText,
-                          hubDestino === 'venta_crudo' && styles.destinoTextActive,
+                          destinoSeleccionado === 'venta_crudo' && styles.destinoTextActive,
                         ]}
                       >
                         Mostrador
@@ -337,21 +327,19 @@ export default function AdminDeviceSettings() {
 
             {/* 2. MODO HUB SWITCH */}
             {rutaNegocio && (
-              <View style={[styles.hubSection, !hubDestino && styles.hubSectionDisabled]}>
+              <View style={styles.hubSection}>
                 <View style={styles.hubHeader}>
                   <View style={styles.hubIconContainer}>
-                    <Ionicons name="server" size={24} color={hubDestino ? '#3b82f6' : '#475569'} />
+                    <Ionicons name="server" size={24} color="#3b82f6" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.hubTitle, !hubDestino && styles.textDisabled]}>
+                    <Text style={styles.hubTitle}>
                       2. Modo Hub Central
                     </Text>
-                    <Text style={[styles.hubDesc, !hubDestino && styles.textDisabled]}>
-                      {hubDestino
-                        ? `Convertir en servidor de impresión para ${
-                            hubDestino === 'restaurante' ? 'Restaurante' : 'Mostrador'
-                          }`
-                        : 'Selecciona un destino arriba para activar'}
+                    <Text style={styles.hubDesc}>
+                      {`Convertir en servidor de impresión para ${
+                        destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'
+                      }`}
                     </Text>
                   </View>
                   <Switch
@@ -359,7 +347,6 @@ export default function AdminDeviceSettings() {
                     onValueChange={toggleHubMode}
                     trackColor={{ false: '#334155', true: '#3b82f6' }}
                     thumbColor={isHubEnabled ? '#ffffff' : '#94a3b8'}
-                    disabled={!hubDestino && !isHubEnabled} // Permite apagarlo siempre
                   />
                 </View>
               </View>

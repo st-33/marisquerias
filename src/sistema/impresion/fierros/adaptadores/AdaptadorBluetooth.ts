@@ -113,69 +113,94 @@ export class AdaptadorBluetooth {
   }
 
   /**
-   * Escanea dispositivos cercanos
-   * @param duracionMs - Duración del escaneo en ms (default: 10s)
+   * Escanea dispositivos Bluetooth.
+   * Prioridad 1: Obtiene dispositivos emparejados del OS de inmediato (<50ms).
+   * Prioridad 2: Intenta descubrir nuevos dispositivos en el aire con un timeout estricto (máx 3s)
+   * sin bloquear jamás la respuesta ni colgar el hilo si la radio no responde.
+   *
+   * @param duracionMs - Duración máxima del escaneo de nuevos dispositivos en ms (default: 3000ms)
    */
-  async escanear(duracionMs: number = 10000): Promise<DispositivoFierro[]> {
+  async escanear(duracionMs: number = 3000): Promise<DispositivoFierro[]> {
     if (!RNBluetoothClassic) return [];
 
+    const todosMap = new Map<string, DispositivoFierro>();
+
     try {
-      // Primero verificar que esté habilitado
-      const habilitado = await this.estaHabilitado();
+      // 1. Obtener dispositivos emparejados de inmediato (directo del caché del OS)
+      const emparejados = await this.obtenerEmparejados().catch(() => []);
+      for (const d of emparejados) {
+        if (d.direccion) {
+          todosMap.set(d.direccion, d);
+        }
+      }
+
+      // 2. Verificar si Bluetooth está habilitado para búsqueda en el aire
+      const habilitado = await this.estaHabilitado().catch(() => false);
       if (!habilitado) {
+        // Si no está habilitado pero ya tenemos emparejados, devolverlos de inmediato
+        if (todosMap.size > 0) {
+          return Array.from(todosMap.values());
+        }
         throw new Error('Bluetooth no está habilitado');
       }
 
-      // Iniciar discovery
-      const iniciado = await RNBluetoothClassic.startDiscovery();
-      if (!iniciado) {
-        // Si no inició discovery, al menos devolver emparejados
-        return this.obtenerEmparejados();
+      // 3. Iniciar descubrimiento con timeout de seguridad (máximo 3000ms)
+      const timeoutLimite = Math.min(Math.max(duracionMs, 1000), 3000);
+      try {
+        const timeoutPromesa = new Promise<boolean>((resolve) =>
+          setTimeout(() => resolve(false), timeoutLimite)
+        );
+        const discoveryPromesa = RNBluetoothClassic.startDiscovery().catch((err: any) => {
+          console.warn('[AdaptadorBluetooth] startDiscovery falló:', err);
+          return false;
+        });
+
+        // Esperar discovery o timeout
+        await Promise.race([discoveryPromesa, timeoutPromesa]);
+      } catch (err) {
+        console.warn('[AdaptadorBluetooth] Discovery no pudo iniciar:', err);
       }
 
-      // Esperar la duración del escaneo
-      await new Promise((resolve) => setTimeout(resolve, duracionMs));
-
-      // Cancelar discovery y obtener resultados
+      // 4. Cancelar discovery de inmediato para liberar la antena Bluetooth
       await RNBluetoothClassic.cancelDiscovery().catch(() => {});
 
-      // Combinar nuevos descubiertos con emparejados
-      const descubiertos: DispositivoBT[] = (await RNBluetoothClassic.getUnpairedDevices()) || [];
-      const emparejados: DispositivoBT[] = (await RNBluetoothClassic.getBondedDevices()) || [];
-
-      const todosMap = new Map<string, DispositivoFierro>();
-
-      // Primero emparejados (tienen prioridad)
-      for (const d of emparejados) {
-        const direccion = d.address || d.id || '';
-        if (direccion) {
-          todosMap.set(direccion, {
-            nombre: d.name || 'Desconocido',
-            direccion,
-            tipo: 'bluetooth',
-            emparejado: true,
-          });
+      // 5. Incorporar dispositivos no emparejados descubiertos
+      try {
+        const descubiertos: DispositivoBT[] = (await RNBluetoothClassic.getUnpairedDevices()) || [];
+        for (const d of descubiertos) {
+          const direccion = d.address || d.id || '';
+          if (direccion && !todosMap.has(direccion)) {
+            todosMap.set(direccion, {
+              nombre: d.name || 'Desconocido',
+              direccion,
+              tipo: 'bluetooth',
+              emparejado: false,
+            });
+          }
         }
+      } catch {
+        // Ignorar fallo al leer no emparejados
       }
 
-      // Luego descubiertos (solo si no están ya)
-      for (const d of descubiertos) {
-        const direccion = d.address || d.id || '';
-        if (direccion && !todosMap.has(direccion)) {
-          todosMap.set(direccion, {
-            nombre: d.name || 'Desconocido',
-            direccion,
-            tipo: 'bluetooth',
-            emparejado: false,
-          });
+      // 6. Refrescar lista de emparejados por si hubo vinculación concurrente
+      try {
+        const emparejadosFrescos = await this.obtenerEmparejados();
+        for (const d of emparejadosFrescos) {
+          if (d.direccion) {
+            todosMap.set(d.direccion, d);
+          }
         }
+      } catch {
+        // Ignorar
       }
 
       return Array.from(todosMap.values());
     } catch (e: any) {
       console.error('[AdaptadorBluetooth] Error en escaneo:', e);
-      // Fallback: devolver emparejados
-      return this.obtenerEmparejados();
+      if (todosMap.size > 0) {
+        return Array.from(todosMap.values());
+      }
+      return this.obtenerEmparejados().catch(() => []);
     }
   }
 
