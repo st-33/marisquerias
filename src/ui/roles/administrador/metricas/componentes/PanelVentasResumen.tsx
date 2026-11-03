@@ -21,15 +21,6 @@ type PanelVentasResumenProps = {
   ordenesMostrador?: number;
 };
 
-const TITULO_POR_FILTRO: Record<DateFilter, string> = {
-  hoy: 'Registro de Ventas — Hoy',
-  ayer: 'Registro de Ventas — Ayer',
-  hace3dias: 'Registro de Ventas — Últimos 3 días',
-  semana: 'Registro de Ventas — Semana',
-  mes: 'Registro de Ventas — Mes',
-  todo: 'Registro de Ventas — Histórico',
-};
-
 /**
  * Calcula el modo de la gráfica y el rango de fechas
  * en base al filtro de período seleccionado.
@@ -77,7 +68,6 @@ export function PanelVentasResumen({
   ordenesRestaurante = 0,
   ordenesMostrador = 0,
 }: PanelVentasResumenProps) {
-  const titulo = TITULO_POR_FILTRO[dateFilter] || 'Registro de Ventas';
   const { modo, rangoInicio, rangoFin } = useMemo(
     () => calcularModoYRango(dateFilter),
     [dateFilter]
@@ -85,62 +75,40 @@ export function PanelVentasResumen({
 
   return (
     <View style={styles.panel}>
-      {includeVentaCrudo ? (
-        <>
-          <View style={styles.encabezado}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.titulo}>{titulo}</Text>
-              <Text style={styles.totalConsolidado}>Total Consolidado: {monto}</Text>
-            </View>
-            <View style={styles.indicador}>
-              <Ionicons name="trending-up" size={22} color="#5ED0B0" />
+      {/* TARJETA CONTENEDORA DE VENTAS */}
+      <View style={styles.splitCardsContainer}>
+        {/* Tarjeta Restaurante (Icono tenedor y cuchillo) */}
+        <View style={[styles.channelCard, styles.channelCardRestaurante]}>
+          <View style={styles.channelHeader}>
+            <View style={[styles.channelIconBadge, { backgroundColor: 'rgba(94, 208, 176, 0.2)' }]}>
+              <Ionicons name="restaurant" size={20} color="#5ED0B0" />
             </View>
           </View>
+          <Text style={styles.channelMonto}>${ventasRestaurante.toFixed(2)}</Text>
+          <Text style={styles.channelSub}>
+            {ordenesRestaurante}{' '}
+            {ordenesRestaurante === 1 ? 'orden de restaurante' : 'órdenes de restaurante'}
+          </Text>
+        </View>
 
-          <View style={styles.splitCardsContainer}>
-            {/* Tarjeta Restaurante */}
-            <View style={[styles.channelCard, styles.channelCardRestaurante]}>
-              <View style={styles.channelHeader}>
-                <View style={[styles.channelIconBadge, { backgroundColor: 'rgba(94, 208, 176, 0.2)' }]}>
-                  <Ionicons name="restaurant" size={16} color="#5ED0B0" />
-                </View>
-                <Text style={[styles.channelTitle, { color: '#5ED0B0' }]}>Restaurante</Text>
+        {/* Tarjeta Mostrador (Icono casita / tienda de negocio) */}
+        {includeVentaCrudo && (
+          <View style={[styles.channelCard, styles.channelCardMostrador]}>
+            <View style={styles.channelHeader}>
+              <View
+                style={[styles.channelIconBadge, { backgroundColor: 'rgba(56, 189, 248, 0.2)' }]}
+              >
+                <Ionicons name="storefront" size={20} color="#38BDF8" />
               </View>
-              <Text style={styles.channelMonto}>${ventasRestaurante.toFixed(2)}</Text>
-              <Text style={styles.channelSub}>
-                {ordenesRestaurante} {ordenesRestaurante === 1 ? 'orden' : 'órdenes'}
-              </Text>
             </View>
-
-            {/* Tarjeta Mostrador */}
-            <View style={[styles.channelCard, styles.channelCardMostrador]}>
-              <View style={styles.channelHeader}>
-                <View style={[styles.channelIconBadge, { backgroundColor: 'rgba(56, 189, 248, 0.2)' }]}>
-                  <Ionicons name="storefront" size={16} color="#38BDF8" />
-                </View>
-                <Text style={[styles.channelTitle, { color: '#38BDF8' }]}>Mostrador (Crudo)</Text>
-              </View>
-              <Text style={styles.channelMonto}>${ventasMostrador.toFixed(2)}</Text>
-              <Text style={styles.channelSub}>
-                {ordenesMostrador} {ordenesMostrador === 1 ? 'orden' : 'órdenes'}
-              </Text>
-            </View>
-          </View>
-        </>
-      ) : (
-        <View style={styles.encabezado}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.titulo}>{titulo} — Restaurante</Text>
-            <Text style={styles.monto}>${ventasRestaurante.toFixed(2)}</Text>
-            <Text style={styles.channelSubRestauranteOnly}>
-              {ordenesRestaurante} {ordenesRestaurante === 1 ? 'orden de restaurante' : 'órdenes de restaurante'}
+            <Text style={styles.channelMonto}>${ventasMostrador.toFixed(2)}</Text>
+            <Text style={styles.channelSub}>
+              {ordenesMostrador}{' '}
+              {ordenesMostrador === 1 ? 'orden de mostrador' : 'órdenes de mostrador'}
             </Text>
           </View>
-          <View style={styles.indicador}>
-            <Ionicons name="restaurant" size={24} color="#5ED0B0" />
-          </View>
-        </View>
-      )}
+        )}
+      </View>
 
       {datos.length > 0 ? (
         <GraficaVentasTiempo
@@ -170,39 +138,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 26,
   },
-  encabezado: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  titulo: {
-    color: '#F4F0E8',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  totalConsolidado: {
-    color: '#94a3b8',
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  monto: {
-    color: '#F8FAFC',
-    fontSize: 38,
-    fontWeight: '900',
-    lineHeight: 44,
-  },
-  channelSubRestauranteOnly: {
-    color: '#5ED0B0',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  indicador: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
   splitCardsContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -211,7 +146,7 @@ const styles = StyleSheet.create({
   },
   channelCard: {
     flex: 1,
-    minWidth: 200,
+    minWidth: 160,
     borderRadius: 14,
     borderWidth: 1,
     padding: 14,
@@ -228,29 +163,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   channelIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 7,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  channelTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
   channelMonto: {
     color: '#F8FAFC',
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
-    lineHeight: 28,
+    lineHeight: 34,
   },
   channelSub: {
     color: '#94a3b8',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     marginTop: 4,
   },

@@ -19,14 +19,19 @@ import { logger } from '../monitoreo';
  * actualiza el store global en caliente.
  */
 export function useCapacidadesRealtime(isReady: boolean) {
-  const rutaNegocio = useStore((s) => s.sesion.ruta_negocio || s.sesion.rutaNegocio);
+  const rutaSecundaria = useStore(
+    (s) =>
+      (s.sesion as any).ruta_secundaria ||
+      (s.sesion as any).ruta_configuracion_secundaria ||
+      (s.sesion.ruta_negocio && s.sesion.ruta_negocio !== '/' ? s.sesion.ruta_negocio : null)
+  );
   const slugCategoria = useStore(
     (s) => s.sesion.category || s.sesion.categoria_id || 'marisquerias'
   );
   const setEstadoEncendido = useStore((s) => s.setEstadoEncendido);
 
   useEffect(() => {
-    if (!isReady || !rutaNegocio) return;
+    if (!isReady || !rutaSecundaria) return;
 
     let capsRef: any = null;
     let capsCallback: any = null;
@@ -34,7 +39,7 @@ export function useCapacidadesRealtime(isReady: boolean) {
     const iniciarSincronizacionCapacidades = async () => {
       try {
         const dbSec = getSecundariaRtdb();
-        const cleanPath = rutaNegocio.replace(/^\/+/, '');
+        const cleanPath = rutaSecundaria.replace(/^\/+/, '');
         const pathCapacidades = `${cleanPath}/capacidades_autorizadas`;
         capsRef = ref(dbSec, pathCapacidades);
 
@@ -91,5 +96,5 @@ export function useCapacidadesRealtime(isReady: boolean) {
         off(capsRef, 'value', capsCallback);
       }
     };
-  }, [isReady, rutaNegocio, slugCategoria, setEstadoEncendido]);
+  }, [isReady, rutaSecundaria, slugCategoria, setEstadoEncendido]);
 }

@@ -1,3 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isDeviceRegistered } from '../vinculacionDispositivo';
+import * as persistenciaO1 from '../../instalacion/npb/persistenciaSesionO1';
+import * as servicioSesion from '../../usuarios/servicio_sesion_dispositivo';
+
 jest.mock('react-native-device-info', () => ({
   getUniqueId: jest.fn(async () => 'device-mock-123'),
   getDeviceId: jest.fn(() => 'mock-device'),
@@ -7,11 +12,6 @@ jest.mock('react-native-device-info', () => ({
   getSystemName: jest.fn(() => 'Android'),
   isEmulator: jest.fn(async () => false),
 }));
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { isDeviceRegistered } from '../vinculacionDispositivo';
-import * as persistenciaO1 from '../../instalacion/npb/persistenciaSesionO1';
-import * as servicioSesion from '../../usuarios/servicio_sesion_dispositivo';
 
 describe('vinculacionDispositivo - Resiliencia y Auto-reparación', () => {
   beforeEach(async () => {

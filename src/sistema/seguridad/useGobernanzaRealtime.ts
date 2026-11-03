@@ -81,4 +81,3 @@ export function useGobernanzaRealtime(isReady: boolean) {
     };
   }, [isReady, router, clearSession, setEstadoInstalacion]);
 }
-

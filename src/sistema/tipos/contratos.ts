@@ -52,6 +52,10 @@ export interface ContratoSesion {
   /** Categoría canónica (ej: "marisquerias") */
   categoria_id?: string | null;
 
+  /** Ruta de configuración en Unidad Secundaria (ej: "alimentos_y_bebidas/marisquerias/negocio/marisqueria-puerto-libres") */
+  ruta_secundaria?: string | null;
+  ruta_configuracion_secundaria?: string | null;
+
   /** Metadata adicional del usuario (nombre, email, etc.) */
   usuario?: {
     nombre?: string;

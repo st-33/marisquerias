@@ -37,9 +37,8 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
           setLocalDeviceId(stored);
           return;
         }
-        const { resolverDeviceIdADI } = await import(
-          '../../../instalacion/vinculacion/generar-device-id-adi'
-        );
+        const { resolverDeviceIdADI } =
+          await import('../../../instalacion/vinculacion/generar-device-id-adi');
         const devId = await resolverDeviceIdADI();
         if (activo) {
           setLocalDeviceId(devId);
@@ -90,12 +89,10 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
 
     // Identificar si este dispositivo es el Hub designado para restaurante o venta_crudo
     const esHubRestaurante =
-      hubsMap.restaurante?.enabled === true &&
-      hubsMap.restaurante?.deviceId === localDeviceId;
+      hubsMap.restaurante?.enabled === true && hubsMap.restaurante?.deviceId === localDeviceId;
 
     const esHubVentaCrudo =
-      hubsMap.venta_crudo?.enabled === true &&
-      hubsMap.venta_crudo?.deviceId === localDeviceId;
+      hubsMap.venta_crudo?.enabled === true && hubsMap.venta_crudo?.deviceId === localDeviceId;
 
     // Compatibilidad legacy si no hay partición
     const configLegacy = Object.values(hubsMap)[0];
@@ -103,8 +100,10 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
       configLegacy?.enabled === true &&
       (!configLegacy.deviceId || configLegacy.deviceId === localDeviceId);
 
-    const activoRestaurante = esHubRestaurante || (esHubLegacy && configLegacy?.destination !== 'venta_crudo');
-    const activoVentaCrudo = esHubVentaCrudo || (esHubLegacy && configLegacy?.destination === 'venta_crudo');
+    const activoRestaurante =
+      esHubRestaurante || (esHubLegacy && configLegacy?.destination !== 'venta_crudo');
+    const activoVentaCrudo =
+      esHubVentaCrudo || (esHubLegacy && configLegacy?.destination === 'venta_crudo');
 
     if (!activoRestaurante && !activoVentaCrudo) {
       DespachadorCola.destruirInstancia(rutaNegocio, 'hub');

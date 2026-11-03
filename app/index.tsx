@@ -26,11 +26,7 @@ export default function Index() {
 
         // En nativo: verificar si ya existe una sesión operativa de operador local
         const sesionOperativa = await obtenerSesionOperativaLocal();
-        if (
-          sesionOperativa &&
-          sesionOperativa.usuario_id &&
-          sesionOperativa.estado === 'activa'
-        ) {
+        if (sesionOperativa && sesionOperativa.usuario_id && sesionOperativa.estado === 'activa') {
           const cargo = sesionOperativa.cargo;
           if (cargo === 'administrador') {
             if (montado) router.replace('/_role/roles');

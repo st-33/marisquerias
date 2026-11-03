@@ -8,6 +8,8 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
+import { servicioFierros } from '../../../sistema/impresion/fierros';
+import type { ItemCuenta } from '../../../sistema/impresion/fierros/contratos/tipos';
 import { createLogger } from '../../../sistema/monitoreo';
 import { usePoliticasImpresion } from './usePoliticasImpresion';
 
@@ -101,11 +103,13 @@ export function useGestionarImpresion({
       }
 
       const table = tablesRef.current.find((t) => t.id === selectedTable);
-      if (!table?.pedidoActivoId) {
-        return { success: false, error: 'No hay pedido activo' };
-      }
+      const pedidoId =
+        table?.pedidoActivoId || pedidoActivo?.id || `mesa_${selectedTable}_${Date.now()}`;
 
-      const pedidoId = table.pedidoActivoId;
+      if (!liveItems || liveItems.length === 0) {
+        log.warn('⚠️ No hay items en la mesa para imprimir cuenta');
+        return { success: false, error: 'No hay productos para imprimir' };
+      }
 
       try {
         isPrintingRef.current = now;
@@ -125,6 +129,44 @@ export function useGestionarImpresion({
           variantes: formatVariantsForPrintWithLabels(item.variantLabels, item.variantes) || [],
         }));
 
+        const itemsParaCuenta: ItemCuenta[] = liveItems.map((item) => ({
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio: item.precio,
+          variantes:
+            formatVariantsForPrintWithLabels(item.variantLabels, item.variantes) || undefined,
+        }));
+
+        // 1. Hardware First (Regla 5): Si la terminal tiene una impresora conectada, emitir físicamente el ticket
+        if (servicioFierros.estaConectado) {
+          try {
+            log.info(
+              '🖨️ [Hardware] Impresora conectada detectada. Imprimiendo cuenta físicamente...'
+            );
+            const resFierros = await servicioFierros.imprimirCuenta(
+              {
+                mesaId: String(selectedTable),
+                tipo: 'local',
+                items: itemsParaCuenta,
+                totales: {
+                  subtotal: totalOrder,
+                  total: totalOrder,
+                },
+                timestamp: Date.now(),
+              },
+              {
+                rol: 'mesero',
+              }
+            );
+            log.info('✅ [Hardware] Resultado impresión física:', resFierros);
+          } catch (errFierros) {
+            log.warn(
+              '⚠️ [Hardware] Error al imprimir en fierro (no bloqueante para operación):',
+              errFierros
+            );
+          }
+        }
+
         const payload = {
           mesaId: selectedTable,
           tipo: 'mesa',
@@ -136,42 +178,53 @@ export function useGestionarImpresion({
           timestamp: Date.now(),
         };
 
-        log.info(`📡 Encolando job: ${jobId}`);
-
-        const job = await DespachadorCola.encolarRemotoIdempotente(db, rutaNegocio, {
-          idTrabajo: jobId,
-          idPedido: pedidoId,
-          proposito: 'cuenta',
-          canal: 'standard',
-          templateVersion: 'v1',
-          payload,
-        });
-
-        log.info('✅ Job encolado', { jobId: job.jobId });
+        // 2. Encolado remoto idempotente (notificación a spool central / hubs)
+        try {
+          log.info(`📡 Encolando job: ${jobId}`);
+          const job = await DespachadorCola.encolarRemotoIdempotente(db, rutaNegocio, {
+            idTrabajo: jobId,
+            idPedido: pedidoId,
+            proposito: 'cuenta',
+            canal: 'standard',
+            templateVersion: 'v1',
+            payload,
+          });
+          log.info('✅ Job encolado en spool', { jobId: job.jobId });
+        } catch (errCola) {
+          log.warn('⚠️ Error al encolar en spool remoto (no bloqueante):', errCola);
+        }
 
         onPrintBill?.(selectedTable);
         setHasPrinted(true);
 
-        await pedidosRepo.actualizar(pedidoId, {
-          cuentaImpresa: true,
-          cuentaImpresaAt: Date.now(),
-        });
+        if (pedidoId && !pedidoId.startsWith('mesa_')) {
+          try {
+            await pedidosRepo.actualizar(pedidoId, {
+              cuentaImpresa: true,
+              cuentaImpresaAt: Date.now(),
+            });
+          } catch (errRepo) {
+            log.warn('⚠️ Error al actualizar estado en pedidosRepo:', errRepo);
+          }
+        }
 
         return {
           success: true,
           message: isReprint ? 'Reimpresión enviada' : 'Impresión enviada',
         };
       } catch (error) {
-        log.error('❌ Error al encolar impresión:', error);
+        log.error('❌ Error en flujo de impresión:', error);
         // Resiliencia Dogma ADI: asegurar que el flujo de cobro nunca quede bloqueado
         onPrintBill?.(selectedTable);
         setHasPrinted(true);
-        try {
-          await pedidosRepo.actualizar(pedidoId, {
-            cuentaImpresa: true,
-            cuentaImpresaAt: Date.now(),
-          });
-        } catch {}
+        if (pedidoId && !pedidoId.startsWith('mesa_')) {
+          try {
+            await pedidosRepo.actualizar(pedidoId, {
+              cuentaImpresa: true,
+              cuentaImpresaAt: Date.now(),
+            });
+          } catch {}
+        }
         return { success: true, message: 'Impresión en cola local / simulada' };
       } finally {
         setTimeout(() => {
@@ -190,6 +243,7 @@ export function useGestionarImpresion({
       db,
       rutaNegocio,
       tablesRef,
+      pedidoActivo,
     ]
   );
 

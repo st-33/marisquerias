@@ -154,18 +154,12 @@ describe('useCapacidadesRealtime — Sincronización en caliente Ecosistema -> M
       expect.anything(),
       expect.objectContaining({
         negocio_id: '01',
-        capacidades_autorizadas: expect.arrayContaining([
-          'comanda_de_cocina',
-          'mostrador_y_pos',
-        ]),
+        capacidades_autorizadas: expect.arrayContaining(['comanda_de_cocina', 'mostrador_y_pos']),
       })
     );
     expect(mockSetEstadoEncendido).toHaveBeenCalledWith(
       expect.objectContaining({
-        capacidades_activas: expect.arrayContaining([
-          'comanda_de_cocina',
-          'mostrador_y_pos',
-        ]),
+        capacidades_activas: expect.arrayContaining(['comanda_de_cocina', 'mostrador_y_pos']),
       })
     );
 

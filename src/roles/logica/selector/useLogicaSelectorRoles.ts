@@ -181,8 +181,12 @@ export function useLogicaSelectorRoles() {
   const tieneMenuDigital = useMemo(() => {
     if (!estadoEncendido) return true;
     if (estadoEncendido.tipo_acceso === 'plantilla') return true;
-    const caps = (estadoEncendido.capacidades_activas || (estadoEncendido as any).activos?.capacidades || []) as string[];
-    const rolesActivos = (estadoEncendido.roles_activos || (estadoEncendido as any).activos?.roles || []) as string[];
+    const caps = (estadoEncendido.capacidades_activas ||
+      (estadoEncendido as any).activos?.capacidades ||
+      []) as string[];
+    const rolesActivos = (estadoEncendido.roles_activos ||
+      (estadoEncendido as any).activos?.roles ||
+      []) as string[];
     return caps.includes('menu_digital') || rolesActivos.includes('menu_digital');
   }, [estadoEncendido]);
 

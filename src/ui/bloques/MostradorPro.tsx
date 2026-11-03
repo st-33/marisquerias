@@ -338,7 +338,11 @@ export function MostradorPro() {
                 {carrito.length === 0 && (
                   <View style={{ alignItems: 'center', paddingVertical: 40, opacity: 0.5 }}>
                     <Ionicons name="receipt-outline" size={40} color="#64748b" />
-                    <Text style={{ color: '#64748b', fontWeight: '700', marginTop: 8, fontSize: 13 }}>CARRO VACÍO</Text>
+                    <Text
+                      style={{ color: '#64748b', fontWeight: '700', marginTop: 8, fontSize: 13 }}
+                    >
+                      CARRO VACÍO
+                    </Text>
                   </View>
                 )}
               </ScrollView>

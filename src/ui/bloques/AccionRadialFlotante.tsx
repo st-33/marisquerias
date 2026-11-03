@@ -41,7 +41,7 @@ const Bubble: React.FC<BubbleProps> = ({
     const angle =
       position === 'top-right'
         ? (Math.PI / 2) * (index / Math.max(total - 1, 1)) + Math.PI
-        : (Math.PI * 0.58) * (index / Math.max(total - 1, 1)) + Math.PI * 0.46;
+        : Math.PI * 0.58 * (index / Math.max(total - 1, 1)) + Math.PI * 0.46;
 
     const radius = 86; // Espaciado refinado y no amontonado
     const x = radius * Math.cos(angle);

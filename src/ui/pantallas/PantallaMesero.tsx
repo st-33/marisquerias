@@ -280,9 +280,7 @@ function MeseroScreenContent() {
             </Pressable>
           )}
           <View>
-            <Text style={{ color: '#f9fafb', fontSize: 15, fontWeight: '800' }}>
-              Mesero
-            </Text>
+            <Text style={{ color: '#f9fafb', fontSize: 15, fontWeight: '800' }}>Mesero</Text>
           </View>
         </View>
         {esAdmin && (

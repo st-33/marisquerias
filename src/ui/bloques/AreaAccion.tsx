@@ -39,7 +39,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
     liveItemsCount,
     mode,
     activeOrderId,
-    allItemsDelivered,
+    allItemsDelivered: _allItemsDelivered,
     hasPrinted,
     canMarkPaid,
     isCollapsed,
@@ -77,10 +77,7 @@ function ActionAreaComponent(props: ActionAreaProps) {
   }, [isCollapsed, heightAnim]);
 
   // 🔴 LÓGICA MEMOIZADA: ¿Cuándo mostrar botón "Imprimir Cuenta"?
-  const showPrintBillButton = useMemo(
-    () => allItemsDelivered && liveItemsCount > 0,
-    [allItemsDelivered, liveItemsCount]
-  );
+  const showPrintBillButton = useMemo(() => liveItemsCount > 0, [liveItemsCount]);
 
   // 🔴 LÓGICA MEMOIZADA: ¿Cuándo mostrar botón "Pagado"?
   const showPaidButton = useMemo(() => canMarkPaid, [canMarkPaid]);

@@ -158,9 +158,20 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
           ...(isSelected ? SHADOWS.primary : SHADOWS.sm),
         })}
       >
-        <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%', paddingHorizontal: 2 }}>
+        <View
+          style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            paddingHorizontal: 2,
+          }}
+        >
           {isTakeaway ? (
-            <MaterialCommunityIcons name="package-variant-closed" size={isTabletOrDesktop ? 20 : 16} color={textColor} />
+            <MaterialCommunityIcons
+              name="package-variant-closed"
+              size={isTabletOrDesktop ? 20 : 16}
+              color={textColor}
+            />
           ) : (
             <Ionicons name="people" size={isTabletOrDesktop ? 18 : 15} color={textColor} />
           )}
@@ -169,7 +180,7 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
             style={{
               color: textColor,
               fontWeight: TYPOGRAPHY.weights.black,
-              fontSize: isTakeaway ? (isTabletOrDesktop ? 12 : 10) : (isTabletOrDesktop ? 14 : 12),
+              fontSize: isTakeaway ? (isTabletOrDesktop ? 12 : 10) : isTabletOrDesktop ? 14 : 12,
               marginTop: 2,
               textAlign: 'center',
               flexShrink: 1,
@@ -247,6 +258,30 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
 
           {/* Salida operativa para pedidos sin mesa */}
           {renderTile('takeaway', 'takeaway', true, onSelectTakeaway)}
+
+          {validTables.length === 0 && (
+            <View
+              style={{
+                flex: 1,
+                minWidth: 160,
+                height: tileHeight,
+                justifyContent: 'center',
+                paddingHorizontal: 12,
+              }}
+            >
+              <Text
+                style={{
+                  color: COLORS.text.secondary,
+                  fontSize: 11,
+                  fontWeight: '600',
+                  lineHeight: 15,
+                }}
+              >
+                Sin mesas registradas. Toma pedidos &quot;Para Llevar&quot; o da de alta mesas en
+                Administración.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

@@ -157,8 +157,12 @@ export async function ejecutarArranqueO1(
       niche: negocio.slug_categoria,
       rutaNegocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
       ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+      ruta_secundaria: typeof negocio.ruta_negocio === 'string' ? negocio.ruta_negocio : undefined,
+      ruta_configuracion_secundaria:
+        typeof negocio.ruta_negocio === 'string' ? negocio.ruta_negocio : undefined,
       rol: destinoRol.rol,
     });
+    store.setEstadoInstalacion('VINCULADA');
 
     if (negocio.nombre_comercial) {
       store.updateConfiguracion({ nombre: negocio.nombre_comercial });
@@ -175,6 +179,7 @@ export async function ejecutarArranqueO1(
       db_url_operativa,
       tipo_acceso: estadoEncendido.tipo_acceso,
       nombre_comercial: negocio.nombre_comercial,
+      ruta_secundaria: typeof negocio.ruta_negocio === 'string' ? negocio.ruta_negocio : undefined,
     });
 
     try {
@@ -203,13 +208,12 @@ export async function ejecutarArranqueO1(
           const devInfo = await getDeviceInfo();
 
           const esWeb = Platform.OS === 'web';
-          const tipoDisp = esWeb
-            ? 'web_supervisor'
-            : devInfo.isEmulator
-              ? 'terminal'
-              : 'movil';
+          const tipoDisp = esWeb ? 'web_supervisor' : devInfo.isEmulator ? 'terminal' : 'movil';
 
-          const rutaInstalacion = `${rutaNegStr.replace(/^\/+/, '')}/dispositivos_instalados/${deviceIdADI}`;
+          const rutaInstalacion = `${rutaNegStr.replace(
+            /^\/+/,
+            ''
+          )}/dispositivos_instalados/${deviceIdADI}`;
           await set(ref(db, rutaInstalacion), {
             deviceId: deviceIdADI,
             plataforma: Platform.OS,
@@ -346,8 +350,11 @@ export function useArranqueSistema(): boolean {
             niche: sesion.slug_categoria,
             rutaNegocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
             ruta_negocio: RUTA_RAIZ_UNIDAD_OPERATIVA,
+            ruta_secundaria: sesion.ruta_secundaria,
+            ruta_configuracion_secundaria: sesion.ruta_secundaria,
             rol: (sesion.rol_activo as any) || 'mesero',
           });
+          store.setEstadoInstalacion('VINCULADA');
 
           if (sesion.nombre_comercial) {
             store.updateConfiguracion({ nombre: sesion.nombre_comercial });

@@ -73,11 +73,9 @@ export async function evaluarGuardiaArranque(db?: Database): Promise<ResultadoGu
 
   // Verificar si el rol activo actual figura en los roles activos del EstadoEncendido
   const rolActivo = sesion.rol_activo;
-  const rolesActivos = (
-    estadoEncendido.roles_activos ||
+  const rolesActivos = (estadoEncendido.roles_activos ||
     (estadoEncendido as any).activos?.roles ||
-    []
-  ) as string[];
+    []) as string[];
 
   const esRolValido =
     rolActivo !== null &&

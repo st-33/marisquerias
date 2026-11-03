@@ -154,7 +154,10 @@ export class RepositorioDispositivos {
    * Admite tanto el nodo particionado (restaurante / venta_crudo) como el nodo plano legacy.
    */
   suscribirConfiguracionHub(
-    callback: (config: Partial<ConfiguracionHub> | null, hubs?: Record<string, ConfiguracionHub>) => void,
+    callback: (
+      config: Partial<ConfiguracionHub> | null,
+      hubs?: Record<string, ConfiguracionHub>
+    ) => void,
     filtroDestino?: 'restaurante' | 'venta_crudo'
   ): () => void {
     const r = ref(this.db, this.getConfiguracionHubPath());

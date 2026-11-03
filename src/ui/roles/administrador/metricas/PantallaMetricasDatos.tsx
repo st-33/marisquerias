@@ -106,8 +106,12 @@ export function PantallaMetricasDatos() {
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
 
-  const [canalDistribucion, setCanalDistribucion] = useState<'todos' | 'restaurante' | 'mostrador'>('todos');
-  const [canalTopPlatillos, setCanalTopPlatillos] = useState<'todos' | 'restaurante' | 'mostrador'>('todos');
+  const [canalDistribucion, setCanalDistribucion] = useState<'todos' | 'restaurante' | 'mostrador'>(
+    'todos'
+  );
+  const [canalTopPlatillos, setCanalTopPlatillos] = useState<'todos' | 'restaurante' | 'mostrador'>(
+    'todos'
+  );
 
   const datosDistribucion = useMemo(() => {
     if (canalDistribucion === 'restaurante' && metrics?.distribucionVentasRestaurante) {
@@ -265,16 +269,13 @@ export function PantallaMetricasDatos() {
                       canal === 'todos'
                         ? 'Todos'
                         : canal === 'restaurante'
-                        ? 'Restaurante'
-                        : 'Mostrador';
+                          ? 'Restaurante'
+                          : 'Mostrador';
                     return (
                       <Pressable
                         key={canal}
                         onPress={() => setCanalDistribucion(canal)}
-                        style={[
-                          styles.channelFilterBtn,
-                          isActivo && styles.channelFilterBtnActive,
-                        ]}
+                        style={[styles.channelFilterBtn, isActivo && styles.channelFilterBtnActive]}
                       >
                         <Text
                           style={[
@@ -320,16 +321,13 @@ export function PantallaMetricasDatos() {
                       canal === 'todos'
                         ? 'Todos'
                         : canal === 'restaurante'
-                        ? 'Restaurante'
-                        : 'Mostrador';
+                          ? 'Restaurante'
+                          : 'Mostrador';
                     return (
                       <Pressable
                         key={canal}
                         onPress={() => setCanalTopPlatillos(canal)}
-                        style={[
-                          styles.channelFilterBtn,
-                          isActivo && styles.channelFilterBtnActive,
-                        ]}
+                        style={[styles.channelFilterBtn, isActivo && styles.channelFilterBtnActive]}
                       >
                         <Text
                           style={[

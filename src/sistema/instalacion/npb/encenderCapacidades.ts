@@ -88,8 +88,23 @@ export function encenderCapacidades(
     // Modo Negocio:
     if (Array.isArray(negocio.capacidades_autorizadas)) {
       // Intersección estricta si se especificaron capacidades autorizadas
-      for (const cap of negocio.capacidades_autorizadas) {
-        if (capacidadesDisponiblesNPB.has(cap)) {
+      for (const rawCap of negocio.capacidades_autorizadas) {
+        const rawStr = String(rawCap);
+        const cap: CapacidadCanonica =
+          rawStr === 'menu_digital'
+            ? 'menu'
+            : rawStr === 'mostrador'
+              ? 'mostrador_y_pos'
+              : rawStr === 'mesero'
+                ? 'control_mesas'
+                : rawStr === 'cocina'
+                  ? 'comanda_cocina'
+                  : (rawCap as CapacidadCanonica);
+
+        if (
+          capacidadesDisponiblesNPB.has(cap) ||
+          capacidadesDisponiblesNPB.has(rawCap as CapacidadCanonica)
+        ) {
           idsCapacidadesActivas.add(cap);
         }
       }
@@ -115,7 +130,8 @@ export function encenderCapacidades(
   if (
     rolesKDS.some((r) => idsRolesDeclarados.has(r)) &&
     (!Array.isArray(negocio?.capacidades_autorizadas) ||
-      negocio.capacidades_autorizadas.includes('comanda_cocina'))
+      negocio.capacidades_autorizadas.includes('comanda_cocina') ||
+      negocio.capacidades_autorizadas.includes('cocina' as any))
   ) {
     idsCapacidadesActivas.add('comanda_cocina');
   }
@@ -179,8 +195,18 @@ export function encenderCapacidades(
       !idsCapacidadesActivas.has('control_mesas')
     )
       activo = false;
-    if (cajon === 'ventas' && !idsCapacidadesActivas.has('mostrador_y_pos')) activo = false;
-    if (cajon === 'inventario' && !idsCapacidadesActivas.has('inventario')) activo = false;
+    if (
+      cajon === 'ventas' &&
+      !idsCapacidadesActivas.has('mostrador_y_pos') &&
+      !idsCapacidadesActivas.has('control_mesas')
+    )
+      activo = false;
+    if (
+      cajon === 'inventario' &&
+      capacidadesDisponiblesNPB.has('inventario') &&
+      !idsCapacidadesActivas.has('inventario')
+    )
+      activo = false;
     if (cajon === 'reparto_ajustes' && !idsCapacidadesActivas.has('reparto_logistica'))
       activo = false;
     if (cajon === 'tickets' && !idsCapacidadesActivas.has('tickets_impresion')) activo = false;

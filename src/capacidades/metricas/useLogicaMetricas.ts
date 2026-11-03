@@ -65,8 +65,18 @@ export function useLogicaMetricas(props: { db?: Database; rutaNegocio?: string }
   // Filtro de período (estado local del módulo)
   const [dateFilter, setDateFilter] = useState<DateFilter>('hoy');
 
-  // Cálculo de métricas según el período seleccionado
-  const includeVentaCrudo = features?.module_venta_crudo === true;
+  // Cálculo de métricas según el período seleccionado y capacidades canónicas
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const caps = (estadoEncendido?.capacidades_activas ||
+    (estadoEncendido as any)?.activos?.capacidades ||
+    []) as string[];
+  const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
+  const includeVentaCrudo =
+    esPlantilla ||
+    caps.includes('mostrador_y_pos') ||
+    caps.includes('mostrador') ||
+    features?.module_venta_crudo === true;
+
   const { metrics, loading: metricsLoading } = useMetricasVentas({ dateFilter, includeVentaCrudo });
 
   const loading = featuresLoading || metricsLoading;

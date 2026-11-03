@@ -126,7 +126,8 @@ export async function isDeviceRegistered(): Promise<boolean> {
       const { leerSesionO1 } = await import('../instalacion/npb/persistenciaSesionO1');
       const sesionO1 = await leerSesionO1();
       if (sesionO1.valida && sesionO1.sesion && sesionO1.sesion.negocio_id) {
-        const { resolverDeviceIdADI } = await import('../instalacion/vinculacion/generar-device-id-adi');
+        const { resolverDeviceIdADI } =
+          await import('../instalacion/vinculacion/generar-device-id-adi');
         const deviceIdADI = await resolverDeviceIdADI().catch(() => 'ADI-DISPOSITIVO-VINCULADO');
         const autoVinculo = {
           deviceIdADI,
@@ -144,7 +145,8 @@ export async function isDeviceRegistered(): Promise<boolean> {
 
     // Comprobación de resiliencia con sesión operativa local de usuario
     try {
-      const { obtenerSesionOperativaLocal } = await import('../usuarios/servicio_sesion_dispositivo');
+      const { obtenerSesionOperativaLocal } =
+        await import('../usuarios/servicio_sesion_dispositivo');
       const sesionLocal = await obtenerSesionOperativaLocal();
       if (sesionLocal && sesionLocal.estado === 'activa' && sesionLocal.dispositivo_id) {
         const autoVinculo = {

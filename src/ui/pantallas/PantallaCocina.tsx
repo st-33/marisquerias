@@ -233,7 +233,7 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
             <Text style={styles.emptyStateSubtext}>
               {estacion
                 ? `No hay comandas pendientes para la estación ${estacion}`
-                : 'Las comandas aparecerán aquí cuando se envíen desde Mesera'}
+                : 'Las comandas aparecerán aquí cuando se envíen desde Mesero'}
             </Text>
           </View>
         ) : (

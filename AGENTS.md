@@ -113,3 +113,9 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 - Las capacidades macro corresponden 1:1 a roles operativos físicos del negocio (Mesero `control_mesas`, Cocina `comanda_cocina`, Mostrador `mostrador_y_pos`, Menú Digital `menu_digital`, Administrador `administrador`).
 - Cero términos abstractos o burocráticos ('salón', 'marcha de cocina', 'KDS', 'cobro y POS', 'stock físico').
 - Toda la lógica operativa permanece intacta y funcional; los filtros son estrictamente visuales y de enrutamiento seguro en caliente.
+
+### 26. Scroll Autocontenido en Tarjetas y Adaptabilidad Paramétrica
+
+- Las vistas operativas y administrativas deben evitar barras de desplazamiento infinitas que muevan la ventana completa como página web.
+- Las listas densas (como el registro diario de ventas) deben residir en tarjetas con `maxHeight` delimitado y desplazamiento interno (`nestedScrollEnabled`).
+- La parrilla de mesas (`CuadriculaMesas`) debe calcular dinámicamente sus columnas (3 a 5 en móvil, 6 a 8 en tablet/escritorio) preservando proporción táctil y textos legibles en formato natural (`M1, M2`).

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RegistroVenta } from '../../../../sistema/persistencia/registroVentas.repositorio';
 
 function formatMesa(mesaId?: string): string {
@@ -113,7 +113,12 @@ export function RegistroVentasDia({
           <Text style={styles.muted}>Todavía no hay ventas registradas hoy.</Text>
         </View>
       ) : (
-        <View style={styles.rows}>
+        <ScrollView
+          style={{ maxHeight: 280 }}
+          contentContainerStyle={styles.rows}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={true}
+        >
           {registros.map((registro) => {
             const estado = colorEstado(registro.estado);
             return (
@@ -124,19 +129,13 @@ export function RegistroVentasDia({
                 style={styles.row}
               >
                 <Text style={[styles.number, { color: estado }]}>{registro.numero}</Text>
-                <Text style={styles.mesa}>
-                  {compacto
-                    ? formatMesa(registro.mesaId)
-                    : registro.mesaId
-                      ? `Mesa ${registro.mesaId}`
-                      : 'Mostrador'}
-                </Text>
+                <Text style={styles.mesa}>{formatMesa(registro.mesaId)}</Text>
                 <Text style={[styles.total, { color: estado }]}>${registro.total.toFixed(2)}</Text>
                 <Text style={styles.hora}>{formatHora(registro.timestamp)}</Text>
               </View>
             );
           })}
-        </View>
+        </ScrollView>
       )}
     </View>
   );

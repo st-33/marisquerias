@@ -73,9 +73,14 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const l = useMemo(() => {
     const base = { ...ETIQUETAS_MENU_POR_DEFECTO, ...labels };
     if (!estadoEncendido || esPlantilla) return base;
-    const caps = (estadoEncendido.capacidades_activas || (estadoEncendido as any)?.activos?.capacidades || []) as string[];
-    const roles = (estadoEncendido.roles_activos || (estadoEncendido as any)?.activos?.roles || []) as string[];
-    const tieneMostrador = caps.includes('mostrador_y_pos') || caps.includes('mostrador') || roles.includes('mostrador');
+    const caps = (estadoEncendido.capacidades_activas ||
+      (estadoEncendido as any)?.activos?.capacidades ||
+      []) as string[];
+    const roles = (estadoEncendido.roles_activos ||
+      (estadoEncendido as any)?.activos?.roles ||
+      []) as string[];
+    const tieneMostrador =
+      caps.includes('mostrador_y_pos') || caps.includes('mostrador') || roles.includes('mostrador');
     const tieneDigital = caps.includes('menu_digital') || roles.includes('menu_digital');
     return {
       ...base,

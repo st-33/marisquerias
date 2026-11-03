@@ -1,3 +1,5 @@
+import { logger } from '../../monitoreo';
+
 /**
  * Identidad derivada de una ruta_negocio válida de mínimo 2 segmentos: [...contexto_path]/{categoria}/{negocio}.
  * El cliente nunca inventa estos valores; los deriva de la ruta_negocio recibida de RTDB.
@@ -271,7 +273,9 @@ export function resolver_ruta_cajon(
   subruta?: string,
   dormidos?: readonly CajonOperativo[] | { cajones?: readonly CajonOperativo[] } | null
 ): string {
-  assertCajonActivo(cajon, dormidos);
+  if (esCajonDormido(cajon, dormidos)) {
+    logger.warn('CAJON_DORMIDO', `Resolviendo ruta de cajón dormido '${cajon}'.`);
+  }
   const base =
     rutaNegocio === RUTA_RAIZ_UNIDAD_OPERATIVA
       ? cajon

@@ -15,7 +15,11 @@ import { logger } from '../src/sistema/monitoreo';
 import { GestorHubGlobal } from '../src/sistema/impresion/fierros/hub/GestorConcentrador';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FabNavegacionAdmin } from '../src/ui/roles/administrador/FabNavegacionAdmin';
-import { useAuthGuard, useGobernanzaRealtime, useCapacidadesRealtime } from '../src/sistema/seguridad';
+import {
+  useAuthGuard,
+  useGobernanzaRealtime,
+  useCapacidadesRealtime,
+} from '../src/sistema/seguridad';
 import { ThemeProvider, useAppTheme } from '../src/compartido/temas';
 import { useArranqueSistema } from '../src/sistema/instalacion/useArranqueSistema';
 import { useAppListeners, useStore } from '../src/sistema/store';
@@ -122,9 +126,7 @@ export default function RootLayout() {
           caps.includes('servicio_mesa' as any);
       } else if (requirement.generic === 'restaurante.cocina') {
         isGenericEnabled =
-          !estadoEncendido ||
-          caps.includes('comanda_cocina') ||
-          caps.includes('cocina' as any);
+          !estadoEncendido || caps.includes('comanda_cocina') || caps.includes('cocina' as any);
       } else if (requirement.generic === 'venta_crudo') {
         isGenericEnabled =
           !estadoEncendido ||

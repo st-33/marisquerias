@@ -55,13 +55,25 @@ export default function AdminDeviceSettings() {
 
   const estadoEncendido = useStore((s) => s.estadoEncendido);
   const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
-  const caps = (estadoEncendido?.capacidades_activas || (estadoEncendido as any)?.activos?.capacidades || []) as string[];
-  const roles = (estadoEncendido?.roles_activos || (estadoEncendido as any)?.activos?.roles || []) as string[];
-  const tieneMostrador = !estadoEncendido || esPlantilla || caps.includes('mostrador_y_pos') || caps.includes('mostrador') || roles.includes('mostrador');
+  const caps = (estadoEncendido?.capacidades_activas ||
+    (estadoEncendido as any)?.activos?.capacidades ||
+    []) as string[];
+  const roles = (estadoEncendido?.roles_activos ||
+    (estadoEncendido as any)?.activos?.roles ||
+    []) as string[];
+  const tieneMostrador = Boolean(
+    estadoEncendido &&
+    (esPlantilla ||
+      caps.includes('mostrador_y_pos') ||
+      caps.includes('mostrador') ||
+      roles.includes('mostrador'))
+  );
 
   const isHubEnabled = hubConfig?.enabled === true;
   const hubDestino: HubDestino = hubConfig?.destination ?? null;
-  const destinoSeleccionado: HubDestino = tieneMostrador ? (hubDestino || 'restaurante') : 'restaurante';
+  const destinoSeleccionado: HubDestino = tieneMostrador
+    ? hubDestino || 'restaurante'
+    : 'restaurante';
   const effectiveHubDeviceId = hubDeviceId || hubConfig?.deviceId || '';
 
   // 📑 TABS
@@ -81,9 +93,8 @@ export default function AdminDeviceSettings() {
       try {
         let devId = await AsyncStorage.getItem('adi_hub_device_id');
         if (!devId) {
-          const { resolverDeviceIdADI } = await import(
-            '../../../src/sistema/instalacion/vinculacion/generar-device-id-adi'
-          );
+          const { resolverDeviceIdADI } =
+            await import('../../../src/sistema/instalacion/vinculacion/generar-device-id-adi');
           devId = await resolverDeviceIdADI();
           await AsyncStorage.setItem('adi_hub_device_id', devId);
         }
@@ -114,8 +125,20 @@ export default function AdminDeviceSettings() {
 
   // Escaneo automático al montar la pantalla para cargar emparejados al instante
   useEffect(() => {
-    void handleScan();
-  }, [handleScan]);
+    let cancelado = false;
+    const ejecutarEscaneo = async () => {
+      try {
+        const devices = await escanear();
+        if (!cancelado) setScannedDevices(devices);
+      } catch (e: any) {
+        console.warn('Error al escanear dispositivos:', e.message);
+      }
+    };
+    void ejecutarEscaneo();
+    return () => {
+      cancelado = true;
+    };
+  }, [escanear]);
 
   const toggleHubMode = async (value: boolean) => {
     const destinoFinal = destinoSeleccionado || 'restaurante';
@@ -339,9 +362,7 @@ export default function AdminDeviceSettings() {
                     <Ionicons name="server" size={24} color="#3b82f6" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.hubTitle}>
-                      2. Modo Hub Central
-                    </Text>
+                    <Text style={styles.hubTitle}>2. Modo Hub Central</Text>
                     <Text style={styles.hubDesc}>
                       {`Convertir en servidor de impresión para ${
                         destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'

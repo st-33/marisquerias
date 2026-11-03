@@ -23,12 +23,7 @@ export function PantallaRoles() {
         const { obtenerSesionOperativaLocal } =
           await import('../../sistema/usuarios/servicio_sesion_dispositivo');
         const sesionLocal = await obtenerSesionOperativaLocal();
-        if (
-          montado &&
-          sesionLocal &&
-          sesionLocal.cargo &&
-          sesionLocal.cargo !== 'administrador'
-        ) {
+        if (montado && sesionLocal && sesionLocal.cargo && sesionLocal.cargo !== 'administrador') {
           const { obtenerRutaPorRol } = await import('../../negocio/roles/redireccionRol');
           const ruta = obtenerRutaPorRol(sesionLocal.cargo as any);
           if (ruta && ruta !== '/_role/roles') {

@@ -224,7 +224,10 @@ class ServicioFierros implements ControladorFierros {
       return dispositivos;
     } catch (e: any) {
       const mensaje = e?.message || 'Error al escanear';
-      console.warn('[ServicioFierros] Error en escaneo, intentando recuperar emparejados:', mensaje);
+      console.warn(
+        '[ServicioFierros] Error en escaneo, intentando recuperar emparejados:',
+        mensaje
+      );
       try {
         const emparejados = await this.adaptadorBT.obtenerEmparejados();
         if (emparejados.length > 0) {

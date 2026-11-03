@@ -178,7 +178,7 @@ export function PuestoMando(props: PuestoMandoProps) {
   const calculatedGridHeight = useMemo(() => {
     if (isWideLayout) return undefined;
     if (numRows <= 1) {
-      return Math.max(90, Math.round(height * 0.20));
+      return Math.max(90, Math.round(height * 0.2));
     }
     if (numRows === 2) {
       return Math.max(140, Math.round(height * 0.26));
@@ -229,12 +229,7 @@ export function PuestoMando(props: PuestoMandoProps) {
   return (
     <View style={themedStyles.container}>
       <View style={[staticStyles.layout, { flexDirection: isWideLayout ? 'row' : 'column' }]}>
-        <View
-          style={[
-            themedStyles.gridWrapper,
-            !isWideLayout && { height: calculatedGridHeight },
-          ]}
-        >
+        <View style={[themedStyles.gridWrapper, !isWideLayout && { height: calculatedGridHeight }]}>
           {showGridLoading ? (
             <View style={staticStyles.emptyState}>
               <ActivityIndicator color={COLORS.primary} size="large" />

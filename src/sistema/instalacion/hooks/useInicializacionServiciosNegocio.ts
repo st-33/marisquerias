@@ -70,13 +70,14 @@ export function useInicializacionServiciosNegocio({ estadoInstalacion, rutaNegoc
         }
 
         const { DespachadorCola } = await import('../../impresion/fierros/cola/DespachadorCola');
-        DespachadorCola.obtenerInstancia(
+        const despachador = DespachadorCola.obtenerInstancia(
           db,
           rutaNegocio,
           deviceId,
           { procesamientoAuto: true, canal: 'standard' },
           'dispositivo'
         );
+        despachador.iniciar();
 
         logger.info('OFFLINE_BOOT', '✅ Servicios Offline Inicializados', {
           rutaNegocio,

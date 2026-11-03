@@ -272,16 +272,17 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(rutaDispositivos(RUTA_RAIZ_UNIDAD_OPERATIVA)).toBe('dispositivos');
     });
 
-    it('bloquea accesos a cajones dormidos con assertCajonActivo y resolverRutaCajon', () => {
+    it('detecta cajones dormidos con assertCajonActivo y resolverRutaCajon sin romper en tiempo de ejecución', () => {
       const dormidos = ['mesas', 'pedidos'] as const;
 
       expect(esCajonDormido('mesas', dormidos)).toBe(true);
       expect(esCajonDormido('menu', dormidos)).toBe(false);
 
+      // assertCajonActivo lanza error en cajón dormido
       expect(() => assertCajonActivo('mesas', dormidos)).toThrow(/El cajón 'mesas' está dormido/);
-      expect(() => resolverRutaCajon(ruta, 'mesas', undefined, dormidos)).toThrow(
-        /El cajón 'mesas' está dormido/
-      );
+
+      // resolverRutaCajon resuelve la ruta de forma segura sin romper el árbol React (Regla 27)
+      expect(resolverRutaCajon(ruta, 'mesas', undefined, dormidos)).toBe(`${ruta}/mesas`);
 
       // Si no está dormido, no lanza error
       expect(() => assertCajonActivo('menu', dormidos)).not.toThrow();
@@ -301,10 +302,10 @@ describe('ruta_negocio — contrato canónico de >= 2 segmentos', () => {
       expect(() => assertCajonActivo('tickets')).not.toThrow();
     });
 
-    it('bloquea cajón dormido con hidratacionCompleta === true y permite acceso si hidratacionCompleta === false', () => {
+    it('bloquea cajón dormido en modo estricto y permite acceso si hidratacionCompleta === false', () => {
       const dormidos = ['pedidos'] as const;
 
-      // 1. Con hidratacionCompleta === true (o por defecto), bloquea el cajón dormido
+      // 1. Con hidratacionCompleta === true, lanza error
       expect(() => assertCajonActivo('pedidos', dormidos, { hidratacionCompleta: true })).toThrow(
         /El cajón 'pedidos' está dormido/
       );
