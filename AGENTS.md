@@ -102,3 +102,14 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 - Una vez autorizada la terminal mediante resolución O(1) y admitido el operador responsable en la Unidad Operativa, el estado de vinculación (`adi_dispositivo_vinculado`, `device_registered` y sesión operativa local) es permanente e inmutable en el almacenamiento local del dispositivo.
 - Queda terminantemente prohibido re-presentar la pantalla de código de acceso (`/access`) o expulsar al operador en reinicios, aperturas frías o cambios de ruta interna.
 - La pantalla de acceso únicamente volverá a presentarse ante desinstalación completa de la app, limpieza manual de datos, o revocación remota explícita desde la Torre de Control/Monitoreo bajo `sesiones/{plaza}`.
+
+### 24. Sincronización Reactiva de Capacidades en Caliente (Regla 25)
+
+- La aplicación suscribe reactivamente `useCapacidadesRealtime` a `${ruta_negocio}/capacidades_autorizadas` en Unidad Secundaria.
+- Cualquier mutación emitida por Torre de Control en Ecosistema recalcula de inmediato en memoria `EstadoEncendido` (intersección NPB 00 ∩ Capacidades Autorizadas) y lo propaga a Zustand sin reiniciar la terminal.
+
+### 25. Homologación Canónica de Capacidades a Roles Operativos y Gating Reactivo
+
+- Las capacidades macro corresponden 1:1 a roles operativos físicos del negocio (Mesero `control_mesas`, Cocina `comanda_cocina`, Mostrador `mostrador_y_pos`, Menú Digital `menu_digital`, Administrador `administrador`).
+- Cero términos abstractos o burocráticos ('salón', 'marcha de cocina', 'KDS', 'cobro y POS', 'stock físico').
+- Toda la lógica operativa permanece intacta y funcional; los filtros son estrictamente visuales y de enrutamiento seguro en caliente.

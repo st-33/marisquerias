@@ -183,8 +183,8 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
   }
 
   const tituloHeader = estacion
-    ? `KDS — ${estacion.charAt(0).toUpperCase() + estacion.slice(1)}`
-    : 'Cocina (KDS)';
+    ? `Cocina — ${estacion.charAt(0).toUpperCase() + estacion.slice(1)}`
+    : 'Cocina';
 
   return (
     <View style={styles.container}>
@@ -203,7 +203,6 @@ export function PantallaCocina({ estacion }: PantallaCocinaProps = {}) {
           <Ionicons name="restaurant" size={24} color="#ffffff" />
           <View>
             <Text style={styles.title}>{tituloHeader}</Text>
-            <Text style={styles.subtituloNegocio}>{negocioNombre}</Text>
           </View>
         </View>
         <View style={styles.statsRow}>

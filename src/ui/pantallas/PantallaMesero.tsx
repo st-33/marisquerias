@@ -25,6 +25,9 @@ import {
 
 function MeseroScreenContent() {
   const negocioNombre = useNegocioNombre();
+  const rolSesion = useStore((s) => s.sesion.rol);
+  const esAdmin = rolSesion === 'administrador' || rolSesion === 'admin';
+
   // 🖨️ Conexión con el proveedor canónico de fierros
   const { estaConectado, dispositivoActivo } = useFierros();
   const [showPrinterModal, setShowPrinterModal] = useState(false);
@@ -34,9 +37,13 @@ function MeseroScreenContent() {
     if (estaConectado && dispositivoActivo) {
       return true;
     }
-    setShowPrinterModal(true);
-    return false;
-  }, [estaConectado, dispositivoActivo]);
+    if (esAdmin) {
+      setShowPrinterModal(true);
+      return false;
+    }
+    // Personal operativo no administra fierros; delega a hardware del negocio
+    return true;
+  }, [estaConectado, dispositivoActivo, esAdmin]);
 
   // Wrapper para cerrar modal
   const closeModal = useCallback(() => setShowPrinterModal(false), []);
@@ -246,66 +253,66 @@ function MeseroScreenContent() {
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Volver a selección de roles"
-            onPress={() => router.replace('/_role/roles')}
-            style={({ pressed }) => [
-              {
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingVertical: 5,
-                paddingHorizontal: 9,
-                borderRadius: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.12)',
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <Ionicons name="chevron-back" size={16} color="#94a3b8" />
-            <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
-              ROLES
-            </Text>
-          </Pressable>
-          <Text style={{ fontSize: 16 }}>🍽️</Text>
+          {esAdmin && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Volver a selección de roles"
+              onPress={() => router.replace('/_role/roles')}
+              style={({ pressed }) => [
+                {
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingVertical: 5,
+                  paddingHorizontal: 9,
+                  borderRadius: 8,
+                  backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.12)',
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Ionicons name="chevron-back" size={16} color="#94a3b8" />
+              <Text style={{ color: '#94a3b8', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
+                ROLES
+              </Text>
+            </Pressable>
+          )}
           <View>
-            <Text style={{ color: '#f9fafb', fontSize: 14, fontWeight: '800' }}>
-              Mesero / Salón
-            </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 11, fontWeight: '600' }}>
-              {negocioNombre}
+            <Text style={{ color: '#f9fafb', fontSize: 15, fontWeight: '800' }}>
+              Mesero
             </Text>
           </View>
         </View>
-        <Pressable
-          onPress={() => setShowPrinterModal(true)}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 6,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 6,
-            backgroundColor: estaConectado
-              ? 'rgba(16, 185, 129, 0.15)'
-              : 'rgba(107, 114, 128, 0.15)',
-            borderWidth: 1,
-            borderColor: estaConectado ? 'rgba(16, 185, 129, 0.3)' : 'rgba(107, 114, 128, 0.3)',
-          }}
-        >
-          <Text
+        {esAdmin && (
+          <Pressable
+            onPress={() => setShowPrinterModal(true)}
             style={{
-              color: estaConectado ? '#34d399' : '#9ca3af',
-              fontSize: 11,
-              fontWeight: '700',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: 6,
+              backgroundColor: estaConectado
+                ? 'rgba(16, 185, 129, 0.15)'
+                : 'rgba(107, 114, 128, 0.15)',
+              borderWidth: 1,
+              borderColor: estaConectado ? 'rgba(16, 185, 129, 0.3)' : 'rgba(107, 114, 128, 0.3)',
             }}
           >
-            {estaConectado ? '🖨️ Conectada' : '🖨️ Sin impresora'}
-          </Text>
-        </Pressable>
+            <Text
+              style={{
+                color: estaConectado ? '#34d399' : '#9ca3af',
+                fontSize: 11,
+                fontWeight: '700',
+              }}
+            >
+              {estaConectado ? '🖨️ Conectada' : '🖨️ Sin impresora'}
+            </Text>
+          </Pressable>
+        )}
       </View>
       <PuestoMando
         mesas={tables}

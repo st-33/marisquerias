@@ -24,7 +24,7 @@ import { SelloMarca } from './SelloMarca';
 const DESCRIPCIONES_ROL: Record<string, string> = {
   administrador: 'Métricas, menú, mesas y control de piso',
   mesero: 'Atención a comensales y comanda móvil',
-  cocina: 'Monitor KDS y despacho de platillos',
+  cocina: 'Preparación y despacho de platillos',
   mostrador: 'Venta rápida y despacho en barra',
   cajero: 'Cobro, facturación y cierre de caja',
   repartidor: 'Rutas de entrega y pedidos externos',
@@ -51,8 +51,9 @@ export function SelectorRolPastillas({
     nombreNegocio,
     logoUrl,
     puedeCambiarPerfil,
+    tieneMenuDigital,
     handleRolPress,
-    handleMenuCliente,
+    handleMenuDigital,
     handleLogout,
   } = useLogicaSelectorRoles();
 
@@ -309,15 +310,17 @@ export function SelectorRolPastillas({
           })}
         </View>
 
-        {/* Footer con Menú Cliente */}
-        <View style={dynamicStyles.footerAcciones}>
-          <Pressable
-            onPress={handleMenuCliente}
-            style={({ pressed }) => [dynamicStyles.botonMenuCliente, pressed && { opacity: 0.7 }]}
-          >
-            <Text style={dynamicStyles.botonMenuClienteTexto}>Menú Cliente</Text>
-          </Pressable>
-        </View>
+        {/* Footer con Menú Digital */}
+        {tieneMenuDigital && (
+          <View style={dynamicStyles.footerAcciones}>
+            <Pressable
+              onPress={handleMenuDigital}
+              style={({ pressed }) => [dynamicStyles.botonMenuCliente, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={dynamicStyles.botonMenuClienteTexto}>Menú Digital</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {/* Toggle de tema */}

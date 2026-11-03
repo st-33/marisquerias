@@ -85,33 +85,63 @@ export function PanelVentasResumen({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.encabezado}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.titulo}>{titulo}</Text>
-          <Text style={styles.monto}>{monto}</Text>
-          {includeVentaCrudo ? (
-            <View style={styles.breakdownContainer}>
-              <View style={styles.breakdownPill}>
-                <Ionicons name="restaurant-outline" size={13} color="#5ED0B0" />
-                <Text style={styles.breakdownLabel}>Restaurante:</Text>
-                <Text style={styles.breakdownValue}>
-                  ${ventasRestaurante.toFixed(2)} ({ordenesRestaurante})
-                </Text>
-              </View>
-              <View style={styles.breakdownPill}>
-                <Ionicons name="scale-outline" size={13} color="#38BDF8" />
-                <Text style={styles.breakdownLabel}>Mostrador (Crudo):</Text>
-                <Text style={styles.breakdownValue}>
-                  ${ventasMostrador.toFixed(2)} ({ordenesMostrador})
-                </Text>
-              </View>
+      {includeVentaCrudo ? (
+        <>
+          <View style={styles.encabezado}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.titulo}>{titulo}</Text>
+              <Text style={styles.totalConsolidado}>Total Consolidado: {monto}</Text>
             </View>
-          ) : null}
+            <View style={styles.indicador}>
+              <Ionicons name="trending-up" size={22} color="#5ED0B0" />
+            </View>
+          </View>
+
+          <View style={styles.splitCardsContainer}>
+            {/* Tarjeta Restaurante */}
+            <View style={[styles.channelCard, styles.channelCardRestaurante]}>
+              <View style={styles.channelHeader}>
+                <View style={[styles.channelIconBadge, { backgroundColor: 'rgba(94, 208, 176, 0.2)' }]}>
+                  <Ionicons name="restaurant" size={16} color="#5ED0B0" />
+                </View>
+                <Text style={[styles.channelTitle, { color: '#5ED0B0' }]}>Restaurante</Text>
+              </View>
+              <Text style={styles.channelMonto}>${ventasRestaurante.toFixed(2)}</Text>
+              <Text style={styles.channelSub}>
+                {ordenesRestaurante} {ordenesRestaurante === 1 ? 'orden' : 'órdenes'}
+              </Text>
+            </View>
+
+            {/* Tarjeta Mostrador */}
+            <View style={[styles.channelCard, styles.channelCardMostrador]}>
+              <View style={styles.channelHeader}>
+                <View style={[styles.channelIconBadge, { backgroundColor: 'rgba(56, 189, 248, 0.2)' }]}>
+                  <Ionicons name="storefront" size={16} color="#38BDF8" />
+                </View>
+                <Text style={[styles.channelTitle, { color: '#38BDF8' }]}>Mostrador (Crudo)</Text>
+              </View>
+              <Text style={styles.channelMonto}>${ventasMostrador.toFixed(2)}</Text>
+              <Text style={styles.channelSub}>
+                {ordenesMostrador} {ordenesMostrador === 1 ? 'orden' : 'órdenes'}
+              </Text>
+            </View>
+          </View>
+        </>
+      ) : (
+        <View style={styles.encabezado}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.titulo}>{titulo} — Restaurante</Text>
+            <Text style={styles.monto}>${ventasRestaurante.toFixed(2)}</Text>
+            <Text style={styles.channelSubRestauranteOnly}>
+              {ordenesRestaurante} {ordenesRestaurante === 1 ? 'orden de restaurante' : 'órdenes de restaurante'}
+            </Text>
+          </View>
+          <View style={styles.indicador}>
+            <Ionicons name="restaurant" size={24} color="#5ED0B0" />
+          </View>
         </View>
-        <View style={styles.indicador}>
-          <Ionicons name="trending-up" size={22} color="#5ED0B0" />
-        </View>
-      </View>
+      )}
+
       {datos.length > 0 ? (
         <GraficaVentasTiempo
           data={datos}
@@ -144,11 +174,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   titulo: {
     color: '#F4F0E8',
     fontSize: 14,
     fontWeight: '700',
+  },
+  totalConsolidado: {
+    color: '#94a3b8',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
   },
   monto: {
     color: '#F8FAFC',
@@ -156,35 +193,65 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 44,
   },
+  channelSubRestauranteOnly: {
+    color: '#5ED0B0',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
   indicador: {
     alignItems: 'flex-end',
     gap: 6,
   },
-  breakdownContainer: {
+  splitCardsContainer: {
     flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
   },
-  breakdownPill: {
+  channelCard: {
+    flex: 1,
+    minWidth: 200,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+  },
+  channelCardRestaurante: {
+    backgroundColor: 'rgba(94, 208, 176, 0.08)',
+    borderColor: 'rgba(94, 208, 176, 0.35)',
+  },
+  channelCardMostrador: {
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+  },
+  channelHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 8,
+    marginBottom: 8,
   },
-  breakdownLabel: {
-    color: '#94A3B8',
+  channelIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  channelTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  channelMonto: {
+    color: '#F8FAFC',
+    fontSize: 24,
+    fontWeight: '900',
+    lineHeight: 28,
+  },
+  channelSub: {
+    color: '#94a3b8',
     fontSize: 11,
     fontWeight: '600',
-  },
-  breakdownValue: {
-    color: '#F8FAFC',
-    fontSize: 11,
-    fontWeight: '700',
+    marginTop: 4,
   },
 });

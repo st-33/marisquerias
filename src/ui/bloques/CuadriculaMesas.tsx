@@ -37,6 +37,29 @@ export type CuadriculaMesasProps = {
 
 export type TablesGridProps = CuadriculaMesasProps;
 
+function formatearEtiquetaMesa(id: string): string {
+  const match = id.match(/^(?:mesa[-_ ]*)(\d+)$/i);
+  if (match) {
+    const num = parseInt(match[1], 10);
+    return `M${num}`;
+  }
+  if (/^m\d+$/i.test(id)) {
+    return id.toUpperCase();
+  }
+  if (/^\d+$/.test(id)) {
+    return `M${parseInt(id, 10)}`;
+  }
+  return id;
+}
+
+function formatearEstadoMesa(state: TableState | string): string {
+  const s = String(state).toLowerCase();
+  if (s === 'libre' || s === 'disponible' || s === 'free') {
+    return 'LIBRE';
+  }
+  return 'OCUPADA';
+}
+
 function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
   const {
     tables,
@@ -154,7 +177,7 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
             }}
             numberOfLines={1}
           >
-            {isTakeaway ? 'Para Llevar' : id}
+            {isTakeaway ? 'Para Llevar' : formatearEtiquetaMesa(id)}
           </Text>
 
           {!isTakeaway && (
@@ -170,7 +193,7 @@ function CuadriculaMesasComponent(props: CuadriculaMesasProps) {
               }}
               numberOfLines={1}
             >
-              {String(state).toUpperCase()}
+              {formatearEstadoMesa(state)}
             </Text>
           )}
         </View>

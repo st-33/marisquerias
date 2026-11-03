@@ -41,8 +41,9 @@ export function SelectorRolElite({
     nombreNegocio,
     logoUrl,
     puedeCambiarPerfil,
+    tieneMenuDigital,
     handleRolPress,
-    handleMenuCliente,
+    handleMenuDigital,
     handleLogout,
   } = useLogicaSelectorRoles();
 
@@ -256,14 +257,16 @@ export function SelectorRolElite({
             })}
           </View>
 
-          {/* Botón Menú Cliente */}
-          <Pressable onPress={handleMenuCliente}>
-            {({ pressed }) => (
-              <View style={[dynamicStyles.clientAccessButton, pressed && { opacity: 0.7 }]}>
-                <Text style={dynamicStyles.clientAccessText}>Menú Cliente</Text>
-              </View>
-            )}
-          </Pressable>
+          {/* Botón Menú Digital */}
+          {tieneMenuDigital && (
+            <Pressable onPress={handleMenuDigital}>
+              {({ pressed }) => (
+                <View style={[dynamicStyles.clientAccessButton, pressed && { opacity: 0.7 }]}>
+                  <Text style={dynamicStyles.clientAccessText}>Menú Digital</Text>
+                </View>
+              )}
+            </Pressable>
+          )}
         </View>
       </ScrollView>
 

@@ -268,6 +268,7 @@ export function ModalProducto({
               prepMin={formData.prepMin}
               onPrepMinChange={(prepMin) => onFormDataChange({ ...formData, prepMin })}
               showVentaCrudo={l.showVentaCrudo}
+              showMenuDigital={l.showMenuDigital}
             />
           )}
 

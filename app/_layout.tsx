@@ -58,7 +58,7 @@ const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/admin/ajustes': { admin: ['admin'] },
   '/_role/admin/reparto': { admin: ['admin_repart'] },
   '/_role/mesero': { generic: 'restaurante.mesas' },
-  '/_role/cocina': { generic: 'restaurante.kds' },
+  '/_role/cocina': { generic: 'restaurante.cocina' },
 };
 
 export default function RootLayout() {
@@ -95,21 +95,15 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady) return;
 
-    // Acceso directo garantizado al dashboard administrativo, dispositivos y ajustes para rol administrador
-    if (
-      pathname.startsWith('/_role/admin/dashboard') ||
-      pathname.startsWith('/_role/admin/dispositivos') ||
-      pathname.startsWith('/_role/admin/ajustes')
-    ) {
-      const rolActivo = useStore.getState().sesion.rol;
-      const roles = estadoEncendido?.activos?.roles ?? estadoEncendido?.roles_activos ?? [];
-      const adminRoleEnabled =
-        rolActivo === 'admin' ||
-        rolActivo === 'administrador' ||
-        roles.includes('administrador') ||
-        roles.includes('admin' as any);
-      if (adminRoleEnabled) return;
-    }
+    const rolActivo = useStore.getState().sesion.rol;
+    const esAdmin = rolActivo === 'admin' || rolActivo === 'administrador';
+
+    // El Administrador tiene acceso garantizado a todas las pantallas operativas y de supervisión
+    if (esAdmin) return;
+
+    // Dispositivos autorizados expresamente en un rol de piso tienen acceso garantizado a su pantalla
+    if (rolActivo === 'mesero' && pathname.startsWith('/_role/mesero')) return;
+    if (rolActivo === 'cocina' && pathname.startsWith('/_role/cocina')) return;
 
     const matchedRoute = Object.keys(ROUTE_FEATURES).find((route) => pathname.startsWith(route));
     if (matchedRoute) {
@@ -121,11 +115,22 @@ export default function RootLayout() {
 
       let isGenericEnabled = true;
       if (requirement.generic === 'restaurante.mesas') {
-        isGenericEnabled = !estadoEncendido || caps.includes('control_mesas');
-      } else if (requirement.generic === 'restaurante.kds') {
-        isGenericEnabled = !estadoEncendido || caps.includes('comanda_cocina');
+        isGenericEnabled =
+          !estadoEncendido ||
+          caps.includes('control_mesas') ||
+          caps.includes('mesas' as any) ||
+          caps.includes('servicio_mesa' as any);
+      } else if (requirement.generic === 'restaurante.cocina') {
+        isGenericEnabled =
+          !estadoEncendido ||
+          caps.includes('comanda_cocina') ||
+          caps.includes('cocina' as any);
       } else if (requirement.generic === 'venta_crudo') {
-        isGenericEnabled = !estadoEncendido || caps.includes('mostrador_y_pos');
+        isGenericEnabled =
+          !estadoEncendido ||
+          caps.includes('mostrador_y_pos') ||
+          caps.includes('mostrador' as any) ||
+          caps.includes('venta_crudo' as any);
       }
 
       const isEnabled = requirement.admin

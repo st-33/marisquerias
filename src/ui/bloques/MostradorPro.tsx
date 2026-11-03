@@ -173,51 +173,8 @@ export function MostradorPro() {
               </Pressable>
               <View>
                 <Text style={styles.title}>MOSTRADOR</Text>
-                <Text style={styles.subtitle}>SISTEMA DE DESPACHO PROFESIONAL</Text>
+                <Text style={styles.subtitle}>SISTEMA DE DESPACHO</Text>
               </View>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
-              {/* Hub Status */}
-              <View
-                style={[
-                  styles.hubBadge,
-                  {
-                    backgroundColor: isHubOnline
-                      ? 'rgba(16, 185, 129, 0.1)'
-                      : 'rgba(239, 68, 68, 0.1)',
-                  },
-                ]}
-              >
-                <View
-                  style={[styles.hubDot, { backgroundColor: isHubOnline ? '#10b981' : '#ef4444' }]}
-                />
-                <Text style={[styles.hubText, { color: isHubOnline ? '#10b981' : '#ef4444' }]}>
-                  {isHubOnline ? 'HUB ONLINE' : 'HUB OFFLINE'}
-                </Text>
-              </View>
-              {/* Area Badge */}
-              {/* Area Badge REMOVED - Inventory Purged */}
-              {/* Cierre */}
-              <Pressable
-                style={styles.closeBoxBtn}
-                onPress={() => Alert.alert('Corte X', 'Generando reporte de turno...')}
-              >
-                <Ionicons name="stats-chart" size={18} color="#ef4444" />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Buscador & Categorías */}
-          <View style={styles.searchWrapper}>
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={20} color="#64748b" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Escribe el nombre del producto..."
-                placeholderTextColor="#64748b"
-                value={search}
-                onChangeText={setSearch}
-              />
             </View>
           </View>
 
@@ -352,9 +309,9 @@ export function MostradorPro() {
               </View>
             )}
 
-            {/* Simulación de Ticket */}
+            {/* Resumen de Venta */}
             <View style={styles.ticketContainer}>
-              <Text style={styles.ticketTitle}>*** TICKET DE VENTA ***</Text>
+              <Text style={styles.ticketTitle}>DETALLE DEL PEDIDO</Text>
               <ScrollView showsVerticalScrollIndicator={false}>
                 {carrito.map((item, idx) => (
                   <View key={item.id}>
@@ -379,9 +336,9 @@ export function MostradorPro() {
                   </View>
                 ))}
                 {carrito.length === 0 && (
-                  <View style={{ alignItems: 'center', paddingVertical: 40, opacity: 0.3 }}>
-                    <Ionicons name="receipt-outline" size={48} color="#1e293b" />
-                    <Text style={{ color: '#1e293b', fontWeight: 'bold' }}>CARRO VACÍO</Text>
+                  <View style={{ alignItems: 'center', paddingVertical: 40, opacity: 0.5 }}>
+                    <Ionicons name="receipt-outline" size={40} color="#64748b" />
+                    <Text style={{ color: '#64748b', fontWeight: '700', marginTop: 8, fontSize: 13 }}>CARRO VACÍO</Text>
                   </View>
                 )}
               </ScrollView>
@@ -777,54 +734,47 @@ const styles = StyleSheet.create({
   // TICKET VIEW
   ticketContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    borderRadius: 4,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    // Diente de sierra simulado o borde
-    borderStyle: 'dashed',
-    borderBottomWidth: 1,
-    borderColor: '#cbd5e1',
+    backgroundColor: '#0f172a',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
   },
   ticketTitle: {
     textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#1e293b',
-    marginBottom: 20,
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#94a3b8',
+    marginBottom: 16,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   ticketItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   ticketItemMain: {
     flex: 1,
   },
   ticketPName: {
-    color: '#0f172a',
-    fontSize: 18, // 🔥 +40% Tamaño para el carnal
+    color: '#f8fafc',
+    fontSize: 15,
     fontWeight: '700',
   },
   ticketPDesc: {
-    color: '#64748b',
-    fontSize: 14,
+    color: '#94a3b8',
+    fontSize: 13,
   },
   ticketPPrice: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '900',
+    color: '#38bdf8',
+    fontSize: 16,
+    fontWeight: '800',
   },
   ticketDivider: {
     height: 1,
-    backgroundColor: '#e2e8f0',
-    marginVertical: 15,
-    borderStyle: 'dashed',
-    borderRadius: 1,
+    backgroundColor: '#1e293b',
+    marginVertical: 10,
   },
 
   // --- CAJA FOOTER ---

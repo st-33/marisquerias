@@ -15,6 +15,7 @@ export interface EtiquetasMenu {
   sellerVisibility: string;
   sellerSubtext: string;
   showVentaCrudo?: boolean;
+  showMenuDigital?: boolean;
 }
 
 export const ETIQUETAS_MENU_POR_DEFECTO: EtiquetasMenu = {
@@ -29,4 +30,5 @@ export const ETIQUETAS_MENU_POR_DEFECTO: EtiquetasMenu = {
   sellerVisibility: 'Visible para Operadores',
   sellerSubtext: 'Aparece en la app de atención y ventas',
   showVentaCrudo: true,
+  showMenuDigital: true,
 };

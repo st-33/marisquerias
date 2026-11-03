@@ -86,7 +86,7 @@ export const CATALOGO_ROLES_DISPOSITIVO: Record<RolDispositivoCanonico, Definici
     },
     cocina: {
       id: 'cocina',
-      nombre: 'Cocina Central / KDS',
+      nombre: 'Cocina Central',
       descripcion: 'Display de comandas, preparación y despacho a piso',
       pantalla: 'app/_role/cocina.tsx',
       pantallas_visibles: ['kds_central'],

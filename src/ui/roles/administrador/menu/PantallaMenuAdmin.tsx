@@ -27,7 +27,7 @@ import { BarraCategorias } from './bloques/BarraCategorias';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
 import { theme } from '@/compartido/temas';
 import type { Producto } from '../../../../sistema/persistencia';
-import { useInventoryAreas, useInventoryCatalog } from '../../../../sistema/store';
+import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
 import { useFuncionalidadesAdmin, useGestionMenu } from '../../../../capacidades';
 import { ListaProductos } from './componentes/ListaProductos';
 import { ModalNuevaCategoria } from './componentes/ModalNuevaCategoria';
@@ -67,7 +67,22 @@ export interface PropsPantallaMenuAdmin {
 }
 
 export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
-  const l = useMemo(() => ({ ...ETIQUETAS_MENU_POR_DEFECTO, ...labels }), [labels]);
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
+
+  const l = useMemo(() => {
+    const base = { ...ETIQUETAS_MENU_POR_DEFECTO, ...labels };
+    if (!estadoEncendido || esPlantilla) return base;
+    const caps = (estadoEncendido.capacidades_activas || (estadoEncendido as any)?.activos?.capacidades || []) as string[];
+    const roles = (estadoEncendido.roles_activos || (estadoEncendido as any)?.activos?.roles || []) as string[];
+    const tieneMostrador = caps.includes('mostrador_y_pos') || caps.includes('mostrador') || roles.includes('mostrador');
+    const tieneDigital = caps.includes('menu_digital') || roles.includes('menu_digital');
+    return {
+      ...base,
+      showVentaCrudo: tieneMostrador,
+      showMenuDigital: tieneDigital,
+    };
+  }, [labels, estadoEncendido, esPlantilla]);
   const { width } = useWindowDimensions();
   const IS_MOBILE = width < 768;
 

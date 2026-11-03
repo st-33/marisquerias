@@ -124,7 +124,7 @@ export function PantallaMesas() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Cargando plano de salón...</Text>
+        <Text style={styles.loadingText}>Cargando plano de mesas...</Text>
       </View>
     );
   }
@@ -136,7 +136,7 @@ export function PantallaMesas() {
       {/* HEADER */}
       <View style={[styles.header, isCompactLayout && styles.headerCompact]}>
         <View>
-          <Text style={styles.title}>Plano de Salón</Text>
+          <Text style={styles.title}>Plano de Mesas</Text>
           <Text style={styles.subtitle}>Distribución e información de mesas en tiempo real</Text>
         </View>
 
@@ -239,7 +239,7 @@ export function PantallaMesas() {
             <Ionicons name="grid-outline" size={46} color="#64748b" />
             <Text style={styles.emptyCanvasTitle}>Aún no hay mesas configuradas</Text>
             <Text style={styles.emptyCanvasText}>
-              Usa “Modificar distribución” para preparar el plano del salón.
+              Usa “Modificar distribución” para preparar la distribución de mesas.
             </Text>
           </View>
         ) : (

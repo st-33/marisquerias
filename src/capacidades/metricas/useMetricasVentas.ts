@@ -107,7 +107,11 @@ export function useMetricasVentas({
         const ventasPorHoraMap: Record<string, number> = {};
         const eventosVentas: { timestamp: number; total: number }[] = [];
         const ventasPorCategoriaMap: Record<string, number> = {};
+        const ventasPorCategoriaRestauranteMap: Record<string, number> = {};
+        const ventasPorCategoriaMostradorMap: Record<string, number> = {};
         const productosMap: Record<string, { nombre: string; ventas: number }> = {};
+        const productosRestauranteMap: Record<string, { nombre: string; ventas: number }> = {};
+        const productosMostradorMap: Record<string, { nombre: string; ventas: number }> = {};
 
         // 4. Procesar pedidos cerrados
         pedidos.forEach((p: any) => {
@@ -159,15 +163,22 @@ export function useMetricasVentas({
               const nombre = item.nombre || item.name || 'Desconocido';
               const productId = item.productId || item.id || nombre;
 
-              // Acumular por categoría
+              // Acumular por categoría (total y restaurante)
               ventasPorCategoriaMap[categoria] =
                 (ventasPorCategoriaMap[categoria] || 0) + itemTotal;
+              ventasPorCategoriaRestauranteMap[categoria] =
+                (ventasPorCategoriaRestauranteMap[categoria] || 0) + itemTotal;
 
-              // Acumular productos
+              // Acumular productos (total y restaurante)
               if (!productosMap[productId]) {
                 productosMap[productId] = { nombre, ventas: 0 };
               }
               productosMap[productId].ventas += cantidad;
+
+              if (!productosRestauranteMap[productId]) {
+                productosRestauranteMap[productId] = { nombre, ventas: 0 };
+              }
+              productosRestauranteMap[productId].ventas += cantidad;
             });
           }
         });
@@ -193,6 +204,21 @@ export function useMetricasVentas({
                 const horaLabel = `${hora}:00`;
                 ventasPorHoraMap[horaLabel] = (ventasPorHoraMap[horaLabel] || 0) + totalVenta;
                 horaPedidosCountMap[horaLabel] = (horaPedidosCountMap[horaLabel] || 0) + 1;
+
+                const cat = 'Mostrador';
+                ventasPorCategoriaMap[cat] = (ventasPorCategoriaMap[cat] || 0) + totalVenta;
+                ventasPorCategoriaMostradorMap[cat] =
+                  (ventasPorCategoriaMostradorMap[cat] || 0) + totalVenta;
+
+                const prodId = 'mostrador_general';
+                if (!productosMap[prodId]) {
+                  productosMap[prodId] = { nombre: 'Venta Mostrador', ventas: 0 };
+                }
+                productosMap[prodId].ventas += 1;
+                if (!productosMostradorMap[prodId]) {
+                  productosMostradorMap[prodId] = { nombre: 'Venta Mostrador', ventas: 0 };
+                }
+                productosMostradorMap[prodId].ventas += 1;
               }
             });
           } else if (ventasData) {
@@ -212,6 +238,21 @@ export function useMetricasVentas({
                 const horaLabel = `${hora}:00`;
                 ventasPorHoraMap[horaLabel] = (ventasPorHoraMap[horaLabel] || 0) + totalVenta;
                 horaPedidosCountMap[horaLabel] = (horaPedidosCountMap[horaLabel] || 0) + 1;
+
+                const cat = 'Mostrador';
+                ventasPorCategoriaMap[cat] = (ventasPorCategoriaMap[cat] || 0) + totalVenta;
+                ventasPorCategoriaMostradorMap[cat] =
+                  (ventasPorCategoriaMostradorMap[cat] || 0) + totalVenta;
+
+                const prodId = 'mostrador_general';
+                if (!productosMap[prodId]) {
+                  productosMap[prodId] = { nombre: 'Venta Mostrador', ventas: 0 };
+                }
+                productosMap[prodId].ventas += 1;
+                if (!productosMostradorMap[prodId]) {
+                  productosMostradorMap[prodId] = { nombre: 'Venta Mostrador', ventas: 0 };
+                }
+                productosMostradorMap[prodId].ventas += 1;
               }
             });
           }
@@ -228,20 +269,28 @@ export function useMetricasVentas({
 
         eventosVentas.sort((a, b) => a.timestamp - b.timestamp);
 
-        // ventasPorCategoria: ordenar por total descendente
-        const ventasPorCategoria = Object.entries(ventasPorCategoriaMap)
-          .map(([categoria, total]: [string, number]) => ({ categoria, total }))
-          .sort((a, b) => b.total - a.total);
+        const formatCategorias = (map: Record<string, number>) =>
+          Object.entries(map)
+            .map(([categoria, total]: [string, number]) => ({ categoria, total }))
+            .sort((a, b) => b.total - a.total);
 
-        // productosEstrella: top 5 por cantidad vendida
-        const productosEstrella = Object.entries(productosMap)
-          .map(([id, data]: [string, { nombre: string; ventas: number }]) => ({
-            id,
-            nombre: data.nombre,
-            ventas: data.ventas,
-          }))
-          .sort((a, b) => b.ventas - a.ventas)
-          .slice(0, 5);
+        const formatTopProductos = (map: Record<string, { nombre: string; ventas: number }>) =>
+          Object.entries(map)
+            .map(([id, data]: [string, { nombre: string; ventas: number }]) => ({
+              id,
+              nombre: data.nombre,
+              ventas: data.ventas,
+            }))
+            .sort((a, b) => b.ventas - a.ventas)
+            .slice(0, 5);
+
+        const ventasPorCategoria = formatCategorias(ventasPorCategoriaMap);
+        const ventasPorCategoriaRestaurante = formatCategorias(ventasPorCategoriaRestauranteMap);
+        const ventasPorCategoriaMostrador = formatCategorias(ventasPorCategoriaMostradorMap);
+
+        const productosEstrella = formatTopProductos(productosMap);
+        const productosEstrellaRestaurante = formatTopProductos(productosRestauranteMap);
+        const productosEstrellaMostrador = formatTopProductos(productosMostradorMap);
 
         // Vendedor Estrella
         const topVendedor = Array.from(vendedoresMap.values()).sort(
@@ -296,7 +345,17 @@ export function useMetricasVentas({
             label: c.categoria,
             value: c.total,
           })),
+          distribucionVentasRestaurante: ventasPorCategoriaRestaurante.map((c) => ({
+            label: c.categoria,
+            value: c.total,
+          })),
+          distribucionVentasMostrador: ventasPorCategoriaMostrador.map((c) => ({
+            label: c.categoria,
+            value: c.total,
+          })),
           topPlatillos: productosEstrella,
+          topPlatillosRestaurante: productosEstrellaRestaurante,
+          topPlatillosMostrador: productosEstrellaMostrador,
           eventosVentas,
           ventasPorHora,
           ventasPorCategoria,

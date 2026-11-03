@@ -171,11 +171,20 @@ export function useLogicaSelectorRoles() {
     [playFeedback, roles, setRol]
   );
 
-  // Manejar menú cliente
-  const handleMenuCliente = useCallback(async () => {
+  // Manejar menú digital
+  const handleMenuDigital = useCallback(async () => {
     await playFeedback();
-    console.log('[RoleSelector] Menú cliente');
+    console.log('[RoleSelector] Menú digital');
   }, [playFeedback]);
+
+  // Si no está activado menú digital en el negocio, no se presenta el botón
+  const tieneMenuDigital = useMemo(() => {
+    if (!estadoEncendido) return true;
+    if (estadoEncendido.tipo_acceso === 'plantilla') return true;
+    const caps = (estadoEncendido.capacidades_activas || (estadoEncendido as any).activos?.capacidades || []) as string[];
+    const rolesActivos = (estadoEncendido.roles_activos || (estadoEncendido as any).activos?.roles || []) as string[];
+    return caps.includes('menu_digital') || rolesActivos.includes('menu_digital');
+  }, [estadoEncendido]);
 
   const rolSesion = useStore((s) => s.sesion.rol);
   const puedeCambiarPerfil = useMemo(() => {
@@ -203,8 +212,10 @@ export function useLogicaSelectorRoles() {
     nombreNegocio,
     logoUrl,
     puedeCambiarPerfil,
+    tieneMenuDigital,
     handleRolPress,
-    handleMenuCliente,
+    handleMenuDigital,
+    handleMenuCliente: handleMenuDigital,
     handleLogout,
     playFeedback,
   };

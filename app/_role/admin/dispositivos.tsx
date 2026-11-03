@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 
-import { useSesion } from '../../../src/sistema/store';
+import { useSesion, useStore } from '../../../src/sistema/store';
 import { useFierros } from '../../../src/sistema/impresion/fierros';
 import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
 import { useConfiguracionNegocio } from '../../../src/sistema/proveedores/ProveedorConfiguracionNegocio';
@@ -53,9 +53,15 @@ export default function AdminDeviceSettings() {
 
   const [hubDeviceId, setHubDeviceId] = useState<string | null>(null);
 
+  const estadoEncendido = useStore((s) => s.estadoEncendido);
+  const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
+  const caps = (estadoEncendido?.capacidades_activas || (estadoEncendido as any)?.activos?.capacidades || []) as string[];
+  const roles = (estadoEncendido?.roles_activos || (estadoEncendido as any)?.activos?.roles || []) as string[];
+  const tieneMostrador = !estadoEncendido || esPlantilla || caps.includes('mostrador_y_pos') || caps.includes('mostrador') || roles.includes('mostrador');
+
   const isHubEnabled = hubConfig?.enabled === true;
   const hubDestino: HubDestino = hubConfig?.destination ?? null;
-  const destinoSeleccionado: HubDestino = hubDestino || 'restaurante';
+  const destinoSeleccionado: HubDestino = tieneMostrador ? (hubDestino || 'restaurante') : 'restaurante';
   const effectiveHubDeviceId = hubDeviceId || hubConfig?.deviceId || '';
 
   // 📑 TABS
@@ -268,7 +274,7 @@ export default function AdminDeviceSettings() {
         {tabActiva === 'impresoras' && (
           <>
             {/* 1. SELECTOR DE DESTINO HUB */}
-            {rutaNegocio && (
+            {rutaNegocio && tieneMostrador && (
               <View style={styles.section}>
                 <View style={styles.sectionHeaderCol}>
                   <Text style={styles.sectionTitle}>1. Destino del Hub</Text>

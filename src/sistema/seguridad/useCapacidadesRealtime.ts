@@ -42,9 +42,7 @@ export function useCapacidadesRealtime(isReady: boolean) {
         const npb = await cargarNPB(dbSec, slugCategoria, 1);
 
         capsCallback = onValue(capsRef, (snapshot) => {
-          if (!snapshot.exists()) return;
-
-          const rawCaps = snapshot.val();
+          const rawCaps = snapshot.exists() ? snapshot.val() : {};
           const capacidadesAutorizadas: string[] = Array.isArray(rawCaps)
             ? rawCaps
             : typeof rawCaps === 'object' && rawCaps !== null

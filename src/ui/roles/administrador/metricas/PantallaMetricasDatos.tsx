@@ -14,8 +14,8 @@
  * gráficas (antes en compartido/componentes/charts).
  */
 
-import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../../../sistema/store';
 import { logger } from '../../../../sistema/monitoreo';
@@ -105,6 +105,29 @@ export function PantallaMetricasDatos() {
   } = useRegistroVentasDelDia({ timestamp: fechaDelDia });
   const { predicciones, loading: loadingPredicciones } = usePrediccionStock();
   const { alertasCriticas, alertasMedias, tieneAlertas } = useAlertasInteligentes();
+
+  const [canalDistribucion, setCanalDistribucion] = useState<'todos' | 'restaurante' | 'mostrador'>('todos');
+  const [canalTopPlatillos, setCanalTopPlatillos] = useState<'todos' | 'restaurante' | 'mostrador'>('todos');
+
+  const datosDistribucion = useMemo(() => {
+    if (canalDistribucion === 'restaurante' && metrics?.distribucionVentasRestaurante) {
+      return metrics.distribucionVentasRestaurante;
+    }
+    if (canalDistribucion === 'mostrador' && metrics?.distribucionVentasMostrador) {
+      return metrics.distribucionVentasMostrador;
+    }
+    return metrics?.distribucionVentas ?? [];
+  }, [canalDistribucion, metrics]);
+
+  const datosTopPlatillos = useMemo(() => {
+    if (canalTopPlatillos === 'restaurante' && metrics?.topPlatillosRestaurante) {
+      return metrics.topPlatillosRestaurante;
+    }
+    if (canalTopPlatillos === 'mostrador' && metrics?.topPlatillosMostrador) {
+      return metrics.topPlatillosMostrador;
+    }
+    return metrics?.topPlatillos ?? [];
+  }, [canalTopPlatillos, metrics]);
 
   // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
@@ -234,10 +257,42 @@ export function PantallaMetricasDatos() {
               titulo="Distribución de Ventas"
               subtitulo="Por categoría de platillo"
             >
-              {(metrics?.distribucionVentas?.length ?? 0) > 0 ? (
+              {metrics?.includeVentaCrudo && (
+                <View style={styles.channelFilterRow}>
+                  {(['todos', 'restaurante', 'mostrador'] as const).map((canal) => {
+                    const isActivo = canalDistribucion === canal;
+                    const label =
+                      canal === 'todos'
+                        ? 'Todos'
+                        : canal === 'restaurante'
+                        ? 'Restaurante'
+                        : 'Mostrador';
+                    return (
+                      <Pressable
+                        key={canal}
+                        onPress={() => setCanalDistribucion(canal)}
+                        style={[
+                          styles.channelFilterBtn,
+                          isActivo && styles.channelFilterBtnActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.channelFilterText,
+                            isActivo && styles.channelFilterTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+              {datosDistribucion.length > 0 ? (
                 <GraficaDistribucionVentas
                   title=""
-                  data={metrics.distribucionVentas.map((d: any, index: number) => ({
+                  data={datosDistribucion.map((d: any, index: number) => ({
                     name: d.label || d.name || 'Origen',
                     population: Number(d.value || d.population || 0),
                     color: PALETA_GRAFICAS[index % PALETA_GRAFICAS.length],
@@ -257,8 +312,40 @@ export function PantallaMetricasDatos() {
               titulo="Top 5 Platillos Más Vendidos"
               subtitulo="Por unidades vendidas"
             >
-              {(metrics?.topPlatillos?.length ?? 0) > 0 ? (
-                <GraficaTopProductos title="" data={metrics.topPlatillos} />
+              {metrics?.includeVentaCrudo && (
+                <View style={styles.channelFilterRow}>
+                  {(['todos', 'restaurante', 'mostrador'] as const).map((canal) => {
+                    const isActivo = canalTopPlatillos === canal;
+                    const label =
+                      canal === 'todos'
+                        ? 'Todos'
+                        : canal === 'restaurante'
+                        ? 'Restaurante'
+                        : 'Mostrador';
+                    return (
+                      <Pressable
+                        key={canal}
+                        onPress={() => setCanalTopPlatillos(canal)}
+                        style={[
+                          styles.channelFilterBtn,
+                          isActivo && styles.channelFilterBtnActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.channelFilterText,
+                            isActivo && styles.channelFilterTextActive,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+              {datosTopPlatillos.length > 0 ? (
+                <GraficaTopProductos title="" data={datosTopPlatillos} />
               ) : (
                 <VistaSinDatos texto="Sin datos de platillos" />
               )}
@@ -358,6 +445,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+  },
+  channelFilterRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    padding: 3,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  channelFilterBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  channelFilterBtnActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  channelFilterText: {
+    color: '#8291A5',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  channelFilterTextActive: {
+    color: '#F4F0E8',
+    fontWeight: '700',
   },
 });
 

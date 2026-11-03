@@ -386,7 +386,6 @@ function ProductPickerOverlayComponent({
                   <Text style={styles.productName} numberOfLines={3}>
                     {String(product?.nombre || 'Producto')}
                   </Text>
-                  <View style={[styles.productDot, { backgroundColor: COLORS.success }]} />
                 </View>
                 <View style={styles.productFooter}>
                   <Text style={styles.productPrice}>

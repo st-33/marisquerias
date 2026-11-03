@@ -30,6 +30,7 @@ type EditorVariantesProps = {
   receta?: Producto['receta'];
   onRecetaChange?: (receta: Producto['receta']) => void;
   showVentaCrudo?: boolean;
+  showMenuDigital?: boolean;
 };
 
 export default function EditorVariantes({
@@ -42,6 +43,7 @@ export default function EditorVariantes({
   receta = {},
   onRecetaChange,
   showVentaCrudo = true,
+  showMenuDigital = true,
 }: EditorVariantesProps) {
   const [groupForm, setGroupForm] = useState<Partial<VariantGroup>>({});
   const [optionForm, setOptionForm] = useState<Partial<VariantOption>>({});
@@ -221,56 +223,60 @@ export default function EditorVariantes({
       keyboardShouldPersistTaps="handled"
       nestedScrollEnabled
     >
-      {/* VISIBILIDAD */}
-      <SeccionDesplegable
-        title="Visibilidad"
-        icon={<Ionicons name="eye-outline" size={18} color={theme.colors.accent} />}
-        defaultExpanded={true}
-      >
-        <View style={styles.visibilityRow}>
-          <Pressable
-            onPress={() => toggleVisible('digital')}
-            style={[styles.visibilityBtn, safeVisible.digital && styles.visibilityBtnActive]}
-          >
-            <Ionicons name="phone-portrait-outline" size={16} color="#fff" />
-            <Text style={styles.visibilityText}>Digital</Text>
-            {safeVisible.digital && (
-              <View style={styles.checkmark}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
+      {/* ¿DÓNDE SE MUESTRA ESTE PRODUCTO? */}
+      {(showMenuDigital || showVentaCrudo) && (
+        <SeccionDesplegable
+          title="¿Dónde se muestra este producto?"
+          icon={<Ionicons name="eye-outline" size={18} color={theme.colors.accent} />}
+          defaultExpanded={true}
+        >
+          <View style={styles.visibilityRow}>
+            {showMenuDigital && (
+              <Pressable
+                onPress={() => toggleVisible('digital')}
+                style={[styles.visibilityBtn, safeVisible.digital && styles.visibilityBtnActive]}
+              >
+                <Ionicons name="phone-portrait-outline" size={16} color="#fff" />
+                <Text style={styles.visibilityText}>Digital</Text>
+                {safeVisible.digital && (
+                  <View style={styles.checkmark}>
+                    <Ionicons name="checkmark" size={12} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
             )}
-          </Pressable>
-          <Pressable
-            onPress={() => toggleVisible('mesero')}
-            style={[styles.visibilityBtn, safeVisible.mesero && styles.visibilityBtnActive]}
-          >
-            <Ionicons name="person-outline" size={16} color="#fff" />
-            <Text style={styles.visibilityText}>Mesero</Text>
-            {safeVisible.mesero && (
-              <View style={styles.checkmark}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
-            )}
-          </Pressable>
-          {showVentaCrudo && (
             <Pressable
-              onPress={() => toggleVisible('ventaCrudo')}
-              style={[
-                styles.visibilityBtn,
-                safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt,
-              ]}
+              onPress={() => toggleVisible('mesero')}
+              style={[styles.visibilityBtn, safeVisible.mesero && styles.visibilityBtnActive]}
             >
-              <Ionicons name="storefront-outline" size={16} color="#fff" />
-              <Text style={styles.visibilityText}>V. Crudo</Text>
-              {safeVisible.ventaCrudo && (
+              <Ionicons name="restaurant-outline" size={16} color="#fff" />
+              <Text style={styles.visibilityText}>Restaurante</Text>
+              {safeVisible.mesero && (
                 <View style={styles.checkmark}>
                   <Ionicons name="checkmark" size={12} color="#fff" />
                 </View>
               )}
             </Pressable>
-          )}
-        </View>
-      </SeccionDesplegable>
+            {showVentaCrudo && (
+              <Pressable
+                onPress={() => toggleVisible('ventaCrudo')}
+                style={[
+                  styles.visibilityBtn,
+                  safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt,
+                ]}
+              >
+                <Ionicons name="storefront-outline" size={16} color="#fff" />
+                <Text style={styles.visibilityText}>Mostrador</Text>
+                {safeVisible.ventaCrudo && (
+                  <View style={styles.checkmark}>
+                    <Ionicons name="checkmark" size={12} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
+            )}
+          </View>
+        </SeccionDesplegable>
+      )}
 
       {/* PREP TIME */}
       <SeccionDesplegable
