@@ -12,7 +12,7 @@ import EditorVariantes from '../editores/EditorVariantes';
 import type { FormState } from '../logica/formularioProducto';
 import type { EtiquetasMenu } from '../logica/etiquetas';
 
-export type PestanaProducto = 'basico' | 'variantes' | 'receta';
+export type PestanaProducto = 'basico' | 'variantes' | 'inventario' | 'receta';
 
 type ModalProductoProps = {
   modo: 'addProd' | 'editProd';
@@ -21,6 +21,7 @@ type ModalProductoProps = {
   pestana: PestanaProducto;
   onPestanaChange: (pestana: PestanaProducto) => void;
   itemsInventario: any[];
+  areas?: any[];
   validacion: any;
   validando: boolean;
   onRecetaEnEdicion: (ingredientes: any) => void;
@@ -37,6 +38,7 @@ export function ModalProducto({
   pestana,
   onPestanaChange,
   itemsInventario,
+  areas = [],
   validacion,
   validando,
   onRecetaEnEdicion,
@@ -45,6 +47,8 @@ export function ModalProducto({
   onGuardar,
   onCancelar,
 }: ModalProductoProps) {
+  const safeVisible = formData.visible || { digital: true, mesero: true, ventaCrudo: true };
+
   return (
     <View style={[styles.modalCard, styles.modalCardLarge]}>
       <View style={styles.modalHeader}>
@@ -87,6 +91,20 @@ export function ModalProducto({
           </Pressable>
 
           <Pressable
+            style={[styles.tabBtn, pestana === 'inventario' && styles.tabBtnActive]}
+            onPress={() => onPestanaChange('inventario')}
+          >
+            <Ionicons
+              name="cube-outline"
+              size={18}
+              color={pestana === 'inventario' ? theme.colors.primary : '#94a3b8'}
+            />
+            <Text style={[styles.tabText, pestana === 'inventario' && styles.tabTextActive]}>
+              Inventario
+            </Text>
+          </Pressable>
+
+          <Pressable
             style={[styles.tabBtn, pestana === 'receta' && styles.tabBtnActive]}
             onPress={() => onPestanaChange('receta')}
           >
@@ -119,71 +137,63 @@ export function ModalProducto({
                 placeholderTextColor="#64748b"
               />
 
-              <View style={styles.inputRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Precio Base ($) *</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={formData.precio}
-                    onChangeText={(v) => onFormDataChange({ ...formData, precio: v })}
-                    placeholder="0.00"
-                    placeholderTextColor="#64748b"
-                    keyboardType="decimal-pad"
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Tiempo Prep. (min)</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={String(formData.prepMin || '')}
-                    onChangeText={(v) =>
-                      onFormDataChange({ ...formData, prepMin: parseInt(v) || 0 })
-                    }
-                    placeholder="Ej: 15"
-                    placeholderTextColor="#64748b"
-                    keyboardType="number-pad"
-                  />
-                </View>
-              </View>
+              <Text style={styles.inputLabel}>Precio Base ($) *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={formData.precio}
+                onChangeText={(v) => onFormDataChange({ ...formData, precio: v })}
+                placeholder="0.00"
+                placeholderTextColor="#64748b"
+                keyboardType="decimal-pad"
+              />
 
-              <View style={styles.inputRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Unidad de Venta *</Text>
-                  <View style={styles.unitContainer}>
+              {/* ¿DÓNDE SE MUESTRA ESTE PRODUCTO? */}
+              <View style={{ marginBottom: theme.spacing.md }}>
+                <Text style={styles.inputLabel}>¿Dónde se muestra este producto?</Text>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <Pressable
+                    onPress={() =>
+                      onFormDataChange({
+                        ...formData,
+                        visible: { ...safeVisible, mesero: !safeVisible.mesero },
+                      })
+                    }
+                    style={[
+                      styles.visibilityBtn,
+                      safeVisible.mesero && styles.visibilityBtnActive,
+                    ]}
+                  >
+                    <Ionicons name="restaurant-outline" size={16} color="#fff" />
+                    <Text style={styles.visibilityText}>Restaurante</Text>
+                    {safeVisible.mesero && (
+                      <View style={styles.checkmark}>
+                        <Ionicons name="checkmark" size={12} color="#fff" />
+                      </View>
+                    )}
+                  </Pressable>
+
+                  {l.showVentaCrudo && (
                     <Pressable
-                      style={[styles.unitBtn, formData.unidad === 'pza' && styles.unitBtnActive]}
-                      onPress={() => onFormDataChange({ ...formData, unidad: 'pza' })}
+                      onPress={() =>
+                        onFormDataChange({
+                          ...formData,
+                          visible: { ...safeVisible, ventaCrudo: !safeVisible.ventaCrudo },
+                        })
+                      }
+                      style={[
+                        styles.visibilityBtn,
+                        safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt,
+                      ]}
                     >
-                      <Ionicons
-                        name="shapes-outline"
-                        size={18}
-                        color={formData.unidad === 'pza' ? 'white' : '#64748b'}
-                      />
-                      <Text
-                        style={[
-                          styles.unitText,
-                          formData.unidad === 'pza' && styles.unitTextActive,
-                        ]}
-                      >
-                        Por Pieza (Pza)
-                      </Text>
+                      <Ionicons name="storefront-outline" size={16} color="#fff" />
+                      <Text style={styles.visibilityText}>Mostrador</Text>
+                      {safeVisible.ventaCrudo && (
+                        <View style={styles.checkmark}>
+                          <Ionicons name="checkmark" size={12} color="#fff" />
+                        </View>
+                      )}
                     </Pressable>
-                    <Pressable
-                      style={[styles.unitBtn, formData.unidad === 'kg' && styles.unitBtnActive]}
-                      onPress={() => onFormDataChange({ ...formData, unidad: 'kg' })}
-                    >
-                      <Ionicons
-                        name="scale-outline"
-                        size={18}
-                        color={formData.unidad === 'kg' ? 'white' : '#64748b'}
-                      />
-                      <Text
-                        style={[styles.unitText, formData.unidad === 'kg' && styles.unitTextActive]}
-                      >
-                        Por Peso (Kg)
-                      </Text>
-                    </Pressable>
-                  </View>
+                  )}
                 </View>
               </View>
 
@@ -193,11 +203,11 @@ export function ModalProducto({
                   <Text style={styles.switchSublabel}>{l.sellerSubtext}</Text>
                 </View>
                 <Switch
-                  value={formData.visible?.mesero}
+                  value={safeVisible.mesero}
                   onValueChange={(v) =>
                     onFormDataChange({
                       ...formData,
-                      visible: { ...formData.visible, mesero: v },
+                      visible: { ...safeVisible, mesero: v },
                     })
                   }
                 />
@@ -263,13 +273,92 @@ export function ModalProducto({
               onChange={(newVariantes) =>
                 onFormDataChange({ ...formData, variantes: newVariantes })
               }
-              visible={formData.visible}
-              onVisibleChange={(visible) => onFormDataChange({ ...formData, visible })}
+              unidad={formData.unidad}
+              onUnidadChange={(unidad) => onFormDataChange({ ...formData, unidad })}
               prepMin={formData.prepMin}
               onPrepMinChange={(prepMin) => onFormDataChange({ ...formData, prepMin })}
-              showVentaCrudo={l.showVentaCrudo}
-              showMenuDigital={l.showMenuDigital}
+              showVentaCrudo={false}
+              showMenuDigital={false}
             />
+          )}
+
+          {pestana === 'inventario' && (
+            <View style={styles.formSection}>
+              <View style={styles.sectionContainer}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Ionicons name="cube-outline" size={20} color={theme.colors.primary} />
+                  <Text style={[styles.switchLabel, { fontSize: 16, fontWeight: '700' }]}>
+                    Área de Almacenamiento y Descuento
+                  </Text>
+                </View>
+                <Text style={[styles.switchSublabel, { marginBottom: 16 }]}>
+                  Selecciona de qué contenedor o área física se descuenta este producto al venderse.
+                </Text>
+
+                {/* Opción Automática / Bodega */}
+                <Pressable
+                  style={[
+                    styles.areaOption,
+                    (!formData.inventoryAreaId || formData.inventoryAreaId === '') && styles.areaOptionActive,
+                  ]}
+                  onPress={() => onFormDataChange({ ...formData, inventoryAreaId: '' })}
+                >
+                  <View style={styles.areaOptionHeader}>
+                    <Text style={{ fontSize: 22 }}>📦</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.areaOptionTitle, (!formData.inventoryAreaId || formData.inventoryAreaId === '') && styles.areaOptionTitleActive]}>
+                        Almacén General / Cocina (Automático)
+                      </Text>
+                      <Text style={styles.areaOptionSub}>
+                        Descuenta del área principal asignada a la categoría o almacén base
+                      </Text>
+                    </View>
+                    {(!formData.inventoryAreaId || formData.inventoryAreaId === '') && (
+                      <Ionicons name="checkmark-circle" size={22} color="#10b981" />
+                    )}
+                  </View>
+                </Pressable>
+
+                {/* Lista de áreas y contenedores */}
+                {areas && areas.length > 0 && (
+                  <View style={{ gap: 8, marginTop: 10 }}>
+                    <Text style={[styles.inputLabel, { marginTop: 4 }]}>O seleccionar área específica:</Text>
+                    {areas.map((a: any) => {
+                      const isSelected = formData.inventoryAreaId === a.id;
+                      return (
+                        <Pressable
+                          key={a.id}
+                          style={[styles.areaOption, isSelected && styles.areaOptionActive]}
+                          onPress={() => onFormDataChange({ ...formData, inventoryAreaId: a.id })}
+                        >
+                          <View style={styles.areaOptionHeader}>
+                            <Text style={{ fontSize: 22 }}>{a.icon || '🧊'}</Text>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.areaOptionTitle, isSelected && styles.areaOptionTitleActive]}>
+                                {a.nombre}
+                              </Text>
+                              <Text style={styles.areaOptionSub}>
+                                {a.parentId ? 'Sub-contenedor' : 'Área de almacenamiento'}
+                              </Text>
+                            </View>
+                            {isSelected && (
+                              <Ionicons name="checkmark-circle" size={22} color="#10b981" />
+                            )}
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+
+                <View style={[styles.infoBox, { marginTop: 16 }]}>
+                  <Ionicons name="information-circle-outline" size={18} color="#60a5fa" />
+                  <Text style={styles.infoText}>
+                    💡 Si configuras una receta en la siguiente pestaña, los ingredientes se descontarán con sus respectivas cantidades de los insumos del catálogo de inventario.
+                  </Text>
+                </View>
+              </View>
+            </View>
           )}
 
           {pestana === 'receta' && (
@@ -486,5 +575,82 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     fontWeight: theme.typography.weights.semibold,
     fontSize: theme.typography.sizes.sm,
+  },
+  visibilityBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.surfaceDark,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  visibilityBtnActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10b981',
+  },
+  visibilityBtnActiveAlt: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+  },
+  visibilityText: { color: 'white', fontSize: 14, fontWeight: '600' },
+  checkmark: {
+    backgroundColor: '#10b981',
+    borderRadius: 10,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  areaOption: {
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 6,
+  },
+  areaOptionActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: '#10b981',
+  },
+  areaOptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  areaOptionTitle: {
+    color: '#cbd5e1',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  areaOptionTitleActive: {
+    color: '#10b981',
+  },
+  areaOptionSub: {
+    color: '#64748b',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(37, 99, 235, 0.2)',
+    alignItems: 'center',
+  },
+  infoText: {
+    color: '#93c5fd',
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 18,
   },
 });

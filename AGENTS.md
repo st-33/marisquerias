@@ -119,3 +119,12 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 - Las vistas operativas y administrativas deben evitar barras de desplazamiento infinitas que muevan la ventana completa como página web.
 - Las listas densas (como el registro diario de ventas) deben residir en tarjetas con `maxHeight` delimitado y desplazamiento interno (`nestedScrollEnabled`).
 - La parrilla de mesas (`CuadriculaMesas`) debe calcular dinámicamente sus columnas (3 a 5 en móvil, 6 a 8 en tablet/escritorio) preservando proporción táctil y textos legibles en formato natural (`M1, M2`).
+
+### 27. Arquitectura Progresiva de 4 Fases para Menú e Inventario
+
+- En los módulos de administración de catálogo y recetas, la ficha de producto se organiza estrictamente en cuatro fases secuenciales:
+  1. Básico: Identidad fundamental (nombre, precio base, canal de visibilidad [Restaurante / Mostrador], visibilidad de operadores y sobreescritura de despacho a cocina).
+  2. Variantes / Opciones: Parametrización de venta (unidad de venta [Pieza / Peso en báscula], tiempo de preparación y grupos de variantes).
+  3. Inventario: Asignación explícita del área o sub-contenedor de almacenamiento y deducción preferente, con fallback automático al almacén general/bodega.
+  4. Receta / Insumos: Desglose de materias primas con estado vacío guiado (aviso pedagógico cuando el catálogo de insumos está vacío) y cálculo de capacidad de producción.
+- Queda prohibido ocultar el botón de alta de insumos en contenedores vacíos o renderizar selectores vacíos sin texto de orientación operativa.

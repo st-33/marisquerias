@@ -464,11 +464,9 @@ export function PanelInventario({
                 <Text style={styles.title}>{itemsViewMeta.title}</Text>
                 <Text style={styles.subtitle}>{itemsViewMeta.subtitle}</Text>
               </View>
-              {viewMode !== 'items_container' && (
-                <Pressable style={styles.addBtn} onPress={() => setShowItemModal(true)}>
-                  <Ionicons name="add" size={20} color="white" />
-                </Pressable>
-              )}
+              <Pressable style={styles.addBtn} onPress={() => setShowItemModal(true)}>
+                <Ionicons name="add" size={20} color="white" />
+              </Pressable>
             </View>
 
             <View style={styles.detailCard}>
@@ -503,6 +501,32 @@ export function PanelInventario({
               <FlatList
                 data={effectiveItems}
                 keyExtractor={(it) => it.itemId}
+                ListEmptyComponent={
+                  <View style={{ padding: 24, alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="cube-outline" size={32} color="#64748b" />
+                    <Text style={{ color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>
+                      No hay productos registrados en este contenedor.
+                    </Text>
+                    <Pressable
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: theme.colors.primary,
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                        marginTop: 8,
+                        gap: 6,
+                      }}
+                      onPress={() => setShowItemModal(true)}
+                    >
+                      <Ionicons name="add-circle" size={18} color="white" />
+                      <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>
+                        Agregar producto al contenedor
+                      </Text>
+                    </Pressable>
+                  </View>
+                }
                 renderItem={({ item }) => {
                   const step = item.unidad === 'kg' ? 0.5 : 1;
                   const isLow = item.qty <= item.minStock;

@@ -192,54 +192,66 @@ export default function EditorReceta({
       <View style={styles.formContainer}>
         <Text style={styles.formTitle}>Agregar Ingrediente</Text>
 
-        {/* Selector de Item */}
-        <View style={styles.selectorContainer}>
-          <ScrollView style={styles.selectorScroll} nestedScrollEnabled>
-            {itemsInventario.map((item) => (
-              <Pressable
-                key={item.id}
-                onPress={() => setItemForm({ ...itemForm, itemId: item.id })}
-                style={[
-                  styles.selectorItem,
-                  itemForm.itemId === item.id && styles.selectorItemActive,
-                ]}
-              >
-                <View style={styles.selectorItemContent}>
-                  <Text style={styles.selectorItemName}>{item.nombre}</Text>
-                  <Text style={styles.selectorItemStock}>
-                    {item.cantidad} {item.unidad} disponible
-                  </Text>
-                </View>
-                {itemForm.itemId === item.id && (
-                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                )}
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+        {itemsInventario.length === 0 ? (
+          <View style={styles.emptyCatalogContainer}>
+            <Ionicons name="alert-circle-outline" size={28} color="#f59e0b" />
+            <Text style={styles.emptyCatalogTitle}>Sin insumos en el inventario</Text>
+            <Text style={styles.emptyCatalogText}>
+              No hay insumos registrados en el catálogo. Da de alta tus insumos en el módulo de Inventario para poder agregarlos a esta receta.
+            </Text>
+          </View>
+        ) : (
+          <>
+            {/* Selector de Item */}
+            <View style={styles.selectorContainer}>
+              <ScrollView style={styles.selectorScroll} nestedScrollEnabled>
+                {itemsInventario.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => setItemForm({ ...itemForm, itemId: item.id })}
+                    style={[
+                      styles.selectorItem,
+                      itemForm.itemId === item.id && styles.selectorItemActive,
+                    ]}
+                  >
+                    <View style={styles.selectorItemContent}>
+                      <Text style={styles.selectorItemName}>{item.nombre}</Text>
+                      <Text style={styles.selectorItemStock}>
+                        {item.cantidad} {item.unidad} disponible
+                      </Text>
+                    </View>
+                    {itemForm.itemId === item.id && (
+                      <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                    )}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
 
-        {/* Cantidad */}
-        <TextInput
-          style={styles.input}
-          placeholder="Cantidad necesaria"
-          placeholderTextColor="#6b7280"
-          value={itemForm.cantidad}
-          onChangeText={(text) => setItemForm({ ...itemForm, cantidad: text })}
-          keyboardType="decimal-pad"
-        />
+            {/* Cantidad */}
+            <TextInput
+              style={styles.input}
+              placeholder="Cantidad necesaria"
+              placeholderTextColor="#6b7280"
+              value={itemForm.cantidad}
+              onChangeText={(text) => setItemForm({ ...itemForm, cantidad: text })}
+              keyboardType="decimal-pad"
+            />
 
-        {/* Botón Agregar */}
-        <Pressable
-          onPress={agregarItem}
-          style={[
-            styles.addButton,
-            (!itemForm.itemId || !itemForm.cantidad) && styles.addButtonDisabled,
-          ]}
-          disabled={!itemForm.itemId || !itemForm.cantidad}
-        >
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Agregar a Receta</Text>
-        </Pressable>
+            {/* Botón Agregar */}
+            <Pressable
+              onPress={agregarItem}
+              style={[
+                styles.addButton,
+                (!itemForm.itemId || !itemForm.cantidad) && styles.addButtonDisabled,
+              ]}
+              disabled={!itemForm.itemId || !itemForm.cantidad}
+            >
+              <Ionicons name="add-circle" size={20} color="#fff" />
+              <Text style={styles.addButtonText}>Agregar a Receta</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </View>
   );
@@ -422,5 +434,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  emptyCatalogContainer: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#374151',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyCatalogTitle: {
+    color: '#f59e0b',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  emptyCatalogText: {
+    color: '#94a3b8',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

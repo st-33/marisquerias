@@ -22,6 +22,7 @@ export type FormState = {
   enviarACocina: boolean;
   saltarPreparando: boolean;
   unidad: 'pza' | 'kg';
+  inventoryAreaId?: string;
 };
 
 export type CargaFormularioProducto = Omit<FormState, 'id' | 'activo' | 'categoriaId'>;
@@ -40,6 +41,7 @@ export const crearFormularioVacio = (): FormState => ({
   enviarACocina: true,
   saltarPreparando: false,
   unidad: 'pza',
+  inventoryAreaId: '',
 });
 
 export const productoAFormulario = (producto: Producto): FormState => ({
@@ -61,6 +63,7 @@ export const productoAFormulario = (producto: Producto): FormState => ({
   enviarACocina: producto.enviarACocina ?? true,
   saltarPreparando: producto.saltarPreparando ?? false,
   unidad: (producto.unidad as FormState['unidad']) || 'pza',
+  inventoryAreaId: (producto as any).inventoryAreaId || (producto as any).areaId || '',
 });
 
 export const formularioACarga = (form: FormState): CargaFormularioProducto => ({
@@ -74,4 +77,5 @@ export const formularioACarga = (form: FormState): CargaFormularioProducto => ({
   enviarACocina: form.enviarACocina,
   saltarPreparando: form.saltarPreparando,
   unidad: form.unidad,
+  inventoryAreaId: form.inventoryAreaId || undefined,
 });

@@ -121,6 +121,10 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     });
   }, [catalog, areas]);
 
+  const areasList = useMemo(() => {
+    return Object.entries(areas || {}).map(([id, a]) => ({ ...(a as any), id }));
+  }, [areas]);
+
   const { showToast } = useToast();
 
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
@@ -330,6 +334,7 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
               pestana={editingTab}
               onPestanaChange={setEditingTab}
               itemsInventario={itemsInventario}
+              areas={areasList}
               validacion={validacionActive}
               validando={validandoActive}
               onRecetaEnEdicion={(ing) => actions.setRecetaEnEdicion(ing)}

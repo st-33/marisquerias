@@ -29,6 +29,8 @@ type EditorVariantesProps = {
   onPrepMinChange?: (prepMin: number) => void;
   receta?: Producto['receta'];
   onRecetaChange?: (receta: Producto['receta']) => void;
+  unidad?: 'pza' | 'kg';
+  onUnidadChange?: (unidad: 'pza' | 'kg') => void;
   showVentaCrudo?: boolean;
   showMenuDigital?: boolean;
 };
@@ -42,6 +44,8 @@ export default function EditorVariantes({
   onPrepMinChange,
   receta = {},
   onRecetaChange,
+  unidad = 'pza',
+  onUnidadChange,
   showVentaCrudo = true,
   showMenuDigital = true,
 }: EditorVariantesProps) {
@@ -274,6 +278,45 @@ export default function EditorVariantes({
                 )}
               </Pressable>
             )}
+          </View>
+        </SeccionDesplegable>
+      )}
+
+      {/* UNIDAD DE VENTA */}
+      {onUnidadChange && (
+        <SeccionDesplegable
+          title="Unidad de Venta"
+          icon={<Ionicons name="scale-outline" size={18} color={theme.colors.accent} />}
+          badge={unidad === 'kg' ? 'Por Peso (Kg)' : 'Por Pieza (Pza)'}
+          defaultExpanded={true}
+        >
+          <View style={styles.unitContainer}>
+            <Pressable
+              style={[styles.unitBtn, unidad === 'pza' && styles.unitBtnActive]}
+              onPress={() => onUnidadChange('pza')}
+            >
+              <Ionicons
+                name="shapes-outline"
+                size={18}
+                color={unidad === 'pza' ? 'white' : '#64748b'}
+              />
+              <Text style={[styles.unitText, unidad === 'pza' && styles.unitTextActive]}>
+                Por Pieza (Pza)
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.unitBtn, unidad === 'kg' && styles.unitBtnActive]}
+              onPress={() => onUnidadChange('kg')}
+            >
+              <Ionicons
+                name="scale-outline"
+                size={18}
+                color={unidad === 'kg' ? 'white' : '#64748b'}
+              />
+              <Text style={[styles.unitText, unidad === 'kg' && styles.unitTextActive]}>
+                Por Peso (Kg)
+              </Text>
+            </Pressable>
           </View>
         </SeccionDesplegable>
       )}
@@ -843,5 +886,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  unitContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  unitBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1f2937',
+    borderWidth: 1,
+    borderColor: '#374151',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  unitBtnActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  unitText: {
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  unitTextActive: {
+    color: 'white',
   },
 });

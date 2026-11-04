@@ -278,6 +278,7 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
     enviarACocina?: boolean;
     saltarPreparando?: boolean;
     unidad?: string;
+    inventoryAreaId?: string;
   }) => {
     if (!datos.nombre || !datos.precio || !datos.categoriaId) {
       throw new Error('Completa nombre, precio y categoría');
@@ -313,7 +314,8 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       enviarACocina: datos.enviarACocina,
       saltarPreparando: datos.saltarPreparando,
       unidad: datos.unidad as any,
-    });
+      inventoryAreaId: datos.inventoryAreaId,
+    } as any);
   };
 
   // 🎭 ORQUESTACIÓN: Actualizar producto con validación
@@ -330,6 +332,7 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       enviarACocina?: boolean;
       saltarPreparando?: boolean;
       unidad?: string;
+      inventoryAreaId?: string;
     }
   ) => {
     if (!datos.nombre || !datos.precio) {
@@ -364,7 +367,8 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       enviarACocina: datos.enviarACocina,
       saltarPreparando: datos.saltarPreparando,
       unidad: datos.unidad as any,
-    });
+      inventoryAreaId: datos.inventoryAreaId,
+    } as any);
   };
 
   const refresh = async () => {
