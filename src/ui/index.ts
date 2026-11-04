@@ -28,6 +28,7 @@ export * from './bloques/CapaEstampa';
 export { CuadriculaMesas, TablesGrid } from './bloques/CuadriculaMesas';
 export type { Table as TablesGridTable, MesaCuadricula } from './bloques/CuadriculaMesas';
 export * from './bloques/TarjetaComanda';
+export * from './bloques/TarjetaProductoSticker';
 export * from './bloques/ModalVariantes';
 export * from './bloques/ErrorArranque';
 export * from './pantallas/PantallaVinculacion';

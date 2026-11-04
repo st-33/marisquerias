@@ -16,9 +16,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS, SPACING, TYPOGRAPHY } from '@/compartido/temas';
 import { useThemedColors, useThemedShadows } from '../../compartido/hooks/useColoresTema';
 import { formatMoney } from '../../compartido/utils/formateadores';
+import { TarjetaProductoSticker } from './TarjetaProductoSticker';
 
 type Category = { id: string; nombre?: string };
-type Product = { id: string; nombre?: string; precio?: number };
+type Product = {
+  id: string;
+  nombre?: string;
+  precio?: number;
+  sticker_id?: string | null;
+  stickerId?: string | null;
+};
 
 type Props = {
   categories: Category[];
@@ -41,8 +48,8 @@ function ProductPickerOverlayComponent({
   const [slideAnim] = React.useState(() => new Animated.Value(34));
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const isWideLayout = width >= 560;
-  const columnCount = isWideLayout ? 2 : 1;
+  const columnCount = width >= 640 ? 4 : 3;
+  const itemWidth = columnCount === 4 ? '23.5%' : '31.4%';
   const COLORS = useThemedColors();
   const SHADOWS = useThemedShadows();
 
@@ -361,43 +368,14 @@ function ProductPickerOverlayComponent({
               </View>
             }
             renderItem={({ item: product }) => (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Agregar ${String(product?.nombre || 'producto')}`}
-                onPress={() => {
-                  if (Platform.OS !== 'web') {
-                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  onOpenVariant(product.id);
-                }}
-                style={({ pressed }) => [
-                  styles.productCard,
-                  {
-                    width: isWideLayout ? '48.2%' : '100%',
-                    backgroundColor: pressed ? COLORS.bg.elevated : COLORS.bg.tertiary,
-                    borderColor: pressed ? COLORS.primaryLight : COLORS.bg.elevated,
-                    opacity: pressed ? 0.92 : 1,
-                    transform: [{ scale: pressed ? 0.985 : 1 }],
-                    ...(pressed ? SHADOWS.sm : {}),
-                  },
-                ]}
-              >
-                <View style={styles.productTopline}>
-                  <Text style={styles.productName} numberOfLines={3}>
-                    {String(product?.nombre || 'Producto')}
-                  </Text>
-                </View>
-                <View style={styles.productFooter}>
-                  <Text style={styles.productPrice}>
-                    {formatMoney(Number(product?.precio ?? 0))}
-                  </Text>
-                  <View
-                    style={[styles.addButton, { backgroundColor: COLORS.primary }, SHADOWS.primary]}
-                  >
-                    <Ionicons name="add" size={20} color={COLORS.text.primary} />
-                  </View>
-                </View>
-              </Pressable>
+              <TarjetaProductoSticker
+                id={product.id}
+                nombre={product.nombre}
+                precio={product.precio}
+                stickerId={product.sticker_id || product.stickerId}
+                ancho={itemWidth}
+                onPress={onOpenVariant}
+              />
             )}
           />
         </View>

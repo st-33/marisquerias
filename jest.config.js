@@ -34,5 +34,7 @@ module.exports = {
     '^react-native$': '<rootDir>/src/__mocks__/react-native.js',
     // @sentry/react-native usa ESM puro — incompatible con Jest sin transpilación nativa.
     '^@sentry/react-native$': '<rootDir>/src/sistema/monitoreo/__mocks__/sentry.mock.ts',
+    // Assets multimedia estáticos
+    '\\.(png|jpg|jpeg|gif|webp|svg|wav|mp3)$': '<rootDir>/src/__mocks__/fileMock.js',
   },
 };
