@@ -5,14 +5,16 @@
  */
 
 export const MAPA_STICKERS: Record<string, any> = {
-  xx_lager: require('../../assets/stickers/bebidas/xx_lager.png'),
-  'dos equis': require('../../assets/stickers/bebidas/xx_lager.png'),
-  'xx': require('../../assets/stickers/bebidas/xx_lager.png'),
+  xx_lager: require('../../assets/images/bebida/xx_lager.png'),
+  'dos equis': require('../../assets/images/bebida/xx_lager.png'),
+  'xx': require('../../assets/images/bebida/xx_lager.png'),
 };
 
+export const MAPA_IMAGENES_PRODUCTOS = MAPA_STICKERS;
+
 /**
- * Resuelve el asset de sticker correspondiente a un producto.
- * Busca primero por clave exacta (sticker_id) y luego por coincidencia de nombre.
+ * Resuelve el asset de imagen correspondiente a un producto.
+ * Busca primero por clave exacta y luego por coincidencia de nombre.
  */
 export function obtenerStickerProducto(
   stickerId?: string | null,
@@ -36,3 +38,5 @@ export function obtenerStickerProducto(
 
   return null;
 }
+
+export const obtenerImagenProducto = obtenerStickerProducto;
