@@ -11,8 +11,8 @@ describe('Catálogo Canónico de Imágenes Nativas (Offline)', () => {
     expect(img).toBe(MAPA_IMAGENES_PRODUCTOS.xx_lager);
   });
 
-  it('resuelve imagen por coincidencia de nombre cuando no hay id explícito', () => {
-    const img = obtenerImagenProducto(undefined, 'Cerveza Dos Equis Lager Bien Fría');
+  it('resuelve imagen por slug normalizado del producto cuando no hay id explícito', () => {
+    const img = obtenerImagenProducto(undefined, 'XX Lager');
     expect(img).toBeDefined();
     expect(img).toBe(MAPA_IMAGENES_PRODUCTOS.xx_lager);
   });

@@ -5,16 +5,13 @@
  */
 
 export const MAPA_IMAGENES_PRODUCTOS: Record<string, any> = {
-  // Bebidas
+  // Recursos locales de la categoría
   xx_lager: require('../../assets/images/bebida/xx_lager.png'),
-  'dos equis': require('../../assets/images/bebida/xx_lager.png'),
-  'xx': require('../../assets/images/bebida/xx_lager.png'),
-  // Platillos y postres se agregan conforme el negocio incorpore sus fotos
 };
 
 /**
  * Resuelve el asset de imagen correspondiente a un producto.
- * Busca primero por clave exacta y luego por coincidencia parcial en el nombre.
+ * Fórmula plantilla agnóstica: busca por imagen_id declarado o por slug normalizado.
  */
 export function obtenerImagenProducto(
   imagenId?: string | null,
@@ -28,11 +25,9 @@ export function obtenerImagenProducto(
   }
 
   if (nombreProducto) {
-    const normalizado = nombreProducto.toLowerCase().trim();
-    for (const [clave, asset] of Object.entries(MAPA_IMAGENES_PRODUCTOS)) {
-      if (normalizado.includes(clave)) {
-        return asset;
-      }
+    const slug = nombreProducto.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_');
+    if (MAPA_IMAGENES_PRODUCTOS[slug]) {
+      return MAPA_IMAGENES_PRODUCTOS[slug];
     }
   }
 

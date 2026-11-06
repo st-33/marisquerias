@@ -7,8 +7,8 @@ describe('Catálogo de Stickers', () => {
     expect(sticker).toBe(MAPA_STICKERS.xx_lager);
   });
 
-  it('resuelve sticker por nombre aproximado cuando no hay stickerId', () => {
-    const sticker = obtenerStickerProducto(undefined, 'Cerveza Dos Equis Lager');
+  it('resuelve sticker por slug normalizado cuando no hay stickerId', () => {
+    const sticker = obtenerStickerProducto(undefined, 'XX Lager');
     expect(sticker).toBeDefined();
     expect(sticker).toBe(MAPA_STICKERS.xx_lager);
   });
