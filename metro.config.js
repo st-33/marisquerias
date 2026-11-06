@@ -35,12 +35,13 @@ try {
               }
               req.headers.host = originUrl.host;
             }
-          } catch {}
+          } catch (_errOrigin) {}
         }
         return origMiddleware(req, res, next);
       };
     };
-} catch {
+  }
+} catch (_errCors) {
   // CORS wrapper no requerido fuera de entornos proxy
 }
 
