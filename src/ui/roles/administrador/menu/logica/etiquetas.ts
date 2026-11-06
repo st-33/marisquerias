@@ -19,7 +19,7 @@ export interface EtiquetasMenu {
 }
 
 export const ETIQUETAS_MENU_POR_DEFECTO: EtiquetasMenu = {
-  catalogTitle: 'Gestión de Catálogo / Menú',
+  catalogTitle: 'Gestión del Menú',
   catalogSubtitle: 'Administra tus categorías, productos e insumos en tiempo real',
   itemLabel: 'Producto',
   itemsPluralLabel: 'productos',

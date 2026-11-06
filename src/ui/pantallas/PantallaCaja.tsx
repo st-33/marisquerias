@@ -243,7 +243,7 @@ export function PantallaCaja() {
                 <Ionicons name="receipt-outline" size={48} color="#334155" />
                 <Text style={styles.emptyCartTitle}>Carrito Vacío</Text>
                 <Text style={styles.emptyCartSub}>
-                  Selecciona productos del catálogo para cobrar
+                  Selecciona productos del menú para cobrar
                 </Text>
               </View>
             ) : (

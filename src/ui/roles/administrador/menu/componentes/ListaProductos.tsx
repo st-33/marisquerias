@@ -42,7 +42,7 @@ export function ListaProductos({
         <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}18` }]}>
           <Ionicons name="folder-open-outline" size={38} color={colors.primary} />
         </View>
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>Tu catálogo está vacío</Text>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>Tu menú está vacío</Text>
         <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
           Crea una categoría para comenzar a agregar productos y sus variantes.
         </Text>
