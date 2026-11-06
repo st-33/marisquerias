@@ -128,3 +128,9 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
   3. Inventario: Asignación explícita del área o sub-contenedor de almacenamiento y deducción preferente, con fallback automático al almacén general/bodega.
   4. Receta / Insumos: Desglose de materias primas con estado vacío guiado (aviso pedagógico cuando el catálogo de insumos está vacío) y cálculo de capacidad de producción.
 - Queda prohibido ocultar el botón de alta de insumos en contenedores vacíos o renderizar selectores vacíos sin texto de orientación operativa.
+
+### 28. Pureza Terminológica Operativa ("Menú"), Plantilla Base Agnóstica y Gating Visual
+
+- Terminología de Usuario: Queda prohibido exponer la palabra "catálogo" en textos visibles al usuario, títulos de pantallas o estados vacíos. En la experiencia operativa de piso y administración, el concepto es estrictamente "Menú". El término "catálogo" queda restringido a referencias técnicas internas a nivel de código fuente.
+- Plantilla Agnóstica Reutilizable: Todo componente y resolvedor debe diseñarse como fórmula plantilla genérica del NPB 00. Queda prohibido acoplar la lógica o resolvedores a marcas o nombres de productos particulares mediante coincidencias de cadenas quemadas (hardcoded). La resolución de recursos opera por identificador (`imagen_id`), slug de categoría o fallback neutro.
+- Sincronización y Gating de Capacidades: Las capacidades macro autorizadas deben coincidir léxicamente con la taxonomía gobernada por Ecosistema. La desactivación de una capacidad opera estrictamente como gating visual y de navegación; los esquemas de datos, recetas, repositorios y persistencia continúan activos e íntegros.

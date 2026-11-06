@@ -46,6 +46,13 @@ export const TarjetaProductoVisual = React.memo(function TarjetaProductoVisual({
     onPress(id);
   };
 
+  const siglas = useMemo(() => {
+    if (!nombre) return 'P';
+    const partes = nombre.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[1][0]).toUpperCase();
+  }, [nombre]);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -68,7 +75,7 @@ export const TarjetaProductoVisual = React.memo(function TarjetaProductoVisual({
         <Text style={styles.priceText}>{formatMoney(Number(precio))}</Text>
       </View>
 
-      {/* Contenedor central de la ilustración / botella */}
+      {/* Contenedor central: Imagen hero si existe, o badge tipográfico agnóstico */}
       <View style={styles.imageContainer}>
         {imagenAsset ? (
           <Image
@@ -78,8 +85,10 @@ export const TarjetaProductoVisual = React.memo(function TarjetaProductoVisual({
             transition={200}
           />
         ) : (
-          <View style={styles.fallbackIcon}>
-            <Ionicons name="fast-food-outline" size={44} color={COLORS.text.muted} />
+          <View style={[styles.fallbackBadge, { backgroundColor: COLORS.bg.tertiary, borderColor: COLORS.bg.elevated }]}>
+            <Text style={[styles.fallbackInitials, { color: COLORS.primary }]}>
+              {siglas}
+            </Text>
           </View>
         )}
       </View>
@@ -140,12 +149,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  fallbackIcon: {
-    width: 60,
-    height: 60,
+  fallbackBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: RADIUS.full,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.6,
+  },
+  fallbackInitials: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   footer: {
     width: '100%',
