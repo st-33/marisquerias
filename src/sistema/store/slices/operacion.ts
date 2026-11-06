@@ -248,6 +248,14 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
       return limpia ? `${limpia}/${cajon}` : cajon;
     };
 
+    // Función de comparación superficial para evitar re-renders si la data no cambió
+    const sonObjetosEquivalentes = (a: Record<string, any>, b: Record<string, any>) => {
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      if (keysA.length !== keysB.length) return false;
+      return keysA.every((k) => a[k] === b[k] || JSON.stringify(a[k]) === JSON.stringify(b[k]));
+    };
+
     // 1. MESAS - Un solo listener para todas las mesas
     const mesasRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'mesas'));
     const mesasCallback = onValue(mesasRef, (snap) => {
@@ -261,9 +269,11 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
         }
       });
 
-      const count = Object.keys(mesasFiltradas).length;
-      if (count > 0) logger.debug('STORE', `📋 ${count} mesas`);
-      set({ mesas: mesasFiltradas, ultimaActualizacion: Date.now() });
+      if (!sonObjetosEquivalentes(get().mesas, mesasFiltradas)) {
+        const count = Object.keys(mesasFiltradas).length;
+        if (count > 0) logger.debug('STORE', `📋 ${count} mesas`);
+        set({ mesas: mesasFiltradas, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(mesasRef, 'value', mesasCallback as any));
 
@@ -279,9 +289,11 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
         }
       });
 
-      const count = Object.keys(pedidos).length;
-      if (count > 0) logger.debug('STORE', `📦 ${count} pedidos`);
-      set({ pedidos, ultimaActualizacion: Date.now() });
+      if (!sonObjetosEquivalentes(get().pedidos, pedidos)) {
+        const count = Object.keys(pedidos).length;
+        if (count > 0) logger.debug('STORE', `📦 ${count} pedidos`);
+        set({ pedidos, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
 
@@ -297,9 +309,11 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
         }
       });
 
-      const count = Object.keys(categorias).length;
-      if (count > 0) logger.debug('STORE', `📂 ${count} categorías`);
-      set({ categorias, ultimaActualizacion: Date.now() });
+      if (!sonObjetosEquivalentes(get().categorias, categorias)) {
+        const count = Object.keys(categorias).length;
+        if (count > 0) logger.debug('STORE', `📂 ${count} categorías`);
+        set({ categorias, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
 
@@ -315,9 +329,11 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
         }
       });
 
-      const count = Object.keys(productos).length;
-      if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
-      set({ productos, ultimaActualizacion: Date.now() });
+      if (!sonObjetosEquivalentes(get().productos, productos)) {
+        const count = Object.keys(productos).length;
+        if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
+        set({ productos, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(productosRef, 'value', productosCallback as any));
 

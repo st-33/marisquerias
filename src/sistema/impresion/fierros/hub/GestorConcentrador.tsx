@@ -135,7 +135,8 @@ export const GestorHub = ({ rutaNegocio }: PropiedadesGestorHub) => {
 
     console.log(`[GestorHub] ✅ Hub activo (canal: ${canal}, dispositivo: ${localDeviceId})`);
 
-    const heartbeatPath = `${rutaNegocio}/impresion/hubs/heartbeat`;
+    const rutaLimpia = rutaNegocio ? rutaNegocio.replace(/^\/+|\/+$/g, '') : '';
+    const heartbeatPath = rutaLimpia ? `${rutaLimpia}/impresion/hubs/heartbeat` : 'impresion/hubs/heartbeat';
     const enviarHeartbeat = async () => {
       try {
         const { ref, set } = await import('firebase/database');

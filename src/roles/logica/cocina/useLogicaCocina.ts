@@ -350,14 +350,23 @@ export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
   // 🔔 EFECTOS DE AUDIO (Encapsulados)
   useAudioCocina(ordenes);
 
-  // 🧹 AUTO-CORRECCIÓN: Cerrar órdenes completadas
-  // Detecta casos donde todos los items están listos pero el estatus no se actualizó
+  // 🧹 AUTO-CORRECCIÓN IDEMPOTENTE: Cerrar órdenes completadas
+  // Evita re-disparar escrituras a Firebase si la orden ya está en proceso de cierre
+  const ordenesAutoCerradasRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     ordenes.forEach((orden) => {
-      if (orden.itemsTotal > 0 && orden.itemsPendientes === 0 && orden.estatus !== 'listo') {
+      if (
+        orden.itemsTotal > 0 &&
+        orden.itemsPendientes === 0 &&
+        orden.estatus !== 'listo' &&
+        !ordenesAutoCerradasRef.current.has(orden.id)
+      ) {
+        ordenesAutoCerradasRef.current.add(orden.id);
         logger.info(`🧹 Auto-cerrando orden completada: ${orden.id}`);
         pedidosRepo.actualizar(orden.id, { estatus: 'listo' }).catch((err) => {
           logger.error('Error al auto-cerrar orden', err);
+          ordenesAutoCerradasRef.current.delete(orden.id);
         });
       }
     });
