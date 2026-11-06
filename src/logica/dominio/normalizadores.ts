@@ -28,13 +28,17 @@ import { toItemCanonical, toOrderCanonical } from './estados';
  * - { estado: { estado: "nuevo" } } → "nuevo" ✅ (nested)
  */
 export function normalizeEstado(raw: any): ItemStatus {
+  if (raw === undefined || raw === null) {
+    return 'nuevo';
+  }
+
   // Si es string directo, usar
   if (typeof raw === 'string') {
     return toItemCanonical(raw);
   }
 
   // Si es object, buscar el campo 'estado'
-  if (typeof raw === 'object' && raw !== null) {
+  if (typeof raw === 'object') {
     // Caso nested: { estado: { estado: "nuevo" } }
     if (raw.estado && typeof raw.estado === 'object' && raw.estado.estado) {
       logger.warn('NORMALIZER', 'Estado nested detectado, normalizando', { raw });
@@ -64,11 +68,15 @@ export function normalizeEstado(raw: any): ItemStatus {
  * Normalizar campo de estatus de orden
  */
 export function normalizeEstatus(raw: any): OrderStatus {
+  if (raw === undefined || raw === null) {
+    return 'creado';
+  }
+
   if (typeof raw === 'string') {
     return toOrderCanonical(raw);
   }
 
-  if (typeof raw === 'object' && raw !== null) {
+  if (typeof raw === 'object') {
     if (raw.estatus && typeof raw.estatus === 'object' && raw.estatus.estatus) {
       logger.warn('NORMALIZER', 'Estatus nested detectado, normalizando', { raw });
       return toOrderCanonical(raw.estatus.estatus);
@@ -76,6 +84,10 @@ export function normalizeEstatus(raw: any): OrderStatus {
 
     if (raw.estatus) {
       return toOrderCanonical(raw.estatus);
+    }
+
+    if (raw.estado) {
+      return toOrderCanonical(raw.estado);
     }
 
     logger.error(
@@ -178,7 +190,7 @@ export function normalizePedido(raw: any): any {
 
   return {
     ...raw,
-    estatus: normalizeEstatus(raw.estatus),
+    estatus: normalizeEstatus(raw.estatus ?? raw.estado ?? raw.status),
     items: normalizedItems,
     createdAt: raw.createdAt ? normalizeTimestamp(raw.createdAt) : Date.now(),
     updatedAt: raw.updatedAt ? normalizeTimestamp(raw.updatedAt) : Date.now(),

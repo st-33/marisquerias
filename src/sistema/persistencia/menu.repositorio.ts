@@ -531,8 +531,7 @@ export class RepositorioMenu {
 
       const updates: Record<string, any> = {};
       const allIds = new Set([...Object.keys(flatMap), ...Object.keys(nestedMap)]);
-
-      console.log(`[MenuRepo] 🚑 Iniciando auto-reparación en ${allIds.size} productos...`);
+      console.log(`[MenuRepo] 🔍 Verificando integridad en ${allIds.size} productos...`);
 
       allIds.forEach((id) => {
         const flat = flatMap[id];

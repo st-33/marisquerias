@@ -40,9 +40,8 @@ try {
         return origMiddleware(req, res, next);
       };
     };
-  }
-} catch (e) {
-  console.warn('[Metro] Advertencia al configurar CORS wrapper:', e.message);
+} catch {
+  // CORS wrapper no requerido fuera de entornos proxy
 }
 
 /** @type {import('expo/metro-config').MetroConfig} */

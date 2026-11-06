@@ -152,7 +152,7 @@ export class DespachadorCola {
     modo: ModoOperacion = 'dispositivo'
   ) {
     this.db = db;
-    this.rutaNegocio = rutaNegocio;
+    this.rutaNegocio = rutaNegocio === '/' ? '' : (rutaNegocio || '').replace(/\/+$/, '');
     this.idDispositivo = idDispositivo;
     this.config = { ...CONFIGURACION_DEFECTO, ...config };
     this.modo = modo;

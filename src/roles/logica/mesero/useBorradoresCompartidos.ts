@@ -55,7 +55,8 @@ export function useBorradoresCompartidos({
   // 🔥 NUEVO: Usar sistema unificado de sincronización
   const syncPath = useMemo(() => {
     if (!sanitizedRutaNegocio || !sanitizedMesaId) return null;
-    return `${sanitizedRutaNegocio}/mesas_pendientes/${sanitizedMesaId}/items`;
+    const base = sanitizedRutaNegocio === '/' ? '' : sanitizedRutaNegocio.replace(/\/+$/, '');
+    return `${base}/mesas_pendientes/${sanitizedMesaId}/items`;
   }, [sanitizedRutaNegocio, sanitizedMesaId]);
 
   const {
