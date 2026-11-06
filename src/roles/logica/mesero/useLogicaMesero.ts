@@ -29,6 +29,7 @@ import { logisticaHabilitada as evaluarLogisticaHabilitada } from '../../../logi
 import { useGestionarImpresion } from './gestionarImpresion';
 import { useProcesarPedido } from './procesarPedido';
 import { useBorradoresCompartidos } from './useBorradoresCompartidos';
+import { resolver_nombre_negocio } from '../../../sistema/rtdb/rutas/ruta_negocio';
 
 const log = createLogger('useLogicaMesero');
 
@@ -339,6 +340,15 @@ export function useLogicaMesero(props: UseMeseroLogicProps = {}) {
     return totalPending + liveTot;
   }, [totalPending, liveItems]);
 
+  const nombreConfigStore = useStore((s) => s.negocio.configuracion?.nombre);
+  const nombreNegocio = useMemo(() => {
+    return resolver_nombre_negocio({
+      nombreConfig: nombreConfigStore,
+      negocioId,
+      rutaNegocio,
+    });
+  }, [nombreConfigStore, negocioId, rutaNegocio]);
+
   // 4. Hook de Gestión de Impresión
   const {
     hasPrinted,
@@ -359,6 +369,7 @@ export function useLogicaMesero(props: UseMeseroLogicProps = {}) {
     onPrintBill,
     pedidoActivo,
     ensureConnection,
+    nombreNegocio,
   });
 
   // 5. Hook de Gestión de Inventario

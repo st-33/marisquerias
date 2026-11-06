@@ -22,6 +22,7 @@ import type {
   PropositoTrabajo,
 } from '../contratos/tipos';
 import { servicioFierros } from '../servicio/ServicioFierros';
+import { resolver_nombre_negocio } from '../../../rtdb/rutas/ruta_negocio';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -745,8 +746,10 @@ export class DespachadorCola {
       const nombreNegocio =
         this.configTicketAjustes?.businessName ||
         this.configTicketLegacy?.header ||
-        this.rutaNegocio.split('/').pop() ||
-        'Restaurante';
+        resolver_nombre_negocio({
+          rutaNegocio: this.rutaNegocio,
+          nombreConfig: this.configTicketAjustes?.businessName || this.configTicketLegacy?.header,
+        });
 
       console.log('[DespachadorCola] 🖨️ Llamando a servicioFierros.imprimirCuenta...');
       const resultado = await servicioFierros.imprimirCuenta(datosCuenta, {

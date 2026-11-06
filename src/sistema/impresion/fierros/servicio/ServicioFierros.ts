@@ -383,6 +383,9 @@ class ServicioFierros implements ControladorFierros {
     try {
       const nombreNegocio = opciones.nombreNegocio || 'RESTAURANTE';
 
+      // Formato canónico de identificador de mesa: extraer solo el número sin prefijos ('mesa_04' -> '4', 'M01' -> '1')
+      const numMesa = String(datos.mesaId).replace(/^[^\d]*/, '').replace(/^0+/, '') || String(datos.mesaId);
+
       const ticket = new ConstructorEscPos()
         .inicializar()
         .centrar()
@@ -393,7 +396,7 @@ class ServicioFierros implements ControladorFierros {
         .textoLinea(new Date().toLocaleString('es-MX'))
         .separadorDoble()
         .izquierda()
-        .textoLinea(`Mesa: ${datos.mesaId}  Tipo: ${datos.tipo}`)
+        .textoLinea(`Mesa: ${numMesa}`)
         .separador();
 
       // Items
@@ -405,13 +408,9 @@ class ServicioFierros implements ControladorFierros {
 
       ticket
         .separador()
-        .columnas('SUBTOTAL:', formatearPrecio(datos.totales.subtotal))
         .negrita(true)
         .columnas('TOTAL:', formatearPrecio(datos.totales.total))
         .negrita(false)
-        .separadorDoble()
-        .centrar()
-        .textoLinea('¡Gracias por su visita!')
         .lineas(3)
         .cortar();
 

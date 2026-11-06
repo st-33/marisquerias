@@ -27,6 +27,7 @@ type GestionarImpresionProps = {
   onPrintBill?: (mesaId: string) => void;
   pedidoActivo: any;
   ensureConnection?: () => boolean | Promise<boolean>;
+  nombreNegocio?: string;
 };
 
 const formatVariantsForPrint = (variants?: Record<string, string[]>) => {
@@ -57,6 +58,7 @@ export function useGestionarImpresion({
   onPrintBill,
   pedidoActivo,
   ensureConnection,
+  nombreNegocio,
 }: GestionarImpresionProps) {
   const printPolicies = usePoliticasImpresion({ db, rutaNegocio });
   const printPoliciesRef = useRef(printPolicies);
@@ -156,6 +158,7 @@ export function useGestionarImpresion({
               },
               {
                 rol: 'mesero',
+                nombreNegocio,
               }
             );
             log.info('✅ [Hardware] Resultado impresión física:', resFierros);
@@ -244,6 +247,7 @@ export function useGestionarImpresion({
       rutaNegocio,
       tablesRef,
       pedidoActivo,
+      nombreNegocio,
     ]
   );
 
