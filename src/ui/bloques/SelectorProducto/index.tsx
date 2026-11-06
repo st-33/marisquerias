@@ -21,8 +21,6 @@ export type Product = {
   precio?: number;
   imagen_id?: string | null;
   imagenId?: string | null;
-  sticker_id?: string | null;
-  stickerId?: string | null;
 };
 
 export type SelectorProductoProps = {
@@ -148,12 +146,7 @@ export const SelectorProducto = React.memo(function SelectorProducto({
                 id={product.id}
                 nombre={product.nombre}
                 precio={product.precio}
-                imagenId={
-                  product.imagen_id ||
-                  product.imagenId ||
-                  product.sticker_id ||
-                  product.stickerId
-                }
+                imagenId={product.imagen_id || product.imagenId}
                 ancho={itemWidth}
                 onPress={onOpenVariant}
               />
@@ -165,9 +158,6 @@ export const SelectorProducto = React.memo(function SelectorProducto({
   );
 });
 
-// Alias canónicos para preservación de contratos existentes
-export const SelectorProductoSuperpuesto = SelectorProducto;
-export const ProductPickerOverlay = SelectorProducto;
 export default SelectorProducto;
 
 const styles = StyleSheet.create({

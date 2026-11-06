@@ -16,7 +16,7 @@ import { useNotificaciones as useNotifications } from '../../compartido/hooks/us
 import { logger } from '../../sistema/monitoreo';
 
 import { useOcultarTotal } from '../../capacidades/mesero/useOcultarTotal';
-import { BluetoothPrinterModal, ProductPickerOverlay, PuestoMando, ModalVariantes } from '..';
+import { BluetoothPrinterModal, SelectorProducto, PuestoMando, ModalVariantes } from '..';
 import {
   useLogicaMesero,
   useSelectorProductos,
@@ -360,7 +360,7 @@ function MeseroScreenContent() {
       )}
 
       {showProductPicker && (
-        <ProductPickerOverlay
+        <SelectorProducto
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={selectCategory}

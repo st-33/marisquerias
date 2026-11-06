@@ -34,6 +34,3 @@ export function obtenerImagenProducto(
   return null;
 }
 
-// Alias de retrocompatibilidad
-export const MAPA_STICKERS = MAPA_IMAGENES_PRODUCTOS;
-export const obtenerStickerProducto = obtenerImagenProducto;

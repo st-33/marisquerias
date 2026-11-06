@@ -1,6 +1,5 @@
 import {
   obtenerImagenProducto,
-  obtenerStickerProducto,
   MAPA_IMAGENES_PRODUCTOS,
 } from '../catalogoImagenes';
 
@@ -21,9 +20,5 @@ describe('Catálogo Canónico de Imágenes Nativas (Offline)', () => {
     const img = obtenerImagenProducto('item_desconocido', 'Sopa de Letras');
     expect(img).toBeNull();
   });
-
-  it('mantiene compatibilidad con el alias obtenerStickerProducto', () => {
-    const img = obtenerStickerProducto('xx_lager');
-    expect(img).toBe(MAPA_IMAGENES_PRODUCTOS.xx_lager);
-  });
 });
+

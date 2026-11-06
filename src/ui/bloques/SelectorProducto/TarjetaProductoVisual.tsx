@@ -103,9 +103,6 @@ export const TarjetaProductoVisual = React.memo(function TarjetaProductoVisual({
   );
 });
 
-// Alias de retrocompatibilidad
-export const TarjetaProductoSticker = TarjetaProductoVisual;
-
 const styles = StyleSheet.create({
   card: {
     borderRadius: RADIUS.lg,

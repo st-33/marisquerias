@@ -13,7 +13,6 @@ export * from './bloques/BotonOrbe';
 export * from './bloques/TarjetaPartida';
 export * from './bloques/ListaComandas';
 export { PanelInventario } from './roles/administrador/inventario/PanelInventario';
-export * from './bloques/SelectorProductoSuperpuesto';
 export { PuestoMando } from './bloques/PuestoMando';
 export type {
   CartItem,
@@ -30,7 +29,7 @@ export type { Table as TablesGridTable, MesaCuadricula } from './bloques/Cuadric
 export * from './bloques/TarjetaComanda';
 export * from './bloques/SelectorProducto';
 export * from './bloques/SelectorProducto/TarjetaProductoVisual';
-export * from './bloques/TarjetaProductoSticker';
 export * from './bloques/ModalVariantes';
 export * from './bloques/ErrorArranque';
 export * from './pantallas/PantallaVinculacion';
+

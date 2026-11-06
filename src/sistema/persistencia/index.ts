@@ -30,14 +30,6 @@ export type {
   VariantRule,
 } from './menu.repositorio';
 
-export { RepositorioPlantillasTicket, TicketTemplatesRepository } from './tickets.repositorio';
-export type {
-  TicketTemplate,
-  TicketTemplateAcciones,
-  TicketTemplateElemento,
-  TicketTemplatesPorRol,
-} from './tickets.repositorio';
-
 export {
   RepositorioBorradores,
   BorradoresLocalRepo,
