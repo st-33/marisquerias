@@ -37,14 +37,17 @@ export function ListaProductos({
     return (
       <Animated.View
         entering={FadeInDown.duration(280)}
-        style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+        style={[
+          styles.emptyCard,
+          { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+        ]}
       >
-        <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}18` }]}>
+        <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}20` }]}>
           <Ionicons name="folder-open-outline" size={38} color={colors.primary} />
         </View>
         <Text style={[styles.emptyTitle, { color: colors.text }]}>Tu menú está vacío</Text>
-        <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-          Crea una categoría para comenzar a agregar productos y sus variantes.
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+          Crea una categoría para comenzar a agregar opciones y sus variantes.
         </Text>
         {onAgregarCategoria ? (
           <Pressable
@@ -70,48 +73,74 @@ export function ListaProductos({
 
   return (
     <>
-      <View style={styles.categoryHeader}>
-        <View>
-          <Text style={styles.categoryTitle}>{categoriaNombre}</Text>
-          <Text style={styles.productCount}>
-            {productos.length} {productos.length === 1 ? 'producto' : 'productos'}
+      <View style={[styles.categoryHeader, { borderBottomColor: colors.border }]}>
+        <View style={{ gap: 2 }}>
+          <Text style={[styles.categoryTitle, { color: colors.text }]}>{categoriaNombre}</Text>
+          <Text style={[styles.productCount, { color: colors.textSecondary }]}>
+            {productos.length} {productos.length === 1 ? 'opción activa en carta' : 'opciones en carta'}
           </Text>
         </View>
-        <Pressable
-          style={({ pressed }) => [
-            styles.btnPrimary,
-            { backgroundColor: colors.primary },
-            pressed && styles.btnPressed,
-          ]}
-          onPress={onAgregarProducto}
-        >
-          <Ionicons name="add" size={20} color={colors.background} />
-          <Text style={[styles.btnPrimaryText, { color: colors.background }]}>
-            Agregar Producto
-          </Text>
-        </Pressable>
+        {productos.length > 0 && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.btnPrimary,
+              { backgroundColor: colors.primary },
+              pressed && styles.btnPressed,
+            ]}
+            onPress={onAgregarProducto}
+          >
+            <Ionicons name="add-circle-outline" size={20} color={colors.background} />
+            <Text style={[styles.btnPrimaryText, { color: colors.background }]}>
+              Agregar al Menú
+            </Text>
+          </Pressable>
+        )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.productsGrid}>
+      <ScrollView contentContainerStyle={styles.productsGrid} showsVerticalScrollIndicator={false}>
         {productos.length === 0 ? (
-          <View style={styles.emptyProducts}>
-            <Ionicons name="cube-outline" size={48} color="#64748b" />
-            <Text style={styles.emptyTitle}>Sin productos en esta categoría</Text>
-            <Text style={styles.emptySubtitle}>
-              Presiona &quot;Agregar Producto&quot; para comenzar
+          <View
+            style={[
+              styles.emptyProducts,
+              { backgroundColor: colors.surfaceDark, borderColor: colors.border },
+            ]}
+          >
+            <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}18` }]}>
+              <Ionicons name="restaurant-outline" size={34} color={colors.primary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Sin opciones en {categoriaNombre}
             </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              Selecciona un platillo de Cocina o un artículo de Inventario para publicarlo en esta categoría.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.btnPrimary,
+                { backgroundColor: colors.primary },
+                pressed && styles.btnPressed,
+              ]}
+              onPress={onAgregarProducto}
+            >
+              <Ionicons name="add" size={20} color={colors.background} />
+              <Text style={[styles.btnPrimaryText, { color: colors.background }]}>
+                Agregar primera opción
+              </Text>
+            </Pressable>
           </View>
         ) : (
-          productos.map((prod) => (
-            <TarjetaProducto
-              key={prod.id}
-              producto={prod}
-              onEdit={() => onEditar(prod)}
-              onToggle={async () => onToggle(prod)}
-              onRecipe={() => onReceta(prod)}
-              onDelete={() => onEliminar(prod)}
-            />
-          ))
+          <View style={styles.cardsWrap}>
+            {productos.map((prod) => (
+              <TarjetaProducto
+                key={prod.id}
+                producto={prod}
+                onEdit={() => onEditar(prod)}
+                onToggle={async () => onToggle(prod)}
+                onRecipe={() => onReceta(prod)}
+                onDelete={() => onEliminar(prod)}
+              />
+            ))}
+          </View>
         )}
       </ScrollView>
     </>
@@ -123,29 +152,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   categoryTitle: {
-    color: '#64748B',
     fontSize: theme.typography.sizes.xl,
-    fontWeight: theme.typography.weights.bold,
+    fontWeight: theme.typography.weights.heavy,
+    fontFamily: (theme.typography as any).displayFamily || theme.typography.fontFamily,
+    letterSpacing: 0.3,
   },
   productCount: {
-    color: theme.colors.textMuted,
     fontSize: theme.typography.sizes.xs,
-    marginTop: 2,
+    fontWeight: theme.typography.weights.medium,
   },
   productsGrid: {
-    gap: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+  },
+  cardsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 14,
   },
   emptyProducts: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.xxl,
+    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    marginTop: theme.spacing.sm,
   },
   emptyCard: {
     alignSelf: 'center',
@@ -153,48 +189,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     maxWidth: 520,
-    marginTop: theme.spacing.xl,
+    marginTop: theme.spacing.lg,
     paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.xxl,
+    paddingVertical: theme.spacing.xl,
     borderWidth: 1,
     borderRadius: theme.borderRadius.xl,
   },
   emptyIcon: {
-    width: 72,
-    height: 72,
+    width: 68,
+    height: 68,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.borderRadius.round,
   },
   emptyTitle: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
-    marginTop: theme.spacing.md,
+    fontSize: theme.typography.sizes.lg,
+    fontWeight: theme.typography.weights.bold,
+    marginTop: theme.spacing.sm,
   },
   emptySubtitle: {
     fontSize: theme.typography.sizes.sm,
-    marginTop: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
-    maxWidth: 360,
+    marginTop: 4,
+    marginBottom: theme.spacing.md,
+    maxWidth: 380,
     textAlign: 'center',
     lineHeight: 20,
   },
   btnPrimary: {
-    backgroundColor: theme.colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: theme.borderRadius.md,
   },
   btnPrimaryText: {
-    fontWeight: theme.typography.weights.semibold,
+    fontWeight: theme.typography.weights.bold,
     fontSize: theme.typography.sizes.sm,
   },
   btnPressed: {
-    opacity: 0.82,
+    opacity: 0.85,
     transform: [{ scale: 0.98 }],
   },
 });

@@ -21,7 +21,12 @@ export type {
 
 export * from './mesas.repositorio';
 
-export { getVariantOptionLabel, RepositorioMenu, MenuRepository } from './menu.repositorio';
+export {
+  getVariantOptionLabel,
+  RepositorioMenu,
+  MenuRepository,
+  type OrigenOfertaMenu,
+} from './menu.repositorio';
 export type {
   Categoria,
   Producto,
@@ -29,6 +34,23 @@ export type {
   VariantOption,
   VariantRule,
 } from './menu.repositorio';
+
+export {
+  RepositorioLibroPlatillos,
+  calcularCosteoYCapacidadPlatillo,
+  normalizarIngredientesReceta,
+} from './platillos.repositorio';
+export type {
+  DesgloseCostoIngrediente,
+  EstadoLoteProduccion,
+  IngredienteRecetaPlatillo,
+  LoteProduccionCocina,
+  ModoPreparacionPlatillo,
+  PlatilloCocina,
+  RendimientoPlatillo,
+  ResumenCosteoPlatillo,
+  UnidadRendimientoPlatillo,
+} from './platillos.repositorio';
 
 export {
   RepositorioBorradores,
@@ -80,10 +102,18 @@ export type { Caracteristicas, Features } from './negocio.repositorio';
 export { RepositorioAjustesReparto, RepartoAjustesRepository } from './reparto-ajustes.repositorio';
 export type { AjustesReparto } from './reparto-ajustes.repositorio';
 
-export { RepositorioInventario, InventoryV2Repository } from './inventario.repositorio';
+export {
+  RepositorioInventario,
+  InventoryV2Repository,
+  convertirCantidadInventario,
+  esArticuloVendibleDirecto,
+  esArticuloInsumoCocina,
+} from './inventario.repositorio';
 export type {
   AreaInventarioV2,
   ItemInventarioV2,
   SeccionInventarioV2,
   SeccionInventarioId,
+  UnidadFisicaInventario,
+  UsoArticuloInventario,
 } from './inventario.repositorio';

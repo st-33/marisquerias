@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MenuRepository, type Producto } from '../../../sistema/persistencia';
 import type { Categoria } from '../../../sistema/persistencia/menu.repositorio';
 import { RegistroVentasRepository } from '../../../sistema/persistencia/registroVentas.repositorio';
-import { servicioFierros } from '../../../sistema/impresion/fierros';
+import { servicioFierros, useEstadoHub } from '../../../sistema/impresion/fierros';
 import { getRtdb } from '../../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../../sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { useStore } from '../../../sistema/store';
@@ -109,17 +109,23 @@ export function useCajaCobro(props?: UseCajaCobroProps) {
     }
 
     let isMounted = true;
+    let liveProdsRecibidos = false;
+    let liveCatsRecibidas = false;
 
     const cargarCache = async () => {
       try {
         const cachedProds = await SQLiteStorageAdapter.getProductos();
         const cachedCats = await SQLiteStorageAdapter.getCategorias();
         if (isMounted) {
-          if (cachedProds && Object.keys(cachedProds).length > 0) {
-            setProductos(cachedProds as Record<string, Producto>);
+          if (!liveProdsRecibidos && cachedProds && Object.keys(cachedProds).length > 0) {
+            setProductos((prev) =>
+              Object.keys(prev).length > 0 ? prev : (cachedProds as Record<string, Producto>)
+            );
           }
-          if (cachedCats && Object.keys(cachedCats).length > 0) {
-            setCategorias(cachedCats as Record<string, Categoria>);
+          if (!liveCatsRecibidas && cachedCats && Object.keys(cachedCats).length > 0) {
+            setCategorias((prev) =>
+              Object.keys(prev).length > 0 ? prev : (cachedCats as Record<string, Categoria>)
+            );
             setLoading(false);
           }
         }
@@ -131,12 +137,14 @@ export function useCajaCobro(props?: UseCajaCobroProps) {
 
     const unsubMenu = menuRepo.suscribirProductos((data) => {
       if (isMounted && data) {
+        if (Object.keys(data).length > 0) liveProdsRecibidos = true;
         setProductos(data);
       }
     });
 
     const unsubCats = menuRepo.suscribirCategorias((data) => {
       if (isMounted && data) {
+        if (Object.keys(data).length > 0) liveCatsRecibidas = true;
         setCategorias(data);
         setLoading(false);
       }
@@ -260,9 +268,12 @@ export function useCajaCobro(props?: UseCajaCobroProps) {
           usuario,
         });
 
-        // 2. Emisión de ticket (si capacidad activa)
+        // 2. Emisión de ticket (si capacidad activa y compatible con el Hub de este dispositivo)
         let ticketEmitido = false;
-        if (debeImprimir) {
+        const estadoHubLocal = useEstadoHub?.getState?.();
+        const esHubRestauranteExclusivo =
+          estadoHubLocal?.habilitado && estadoHubLocal?.destino === 'restaurante';
+        if (debeImprimir && !esHubRestauranteExclusivo) {
           try {
             const res = await servicioFierros.imprimirTicketVenta(
               {

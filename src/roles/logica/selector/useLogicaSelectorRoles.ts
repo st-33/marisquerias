@@ -43,17 +43,19 @@ export function useLogicaSelectorRoles() {
   // Escuchar nombre y logo configurados en RTDB si existen
   useEffect(() => {
     if (!rutaNegocio) return;
-    const unsubNombre = onValue(ref(db, `${rutaNegocio}/nombre`), (snap) => {
+    const baseLimpia = rutaNegocio.replace(/^\/+|\/+$/g, '');
+    const prefijo = baseLimpia ? `${baseLimpia}/` : '';
+    const unsubNombre = onValue(ref(db, `${prefijo}nombre`), (snap) => {
       if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
         setNombreRemoto(snap.val().trim());
       }
     });
-    const unsubConfigNombre = onValue(ref(db, `${rutaNegocio}/configuracion/nombre`), (snap) => {
+    const unsubConfigNombre = onValue(ref(db, `${prefijo}configuracion/nombre`), (snap) => {
       if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
         setNombreRemoto(snap.val().trim());
       }
     });
-    const unsubConfigLogo = onValue(ref(db, `${rutaNegocio}/configuracion/logo_url`), (snap) => {
+    const unsubConfigLogo = onValue(ref(db, `${prefijo}configuracion/logo_url`), (snap) => {
       if (snap.exists() && typeof snap.val() === 'string' && snap.val().trim()) {
         setLogoRemoto(snap.val().trim());
       }

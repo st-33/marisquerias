@@ -8,7 +8,7 @@ import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MesasRepository, PedidosRepository } from '../../../sistema/persistencia';
 import { DespachadorCola } from '../../../sistema/impresion/fierros/cola/DespachadorCola';
-import { servicioFierros } from '../../../sistema/impresion/fierros';
+import { servicioFierros, useEstadoHub } from '../../../sistema/impresion/fierros';
 import type { ItemCuenta } from '../../../sistema/impresion/fierros/contratos/tipos';
 import { createLogger } from '../../../sistema/monitoreo';
 import { usePoliticasImpresion } from './usePoliticasImpresion';
@@ -139,11 +139,27 @@ export function useGestionarImpresion({
             formatVariantsForPrintWithLabels(item.variantLabels, item.variantes) || undefined,
         }));
 
-        // 1. Hardware First (Regla 5): Si la terminal tiene una impresora conectada, emitir físicamente el ticket
-        if (servicioFierros.estaConectado) {
+        const estadoHubLocal = useEstadoHub?.getState?.();
+        const destinoHub = estadoHubLocal?.destino;
+        const esDedicadoAMostrador =
+          destinoHub === 'mostrador' || destinoHub === 'venta_crudo';
+        const esHubRestauranteOnline =
+          estadoHubLocal?.habilitado &&
+          estadoHubLocal?.destino === 'restaurante' &&
+          estadoHubLocal?.enLinea;
+
+        let impresoEnFierroLocal = false;
+
+        // 1. Hardware First con Aislamiento de Canal (Regla 5 + Aislamiento de Hub):
+        // - Si esta terminal tiene una impresora conectada y NO está dedicada a Mostrador,
+        //   ni tiene activo el DespachadorCola de Restaurante en línea (el cual lo imprimirá por la cola),
+        //   emitir físicamente el ticket.
+        // - Si esta terminal está configurada o dedicada a Mostrador, su impresora física pertenece exclusivamente
+        //   a Mostrador y jamás debe imprimir cuentas de Restaurante; el trabajo va al spool de `restaurante`.
+        if (servicioFierros.estaConectado && !esDedicadoAMostrador && !esHubRestauranteOnline) {
           try {
             log.info(
-              '🖨️ [Hardware] Impresora conectada detectada. Imprimiendo cuenta físicamente...'
+              '🖨️ [Hardware] Impresora local disponible para Restaurante. Imprimiendo cuenta físicamente...'
             );
             const resFierros = await servicioFierros.imprimirCuenta(
               {
@@ -161,6 +177,7 @@ export function useGestionarImpresion({
                 nombreNegocio,
               }
             );
+            impresoEnFierroLocal = Boolean(resFierros?.exito);
             log.info('✅ [Hardware] Resultado impresión física:', resFierros);
           } catch (errFierros) {
             log.warn(
@@ -168,6 +185,10 @@ export function useGestionarImpresion({
               errFierros
             );
           }
+        } else if (esDedicadoAMostrador) {
+          log.info(
+            '🛡️ [Aislamiento Hub] Impresora local asignada a Mostrador. Enrutando cuenta al Hub de Restaurante...'
+          );
         }
 
         const payload = {
@@ -181,20 +202,23 @@ export function useGestionarImpresion({
           timestamp: Date.now(),
         };
 
-        // 2. Encolado remoto idempotente (notificación a spool central / hubs)
-        try {
-          log.info(`📡 Encolando job: ${jobId}`);
-          const job = await DespachadorCola.encolarRemotoIdempotente(db, rutaNegocio, {
-            idTrabajo: jobId,
-            idPedido: pedidoId,
-            proposito: 'cuenta',
-            canal: 'standard',
-            templateVersion: 'v1',
-            payload,
-          });
-          log.info('✅ Job encolado en spool', { jobId: job.jobId });
-        } catch (errCola) {
-          log.warn('⚠️ Error al encolar en spool remoto (no bloqueante):', errCola);
+        // 2. Encolado remoto idempotente (notificación a spool central / Hub de Restaurante)
+        // Solo se encola al Hub si no se imprimió ya directamente en una impresora local dedicada.
+        if (!impresoEnFierroLocal) {
+          try {
+            log.info(`📡 Encolando job para Hub Restaurante: ${jobId}`);
+            const job = await DespachadorCola.encolarRemotoIdempotente(db, rutaNegocio, {
+              idTrabajo: jobId,
+              idPedido: pedidoId,
+              proposito: 'cuenta',
+              canal: 'standard',
+              templateVersion: 'v1',
+              payload,
+            });
+            log.info('✅ Job encolado en spool', { jobId: job.jobId });
+          } catch (errCola) {
+            log.warn('⚠️ Error al encolar en spool remoto (no bloqueante):', errCola);
+          }
         }
 
         onPrintBill?.(selectedTable);

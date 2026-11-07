@@ -96,7 +96,8 @@ export function useLogicaAjustesAdmin() {
   useEffect(() => {
     if (!rutaNegocio) return;
 
-    const rutaConfig = `${rutaNegocio}/configuracion`;
+    const baseLimpia = rutaNegocio.replace(/^\/+|\/+$/g, '');
+    const rutaConfig = baseLimpia ? `${baseLimpia}/configuracion` : 'configuracion';
     const unsub = onValue(
       ref(db, rutaConfig),
       (snap) => {
@@ -146,9 +147,11 @@ export function useLogicaAjustesAdmin() {
 
       // 2. Persistir en RTDB del negocio si hay ruta conectada
       if (rutaNegocio) {
-        await update(ref(db, `${rutaNegocio}/configuracion`), updates);
+        const baseLimpia = rutaNegocio.replace(/^\/+|\/+$/g, '');
+        const rutaConfig = baseLimpia ? `${baseLimpia}/configuracion` : 'configuracion';
+        await update(ref(db, rutaConfig), updates);
         // Sincronizar también nodo raíz /nombre por compatibilidad
-        await update(ref(db, rutaNegocio), { nombre: nombre.trim() });
+        await update(ref(db, baseLimpia || '/'), { nombre: nombre.trim() });
       }
 
       setCargando(false);

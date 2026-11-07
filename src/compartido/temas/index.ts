@@ -84,18 +84,18 @@ export const RADIUS = {
 
 export const TYPOGRAPHY = {
   sizes: {
-    xs: 10,
-    sm: 11,
-    base: 13,
-    md: 14,
-    lg: 15,
-    xl: 16,
-    xxl: 18,
-    xxxl: 22,
-    display: 30,
+    xs: 12,
+    sm: 13,
+    base: 15,
+    md: 16,
+    lg: 17,
+    xl: 19,
+    xxl: 22,
+    xxxl: 26,
+    display: 32,
   },
   weights: {
-    regular: '400' as const,
+    regular: '500' as const,
     medium: '600' as const,
     semibold: '700' as const,
     bold: '800' as const,

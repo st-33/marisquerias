@@ -210,7 +210,9 @@ export class DespachadorCola {
     rutaNegocio: string,
     idTrabajo: string
   ): Promise<TrabajoRTDB | null> {
-    const snapshot = await get(ref(db, `${rutaNegocio}/spool/jobs/${idTrabajo}`));
+    const baseLimpia = (rutaNegocio || '').replace(/^\/+|\/+$/g, '');
+    const baseSpool = baseLimpia ? `${baseLimpia}/spool` : 'spool';
+    const snapshot = await get(ref(db, `${baseSpool}/jobs/${idTrabajo}`));
     return snapshot.exists() ? (snapshot.val() as TrabajoRTDB) : null;
   }
 
@@ -240,14 +242,16 @@ export class DespachadorCola {
       updatedAt: ahora,
     }) as TrabajoRTDB;
 
+    const baseLimpia = (rutaNegocio || '').replace(/^\/+|\/+$/g, '');
+    const baseSpool = baseLimpia ? `${baseLimpia}/spool` : 'spool';
     await Promise.all([
-      set(ref(db, `${rutaNegocio}/spool/jobs/${idTrabajo}`), trabajo),
+      set(ref(db, `${baseSpool}/jobs/${idTrabajo}`), trabajo),
       set(
         ref(
           db,
           canal === 'standard'
-            ? `${rutaNegocio}/spool/hub/queue/${idTrabajo}`
-            : `${rutaNegocio}/spool/hub/${canal}/queue/${idTrabajo}`
+            ? `${baseSpool}/hub/queue/${idTrabajo}`
+            : `${baseSpool}/hub/${canal}/queue/${idTrabajo}`
         ),
         true
       ),
@@ -456,9 +460,11 @@ export class DespachadorCola {
     const ahora = Date.now();
 
     const canal =
-      trabajo.canal || (trabajo.proposito === 'venta_crudo' ? 'venta_crudo' : 'standard');
+      trabajo.canal === 'mostrador' || trabajo.canal === 'venta_crudo'
+        ? 'venta_crudo'
+        : trabajo.canal || (trabajo.proposito === 'venta_crudo' || trabajo.proposito === 'mostrador' ? 'venta_crudo' : 'standard');
 
-    const trabajoRTDB: TrabajoRTDB = {
+    const trabajoRTDB: TrabajoRTDB = limpiarUndefined({
       jobId: idTrabajo,
       purpose: trabajo.proposito,
       state: 'pendiente_impresion',
@@ -470,7 +476,7 @@ export class DespachadorCola {
       attempts: 0,
       createdAt: ahora,
       updatedAt: ahora,
-    };
+    });
 
     // Guardar trabajo
     await set(ref(this.db, `${this.rutaNegocio}/spool/jobs/${idTrabajo}`), trabajoRTDB);
@@ -622,6 +628,7 @@ export class DespachadorCola {
         case 'cuenta':
           resultado = await this.imprimirCuenta(trabajoFresco);
           break;
+        case 'mostrador':
         case 'venta_crudo':
           resultado = await this.imprimirVentaCrudo(trabajoFresco);
           break;
@@ -782,7 +789,13 @@ export class DespachadorCola {
         legacy = legacySnap?.exists?.() ? legacySnap.val() : null;
       }
 
-      const nombreNegocio = ajustes?.businessName || legacy?.header || 'NEGOCIO';
+      const nombreNegocio =
+        ajustes?.businessName ||
+        legacy?.header ||
+        resolver_nombre_negocio({
+          rutaNegocio: this.rutaNegocio,
+          nombreConfig: ajustes?.businessName || legacy?.header,
+        });
       const piePagina = ajustes?.footerMessage || legacy?.footer || '¡Gracias por su compra!';
 
       const datosVenta: DatosVenta = {

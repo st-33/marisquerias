@@ -17,12 +17,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 export type ThemeType = 'elite' | 'default';
 
 export interface ThemeColors {
-  // Fondo
+  // Fondo y Superficies Elevadas (Multi-layer dark hierarchy)
   background: string;
   backgroundSecondary: string;
   surface: string;
   surfaceDark: string;
+  surfaceElevated: string;
   card: string;
+  cardElevated: string;
 
   // Acentos
   primary: string;
@@ -41,9 +43,11 @@ export interface ThemeColors {
   // Bordes
   border: string;
   borderLight: string;
+  borderHighlight: string;
 
   // Estados
   success: string;
+  successSoft: string;
   error: string;
   danger: string;
   warning: string;
@@ -67,38 +71,42 @@ export interface AppTheme {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// TEMA ELITE (Marisquerías)
+// TEMA ELITE (Marisquerías - Oro & Obsidiana Cálida)
 // ═══════════════════════════════════════════════════════════════════
-const SCALE_ELITE = SCREEN_WIDTH < 480 ? 0.85 : SCREEN_WIDTH < 1024 ? 1.0 : 1.4;
+const SCALE_ELITE = SCREEN_WIDTH < 480 ? 0.9 : SCREEN_WIDTH < 1024 ? 1.05 : 1.35;
 
 const eliteColors: ThemeColors = {
-  background: '#050506',
-  backgroundSecondary: '#0a0a0c',
-  surface: '#111115',
-  surfaceDark: '#0a0a0d',
-  card: '#1a1a1f',
+  background: '#08080a',
+  backgroundSecondary: '#0f0f13',
+  surface: '#16161c',
+  surfaceDark: '#0c0c10',
+  surfaceElevated: '#1f1e26',
+  card: '#1d1c24',
+  cardElevated: '#26252f',
 
-  primary: '#c5a059',
-  primaryLight: '#f5ecd7',
-  secondary: '#8e7952',
-  accent: '#d4af37',
+  primary: '#d4af37',
+  primaryLight: '#faeed1',
+  secondary: '#b89758',
+  accent: '#e5c158',
 
-  glass: 'rgba(15, 15, 18, 0.85)',
+  glass: 'rgba(22, 22, 28, 0.92)',
 
-  text: '#ffffff',
-  textSecondary: 'rgba(255, 255, 255, 0.75)',
-  textMuted: 'rgba(255, 255, 255, 0.5)',
+  text: '#faf8f5',
+  textSecondary: '#e2dcd3',
+  textMuted: '#a39b8f',
 
-  border: '#2a2520',
-  borderLight: '#3d362d',
+  border: '#302b24',
+  borderLight: '#463e33',
+  borderHighlight: 'rgba(212, 175, 55, 0.42)',
 
-  success: '#4ade80',
-  error: '#ff4d4d',
-  danger: '#ff4d4d',
+  success: '#34d399',
+  successSoft: 'rgba(52, 211, 153, 0.14)',
+  error: '#f87171',
+  danger: '#f87171',
   warning: '#fbbf24',
 
-  shadow: 'rgba(197, 160, 89, 0.2)',
-  shadowDark: 'rgba(0, 0, 0, 0.5)',
+  shadow: 'rgba(212, 175, 55, 0.24)',
+  shadowDark: 'rgba(0, 0, 0, 0.65)',
 };
 
 const eliteTheme: AppTheme = {
@@ -110,43 +118,47 @@ const eliteTheme: AppTheme = {
   screenHeight: SCREEN_HEIGHT,
   hasLiquidBackground: true,
   hasStickers: true,
-  stickerOpacity: 0.12,
+  stickerOpacity: 0.14,
   orbHasHalo: true,
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// TEMA DEFAULT (Otras categorías)
+// TEMA DEFAULT (Clásico Atlántico Profundo)
 // ═══════════════════════════════════════════════════════════════════
-const SCALE_DEFAULT = SCREEN_WIDTH < 480 ? 0.85 : SCREEN_WIDTH < 1024 ? 1.0 : 1.4;
+const SCALE_DEFAULT = SCREEN_WIDTH < 480 ? 0.9 : SCREEN_WIDTH < 1024 ? 1.05 : 1.35;
 
 const defaultColors: ThemeColors = {
-  background: '#0B101A',
-  backgroundSecondary: '#0F172A',
-  surface: '#111827',
-  surfaceDark: '#0F172A',
-  card: '#1F2937',
+  background: '#090d16',
+  backgroundSecondary: '#0f1624',
+  surface: '#151e30',
+  surfaceDark: '#0c121e',
+  surfaceElevated: '#1e293b',
+  card: '#1b2538',
+  cardElevated: '#243147',
 
-  primary: '#2563EB',
-  primaryLight: '#93c5fd',
-  secondary: '#64748b',
-  accent: '#F59E0B',
+  primary: '#3b82f6',
+  primaryLight: '#dbeafe',
+  secondary: '#94a3b8',
+  accent: '#f59e0b',
 
-  glass: 'rgba(30, 41, 59, 0.9)',
+  glass: 'rgba(21, 30, 48, 0.92)',
 
-  text: '#F9FAFB',
-  textSecondary: '#CBD5F5',
-  textMuted: '#6B7280',
+  text: '#f8fafc',
+  textSecondary: '#cbd5e1',
+  textMuted: '#94a3b8',
 
-  border: '#1F2937',
-  borderLight: '#27324A',
+  border: '#26334d',
+  borderLight: '#334466',
+  borderHighlight: 'rgba(59, 130, 246, 0.42)',
 
-  success: '#10B981',
-  error: '#EF4444',
-  danger: '#EF4444',
-  warning: '#F59E0B',
+  success: '#34d399',
+  successSoft: 'rgba(52, 211, 153, 0.14)',
+  error: '#f87171',
+  danger: '#f87171',
+  warning: '#fbbf24',
 
-  shadow: 'rgba(15,23,42,0.45)',
-  shadowDark: 'rgba(15,23,42,0.65)',
+  shadow: 'rgba(15, 23, 42, 0.55)',
+  shadowDark: 'rgba(0, 0, 0, 0.7)',
 };
 
 const defaultTheme: AppTheme = {
@@ -296,43 +308,54 @@ export function useAppTheme(): ThemeContextValue {
 export const theme = {
   colors: defaultColors,
   typography: {
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    sizes: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20, xxl: 24, xxxl: 32 },
+    fontFamily:
+      Platform.OS === 'web'
+        ? '"Plus Jakarta Sans", "Outfit", "Segoe UI", system-ui, sans-serif'
+        : Platform.OS === 'ios'
+          ? 'AvenirNext-DemiBold'
+          : 'sans-serif-medium',
+    displayFamily:
+      Platform.OS === 'web'
+        ? '"Cabinet Grotesk", "Outfit", "Georgia", serif'
+        : Platform.OS === 'ios'
+          ? 'Georgia-Bold'
+          : 'serif',
+    sizes: { xs: 13, sm: 15, md: 17, lg: 19, xl: 22, xxl: 26, xxxl: 34 },
     weights: {
-      regular: '400' as const,
-      medium: '500' as const,
-      semibold: '600' as const,
-      bold: '700' as const,
-      heavy: '800' as const,
+      regular: '500' as const,
+      medium: '600' as const,
+      semibold: '700' as const,
+      bold: '800' as const,
+      heavy: '900' as const,
     },
-    lineHeights: { tight: 1.2, normal: 1.4, relaxed: 1.6 },
+    lineHeights: { tight: 1.25, normal: 1.45, relaxed: 1.65 },
   },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48, xxxl: 64 },
-  borderRadius: { sm: 6, md: 8, lg: 12, xl: 16, round: 9999 },
+  spacing: { xs: 4, sm: 8, md: 14, lg: 20, xl: 28, xxl: 40, xxxl: 56 },
+  borderRadius: { sm: 8, md: 10, lg: 14, xl: 18, round: 9999 },
   shadows: {
     sm: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 3,
     },
     md: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.32,
+      shadowRadius: 8,
+      elevation: 6,
     },
     lg: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      elevation: 10,
     },
   },
-  animations: { duration: { fast: 200, normal: 300, slow: 500 }, easing: 'ease-in-out' },
+  animations: { duration: { fast: 180, normal: 260, slow: 420 }, easing: 'ease-in-out' },
 };
 
 export const useTheme = useAppTheme;

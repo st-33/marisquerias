@@ -1,14 +1,18 @@
 import type { Database } from 'firebase/database';
 import { off, onValue, ref, update } from 'firebase/database';
 import type { StateCreator } from 'zustand';
-import type {
-  AreaInventarioV2,
-  ItemInventarioV2,
-  SeccionInventarioV2,
+import {
+  RepositorioInventario,
+  convertirCantidadInventario,
+  type AreaInventarioV2,
+  type ItemInventarioV2,
+  type SeccionInventarioV2,
+  type UnidadFisicaInventario,
+  type UsoArticuloInventario,
 } from '../../persistencia/inventario.repositorio';
 import { OfflinePrintFallback } from '../../servicios/RespaldoImpresionOffline';
 import { SQLiteStorageAdapter } from '../../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
-import { validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
+import { resolver_ruta_cajon, validar_ruta_negocio } from '../../rtdb/rutas/ruta_negocio';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../../rtdb/guards';
 
 export interface ContratoInventoryV2 {
@@ -45,6 +49,13 @@ export interface AccionesInventoryV2 {
     rutaNegocio: string,
     item: Omit<ItemInventarioV2, 'id' | 'updatedAt'>
   ) => Promise<string>;
+
+  actualizarItem: (
+    db: Database,
+    rutaNegocio: string,
+    itemId: string,
+    patch: Partial<Omit<ItemInventarioV2, 'id'>>
+  ) => Promise<void>;
 
   crearArea: (
     db: Database,
@@ -98,6 +109,47 @@ export interface AccionesInventoryV2 {
     allowNegative?: boolean;
   }) => Promise<void>;
 
+  registrarMerma: (params: {
+    db: Database;
+    rutaNegocio: string;
+    areaId: string;
+    itemId: string;
+    cantidad: number;
+    usuario?: string;
+    razon: string;
+  }) => Promise<void>;
+
+  transferirStock: (params: {
+    db: Database;
+    rutaNegocio: string;
+    itemId: string;
+    cantidad: number;
+    fromAreaId: string;
+    toAreaId: string;
+    usuario?: string;
+    razon?: string;
+  }) => Promise<void>;
+
+  porcionarInsumo: (params: {
+    db: Database;
+    rutaNegocio: string;
+    insumoOrigenId: string;
+    cantidadOrigen: number;
+    areaOrigenId: string;
+    itemDestinoId?: string;
+    nuevoItemDestino?: {
+      nombre: string;
+      unidad: UnidadFisicaInventario;
+      uso?: UsoArticuloInventario;
+      imagenId?: string;
+    };
+    cantidadPorcionesObtenidas: number;
+    areaDestinoId?: string;
+    mermaCantidad?: number;
+    usuario?: string;
+    razon?: string;
+  }) => Promise<{ itemDestinoId: string; costoUnitarioDestino: number }>;
+
   // === SELECTORES DERIVADOS ===
   getPredicciones: (productos: Record<string, any>) => PrediccionPlatillo[];
 }
@@ -114,6 +166,17 @@ export const ESTADO_INICIAL_INVENTORY_V2: ContratoInventoryV2 = {
 
 export type InventoryV2Slice = ContratoInventoryV2 & AccionesInventoryV2;
 
+function sonColeccionesEquivalentes(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+const normalizadosPorSesion = new Set<string>();
+
 export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], InventoryV2Slice> = (
   set,
   getState
@@ -121,7 +184,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   ...ESTADO_INICIAL_INVENTORY_V2,
 
   inicializarInventoryV2Listeners: (db: Database, rutaNegocio: string) => {
-    if (!validar_ruta_negocio(rutaNegocio)) {
+    if (!validar_ruta_negocio(rutaNegocio, { permitirRaiz: true })) {
       return () => {};
     }
 
@@ -129,22 +192,25 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       return () => {};
     }
 
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const cleanupFunctions: (() => void)[] = [];
 
-    const catalogRef = ref(db, `${rutaNegocio}/inventario/catalog`);
+    const catalogRef = ref(db, `${baseInv}/catalog`);
     const catalogCb = onValue(catalogRef, (snap) => {
       const raw = snap.val() || {};
       const next: Record<string, ItemInventarioV2> = {};
       Object.entries(raw).forEach(([id, v]) => {
         if (v && typeof v === 'object') {
-          next[id] = { id, ...(v as any) };
+          next[id] = { id, uso: 'ambos', controlarExistencias: true, ...(v as any) };
         }
       });
-      set({ catalog: next, ultimaActualizacion: Date.now() });
+      if (!sonColeccionesEquivalentes(getState().catalog, next)) {
+        set({ catalog: next, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(catalogRef, 'value', catalogCb as any));
 
-    const sectionsRef = ref(db, `${rutaNegocio}/inventario/sections`);
+    const sectionsRef = ref(db, `${baseInv}/sections`);
     const sectionsCb = onValue(sectionsRef, (snap) => {
       const raw = snap.val() || {};
       const next: Record<string, SeccionInventarioV2> = {};
@@ -153,11 +219,13 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
           next[id] = { id, ...(v as any) };
         }
       });
-      set({ sections: next, ultimaActualizacion: Date.now() });
+      if (!sonColeccionesEquivalentes(getState().sections, next)) {
+        set({ sections: next, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(sectionsRef, 'value', sectionsCb as any));
 
-    const areasRef = ref(db, `${rutaNegocio}/inventario/areas`);
+    const areasRef = ref(db, `${baseInv}/areas`);
     const areasCb = onValue(areasRef, (snap) => {
       const raw = snap.val() || {};
       const next: Record<string, AreaInventarioV2> = {};
@@ -166,7 +234,9 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
           next[id] = { id, ...(v as any) };
         }
       });
-      set({ areas: next, ultimaActualizacion: Date.now() });
+      if (!sonColeccionesEquivalentes(getState().areas, next)) {
+        set({ areas: next, ultimaActualizacion: Date.now() });
+      }
 
       if (!getState().normalizing) {
         void getState().normalizarItemsSinContenedor(db, rutaNegocio, next);
@@ -174,9 +244,12 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     });
     cleanupFunctions.push(() => off(areasRef, 'value', areasCb as any));
 
-    const missingRef = ref(db, `${rutaNegocio}/inventario/missing_area_assignments`);
+    const missingRef = ref(db, `${baseInv}/missing_area_assignments`);
     const missingCb = onValue(missingRef, (snap) => {
-      set({ missingAssignments: snap.val() || {}, ultimaActualizacion: Date.now() });
+      const next = snap.val() || {};
+      if (!sonColeccionesEquivalentes(getState().missingAssignments, next)) {
+        set({ missingAssignments: next, ultimaActualizacion: Date.now() });
+      }
     });
     cleanupFunctions.push(() => off(missingRef, 'value', missingCb as any));
 
@@ -193,26 +266,27 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
   async crearItem(db, rutaNegocio, item) {
     assertValidRutaNegocio(rutaNegocio);
-    const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
-    const r = rtdbRef(db, `${rutaNegocio}/inventario/catalog`);
-    const newRef = push(r);
-    await rtdbSet(newRef, sanitizeRtdbPayload({ ...item, updatedAt: Date.now() }));
-    return newRef.key as string;
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    return repo.crearItem(item);
+  },
+
+  async actualizarItem(db, rutaNegocio, itemId, patch) {
+    assertValidRutaNegocio(rutaNegocio);
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    await repo.actualizarItem(itemId, patch);
   },
 
   async crearArea(db, rutaNegocio, area) {
     assertValidRutaNegocio(rutaNegocio);
-    const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
-    const r = rtdbRef(db, `${rutaNegocio}/inventario/areas`);
-    const newRef = push(r);
-    await rtdbSet(newRef, sanitizeRtdbPayload({ ...area, updatedAt: Date.now() }));
-    return newRef.key as string;
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    return repo.crearArea(area);
   },
 
   async crearContenedor(db, rutaNegocio, contenedor) {
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { push, ref: rtdbRef, set: rtdbSet } = await import('firebase/database');
-    const r = rtdbRef(db, `${rutaNegocio}/inventario/areas`);
+    const r = rtdbRef(db, `${baseInv}/areas`);
     const newRef = push(r);
     await rtdbSet(
       newRef,
@@ -224,22 +298,25 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   async crearItemEnContenedor(params) {
     const { db, rutaNegocio, containerId, item, initialQty = 0 } = params;
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { push, ref: rtdbRef } = await import('firebase/database');
 
-    const catalogRef = rtdbRef(db, `${rutaNegocio}/inventario/catalog`);
+    const catalogRef = rtdbRef(db, `${baseInv}/catalog`);
     const newRef = push(catalogRef);
     const itemId = newRef.key as string;
     const now = Date.now();
 
     const updates: Record<string, any> = {};
-    updates[`${rutaNegocio}/inventario/catalog/${itemId}`] = sanitizeRtdbPayload({
+    updates[`${baseInv}/catalog/${itemId}`] = sanitizeRtdbPayload({
       ...item,
+      uso: item.uso || 'ambos',
+      controlarExistencias: item.controlarExistencias ?? true,
       updatedAt: now,
     });
-    updates[`${rutaNegocio}/inventario/areas/${containerId}/stock/${itemId}`] = Number(
-      initialQty || 0
-    );
-    updates[`${rutaNegocio}/inventario/areas/${containerId}/updatedAt`] = now;
+    if (item.controlarExistencias !== false) {
+      updates[`${baseInv}/areas/${containerId}/stock/${itemId}`] = Number(initialQty || 0);
+      updates[`${baseInv}/areas/${containerId}/updatedAt`] = now;
+    }
 
     await update(rtdbRef(db), sanitizeRtdbPayload(updates));
     return itemId;
@@ -248,22 +325,25 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   async crearItemEnSeccion(params) {
     const { db, rutaNegocio, sectionId, item, initialQty = 0 } = params;
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { push, ref: rtdbRef } = await import('firebase/database');
 
-    const catalogRef = rtdbRef(db, `${rutaNegocio}/inventario/catalog`);
+    const catalogRef = rtdbRef(db, `${baseInv}/catalog`);
     const newRef = push(catalogRef);
     const itemId = newRef.key as string;
     const now = Date.now();
 
     const updates: Record<string, any> = {};
-    updates[`${rutaNegocio}/inventario/catalog/${itemId}`] = sanitizeRtdbPayload({
+    updates[`${baseInv}/catalog/${itemId}`] = sanitizeRtdbPayload({
       ...item,
+      uso: item.uso || 'ambos',
+      controlarExistencias: item.controlarExistencias ?? true,
       updatedAt: now,
     });
-    updates[`${rutaNegocio}/inventario/sections/${sectionId}/stock/${itemId}`] = Number(
-      initialQty || 0
-    );
-    updates[`${rutaNegocio}/inventario/sections/${sectionId}/updatedAt`] = now;
+    if (item.controlarExistencias !== false) {
+      updates[`${baseInv}/sections/${sectionId}/stock/${itemId}`] = Number(initialQty || 0);
+      updates[`${baseInv}/sections/${sectionId}/updatedAt`] = now;
+    }
 
     await update(rtdbRef(db), sanitizeRtdbPayload(updates));
     return itemId;
@@ -271,12 +351,13 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
   async seedPresets(db, rutaNegocio) {
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { get, ref: rtdbRef } = await import('firebase/database');
 
     const [catSnap, areasSnap, sectionsSnap] = await Promise.all([
-      get(rtdbRef(db, `${rutaNegocio}/inventario/catalog`)),
-      get(rtdbRef(db, `${rutaNegocio}/inventario/areas`)),
-      get(rtdbRef(db, `${rutaNegocio}/inventario/sections`)),
+      get(rtdbRef(db, `${baseInv}/catalog`)),
+      get(rtdbRef(db, `${baseInv}/areas`)),
+      get(rtdbRef(db, `${baseInv}/sections`)),
     ]);
 
     const hasCatalog = catSnap.exists() && Object.keys(catSnap.val() || {}).length > 0;
@@ -292,19 +373,19 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     const niche = (getState() as any).sesion?.niche;
     const hubId = niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante';
 
-    updates[`${rutaNegocio}/inventario/sections/alimentos`] = {
+    updates[`${baseInv}/sections/alimentos`] = {
       nombre: 'Alimentos / Consumibles',
       icon: '🍲',
       stock: {},
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/sections/losa_cristaleria`] = {
+    updates[`${baseInv}/sections/losa_cristaleria`] = {
       nombre: 'Losa / Cristalería',
       icon: '🍽️',
       stock: {},
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/sections/otros`] = {
+    updates[`${baseInv}/sections/otros`] = {
       nombre: 'Otros',
       icon: '📦',
       stock: {},
@@ -315,10 +396,26 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       alimentos: {
         camaron: 'item_alim_camaron',
         pescado: 'item_alim_pescado_entero',
+        filete: 'item_alim_filete_pescado',
         pulpo: 'item_alim_pulpo_cocido',
         calamar: 'item_alim_calamar_fresco',
-        cerveza: 'item_alim_cerveza',
-        refresco: 'item_alim_refresco',
+        ostion: 'item_alim_ostion',
+        jaiba_mixto: 'item_alim_marisco_mixto',
+        aguacate: 'item_alim_aguacate',
+        limon: 'item_alim_limon',
+        verdura_coctel: 'item_alim_verdura_coctel',
+        tostadas_empanadas: 'item_alim_tostadas_masa',
+        insumos_flan: 'item_alim_base_flan',
+        duraznos: 'item_alim_duraznos_almibar',
+        flan_terminado: 'item_term_plat_flan_napolitano',
+        coca_cola: 'item_alim_refresco',
+        cerveza_xx: 'item_alim_cerveza',
+        cerveza_victoria: 'item_alim_cerveza_victoria',
+        cerveza_sol: 'item_alim_cerveza_sol',
+        boing_mango: 'item_alim_boing_mango',
+        boing_guayaba: 'item_alim_boing_guayaba',
+        boing_tamarindo: 'item_alim_boing_tamarindo',
+        boing_uva: 'item_alim_boing_uva',
       },
       losa_cristaleria: {
         plato: 'item_losa_plato',
@@ -338,132 +435,366 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       },
     };
 
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.camaron}`] = {
-      nombre: 'Camarón',
+    updates[`${baseInv}/catalog/${itemIds.alimentos.camaron}`] = {
+      nombre: 'Camarón Cristal',
       sectionId: 'alimentos',
       unidad: 'kg',
+      uso: 'ambos',
+      controlarExistencias: true,
+      costo: 165,
       minStock: 5,
+      equivalencias: { piezasPorKg: 35, esAproximado: true },
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.pescado}`] = {
-      nombre: 'Pescado Entero',
+    updates[`${baseInv}/catalog/${itemIds.alimentos.pescado}`] = {
+      nombre: 'Mojarra Entera Fresca',
       sectionId: 'alimentos',
       unidad: 'kg',
-      minStock: 5,
+      uso: 'ambos',
+      controlarExistencias: true,
+      costo: 95,
+      minStock: 6,
+      equivalencias: { piezasPorKg: 2.5, pesoPromedioPiezaKg: 0.4, esAproximado: true },
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.pulpo}`] = {
+    updates[`${baseInv}/catalog/${itemIds.alimentos.filete}`] = {
+      nombre: 'Filete de Pescado Blanco',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'ambos',
+      controlarExistencias: true,
+      costo: 135,
+      minStock: 5,
+      equivalencias: { piezasPorKg: 5, pesoPromedioPiezaKg: 0.2, esAproximado: true },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.pulpo}`] = {
       nombre: 'Pulpo Cocido',
       sectionId: 'alimentos',
       unidad: 'kg',
+      uso: 'ambos',
+      controlarExistencias: true,
+      costo: 210,
       minStock: 3,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.calamar}`] = {
+    updates[`${baseInv}/catalog/${itemIds.alimentos.calamar}`] = {
       nombre: 'Calamar Fresco',
       sectionId: 'alimentos',
       unidad: 'kg',
+      uso: 'ambos',
+      controlarExistencias: true,
+      costo: 140,
       minStock: 3,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.cerveza}`] = {
-      nombre: 'Cerveza',
+    updates[`${baseInv}/catalog/${itemIds.alimentos.ostion}`] = {
+      nombre: 'Ostión Fresco',
       sectionId: 'alimentos',
-      unidad: 'pza',
-      minStock: 12,
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 120,
+      minStock: 2,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.alimentos.refresco}`] = {
-      nombre: 'Refresco',
+    updates[`${baseInv}/catalog/${itemIds.alimentos.jaiba_mixto}`] = {
+      nombre: 'Surtido de Mariscos (Jaiba / Almeja / Mejillón)',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 150,
+      minStock: 3,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.aguacate}`] = {
+      nombre: 'Aguacate Hass',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 65,
+      minStock: 3,
+      equivalencias: { piezasPorKg: 4, pesoPromedioPiezaKg: 0.25, esAproximado: true },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.limon}`] = {
+      nombre: 'Limón Verde',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 28,
+      minStock: 4,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.verdura_coctel}`] = {
+      nombre: 'Verdura Fresca (Jitomate, Cebolla, Pepino, Cilantro)',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 26,
+      minStock: 5,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.tostadas_empanadas}`] = {
+      nombre: 'Tostadas y Masa para Empanadas',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 32,
+      minStock: 3,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.insumos_flan}`] = {
+      nombre: 'Base Láctea y Huevo para Flan (Por Molde)',
       sectionId: 'alimentos',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 95,
+      minStock: 2,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.duraznos}`] = {
+      nombre: 'Duraznos en Almíbar y Crema',
+      sectionId: 'alimentos',
+      unidad: 'kg',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 75,
+      minStock: 2,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.flan_terminado}`] = {
+      nombre: 'Flan Napolitano Casero (Rebanada)',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'producto_terminado',
+      controlarExistencias: true,
+      costo: 14.5,
+      minStock: 4,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.coca_cola}`] = {
+      nombre: 'Coca-Cola',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'coca_cola',
+      controlarExistencias: true,
+      costo: 16,
       minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.cerveza_xx}`] = {
+      nombre: 'Cerveza XX Lager',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'xx_lager',
+      controlarExistencias: true,
+      costo: 21,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.cerveza_victoria}`] = {
+      nombre: 'Cerveza Victoria',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'victoria',
+      controlarExistencias: true,
+      costo: 21,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.cerveza_sol}`] = {
+      nombre: 'Cerveza Sol',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'sol',
+      controlarExistencias: true,
+      costo: 20,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.boing_mango}`] = {
+      nombre: 'Boing de Mango',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'boing_mango',
+      controlarExistencias: true,
+      costo: 15,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.boing_guayaba}`] = {
+      nombre: 'Boing de Guayaba',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'boing_guayava',
+      controlarExistencias: true,
+      costo: 15,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.boing_tamarindo}`] = {
+      nombre: 'Boing de Tamarindo',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'boing_tamarindo',
+      controlarExistencias: true,
+      costo: 15,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.alimentos.boing_uva}`] = {
+      nombre: 'Boing de Uva',
+      sectionId: 'alimentos',
+      unidad: 'pza',
+      uso: 'venta_directa',
+      imagenId: 'boing_uva',
+      controlarExistencias: true,
+      costo: 15,
+      minStock: 12,
+      equivalencias: { piezasPorCaja: 24, esAproximado: false },
       updatedAt: now,
     };
 
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.plato}`] = {
-      nombre: 'Plato',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.plato}`] = {
+      nombre: 'Plato Trinche Marisquero',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 45,
       minStock: 24,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.vaso}`] = {
-      nombre: 'Vaso',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.vaso}`] = {
+      nombre: 'Vaso Jaibolero / Chabela',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 32,
       minStock: 24,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.copa}`] = {
-      nombre: 'Copa',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.copa}`] = {
+      nombre: 'Copa Coctelera (Chica / Mediana / Grande)',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
-      minStock: 12,
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 55,
+      minStock: 18,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.cubierto}`] = {
-      nombre: 'Cubierto',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.cubierto}`] = {
+      nombre: 'Juego de Cubiertos',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
-      minStock: 24,
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 25,
+      minStock: 30,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.charola}`] = {
-      nombre: 'Charola',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.charola}`] = {
+      nombre: 'Charola de Servicio',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 85,
       minStock: 6,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.losa_cristaleria.jarra}`] = {
-      nombre: 'Jarra',
+    updates[`${baseInv}/catalog/${itemIds.losa_cristaleria.jarra}`] = {
+      nombre: 'Jarra de 2 Litros',
       sectionId: 'losa_cristaleria',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 70,
       minStock: 6,
       updatedAt: now,
     };
 
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.bolsas}`] = {
-      nombre: 'Bolsas',
+    updates[`${baseInv}/catalog/${itemIds.otros.bolsas}`] = {
+      nombre: 'Bolsas para Llevar',
       sectionId: 'otros',
       unidad: 'pza',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 1.5,
       minStock: 50,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.servilletas}`] = {
-      nombre: 'Servilletas',
-      sectionId: 'otros',
-      unidad: 'pza',
-      minStock: 200,
-      updatedAt: now,
-    };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.jabon}`] = {
-      nombre: 'Jabón',
-      sectionId: 'otros',
-      unidad: 'pza',
-      minStock: 2,
-      updatedAt: now,
-    };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.cloro}`] = {
-      nombre: 'Cloro',
-      sectionId: 'otros',
-      unidad: 'pza',
-      minStock: 2,
-      updatedAt: now,
-    };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.guantes}`] = {
-      nombre: 'Guantes',
+    updates[`${baseInv}/catalog/${itemIds.otros.servilletas}`] = {
+      nombre: 'Paquete de Servilletas',
       sectionId: 'otros',
       unidad: 'caja',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 38,
+      minStock: 4,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.otros.jabon}`] = {
+      nombre: 'Detergente Líquido Cocina',
+      sectionId: 'otros',
+      unidad: 'l',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 35,
+      minStock: 2,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.otros.cloro}`] = {
+      nombre: 'Cloro Desinfectante',
+      sectionId: 'otros',
+      unidad: 'l',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 22,
+      minStock: 2,
+      updatedAt: now,
+    };
+    updates[`${baseInv}/catalog/${itemIds.otros.guantes}`] = {
+      nombre: 'Guantes de Nitrilo Cocina',
+      sectionId: 'otros',
+      unidad: 'caja',
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 145,
       minStock: 1,
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/catalog/${itemIds.otros.papel}`] = {
-      nombre: 'Papel',
+    updates[`${baseInv}/catalog/${itemIds.otros.papel}`] = {
+      nombre: 'Rollo de Papel Aluminio / Emplaye',
       sectionId: 'otros',
       unidad: 'pza',
-      minStock: 6,
+      uso: 'insumo',
+      controlarExistencias: true,
+      costo: 120,
+      minStock: 2,
       updatedAt: now,
     };
 
@@ -482,7 +813,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       },
     };
 
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.alimentos.cocina}`] = {
+    updates[`${baseInv}/areas/${areaIds.alimentos.cocina}`] = {
       hubId,
       sectionId: 'alimentos',
       nombre: 'Cocina',
@@ -490,44 +821,44 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       tipo: 'cocina',
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.alimentos.barra}`] = {
+    updates[`${baseInv}/areas/${areaIds.alimentos.barra}`] = {
       hubId,
       sectionId: 'alimentos',
-      nombre: 'Barra',
-      icon: '🍸',
+      nombre: 'Barra y Bebidas',
+      icon: '🍹',
       tipo: 'otro',
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.alimentos.almacen}`] = {
+    updates[`${baseInv}/areas/${areaIds.alimentos.almacen}`] = {
       hubId,
       sectionId: 'alimentos',
-      nombre: 'Almacén',
+      nombre: 'Almacén General',
       icon: '📦',
       tipo: 'almacen',
       updatedAt: now,
     };
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.alimentos.vc}`] = {
+    updates[`${baseInv}/areas/${areaIds.alimentos.vc}`] = {
       hubId: 'venta_crudo',
       sectionId: 'alimentos',
-      nombre: 'Venta Crudo',
-      icon: '🛒',
+      nombre: 'Mostrador',
+      icon: '🦐',
       tipo: 'mostrador',
       updatedAt: now,
     };
 
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.losa_cristaleria.servicio}`] = {
+    updates[`${baseInv}/areas/${areaIds.losa_cristaleria.servicio}`] = {
       hubId,
       sectionId: 'losa_cristaleria',
-      nombre: 'Servicio',
+      nombre: 'Servicio de Salón',
       icon: '🍽️',
       tipo: 'otro',
       updatedAt: now,
     };
 
-    updates[`${rutaNegocio}/inventario/areas/${areaIds.otros.general}`] = {
+    updates[`${baseInv}/areas/${areaIds.otros.general}`] = {
       hubId,
       sectionId: 'otros',
-      nombre: 'General',
+      nombre: 'Bodega de Insumos',
       icon: '🧰',
       tipo: 'otro',
       updatedAt: now,
@@ -538,81 +869,106 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
         areaId: areaIds.alimentos.cocina,
         hubId,
         sectionId: 'alimentos' as const,
-        nombre: 'Refri Principal',
+        nombre: 'Refri de Cocina',
         icon: '🧊',
         tipo: 'refri' as const,
         stock: {
-          [itemIds.alimentos.camaron]: 21,
-          [itemIds.alimentos.pescado]: 8,
-          [itemIds.alimentos.pulpo]: 2,
+          [itemIds.alimentos.camaron]: 24,
+          [itemIds.alimentos.pescado]: 18,
+          [itemIds.alimentos.filete]: 16,
+          [itemIds.alimentos.pulpo]: 8,
+          [itemIds.alimentos.calamar]: 7,
+          [itemIds.alimentos.ostion]: 6,
+          [itemIds.alimentos.jaiba_mixto]: 10,
+          [itemIds.alimentos.aguacate]: 8,
+          [itemIds.alimentos.limon]: 12,
+          [itemIds.alimentos.verdura_coctel]: 15,
+          [itemIds.alimentos.tostadas_empanadas]: 8,
+          [itemIds.alimentos.flan_terminado]: 16,
         },
       },
       {
         areaId: areaIds.alimentos.barra,
         hubId,
         sectionId: 'alimentos' as const,
-        nombre: 'Refri Principal',
+        nombre: 'Enfriador de Bebidas',
         icon: '🧊',
         tipo: 'refri' as const,
         stock: {
-          [itemIds.alimentos.refresco]: 24,
-          [itemIds.alimentos.cerveza]: 24,
+          [itemIds.alimentos.coca_cola]: 36,
+          [itemIds.alimentos.cerveza_xx]: 36,
+          [itemIds.alimentos.cerveza_victoria]: 36,
+          [itemIds.alimentos.cerveza_sol]: 24,
+          [itemIds.alimentos.boing_mango]: 24,
+          [itemIds.alimentos.boing_guayaba]: 24,
+          [itemIds.alimentos.boing_tamarindo]: 18,
+          [itemIds.alimentos.boing_uva]: 18,
         },
       },
       {
         areaId: areaIds.alimentos.almacen,
         hubId,
         sectionId: 'alimentos' as const,
-        nombre: 'Refri Principal',
+        nombre: 'Alacena y Secos',
         icon: '📦',
         tipo: 'almacen' as const,
-        stock: {},
+        stock: {
+          [itemIds.alimentos.insumos_flan]: 6,
+          [itemIds.alimentos.duraznos]: 6,
+        },
       },
       {
         areaId: areaIds.alimentos.vc,
         hubId: 'venta_crudo' as const,
         sectionId: 'alimentos' as const,
-        nombre: 'Caja Principal',
-        icon: '📦',
+        nombre: 'Mostrador Principal',
+        icon: '🧊',
         tipo: 'mostrador' as const,
         stock: {
-          [itemIds.alimentos.camaron]: 6,
-          [itemIds.alimentos.calamar]: 4,
+          [itemIds.alimentos.camaron]: 12,
+          [itemIds.alimentos.pescado]: 10,
+          [itemIds.alimentos.filete]: 8,
+          [itemIds.alimentos.pulpo]: 5,
+          [itemIds.alimentos.calamar]: 5,
         },
       },
       {
         areaId: areaIds.losa_cristaleria.servicio,
         hubId,
         sectionId: 'losa_cristaleria' as const,
-        nombre: 'Contenedor Principal',
-        icon: '📦',
+        nombre: 'Estación de Loza',
+        icon: '🍽️',
         tipo: 'almacen' as const,
         stock: {
           [itemIds.losa_cristaleria.plato]: 60,
           [itemIds.losa_cristaleria.vaso]: 60,
-          [itemIds.losa_cristaleria.copa]: 24,
+          [itemIds.losa_cristaleria.copa]: 36,
           [itemIds.losa_cristaleria.cubierto]: 80,
+          [itemIds.losa_cristaleria.charola]: 10,
+          [itemIds.losa_cristaleria.jarra]: 12,
         },
       },
       {
         areaId: areaIds.otros.general,
         hubId,
         sectionId: 'otros' as const,
-        nombre: 'Contenedor Principal',
+        nombre: 'Estante General',
         icon: '📦',
         tipo: 'almacen' as const,
         stock: {
           [itemIds.otros.bolsas]: 200,
-          [itemIds.otros.servilletas]: 500,
-          [itemIds.otros.cloro]: 3,
-          [itemIds.otros.jabon]: 2,
+          [itemIds.otros.servilletas]: 12,
+          [itemIds.otros.cloro]: 6,
+          [itemIds.otros.jabon]: 6,
+          [itemIds.otros.guantes]: 3,
+          [itemIds.otros.papel]: 4,
         },
       },
     ];
 
     for (const c of defaultContainers) {
       const containerId = `${c.areaId}__default`;
-      updates[`${rutaNegocio}/inventario/areas/${containerId}`] = {
+      updates[`${baseInv}/areas/${containerId}`] = {
         hubId: c.hubId,
         sectionId: c.sectionId,
         nombre: c.nombre,
@@ -631,6 +987,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     assertValidRutaNegocio(rutaNegocio);
     if (getState().normalizing) return;
 
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const niche = (getState() as any).sesion?.niche;
     const hubId = niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante';
 
@@ -653,19 +1010,23 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
     for (const [id, a] of areaEntries) {
       const sectionId = (a as any)?.sectionId;
-      if (!sectionId) {
-        updates[`${rutaNegocio}/inventario/areas/${id}/sectionId`] = 'otros';
-        updates[`${rutaNegocio}/inventario/areas/${id}/updatedAt`] = now;
+      const lockKey = `area:${rutaNegocio}:${id}`;
+      if (!sectionId && !normalizadosPorSesion.has(lockKey)) {
+        normalizadosPorSesion.add(lockKey);
+        updates[`${baseInv}/areas/${id}/sectionId`] = 'otros';
+        updates[`${baseInv}/areas/${id}/updatedAt`] = now;
       }
     }
 
     for (const [id, it] of Object.entries(catalog)) {
       const sectionId = (it as any)?.sectionId;
-      if (!sectionId) {
+      const lockKey = `item:${rutaNegocio}:${id}`;
+      if (!sectionId && !normalizadosPorSesion.has(lockKey)) {
+        normalizadosPorSesion.add(lockKey);
         const inferred = inferSectionByItemId[id] || 'otros';
-        updates[`${rutaNegocio}/inventario/catalog/${id}/sectionId`] = inferred;
-        updates[`${rutaNegocio}/inventario/catalog/${id}/updatedAt`] = now;
-        updates[`${rutaNegocio}/inventario/missing_area_assignments/${id}`] = {
+        updates[`${baseInv}/catalog/${id}/sectionId`] = inferred;
+        updates[`${baseInv}/catalog/${id}/updatedAt`] = now;
+        updates[`${baseInv}/missing_area_assignments/${id}`] = {
           hubId,
           itemId: id,
           fallbackAreaId: '__auto_section__',
@@ -692,6 +1053,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   async ajustarStockDelta(params) {
     const { db, rutaNegocio, containerId, itemId, delta, usuario, razon, allowNegative } = params;
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { get, push, ref: rtdbRef } = await import('firebase/database');
 
     const { isOnline } = OfflinePrintFallback.getStatus();
@@ -701,7 +1063,6 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       .toUpperCase()}`;
 
     if (!isOnline) {
-      // 1. Guardar en SQLite local
       await SQLiteStorageAdapter.enqueueInventoryMovement({
         id: movementId,
         rutaNegocio,
@@ -713,7 +1074,6 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
         allowNegative: !!allowNegative,
       });
 
-      // 2. Modificar estado local en Zustand inmediatamente
       const areas = getState().areas;
       const area = areas[containerId];
       if (area) {
@@ -736,22 +1096,22 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       return;
     }
 
-    const stockRef = rtdbRef(db, `${rutaNegocio}/inventario/areas/${containerId}/stock/${itemId}`);
+    const stockRef = rtdbRef(db, `${baseInv}/areas/${containerId}/stock/${itemId}`);
     const snap = await get(stockRef);
     const current = Number(snap.val() || 0);
     const next = allowNegative ? current + delta : Math.max(0, current + delta);
 
-    const movRef = push(rtdbRef(db, `${rutaNegocio}/inventario/movements`));
+    const movRef = push(rtdbRef(db, `${baseInv}/movements`));
 
     const updates: Record<string, any> = {};
-    updates[`${rutaNegocio}/inventario/areas/${containerId}/stock/${itemId}`] = next;
-    updates[`${rutaNegocio}/inventario/movements/${movRef.key}`] = sanitizeRtdbPayload({
-      tipo: 'ajuste',
+    updates[`${baseInv}/areas/${containerId}/stock/${itemId}`] = next;
+    updates[`${baseInv}/movements/${movRef.key}`] = sanitizeRtdbPayload({
+      tipo: delta >= 0 ? 'entrada' : 'salida',
       itemId,
-      cantidad: delta,
+      cantidad: Math.abs(delta),
       areaId: containerId,
       usuario,
-      razon,
+      razon: razon || 'Ajuste manual',
       timestamp: Date.now(),
       permiteNegativo: allowNegative,
     });
@@ -762,6 +1122,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
   async ajustarStockDeltaSeccion(params) {
     const { db, rutaNegocio, sectionId, itemId, delta, usuario, razon, allowNegative } = params;
     assertValidRutaNegocio(rutaNegocio);
+    const baseInv = resolver_ruta_cajon(rutaNegocio, 'inventario');
     const { get, push, ref: rtdbRef } = await import('firebase/database');
 
     const { isOnline } = OfflinePrintFallback.getStatus();
@@ -771,7 +1132,6 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       .toUpperCase()}`;
 
     if (!isOnline) {
-      // 1. Guardar en SQLite local
       await SQLiteStorageAdapter.enqueueInventoryMovement({
         id: movementId,
         rutaNegocio,
@@ -783,7 +1143,6 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
         allowNegative: !!allowNegative,
       });
 
-      // 2. Modificar estado local en Zustand inmediatamente
       const sections = getState().sections;
       const sec = sections[sectionId];
       if (sec) {
@@ -806,22 +1165,22 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       return;
     }
 
-    const stockRef = rtdbRef(db, `${rutaNegocio}/inventario/sections/${sectionId}/stock/${itemId}`);
+    const stockRef = rtdbRef(db, `${baseInv}/sections/${sectionId}/stock/${itemId}`);
     const snap = await get(stockRef);
     const current = Number(snap.val() || 0);
     const next = allowNegative ? current + delta : Math.max(0, current + delta);
 
-    const movRef = push(rtdbRef(db, `${rutaNegocio}/inventario/movements`));
+    const movRef = push(rtdbRef(db, `${baseInv}/movements`));
 
     const updates: Record<string, any> = {};
-    updates[`${rutaNegocio}/inventario/sections/${sectionId}/stock/${itemId}`] = next;
-    updates[`${rutaNegocio}/inventario/movements/${movRef.key}`] = sanitizeRtdbPayload({
-      tipo: 'ajuste',
+    updates[`${baseInv}/sections/${sectionId}/stock/${itemId}`] = next;
+    updates[`${baseInv}/movements/${movRef.key}`] = sanitizeRtdbPayload({
+      tipo: delta >= 0 ? 'entrada' : 'salida',
       itemId,
-      cantidad: delta,
+      cantidad: Math.abs(delta),
       areaId: `section:${sectionId}`,
       usuario,
-      razon,
+      razon: razon || 'Ajuste manual',
       timestamp: Date.now(),
       permiteNegativo: allowNegative,
     });
@@ -829,8 +1188,26 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
     await update(rtdbRef(db), sanitizeRtdbPayload(updates));
   },
 
+  async registrarMerma(params) {
+    const { db, rutaNegocio, areaId, itemId, cantidad, usuario, razon } = params;
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    await repo.registrarMerma({ areaId, itemId, cantidad, usuario, razon });
+  },
+
+  async transferirStock(params) {
+    const { db, rutaNegocio, itemId, cantidad, fromAreaId, toAreaId, usuario, razon } = params;
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    await repo.transferir({ itemId, cantidad, fromAreaId, toAreaId, usuario, razon });
+  },
+
+  async porcionarInsumo(params) {
+    const { db, rutaNegocio, ...rest } = params;
+    const repo = new RepositorioInventario(db, rutaNegocio);
+    return repo.porcionarInsumo(rest);
+  },
+
   getPredicciones: (productos) => {
-    const { catalog } = getState();
+    const { catalog, areas, sections } = getState();
     const prodsConReceta = Object.values(productos).filter(
       (p: any) => p.receta?.ingredientes && Object.keys(p.receta.ingredientes).length > 0
     );
@@ -841,9 +1218,16 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
 
       const ingredientes = producto.receta?.ingredientes || {};
 
-      for (const [itemId, cantidadNecesaria] of Object.entries(ingredientes)) {
+      for (const [itemId, valorIngrediente] of Object.entries(ingredientes)) {
         const itemInventario = catalog[itemId];
-        const cantidadRequerida = Number(cantidadNecesaria) || 0;
+        const cantidadRequerida =
+          typeof valorIngrediente === 'number'
+            ? Number(valorIngrediente)
+            : Number((valorIngrediente as any)?.cantidad || 0);
+        const unidadReceta =
+          typeof valorIngrediente === 'object' && valorIngrediente !== null
+            ? String((valorIngrediente as any).unidad || itemInventario?.unidad || 'pza')
+            : itemInventario?.unidad || 'pza';
 
         if (!itemInventario) {
           cantidadPosible = 0;
@@ -851,24 +1235,37 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
           break;
         }
 
-        // Importante: El catálogo v2 tiene el stock distribuido en áreas,
-        // pero por ahora usePrediccionStock sumaba el stock global de Items.
-        // Si el catálogo v2 NO tiene un stock consolidado, debemos sumarlo de las áreas.
+        if (itemInventario.controlarExistencias === false) {
+          continue;
+        }
 
         let stockConsolidado = 0;
-        Object.values(getState().areas).forEach((area: any) => {
+        Object.values(areas).forEach((area: any) => {
           if (area.stock && area.stock[itemId]) {
-            stockConsolidado += area.stock[itemId];
+            stockConsolidado += Number(area.stock[itemId] || 0);
+          }
+        });
+        Object.values(sections).forEach((sec: any) => {
+          if (sec.stock && sec.stock[itemId]) {
+            stockConsolidado += Number(sec.stock[itemId] || 0);
           }
         });
 
-        if (stockConsolidado === 0) {
+        const conv = convertirCantidadInventario({
+          cantidad: cantidadRequerida,
+          unidadOrigen: unidadReceta,
+          unidadDestino: itemInventario.unidad,
+          equivalencias: itemInventario.equivalencias,
+        });
+        const requeridoEnUnidadBase = conv.posible ? conv.cantidadConvertida : cantidadRequerida;
+
+        if (stockConsolidado <= 0 || requeridoEnUnidadBase <= 0) {
           cantidadPosible = 0;
           ingredienteLimitante = itemInventario.nombre;
           break;
         }
 
-        const posibleConEsteIngrediente = Math.floor(stockConsolidado / cantidadRequerida);
+        const posibleConEsteIngrediente = Math.floor(stockConsolidado / requeridoEnUnidadBase);
 
         if (posibleConEsteIngrediente < cantidadPosible) {
           cantidadPosible = posibleConEsteIngrediente;
@@ -879,7 +1276,7 @@ export const createInventoryV2Slice: StateCreator<InventoryV2Slice, [], [], Inve
       return {
         productoId: producto.id,
         productoNombre: producto.nombre,
-        cantidadPosible: cantidadPosible === Infinity ? 0 : cantidadPosible,
+        cantidadPosible: cantidadPosible === Infinity ? 999 : cantidadPosible,
         ingredienteLimitante,
         stockSuficiente: cantidadPosible >= 5,
       };

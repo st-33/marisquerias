@@ -1,6 +1,7 @@
 /**
  * 🛠️ EDITOR DE VARIANTES PARA PRODUCTOS
- * Componente reutilizable para editar grupos de variantes, opciones y reglas
+ * Componente reutilizable para editar grupos de variantes, opciones y reglas comerciales.
+ * La unidad de venta ya viene predeterminada por el origen (Inventario o Libro de Platillos).
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,7 @@ import {
   View,
 } from 'react-native';
 import type { Producto, VariantGroup, VariantOption } from '../../../../../sistema/persistencia';
-import { theme } from '@/compartido/temas';
+import { theme, useAppTheme } from '@/compartido/temas';
 import { SeccionDesplegable } from '../bloques/SeccionDesplegable';
 import { FichaVariante } from '../bloques/FichaVariante';
 
@@ -31,6 +32,7 @@ type EditorVariantesProps = {
   onRecetaChange?: (receta: Producto['receta']) => void;
   unidad?: 'pza' | 'kg';
   onUnidadChange?: (unidad: 'pza' | 'kg') => void;
+  esPlatillo?: boolean;
   showVentaCrudo?: boolean;
   showMenuDigital?: boolean;
 };
@@ -42,13 +44,12 @@ export default function EditorVariantes({
   onVisibleChange,
   prepMin = 0,
   onPrepMinChange,
-  receta = {},
-  onRecetaChange,
   unidad = 'pza',
-  onUnidadChange,
+  esPlatillo = false,
   showVentaCrudo = true,
   showMenuDigital = true,
 }: EditorVariantesProps) {
+  const { colors } = useAppTheme();
   const [groupForm, setGroupForm] = useState<Partial<VariantGroup>>({});
   const [optionForm, setOptionForm] = useState<Partial<VariantOption>>({});
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function EditorVariantes({
 
   const addGroup = () => {
     if (!groupForm.titulo) {
-      Alert.alert('Error', 'Completa el título del grupo');
+      Alert.alert('Atención', 'Escribe el nombre del grupo de opciones (ej. Tamaño o Preparación)');
       return;
     }
     const grupos = variantes.grupos || {};
@@ -98,7 +99,7 @@ export default function EditorVariantes({
 
   const addOption = (groupKey: string) => {
     if (!optionForm.titulo) {
-      Alert.alert('Error', 'Completa título');
+      Alert.alert('Atención', 'Escribe el nombre de la opción');
       return;
     }
     const grupos = variantes.grupos || {};
@@ -230,20 +231,27 @@ export default function EditorVariantes({
       {/* ¿DÓNDE SE MUESTRA ESTE PRODUCTO? */}
       {(showMenuDigital || showVentaCrudo) && (
         <SeccionDesplegable
-          title="¿Dónde se muestra este producto?"
-          icon={<Ionicons name="eye-outline" size={18} color={theme.colors.accent} />}
+          title="¿Dónde se muestra esta opción?"
+          icon={<Ionicons name="eye-outline" size={18} color={colors.accent} />}
           defaultExpanded={true}
         >
           <View style={styles.visibilityRow}>
             {showMenuDigital && (
               <Pressable
                 onPress={() => toggleVisible('digital')}
-                style={[styles.visibilityBtn, safeVisible.digital && styles.visibilityBtnActive]}
+                style={[
+                  styles.visibilityBtn,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  safeVisible.digital && {
+                    backgroundColor: colors.successSoft,
+                    borderColor: colors.success,
+                  },
+                ]}
               >
-                <Ionicons name="phone-portrait-outline" size={16} color="#fff" />
-                <Text style={styles.visibilityText}>Digital</Text>
+                <Ionicons name="phone-portrait-outline" size={16} color={colors.text} />
+                <Text style={[styles.visibilityText, { color: colors.text }]}>Menú Digital</Text>
                 {safeVisible.digital && (
-                  <View style={styles.checkmark}>
+                  <View style={[styles.checkmark, { backgroundColor: colors.success }]}>
                     <Ionicons name="checkmark" size={12} color="#fff" />
                   </View>
                 )}
@@ -251,12 +259,19 @@ export default function EditorVariantes({
             )}
             <Pressable
               onPress={() => toggleVisible('mesero')}
-              style={[styles.visibilityBtn, safeVisible.mesero && styles.visibilityBtnActive]}
+              style={[
+                styles.visibilityBtn,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                safeVisible.mesero && {
+                  backgroundColor: colors.successSoft,
+                  borderColor: colors.success,
+                },
+              ]}
             >
-              <Ionicons name="restaurant-outline" size={16} color="#fff" />
-              <Text style={styles.visibilityText}>Restaurante</Text>
+              <Ionicons name="restaurant-outline" size={16} color={colors.text} />
+              <Text style={[styles.visibilityText, { color: colors.text }]}>Restaurante</Text>
               {safeVisible.mesero && (
-                <View style={styles.checkmark}>
+                <View style={[styles.checkmark, { backgroundColor: colors.success }]}>
                   <Ionicons name="checkmark" size={12} color="#fff" />
                 </View>
               )}
@@ -266,13 +281,17 @@ export default function EditorVariantes({
                 onPress={() => toggleVisible('ventaCrudo')}
                 style={[
                   styles.visibilityBtn,
-                  safeVisible.ventaCrudo && styles.visibilityBtnActiveAlt,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  safeVisible.ventaCrudo && {
+                    backgroundColor: `${colors.accent}20`,
+                    borderColor: colors.accent,
+                  },
                 ]}
               >
-                <Ionicons name="storefront-outline" size={16} color="#fff" />
-                <Text style={styles.visibilityText}>Mostrador</Text>
+                <Ionicons name="storefront-outline" size={16} color={colors.text} />
+                <Text style={[styles.visibilityText, { color: colors.text }]}>Mostrador</Text>
                 {safeVisible.ventaCrudo && (
-                  <View style={styles.checkmark}>
+                  <View style={[styles.checkmark, { backgroundColor: colors.accent }]}>
                     <Ionicons name="checkmark" size={12} color="#fff" />
                   </View>
                 )}
@@ -282,68 +301,67 @@ export default function EditorVariantes({
         </SeccionDesplegable>
       )}
 
-      {/* UNIDAD DE VENTA */}
-      {onUnidadChange && (
+      {/* Resumen de despacho predeterminado desde el origen */}
+      <View
+        style={[
+          styles.predeterminedInfoBar,
+          { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+        ]}
+      >
+        <Ionicons
+          name={esPlatillo ? 'restaurant-outline' : 'cube-outline'}
+          size={18}
+          color={esPlatillo ? colors.accent : colors.primary}
+        />
+        <Text style={[styles.predeterminedInfoText, { color: colors.textSecondary }]}>
+          {esPlatillo
+            ? `Porción y receta predeterminadas desde Cocina${prepMin > 0 ? ` (~${prepMin} min de entrega)` : ''}.`
+            : `Unidad de venta predeterminada desde Inventario: ${unidad === 'kg' ? 'Por Peso (Kg)' : 'Por Pieza (Pza)'}.`}
+        </Text>
+      </View>
+
+      {/* Tiempo de entrega ajustable para platillos */}
+      {esPlatillo && onPrepMinChange && (
         <SeccionDesplegable
-          title="Unidad de Venta"
-          icon={<Ionicons name="scale-outline" size={18} color={theme.colors.accent} />}
-          badge={unidad === 'kg' ? 'Por Peso (Kg)' : 'Por Pieza (Pza)'}
-          defaultExpanded={true}
+          title="Tiempo estimado de entrega"
+          icon={<Ionicons name="time-outline" size={18} color={colors.accent} />}
+          badge={prepMin > 0 ? `~${prepMin} min` : undefined}
         >
-          <View style={styles.unitContainer}>
-            <Pressable
-              style={[styles.unitBtn, unidad === 'pza' && styles.unitBtnActive]}
-              onPress={() => onUnidadChange('pza')}
-            >
-              <Ionicons
-                name="shapes-outline"
-                size={18}
-                color={unidad === 'pza' ? 'white' : '#64748b'}
-              />
-              <Text style={[styles.unitText, unidad === 'pza' && styles.unitTextActive]}>
-                Por Pieza (Pza)
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.unitBtn, unidad === 'kg' && styles.unitBtnActive]}
-              onPress={() => onUnidadChange('kg')}
-            >
-              <Ionicons
-                name="scale-outline"
-                size={18}
-                color={unidad === 'kg' ? 'white' : '#64748b'}
-              />
-              <Text style={[styles.unitText, unidad === 'kg' && styles.unitTextActive]}>
-                Por Peso (Kg)
-              </Text>
-            </Pressable>
+          <View style={styles.prepTimeRow}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.borderLight,
+                  color: colors.text,
+                  width: 110,
+                },
+              ]}
+              value={prepMin.toString()}
+              onChangeText={(text) => onPrepMinChange(parseInt(text) || 0)}
+              keyboardType="number-pad"
+              placeholder="15"
+              placeholderTextColor={colors.textMuted}
+            />
+            <Text style={{ color: colors.textSecondary, fontSize: 13, flex: 1 }}>
+              minutos aproximados desde que el mesero envía la orden.
+            </Text>
           </View>
         </SeccionDesplegable>
       )}
 
-      {/* PREP TIME */}
-      <SeccionDesplegable
-        title="Tiempo de preparación"
-        icon={<Ionicons name="time-outline" size={18} color={theme.colors.accent} />}
-        badge={prepMin > 0 ? `${prepMin} min` : undefined}
-      >
-        <TextInput
-          style={styles.input}
-          value={prepMin.toString()}
-          onChangeText={(text) => onPrepMinChange?.(parseInt(text) || 0)}
-          keyboardType="number-pad"
-          placeholder="Minutos"
-          placeholderTextColor="#6b7280"
-        />
-      </SeccionDesplegable>
-
       {/* GRUPOS DE VARIANTES */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="options-outline" size={20} color={theme.colors.primary} />
-          <Text style={styles.sectionTitle}>Grupos de Variantes</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{groupEntries.length}</Text>
+          <Ionicons name="options-outline" size={20} color={colors.primary} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Variantes y Tamaños (Opcional)
+          </Text>
+          <View style={[styles.badge, { backgroundColor: `${colors.primary}24` }]}>
+            <Text style={[styles.badgeText, { color: colors.primaryLight }]}>
+              {groupEntries.length}
+            </Text>
           </View>
         </View>
 
@@ -356,29 +374,27 @@ export default function EditorVariantes({
               <Ionicons
                 name={group.tipo === 'single' ? 'radio-button-on-outline' : 'checkbox-outline'}
                 size={18}
-                color={group.obligatorio ? '#f59e0b' : theme.colors.textSecondary}
+                color={group.obligatorio ? colors.accent : colors.textSecondary}
               />
             }
             defaultExpanded={key === activeGroup || (!activeGroup && index === 0)}
           >
             <View style={styles.groupMeta}>
               <View style={styles.metaChips}>
-                <View style={[styles.metaChip, { backgroundColor: 'rgba(139, 92, 246, 0.15)' }]}>
-                  <Text style={[styles.metaChipText, { color: '#a78bfa' }]}>
-                    {group.rol || group.titulo}
-                  </Text>
-                </View>
                 <Pressable
                   onPress={() => toggleGroupTipo(key)}
-                  style={[styles.metaChip, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}
+                  style={[
+                    styles.metaChip,
+                    { backgroundColor: `${colors.primary}20`, borderColor: `${colors.primary}50` },
+                  ]}
                 >
                   <Ionicons
                     name={group.tipo === 'single' ? 'radio-button-on-outline' : 'checkbox-outline'}
-                    size={12}
-                    color="#60a5fa"
+                    size={13}
+                    color={colors.primaryLight}
                   />
-                  <Text style={[styles.metaChipText, { color: '#60a5fa' }]}>
-                    {group.tipo === 'single' ? 'Una opción' : 'Multi'}
+                  <Text style={[styles.metaChipText, { color: colors.primaryLight }]}>
+                    {group.tipo === 'single' ? 'Elegir 1 opción' : 'Elegir varias'}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -387,20 +403,21 @@ export default function EditorVariantes({
                     styles.metaChip,
                     {
                       backgroundColor: group.obligatorio
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : 'rgba(156, 163, 175, 0.15)',
+                        ? `${colors.accent}22`
+                        : `${colors.textMuted}18`,
+                      borderColor: group.obligatorio ? colors.accent : colors.border,
                     },
                   ]}
                 >
                   <Ionicons
                     name={group.obligatorio ? 'alert-circle' : 'alert-circle-outline'}
-                    size={12}
-                    color={group.obligatorio ? '#ef4444' : '#9ca3af'}
+                    size={13}
+                    color={group.obligatorio ? colors.accent : colors.textSecondary}
                   />
                   <Text
                     style={[
                       styles.metaChipText,
-                      { color: group.obligatorio ? '#ef4444' : '#9ca3af' },
+                      { color: group.obligatorio ? colors.accent : colors.textSecondary },
                     ]}
                   >
                     {group.obligatorio ? 'Obligatorio' : 'Opcional'}
@@ -408,101 +425,11 @@ export default function EditorVariantes({
                 </Pressable>
               </View>
               <Pressable onPress={() => deleteGroup(key)} style={styles.deleteGroupBtn}>
-                <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
+                <Ionicons name="trash-outline" size={17} color={colors.danger} />
               </Pressable>
             </View>
 
-            {/* FLUJO Y MIXTOS (PRO) */}
-            <View style={styles.flowSection}>
-              <Text style={styles.metaLabel}>PASO SIGUIENTE:</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.flowRow}
-              >
-                <Pressable
-                  onPress={() => setGroupNextStep(key, null)}
-                  style={[styles.flowChip, !group.nextGroupId && styles.flowChipActive]}
-                >
-                  <Text
-                    style={[styles.flowChipText, !group.nextGroupId && styles.flowChipTextActive]}
-                  >
-                    Fin
-                  </Text>
-                </Pressable>
-                {groupEntries.map(
-                  ([gId, g]) =>
-                    gId !== key && (
-                      <Pressable
-                        key={gId}
-                        onPress={() => setGroupNextStep(key, gId)}
-                        style={[
-                          styles.flowChip,
-                          group.nextGroupId === gId && styles.flowChipActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.flowChipText,
-                            group.nextGroupId === gId && styles.flowChipTextActive,
-                          ]}
-                        >
-                          {g.titulo}
-                        </Text>
-                      </Pressable>
-                    )
-                )}
-              </ScrollView>
-
-              <View
-                style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 8 }}
-              />
-
-              <Text style={styles.metaLabel}>EXCLUIR REPETIDOS DE (MIXTOS):</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.flowRow}
-              >
-                <Pressable
-                  onPress={() => setGroupExcludeSibling(key, null)}
-                  style={[styles.flowChip, !group.excludeFromSibling && styles.flowChipActive]}
-                >
-                  <Text
-                    style={[
-                      styles.flowChipText,
-                      !group.excludeFromSibling && styles.flowChipTextActive,
-                    ]}
-                  >
-                    Ninguno
-                  </Text>
-                </Pressable>
-                {groupEntries.map(
-                  ([gId, g]) =>
-                    gId !== key && (
-                      <Pressable
-                        key={gId}
-                        onPress={() => setGroupExcludeSibling(key, gId)}
-                        style={[
-                          styles.flowChip,
-                          group.excludeFromSibling === gId && styles.flowChipActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.flowChipText,
-                            group.excludeFromSibling === gId && styles.flowChipTextActive,
-                          ]}
-                        >
-                          {g.titulo}
-                        </Text>
-                      </Pressable>
-                    )
-                )}
-              </ScrollView>
-            </View>
-
-            {/* OPCIONES */}
+            {/* OPCIONES DEL GRUPO */}
             <View style={styles.optionsContainer}>
               {Object.entries(group.opciones || {}).map(([oKey, opt]) => (
                 <View key={oKey} style={styles.optionRow}>
@@ -511,55 +438,230 @@ export default function EditorVariantes({
                     delta={opt.delta ?? 0}
                     onDelete={() => deleteOption(key, oKey)}
                   />
-                  <Pressable
-                    onPress={() => setEditingOption({ gKey: key, oKey: oKey })}
-                    style={styles.advancedBtn}
-                  >
-                    <Ionicons
-                      name="settings-sharp"
-                      size={16}
-                      color={opt.triggers ? theme.colors.primary : theme.colors.textMuted}
-                    />
-                  </Pressable>
+                  {groupEntries.length > 1 && (
+                    <Pressable
+                      onPress={() => setEditingOption({ gKey: key, oKey: oKey })}
+                      style={[styles.advancedBtn, { backgroundColor: colors.card }]}
+                    >
+                      <Ionicons
+                        name="settings-sharp"
+                        size={16}
+                        color={opt.triggers ? colors.primary : colors.textMuted}
+                      />
+                    </Pressable>
+                  )}
                 </View>
               ))}
             </View>
 
             <View style={styles.addOptionForm}>
               <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Opción"
-                placeholderTextColor="#6b7280"
+                style={[
+                  styles.input,
+                  {
+                    flex: 1,
+                    backgroundColor: colors.card,
+                    borderColor: colors.borderLight,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="Ej. Mediano, Al mojo de ajo, A la diabla..."
+                placeholderTextColor={colors.textMuted}
                 value={optionForm.titulo || ''}
                 onChangeText={(t) => setOptionForm({ ...optionForm, titulo: t })}
               />
               <TextInput
-                style={[styles.input, { width: 70 }]}
-                placeholder="$"
-                placeholderTextColor="#6b7280"
+                style={[
+                  styles.input,
+                  {
+                    width: 86,
+                    backgroundColor: colors.card,
+                    borderColor: colors.borderLight,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="+$ Extra"
+                placeholderTextColor={colors.textMuted}
                 value={optionForm.delta?.toString() || ''}
                 onChangeText={(d) => setOptionForm({ ...optionForm, delta: parseFloat(d) || 0 })}
                 keyboardType="decimal-pad"
               />
-              <Pressable onPress={() => addOption(key)} style={styles.addBtn}>
-                <Ionicons name="add" size={20} color="#fff" />
+              <Pressable
+                onPress={() => addOption(key)}
+                style={[styles.addBtn, { backgroundColor: colors.primary }]}
+              >
+                <Ionicons name="add" size={20} color={colors.background} />
               </Pressable>
             </View>
+
+            {/* Opciones avanzadas de flujo solo si hay más de 1 grupo */}
+            {groupEntries.length > 1 && (
+              <SeccionDesplegable
+                title="Flujo entre grupos (Mixtos / Siguiente paso)"
+                icon={<Ionicons name="git-branch-outline" size={16} color={colors.textSecondary} />}
+              >
+                <View style={[styles.flowSection, { backgroundColor: colors.surfaceDark }]}>
+                  <Text style={[styles.metaLabel, { color: colors.textMuted }]}>
+                    PASO SIGUIENTE:
+                  </Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.flowRow}
+                  >
+                    <Pressable
+                      onPress={() => setGroupNextStep(key, null)}
+                      style={[
+                        styles.flowChip,
+                        { borderColor: colors.border },
+                        !group.nextGroupId && {
+                          backgroundColor: `${colors.primary}22`,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.flowChipText,
+                          { color: !group.nextGroupId ? colors.primaryLight : colors.textMuted },
+                        ]}
+                      >
+                        Fin
+                      </Text>
+                    </Pressable>
+                    {groupEntries.map(
+                      ([gId, g]) =>
+                        gId !== key && (
+                          <Pressable
+                            key={gId}
+                            onPress={() => setGroupNextStep(key, gId)}
+                            style={[
+                              styles.flowChip,
+                              { borderColor: colors.border },
+                              group.nextGroupId === gId && {
+                                backgroundColor: `${colors.primary}22`,
+                                borderColor: colors.primary,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.flowChipText,
+                                {
+                                  color:
+                                    group.nextGroupId === gId
+                                      ? colors.primaryLight
+                                      : colors.textMuted,
+                                },
+                              ]}
+                            >
+                              {g.titulo}
+                            </Text>
+                          </Pressable>
+                        )
+                    )}
+                  </ScrollView>
+
+                  <Text style={[styles.metaLabel, { color: colors.textMuted, marginTop: 8 }]}>
+                    EXCLUIR REPETIDOS DE (PARA ÓRDENES MIXTAS):
+                  </Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.flowRow}
+                  >
+                    <Pressable
+                      onPress={() => setGroupExcludeSibling(key, null)}
+                      style={[
+                        styles.flowChip,
+                        { borderColor: colors.border },
+                        !group.excludeFromSibling && {
+                          backgroundColor: `${colors.primary}22`,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.flowChipText,
+                          {
+                            color: !group.excludeFromSibling
+                              ? colors.primaryLight
+                              : colors.textMuted,
+                          },
+                        ]}
+                      >
+                        Ninguno
+                      </Text>
+                    </Pressable>
+                    {groupEntries.map(
+                      ([gId, g]) =>
+                        gId !== key && (
+                          <Pressable
+                            key={gId}
+                            onPress={() => setGroupExcludeSibling(key, gId)}
+                            style={[
+                              styles.flowChip,
+                              { borderColor: colors.border },
+                              group.excludeFromSibling === gId && {
+                                backgroundColor: `${colors.primary}22`,
+                                borderColor: colors.primary,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.flowChipText,
+                                {
+                                  color:
+                                    group.excludeFromSibling === gId
+                                      ? colors.primaryLight
+                                      : colors.textMuted,
+                                },
+                              ]}
+                            >
+                              {g.titulo}
+                            </Text>
+                          </Pressable>
+                        )
+                    )}
+                  </ScrollView>
+                </View>
+              </SeccionDesplegable>
+            )}
           </SeccionDesplegable>
         ))}
 
-        <View style={styles.addGroupForm}>
-          <Text style={styles.formLabel}>Nuevo Grupo</Text>
+        <View
+          style={[
+            styles.addGroupForm,
+            { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+          ]}
+        >
+          <Text style={[styles.formLabel, { color: colors.textSecondary }]}>
+            Agregar grupo de opciones (ej. Tamaño, Estilo de preparación, Proteína)
+          </Text>
           <View style={styles.formRow}>
             <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Título"
-              placeholderTextColor="#6b7280"
+              style={[
+                styles.input,
+                {
+                  flex: 1,
+                  backgroundColor: colors.card,
+                  borderColor: colors.borderLight,
+                  color: colors.text,
+                },
+              ]}
+              placeholder="Nombre del grupo..."
+              placeholderTextColor={colors.textMuted}
               value={groupForm.titulo || ''}
               onChangeText={(t) => setGroupForm({ ...groupForm, titulo: t })}
             />
-            <Pressable onPress={addGroup} style={styles.addBtn}>
-              <Ionicons name="add" size={20} color="#fff" />
+            <Pressable
+              onPress={addGroup}
+              style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            >
+              <Ionicons name="add" size={20} color={colors.background} />
             </Pressable>
           </View>
         </View>
@@ -580,37 +682,39 @@ export default function EditorVariantes({
 }
 
 function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleTrigger }: any) {
+  const { colors } = useAppTheme();
   return (
     <Modal transparent visible animationType="slide">
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
+        <View
+          style={[
+            styles.modalContent,
+            { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+          ]}
+        >
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <View>
-              <Text style={styles.modalTitle}>Ajustes de Flujo Inteligente</Text>
-              <Text style={{ color: '#64748b', fontSize: 11 }}>
-                Configura la visibilidad basada en esta opción
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Flujo condicional de opciones
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                Mostrar u ocultar otros grupos al elegir esta opción
               </Text>
             </View>
             <Pressable onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#94a3b8" />
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </Pressable>
           </View>
 
           <ScrollView style={{ padding: 20 }} showsVerticalScrollIndicator={false}>
             <View style={styles.optionFocusHeader}>
-              <Ionicons name="sparkles-sharp" size={20} color={theme.colors.primary} />
-              <Text style={styles.optionFocusTitle}>{option.titulo}</Text>
+              <Ionicons name="sparkles-sharp" size={20} color={colors.primary} />
+              <Text style={[styles.optionFocusTitle, { color: colors.text }]}>{option.titulo}</Text>
             </View>
 
-            <View style={styles.infoBox}>
-              <Ionicons name="information-circle-outline" size={16} color={theme.colors.primary} />
-              <Text style={styles.infoText}>
-                Usa el sistema de &quot;Whitelist&quot; para activar grupos ocultos, o
-                &quot;Blacklist&quot; para forzar el ocultamiento de grupos activos.
-              </Text>
-            </View>
-
-            <Text style={styles.configLabel}>AL SELECCIONAR, ACTIVAR (SHOW):</Text>
+            <Text style={[styles.configLabel, { color: colors.textSecondary }]}>
+              AL SELECCIONAR, MOSTRAR GRUPO:
+            </Text>
             <View style={styles.checkGrid}>
               {Object.entries(grupos || {}).map(
                 ([id, g]: any) =>
@@ -620,25 +724,30 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
                       onPress={() => onToggleTrigger(gKey, oKey, 'show', id)}
                       style={[
                         styles.checkBtn,
-                        option.triggers?.showGroups?.includes(id) && styles.checkBtnActive,
+                        { backgroundColor: colors.card, borderColor: colors.border },
+                        option.triggers?.showGroups?.includes(id) && {
+                          backgroundColor: `${colors.primary}22`,
+                          borderColor: colors.primary,
+                        },
                       ]}
                     >
-                      <View
-                        style={[
-                          styles.checkIcon,
-                          option.triggers?.showGroups?.includes(id) && styles.checkIconActive,
-                        ]}
-                      >
-                        <Ionicons
-                          name={option.triggers?.showGroups?.includes(id) ? 'eye' : 'eye-outline'}
-                          size={16}
-                          color={option.triggers?.showGroups?.includes(id) ? 'white' : '#475569'}
-                        />
-                      </View>
+                      <Ionicons
+                        name={option.triggers?.showGroups?.includes(id) ? 'eye' : 'eye-outline'}
+                        size={18}
+                        color={
+                          option.triggers?.showGroups?.includes(id)
+                            ? colors.primaryLight
+                            : colors.textMuted
+                        }
+                      />
                       <Text
                         style={[
                           styles.checkBtnText,
-                          option.triggers?.showGroups?.includes(id) && styles.checkBtnTextActive,
+                          {
+                            color: option.triggers?.showGroups?.includes(id)
+                              ? colors.text
+                              : colors.textSecondary,
+                          },
                         ]}
                       >
                         {g.titulo}
@@ -649,10 +758,12 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
             </View>
 
             <View
-              style={{ height: 1.5, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 }}
+              style={{ height: 1, backgroundColor: colors.border, marginVertical: 18 }}
             />
 
-            <Text style={styles.configLabel}>AL SELECCIONAR, DESACTIVAR (HIDE):</Text>
+            <Text style={[styles.configLabel, { color: colors.textSecondary }]}>
+              AL SELECCIONAR, OCULTAR GRUPO:
+            </Text>
             <View style={styles.checkGrid}>
               {Object.entries(grupos || {}).map(
                 ([id, g]: any) =>
@@ -662,30 +773,32 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
                       onPress={() => onToggleTrigger(gKey, oKey, 'hide', id)}
                       style={[
                         styles.checkBtn,
-                        option.triggers?.hideGroups?.includes(id) && styles.checkBtnActiveHide,
+                        { backgroundColor: colors.card, borderColor: colors.border },
+                        option.triggers?.hideGroups?.includes(id) && {
+                          backgroundColor: `${colors.danger}22`,
+                          borderColor: colors.danger,
+                        },
                       ]}
                     >
-                      <View
-                        style={[
-                          styles.checkIcon,
-                          option.triggers?.hideGroups?.includes(id) && styles.checkIconActiveHide,
-                        ]}
-                      >
-                        <Ionicons
-                          name={
-                            option.triggers?.hideGroups?.includes(id)
-                              ? 'eye-off'
-                              : 'eye-off-outline'
-                          }
-                          size={16}
-                          color={option.triggers?.hideGroups?.includes(id) ? 'white' : '#475569'}
-                        />
-                      </View>
+                      <Ionicons
+                        name={
+                          option.triggers?.hideGroups?.includes(id) ? 'eye-off' : 'eye-off-outline'
+                        }
+                        size={18}
+                        color={
+                          option.triggers?.hideGroups?.includes(id)
+                            ? colors.danger
+                            : colors.textMuted
+                        }
+                      />
                       <Text
                         style={[
                           styles.checkBtnText,
-                          option.triggers?.hideGroups?.includes(id) &&
-                            styles.checkBtnTextActiveHide,
+                          {
+                            color: option.triggers?.hideGroups?.includes(id)
+                              ? colors.text
+                              : colors.textSecondary,
+                          },
                         ]}
                       >
                         {g.titulo}
@@ -695,7 +808,7 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
               )}
             </View>
 
-            <View style={{ height: 40 }} />
+            <View style={{ height: 30 }} />
           </ScrollView>
         </View>
       </View>
@@ -705,17 +818,16 @@ function AdvancedOptionSettings({ gKey, oKey, option, grupos, onClose, onToggleT
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  containerContent: { paddingBottom: 24 },
-  section: { marginBottom: 20 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  sectionTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', flex: 1 },
+  containerContent: { paddingBottom: 20, gap: 10 },
+  section: { marginBottom: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', flex: 1 },
   badge: {
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: 12,
   },
-  badgeText: { color: theme.colors.primary, fontSize: 12, fontWeight: 'bold' },
+  badgeText: { fontSize: 12, fontWeight: '800' },
   visibilityRow: { flexDirection: 'row', gap: 10 },
   visibilityBtn: {
     flex: 1,
@@ -723,197 +835,139 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1f2937',
     padding: 12,
     borderRadius: 12,
-  },
-  visibilityBtnActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderWidth: 1,
-    borderColor: '#10b981',
   },
-  visibilityBtnActiveAlt: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-    borderWidth: 1,
-    borderColor: '#f59e0b',
-  },
-  visibilityText: { color: 'white', fontSize: 14 },
+  visibilityText: { fontSize: 14, fontWeight: '700' },
   checkmark: {
-    backgroundColor: '#10b981',
     borderRadius: 10,
     width: 18,
     height: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  input: {
-    backgroundColor: '#1f2937',
-    borderRadius: 8,
-    padding: 10,
-    color: 'white',
+  predeterminedInfoBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#374151',
+    marginBottom: 4,
+  },
+  predeterminedInfoText: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  prepTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  input: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontWeight: '600',
+    borderWidth: 1,
   },
   groupMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  metaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, flex: 1 },
+  metaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, flex: 1 },
   metaChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 20,
+    borderWidth: 1,
   },
-  metaChipText: { fontSize: 11, fontWeight: 'bold' },
+  metaChipText: { fontSize: 12, fontWeight: '700' },
   deleteGroupBtn: { padding: 6 },
   optionsContainer: { gap: 8, marginBottom: 12 },
   optionRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  advancedBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8 },
-  addOptionForm: { flexDirection: 'row', gap: 8 },
+  advancedBtn: { padding: 8, borderRadius: 8 },
+  addOptionForm: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   addBtn: {
-    backgroundColor: theme.colors.primary,
-    padding: 10,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addGroupForm: { backgroundColor: '#1f2937', padding: 16, borderRadius: 12, marginTop: 10 },
-  formLabel: { color: '#94a3b8', fontSize: 12, fontWeight: 'bold', marginBottom: 8 },
+  addGroupForm: {
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 6,
+  },
+  formLabel: { fontSize: 13, fontWeight: '700', marginBottom: 8 },
   formRow: { flexDirection: 'row', gap: 8 },
   flowSection: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
     padding: 10,
-    borderRadius: 12,
-    marginBottom: 16,
+    borderRadius: 10,
   },
-  metaLabel: { color: '#64748b', fontSize: 10, fontWeight: 'bold', marginBottom: 6 },
+  metaLabel: { fontSize: 11, fontWeight: '800', marginBottom: 6 },
   flowRow: { gap: 6 },
   flowChip: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#334155',
   },
-  flowChipActive: { backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: theme.colors.primary },
-  flowChipText: { color: '#64748b', fontSize: 11 },
-  flowChipTextActive: { color: theme.colors.primary, fontWeight: 'bold' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'flex-end' },
+  flowChipText: { fontSize: 12, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
   modalContent: {
-    backgroundColor: theme.colors.surfaceDark,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    maxHeight: '90%',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '88%',
     borderWidth: 1,
-    borderColor: '#374151',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#374151',
   },
-  modalTitle: { color: 'white', fontWeight: '900', fontSize: 18, letterSpacing: -0.5 },
+  modalTitle: { fontWeight: '800', fontSize: 18 },
   configLabel: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '900',
-    marginBottom: 16,
-    letterSpacing: 1,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 10,
+    letterSpacing: 0.6,
   },
   checkGrid: { gap: 8 },
   checkBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
     borderWidth: 1,
-    borderColor: 'transparent',
   },
-  checkBtnActive: {
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
-    borderColor: 'rgba(37, 99, 235, 0.3)',
-  },
-  checkBtnActiveHide: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderColor: 'rgba(239, 68, 68, 0.3)',
-  },
-  checkIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkIconActive: { backgroundColor: theme.colors.primary },
-  checkIconActiveHide: { backgroundColor: theme.colors.danger },
-  checkBtnText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
-  checkBtnTextActive: { color: 'white', fontWeight: 'bold' },
-  checkBtnTextActiveHide: { color: 'white', fontWeight: 'bold' },
+  checkBtnText: { fontSize: 14, fontWeight: '700' },
   optionFocusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 20,
-    justifyContent: 'center',
-  },
-  optionFocusTitle: { color: 'white', fontSize: 22, fontWeight: '900', letterSpacing: -1 },
-  infoBox: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: 'rgba(37, 99, 235, 0.05)',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(37, 99, 235, 0.1)',
-  },
-  infoText: { color: '#94a3b8', fontSize: 12, flex: 1, lineHeight: 18 },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  unitContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  unitBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1f2937',
-    borderWidth: 1,
-    borderColor: '#374151',
-    paddingVertical: 12,
-    borderRadius: 12,
+    marginBottom: 16,
   },
-  unitBtnActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  unitText: {
-    color: '#64748b',
-    fontWeight: '600',
-  },
-  unitTextActive: {
-    color: 'white',
+  optionFocusTitle: { fontSize: 20, fontWeight: '800' },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

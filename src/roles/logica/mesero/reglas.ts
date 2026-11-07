@@ -1,5 +1,11 @@
 import type { VariantGroup, VariantRule } from '../../../sistema/persistencia/menu.repositorio';
 
+export function limpiarEtiquetaVariante(texto: string): string {
+  if (!texto) return '';
+  // Elimina ($...) o (+ $...) o (+...) o ($140) del final o intermedio
+  return texto.replace(/\s*\(\s*[\+\-\$]?\s*\d+(?:\.\d+)?\s*\)/g, '').trim();
+}
+
 export function computeVariantDeltaAndLabels(
   groups: Record<string, VariantGroup>,
   selections: Record<string, string[]>
@@ -16,7 +22,8 @@ export function computeVariantDeltaAndLabels(
       if (option) {
         const optionDelta = Number(option.delta || 0);
         delta += Number.isNaN(optionDelta) ? 0 : optionDelta;
-        labels.push(option.titulo);
+        const rawLabel = option.label || option.nombre || option.titulo || oid;
+        labels.push(limpiarEtiquetaVariante(rawLabel));
       }
     });
   });

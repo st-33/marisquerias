@@ -15,13 +15,16 @@ import {
 } from 'react-native';
 
 import { useSesion, useStore } from '../../../src/sistema/store';
-import { useFierros } from '../../../src/sistema/impresion/fierros';
+import { useEstadoHub, useFierros } from '../../../src/sistema/impresion/fierros';
 import type { DispositivoFierro } from '../../../src/sistema/impresion/fierros/contratos/tipos';
 import { useConfiguracionNegocio } from '../../../src/sistema/proveedores/ProveedorConfiguracionNegocio';
 import { useDevicesManagement } from '../../../src/capacidades/dispositivos';
 
-type HubDestino = 'restaurante' | 'venta_crudo' | null;
+type HubDestino = 'restaurante' | 'mostrador' | 'venta_crudo' | null;
 type TabActiva = 'impresoras' | 'basculas';
+
+const normalizarDestino = (d?: string | null): 'restaurante' | 'mostrador' =>
+  d === 'venta_crudo' || d === 'mostrador' ? 'mostrador' : 'restaurante';
 
 export default function AdminDeviceSettings() {
   const {
@@ -47,11 +50,14 @@ export default function AdminDeviceSettings() {
   const [isScanning, setIsScanning] = useState(false);
   const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
 
-  // 🔌 MODO HUB DUAL
+  // 🔌 MODO HUB POR DISPOSITIVO FÍSICO
   const { rutaNegocio } = useSesion();
-  const { hubConfig, actions: deviceActions } = useDevicesManagement();
+  const { hubsMap, actions: deviceActions } = useDevicesManagement();
+  const { activarHub, desactivarHub, setDestino: setDestinoLocalHub } = useEstadoHub();
 
   const [hubDeviceId, setHubDeviceId] = useState<string | null>(null);
+  const [localDestino, setLocalDestino] = useState<HubDestino>(null);
+  const esWeb = Platform.OS === 'web';
 
   const estadoEncendido = useStore((s) => s.estadoEncendido);
   const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
@@ -69,12 +75,44 @@ export default function AdminDeviceSettings() {
       roles.includes('mostrador'))
   );
 
-  const isHubEnabled = hubConfig?.enabled === true;
-  const hubDestino: HubDestino = hubConfig?.destination ?? null;
-  const destinoSeleccionado: HubDestino = tieneMostrador
-    ? hubDestino || 'restaurante'
+  // Determinar si ESTE dispositivo físico es el dueño de alguno de los Hubs en la nube
+  const miHubActivoEnCloud: 'restaurante' | 'mostrador' | null =
+    hubDeviceId &&
+    (hubsMap?.mostrador?.enabled || hubsMap?.venta_crudo?.enabled) &&
+    (hubsMap?.mostrador?.deviceId === hubDeviceId || hubsMap?.venta_crudo?.deviceId === hubDeviceId)
+      ? 'mostrador'
+      : hubDeviceId &&
+          hubsMap?.restaurante?.enabled &&
+          hubsMap?.restaurante?.deviceId === hubDeviceId
+        ? 'restaurante'
+        : null;
+
+  const destinoSeleccionado: 'restaurante' | 'mostrador' = tieneMostrador
+    ? normalizarDestino(localDestino || miHubActivoEnCloud || 'restaurante')
     : 'restaurante';
-  const effectiveHubDeviceId = hubDeviceId || hubConfig?.deviceId || '';
+
+  const configDelDestinoActual =
+    destinoSeleccionado === 'mostrador'
+      ? hubsMap?.mostrador || hubsMap?.venta_crudo
+      : hubsMap?.restaurante;
+
+  const isHubEnabled = Boolean(
+    !esWeb &&
+      hubDeviceId &&
+      configDelDestinoActual?.enabled === true &&
+      configDelDestinoActual?.deviceId === hubDeviceId
+  );
+  const otroDispositivoEnDestino = Boolean(
+    configDelDestinoActual?.enabled === true &&
+      configDelDestinoActual?.deviceId &&
+      hubDeviceId &&
+      configDelDestinoActual.deviceId !== hubDeviceId
+  );
+  const effectiveHubDeviceId = hubDeviceId || '';
+
+  // 🖨️ CONDICIÓN ESTRICTA: El Modo Hub solo puede activarse si ESTE dispositivo físico
+  // tiene una impresora Bluetooth conectada y sincronizada en verde (estaConectado).
+  const puedeActivarHub = Boolean(!esWeb && estaConectado && dispositivoActivo);
 
   // 📑 TABS
   const [tabActiva, setTabActiva] = useState<TabActiva>('impresoras');
@@ -85,20 +123,29 @@ export default function AdminDeviceSettings() {
     setIsScanning(false);
   };
 
-  // Cargar identidad persistente del dispositivo físico local
+  // Cargar identidad persistente y destino preferido del dispositivo físico local
   useEffect(() => {
     let activo = true;
 
     const cargarIdentidadLocal = async () => {
       try {
-        let devId = await AsyncStorage.getItem('adi_hub_device_id');
+        const [storedDevId, storedDestino] = await Promise.all([
+          AsyncStorage.getItem('adi_hub_device_id'),
+          AsyncStorage.getItem('adi_hub_destino'),
+        ]);
+        let devId = storedDevId;
         if (!devId) {
           const { resolverDeviceIdADI } =
             await import('../../../src/sistema/instalacion/vinculacion/generar-device-id-adi');
           devId = await resolverDeviceIdADI();
           await AsyncStorage.setItem('adi_hub_device_id', devId);
         }
-        if (activo) setHubDeviceId(devId);
+        if (activo) {
+          setHubDeviceId(devId);
+          if (storedDestino === 'restaurante' || storedDestino === 'mostrador' || storedDestino === 'venta_crudo') {
+            setLocalDestino(normalizarDestino(storedDestino));
+          }
+        }
       } catch (e) {
         console.warn('No se pudo cargar identidad local de Hub', e);
       }
@@ -111,6 +158,7 @@ export default function AdminDeviceSettings() {
   }, []);
 
   const handleScan = useCallback(async () => {
+    if (esWeb) return;
     setIsScanning(true);
     setScannedDevices([]);
     try {
@@ -121,10 +169,11 @@ export default function AdminDeviceSettings() {
     } finally {
       setIsScanning(false);
     }
-  }, [escanear]);
+  }, [escanear, esWeb]);
 
-  // Escaneo automático al montar la pantalla para cargar emparejados al instante
+  // Escaneo automático al montar la pantalla en Android para cargar emparejados al instante
   useEffect(() => {
+    if (esWeb) return;
     let cancelado = false;
     const ejecutarEscaneo = async () => {
       try {
@@ -138,11 +187,36 @@ export default function AdminDeviceSettings() {
     return () => {
       cancelado = true;
     };
-  }, [escanear]);
+  }, [escanear, esWeb]);
 
   const toggleHubMode = async (value: boolean) => {
+    if (esWeb) {
+      Alert.alert(
+        'Exclusivo de Terminal Android',
+        'El Modo Hub Bluetooth requiere una terminal física Android vinculada a la impresora o báscula.'
+      );
+      return;
+    }
+
+    if (value && !puedeActivarHub) {
+      Alert.alert(
+        'Impresora Requerida',
+        'Para activar este dispositivo como Hub Central, primero debe conectar y sincronizar una impresora Bluetooth en el paso 3.'
+      );
+      return;
+    }
+
     const destinoFinal = destinoSeleccionado || 'restaurante';
+    if (!effectiveHubDeviceId) {
+      Alert.alert('Espere', 'Resolviendo identidad física del dispositivo...');
+      return;
+    }
     try {
+      if (value) {
+        await activarHub(destinoFinal, effectiveHubDeviceId);
+      } else {
+        await desactivarHub();
+      }
       await deviceActions.establecerHubConfig({
         enabled: value,
         destination: destinoFinal,
@@ -154,17 +228,44 @@ export default function AdminDeviceSettings() {
     }
   };
 
-  const selectHubDestino = async (destino: HubDestino) => {
-    if (!destino) return;
+  const liberarCanalColgado = async () => {
+    if (esWeb) return;
     try {
-      await deviceActions.actualizarHubConfig({
-        destination: destino,
-        deviceId: effectiveHubDeviceId,
+      await deviceActions.establecerHubConfig({
+        enabled: false,
+        destination: destinoSeleccionado,
+        deviceId: configDelDestinoActual?.deviceId || '',
         updatedAt: Date.now(),
-        ...(isHubEnabled ? { enabled: true } : {}),
       });
-    } catch (e: any) {
-      console.warn('Error al cambiar destino de Hub:', e);
+      await desactivarHub();
+      Alert.alert(
+        'Canal Liberado',
+        `El canal de ${destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'} ha sido liberado de registros colgados.`
+      );
+    } catch {
+      Alert.alert('Error', 'No se pudo liberar el canal colgado');
+    }
+  };
+
+  const selectHubDestino = async (destino: 'restaurante' | 'mostrador') => {
+    if (!destino) return;
+    setLocalDestino(destino);
+    await setDestinoLocalHub(destino);
+    if (esWeb || !effectiveHubDeviceId) return;
+
+    // Si este dispositivo tenía activo el otro canal de Hub, mover su asignación activa al nuevo destino
+    if (miHubActivoEnCloud && miHubActivoEnCloud !== destino) {
+      try {
+        await activarHub(destino, effectiveHubDeviceId);
+        await deviceActions.establecerHubConfig({
+          enabled: true,
+          destination: destino,
+          deviceId: effectiveHubDeviceId,
+          updatedAt: Date.now(),
+        });
+      } catch (e: any) {
+        console.warn('Error al cambiar destino de Hub:', e);
+      }
     }
   };
 
@@ -201,7 +302,7 @@ export default function AdminDeviceSettings() {
     try {
       Alert.alert('Imprimiendo...', 'Enviando un ticket de prueba.');
 
-      if (hubDestino === 'venta_crudo') {
+      if (destinoSeleccionado === 'mostrador') {
         // Test Mostrador format (Weighted items)
         await imprimirTicketVenta(
           {
@@ -248,7 +349,7 @@ export default function AdminDeviceSettings() {
     } catch (e: any) {
       Alert.alert('Error de Impresión', e.message);
     }
-  }, [estaConectado, negocioConfig, imprimirCuenta, imprimirTicketVenta, hubDestino]);
+  }, [estaConectado, negocioConfig, imprimirCuenta, imprimirTicketVenta, destinoSeleccionado]);
 
   if (isConfigLoading) {
     return (
@@ -331,19 +432,19 @@ export default function AdminDeviceSettings() {
                     <Pressable
                       style={[
                         styles.destinoBtn,
-                        destinoSeleccionado === 'venta_crudo' && styles.destinoBtnActive,
+                        destinoSeleccionado === 'mostrador' && styles.destinoBtnActive,
                       ]}
-                      onPress={() => selectHubDestino('venta_crudo')}
+                      onPress={() => selectHubDestino('mostrador')}
                     >
                       <Ionicons
                         name="storefront"
                         size={24}
-                        color={destinoSeleccionado === 'venta_crudo' ? '#fff' : '#64748b'}
+                        color={destinoSeleccionado === 'mostrador' ? '#fff' : '#64748b'}
                       />
                       <Text
                         style={[
                           styles.destinoText,
-                          destinoSeleccionado === 'venta_crudo' && styles.destinoTextActive,
+                          destinoSeleccionado === 'mostrador' && styles.destinoTextActive,
                         ]}
                       >
                         Mostrador
@@ -356,24 +457,65 @@ export default function AdminDeviceSettings() {
 
             {/* 2. MODO HUB SWITCH */}
             {rutaNegocio && (
-              <View style={styles.hubSection}>
+              <View
+                style={[
+                  styles.hubSection,
+                  (esWeb || !puedeActivarHub) && styles.hubSectionDisabled,
+                ]}
+              >
                 <View style={styles.hubHeader}>
                   <View style={styles.hubIconContainer}>
-                    <Ionicons name="server" size={24} color="#3b82f6" />
+                    <Ionicons
+                      name="server"
+                      size={24}
+                      color={esWeb || !puedeActivarHub ? '#64748b' : '#3b82f6'}
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.hubTitle}>2. Modo Hub Central</Text>
+                    <Text style={styles.hubTitle}>2. Modo Hub Central (Este Dispositivo)</Text>
                     <Text style={styles.hubDesc}>
-                      {`Convertir en servidor de impresión para ${
-                        destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'
-                      }`}
+                      {esWeb
+                        ? 'En Web operas como supervisor. La conexión Bluetooth al Hub se activa directamente desde cada tableta o teléfono Android.'
+                        : !puedeActivarHub
+                          ? 'Paso requerido: primero conecte y sincronice una impresora Bluetooth en el paso 3 para poder activar el Modo Hub Central en este dispositivo.'
+                          : isHubEnabled
+                            ? `Este dispositivo es el Hub activo de ${
+                                destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'
+                              }`
+                            : otroDispositivoEnDestino
+                              ? `Otro dispositivo Android atiende actualmente ${
+                                  destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'
+                                }. Actívalo aquí para transferir el Hub a esta terminal.`
+                              : `Convertir ESTE dispositivo en servidor de impresión para ${
+                                  destinoSeleccionado === 'restaurante' ? 'Restaurante' : 'Mostrador'
+                                }`}
                     </Text>
+                    {otroDispositivoEnDestino && !isHubEnabled && !esWeb && (
+                      <Pressable
+                        style={{
+                          marginTop: 8,
+                          alignSelf: 'flex-start',
+                          paddingVertical: 4,
+                          paddingHorizontal: 10,
+                          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: '#ef4444',
+                        }}
+                        onPress={liberarCanalColgado}
+                      >
+                        <Text style={{ color: '#f87171', fontSize: 12, fontWeight: '600' }}>
+                          Liberar canal colgado
+                        </Text>
+                      </Pressable>
+                    )}
                   </View>
                   <Switch
                     value={isHubEnabled}
                     onValueChange={toggleHubMode}
+                    disabled={esWeb || !puedeActivarHub}
                     trackColor={{ false: '#334155', true: '#3b82f6' }}
-                    thumbColor={isHubEnabled ? '#ffffff' : '#94a3b8'}
+                    thumbColor={isHubEnabled ? '#ffffff' : puedeActivarHub ? '#94a3b8' : '#475569'}
                   />
                 </View>
               </View>

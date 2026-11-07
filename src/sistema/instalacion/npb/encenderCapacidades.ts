@@ -161,15 +161,48 @@ export function encenderCapacidades(
   const rolesPermitidosNegocio = Array.isArray(negocio?.roles_permitidos)
     ? new Set(negocio!.roles_permitidos.map((r) => (r === 'admin' ? 'administrador' : r)))
     : null;
+  const tieneRestriccionCapacidadesExplicita =
+    !esPlantilla && Array.isArray(negocio?.capacidades_autorizadas);
 
   const roles_activos: RolDispositivoCanonico[] = [];
   const roles_dormidos: RolDispositivoCanonico[] = [];
 
   for (const rol of ROLES_DISPOSITIVO_CANONICOS) {
-    let cumpleNPB = idsRolesDeclarados.has(rol);
-    let cumpleNegocio = rolesPermitidosNegocio ? rolesPermitidosNegocio.has(rol) : true;
+    const cumpleNPB = idsRolesDeclarados.has(rol);
+    const cumpleNegocio = rolesPermitidosNegocio ? rolesPermitidosNegocio.has(rol) : true;
 
-    if (cumpleNPB && cumpleNegocio) {
+    let cumpleCapacidadRequerida = true;
+    if (tieneRestriccionCapacidadesExplicita) {
+      const explicitamenteAutorizadoSolo =
+        rolesPermitidosNegocio !== null &&
+        rolesPermitidosNegocio.has(rol) &&
+        idsCapacidadesActivas.size === 1 &&
+        idsCapacidadesActivas.has('menu');
+
+      if (!explicitamenteAutorizadoSolo) {
+        if (rol === 'mesero' && !idsCapacidadesActivas.has('control_mesas')) {
+          cumpleCapacidadRequerida = false;
+        } else if (
+          (rol === 'cocina' ||
+            rol === 'barman' ||
+            rol === 'barista' ||
+            rol === 'parrillero' ||
+            rol === 'empacador') &&
+          !idsCapacidadesActivas.has('comanda_cocina')
+        ) {
+          cumpleCapacidadRequerida = false;
+        } else if (
+          (rol === 'mostrador' || rol === 'cajero') &&
+          !idsCapacidadesActivas.has('mostrador_y_pos')
+        ) {
+          cumpleCapacidadRequerida = false;
+        } else if (rol === 'repartidor' && !idsCapacidadesActivas.has('reparto_logistica')) {
+          cumpleCapacidadRequerida = false;
+        }
+      }
+    }
+
+    if (cumpleNPB && cumpleNegocio && cumpleCapacidadRequerida) {
       roles_activos.push(rol);
     } else {
       roles_dormidos.push(rol);

@@ -212,7 +212,7 @@ export interface ItemPesado {
 /**
  * Propósito de un trabajo de impresión
  */
-export type PropositoTrabajo = 'comanda' | 'cuenta' | 'venta_crudo' | 'etiqueta';
+export type PropositoTrabajo = 'comanda' | 'cuenta' | 'mostrador' | 'venta_crudo' | 'etiqueta';
 
 /**
  * Estado de un trabajo en la cola
@@ -220,9 +220,9 @@ export type PropositoTrabajo = 'comanda' | 'cuenta' | 'venta_crudo' | 'etiqueta'
 export type EstadoTrabajo = 'pendiente_impresion' | 'impresion_enviada' | 'exito' | 'fallo';
 
 /**
- * Canal de impresión (restaurante standard o venta crudo)
+ * Canal de impresión (restaurante standard o mostrador)
  */
-export type CanalImpresion = 'standard' | 'venta_crudo';
+export type CanalImpresion = 'standard' | 'mostrador' | 'venta_crudo';
 
 /**
  * Trabajo en la cola de impresión
@@ -259,7 +259,7 @@ export interface TrabajoImpresion {
 /**
  * Destino del Hub Central
  */
-export type DestinoConcentrador = 'restaurante' | 'venta_crudo';
+export type DestinoConcentrador = 'restaurante' | 'mostrador' | 'venta_crudo';
 
 /** Alias de compatibilidad para el contrato previo. */
 export type DestinoHub = DestinoConcentrador;

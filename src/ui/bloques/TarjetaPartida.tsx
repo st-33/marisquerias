@@ -46,6 +46,12 @@ export const TarjetaPartida = ({
   } else if (item.variantes && typeof item.variantes === 'object') {
     variants = Object.values(item.variantes).flat().map(String);
   }
+  // Limpieza defensiva contra duplicación de precio en etiqueta: "Mediano ($140)" -> "Mediano"
+  variants = variants.map((v) =>
+    typeof v === 'string'
+      ? v.replace(/\s*\(\s*[\+\-\$]?\s*\d+(?:\.\d+)?\s*\)/g, '').trim()
+      : String(v)
+  ).filter(Boolean);
 
   const statusLabel = statusConfig.label === 'NUEVO' ? 'Nueva' : statusConfig.label;
 

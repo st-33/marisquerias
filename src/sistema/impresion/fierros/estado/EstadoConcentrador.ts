@@ -63,7 +63,7 @@ function generarIdDispositivo(): string {
  * Convierte destino a canal de impresión
  */
 export function destinoACanal(destino: DestinoHub | null): CanalImpresion {
-  if (destino === 'venta_crudo') return 'venta_crudo';
+  if (destino === 'mostrador' || destino === 'venta_crudo') return 'venta_crudo';
   return 'standard';
 }
 

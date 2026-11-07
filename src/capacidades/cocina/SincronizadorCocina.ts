@@ -1,10 +1,16 @@
 /**
  * 🔄 CLASE DE SINCRONIZACIÓN INVENTARIO ↔ COCINA (DOGMA V2)
- * Descuenta automáticamente el inventario cuando Kitchen comienza a preparar items
+ * Delega la autoridad única de consumo a `ServicioMovimientosInventario`,
+ * manteniendo compatibilidad de firma con `pedidos.repositorio.ts`.
  */
 
 import { getRtdb } from '../../sistema/firebase';
 import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repositorio';
+import { RepositorioLibroPlatillos } from '../../sistema/persistencia/platillos.repositorio';
+import {
+  ServicioMovimientosInventario,
+  resolverLineasConsumoParaProducto,
+} from '../../sistema/servicios/ServicioMovimientosInventario';
 import { useInventoryV2Store, useOperacionStore, useStore } from '../../sistema/store';
 
 export type DescuentoResult = {
@@ -16,17 +22,17 @@ export type DescuentoResult = {
 
 export class SincronizadorCocina {
   /**
-   * Descontar ingredientes de un producto del inventario
-   * Usa el store para validación instantánea y actualiza Firebase
+   * Descontar ingredientes o artículo directo de un producto del inventario
+   * delegando en `ServicioMovimientosInventario`.
    */
   static async descontarPorReceta(
     productoId: string,
-    cantidad: number = 1
+    cantidad: number = 1,
+    operacionIdOverride?: string
   ): Promise<DescuentoResult> {
     try {
       const db = getRtdb();
 
-      // Guard de inicialización básica del store
       if (!useStore || typeof useStore.getState !== 'function') {
         throw new Error(
           '[SincronizadorCocina] useStore no está disponible o no ha sido inicializado.'
@@ -35,10 +41,8 @@ export class SincronizadorCocina {
 
       const rutaNegocio = useStore.getState().sesion?.rutaNegocio || '';
 
-      // 1. Obtener producto con receta del store local
       let producto = useOperacionStore.getState().productos?.[productoId];
       if (!producto) {
-        // Breve espera por si los productos están terminando de sincronizar
         for (let intento = 1; intento <= 3; intento++) {
           await new Promise((resolve) => setTimeout(resolve, 150));
           producto = useOperacionStore.getState().productos?.[productoId];
@@ -50,13 +54,6 @@ export class SincronizadorCocina {
         return { success: false, error: `Producto ${productoId} no encontrado` };
       }
 
-      const receta = (producto as any).receta?.ingredientes;
-      if (!receta || Object.keys(receta).length === 0) {
-        return { success: true, descontados: [] };
-      }
-
-      // 2. Validar stock instantáneamente con el store
-      // En V2 el stock está distribuido por áreas/contenedores.
       const checkStoreListo = () => {
         const state = useInventoryV2Store.getState();
         const cat = state?.catalog;
@@ -67,28 +64,21 @@ export class SincronizadorCocina {
       let catalog = useInventoryV2Store.getState()?.catalog;
       let areas = useInventoryV2Store.getState()?.areas;
 
-      // Si el catálogo o las áreas están vacíos (store no inicializado), activar contingencia
       if (
         !catalog ||
         Object.keys(catalog).length === 0 ||
         !areas ||
         Object.keys(areas).length === 0
       ) {
-        // Contingencia 1: Reintentos breves para esperar hidratación de listeners
-        const MAX_INTENTOS = 3;
-        const DELAY_MS = 250;
-        for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
-          await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
-          if (checkStoreListo()) {
-            break;
-          }
+        for (let intento = 1; intento <= 3; intento++) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          if (checkStoreListo()) break;
         }
 
         const refreshed = useInventoryV2Store.getState();
         catalog = refreshed?.catalog;
         areas = refreshed?.areas;
 
-        // Contingencia 2: Si el store persiste vacío, consultar directamente al repositorio de persistencia
         if (
           (!catalog ||
             Object.keys(catalog).length === 0 ||
@@ -120,8 +110,6 @@ export class SincronizadorCocina {
         }
       }
 
-      // Si tras la contingencia el inventario sigue sin estar disponible:
-      // NO hacemos return ciego ni evaluamos stock contra colecciones vacías (evita falso "sin stock").
       if (
         !catalog ||
         Object.keys(catalog).length === 0 ||
@@ -132,21 +120,40 @@ export class SincronizadorCocina {
           `[SincronizadorCocina] Store de inventario no inicializado (catálogo o áreas vacíos). Descuento pospuesto para ${productoId} para prevenir falso sin stock.`
         );
       }
+
+      let platilloAsociado: any = null;
+      if (rutaNegocio && ((producto as any).origenTipo === 'platillo' || (producto as any).origenId)) {
+        try {
+          const repoPlatillos = new RepositorioLibroPlatillos(db, rutaNegocio);
+          const platillosMap = await repoPlatillos.obtenerPlatillos();
+          const origenKey = (producto as any).origenId || productoId;
+          platilloAsociado = platillosMap[origenKey] || null;
+        } catch {
+          platilloAsociado = null;
+        }
+      }
+
+      const { lineas } = resolverLineasConsumoParaProducto({
+        producto: producto as any,
+        platillo: platilloAsociado,
+        cantidadVendida: cantidad,
+        catalogoInventario: catalog,
+      });
+
+      if (lineas.length === 0) {
+        return { success: true, descontados: [] };
+      }
+
       const sinStock: string[] = [];
-
-      for (const [itemId, cantidadReceta] of Object.entries(receta)) {
-        const cantidadNecesaria = (cantidadReceta as number) * cantidad;
-        const item = catalog[itemId];
-
+      for (const linea of lineas) {
         let stockConsolidado = 0;
         Object.values(areas).forEach((area: any) => {
-          if (area.stock && area.stock[itemId]) {
-            stockConsolidado += area.stock[itemId];
+          if (area?.stock && typeof area.stock[linea.itemId] === 'number') {
+            stockConsolidado += area.stock[linea.itemId];
           }
         });
-
-        if (!item || stockConsolidado < cantidadNecesaria) {
-          sinStock.push(item?.nombre || itemId);
+        if (stockConsolidado < linea.cantidadBase) {
+          sinStock.push(linea.nombre || linea.itemId);
         }
       }
 
@@ -158,32 +165,41 @@ export class SincronizadorCocina {
         };
       }
 
-      // 3. Ejecutar descuentos (asíncrono)
       const ajustarDelta = useInventoryV2Store.getState().ajustarStockDelta;
+      if (operacionIdOverride && rutaNegocio) {
+        const res = await ServicioMovimientosInventario.aplicarConsumoIdempotente({
+          db,
+          rutaNegocio,
+          operacionId: operacionIdOverride,
+          lineas,
+          allowNegative: false,
+          metadata: { productoId, cantidad },
+        });
+        return {
+          success: res.aplicado || res.yaEstabaAplicado,
+          descontados: res.lineasAplicadas.map((l) => l.itemId),
+        };
+      }
+
       const descontados: string[] = [];
-
-      for (const [itemId, cantidadReceta] of Object.entries(receta)) {
-        const cantidadA_Descontar = (cantidadReceta as number) * cantidad;
-
-        // Estrategia simple: buscar el primer contenedor que tenga stock de este item
+      for (const linea of lineas) {
         let contenedorId: string | null = null;
         for (const [id, area] of Object.entries(areas)) {
-          if ((area as any).stock?.[itemId] > 0) {
+          if ((area as any).stock?.[linea.itemId] > 0) {
             contenedorId = id;
             break;
           }
         }
-
         if (contenedorId) {
           await ajustarDelta({
             db,
             rutaNegocio,
             containerId: contenedorId,
-            itemId,
-            delta: -cantidadA_Descontar,
-            razon: `Preparación: ${cantidad}x ${producto.nombre}`,
+            itemId: linea.itemId,
+            delta: -linea.cantidadBase,
+            razon: linea.razon || `Preparación: ${cantidad}x ${producto.nombre}`,
           });
-          descontados.push(itemId);
+          descontados.push(linea.itemId);
         }
       }
 

@@ -9,7 +9,7 @@ import { get, off, onValue, ref, remove, runTransaction, set, update } from 'fir
 import { ensureNumberTimestamp } from '../../logica/dominio/normalizadores';
 import { DespachadorCola } from '../impresion/fierros/cola/DespachadorCola';
 import { assertValidRutaNegocio } from '../rtdb/guards';
-import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
+import { assertCajonActivo, resolver_ruta_cajon } from '../rtdb/rutas/ruta_negocio';
 import { purgarMesasPendientes } from './borradores.repositorio';
 import { SincronizadorCocina } from '../../capacidades/cocina/SincronizadorCocina';
 import { RegistroVentasRepository } from './registroVentas.repositorio';
@@ -388,8 +388,9 @@ export class RepositorioPedidos {
         return;
       }
 
-      const productosRef = ref(this.db, `${this.rutaNegocio}/menu/productos`);
-      const categoriasRef = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
+      const baseMenu = resolver_ruta_cajon(this.rutaNegocio, 'menu');
+      const productosRef = ref(this.db, `${baseMenu}/productos`);
+      const categoriasRef = ref(this.db, `${baseMenu}/categorias`);
 
       const [productosSnap, categoriasSnap] = await Promise.all([
         get(productosRef),
@@ -496,7 +497,8 @@ export class RepositorioPedidos {
               try {
                 const res = await SincronizadorCocina.descontarPorReceta(
                   item.productId,
-                  item.cantidad || 1
+                  item.cantidad || 1,
+                  `pedido_${pedidoId}_item_${itemId}_directo`
                 );
                 if (res.success && res.descontados && res.descontados.length > 0) {
                   await update(ref(this.db, `${this.getBasePath()}/${pedidoId}/items/${itemId}`), {

@@ -11,9 +11,14 @@ import { MenuRepository, type Producto } from '../../sistema/persistencia';
 import { InventoryV2Repository } from '../../sistema/persistencia/inventario.repositorio';
 import type { Categoria } from '../../sistema/persistencia/menu.repositorio';
 import { RegistroVentasRepository } from '../../sistema/persistencia/registroVentas.repositorio';
+import {
+  ServicioMovimientosInventario,
+  resolverLineasConsumoParaProducto,
+} from '../../sistema/servicios/ServicioMovimientosInventario';
 import { getRtdb } from '../../sistema/firebase';
 import { SQLiteStorageAdapter } from '../../sistema/sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
 import { OfflinePrintFallback } from '../../sistema/servicios/RespaldoImpresionOffline';
+import { servicioFierros } from '../../sistema/impresion/fierros';
 import { DespachadorCola } from '../../sistema/impresion/fierros/cola/DespachadorCola';
 import { useStore } from '../../sistema/store';
 import { resolverDeviceIdADI } from '../../sistema/instalacion/vinculacion/generar-device-id-adi';
@@ -88,20 +93,62 @@ export function useMostradorPro(props?: UseMostradorProProps) {
   );
   const inventoryAutoDiscount = isInventarioEnabled && rawInventoryAutoDiscount;
 
+  const storeProductos = useStore((s) => (s as any).productos) as Record<string, Producto> | undefined;
+  const storeCategorias = useStore((s) => (s as any).categorias) as Record<string, Categoria> | undefined;
+
+  // Sincronizar con el store centralizado si ya tiene datos cargados
+  useEffect(() => {
+    if (storeProductos && Object.keys(storeProductos).length > 0) {
+      setProductos((prev) => ({ ...(prev || {}), ...storeProductos }));
+    }
+  }, [storeProductos]);
+
+  useEffect(() => {
+    if (storeCategorias && Object.keys(storeCategorias).length > 0) {
+      const normalizadas: Record<string, Categoria> = {};
+      for (const [cid, cat] of Object.entries(storeCategorias)) {
+        if (cat && typeof cat === 'object') {
+          normalizadas[cid] = { ...(cat as any), id: cid };
+        }
+      }
+      setCategorias((prev) => ({ ...(prev || {}), ...normalizadas }));
+      setLoading(false);
+    }
+  }, [storeCategorias]);
+
   // --- Carga de Datos ---
   useEffect(() => {
     if (!rutaNegocio) return;
 
-    // Cargar caché local primero por si estamos offline o para render rápido
+    let liveProdsRecibidos = false;
+    let liveCatsRecibidas = false;
+    let saveProdsTimer: ReturnType<typeof setTimeout> | null = null;
+    let saveCatsTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Auto-reparar integridad flat/nested si existen discrepancias
+    if (typeof (menuRepo as any).repararIntegridad === 'function') {
+      void (menuRepo as any).repararIntegridad().catch(() => {});
+    }
+
+    // Cargar caché local primero por si estamos offline o para render rápido,
+    // sin sobrescribir jamás datos en vivo ya emitidos por Firebase o el Store.
     const cargarCacheOffline = async () => {
       try {
         const cachedProds = await SQLiteStorageAdapter.getProductos();
         const cachedCats = await SQLiteStorageAdapter.getCategorias();
-        if (cachedProds && Object.keys(cachedProds).length > 0) {
-          setProductos(cachedProds as Record<string, Producto>);
+        if (!liveProdsRecibidos && cachedProds && Object.keys(cachedProds).length > 0) {
+          setProductos((prev) =>
+            Object.keys(prev).length > 0 ? prev : (cachedProds as Record<string, Producto>)
+          );
         }
-        if (cachedCats && Object.keys(cachedCats).length > 0) {
-          setCategorias(cachedCats as Record<string, Categoria>);
+        if (!liveCatsRecibidas && cachedCats && Object.keys(cachedCats).length > 0) {
+          const fixedCats: Record<string, Categoria> = {};
+          for (const [cid, cat] of Object.entries(cachedCats)) {
+            if (cat && typeof cat === 'object') {
+              fixedCats[cid] = { ...(cat as any), id: cid };
+            }
+          }
+          setCategorias((prev) => (Object.keys(prev).length > 0 ? prev : fixedCats));
           setLoading(false);
         }
       } catch (err) {
@@ -111,21 +158,41 @@ export function useMostradorPro(props?: UseMostradorProProps) {
     void cargarCacheOffline();
 
     const unsubMenu = menuRepo.suscribirProductos((data) => {
-      setProductos(data);
       if (data && Object.keys(data).length > 0) {
-        void SQLiteStorageAdapter.saveProductosBulk(data);
+        liveProdsRecibidos = true;
+        setProductos((prev) => ({ ...(prev || {}), ...data }));
+        if (saveProdsTimer) clearTimeout(saveProdsTimer);
+        saveProdsTimer = setTimeout(() => {
+          void SQLiteStorageAdapter.saveProductosBulk(data).catch(() => {});
+        }, 600);
+      } else if (!liveProdsRecibidos) {
+        setProductos(data || {});
       }
     });
 
     const unsubCats = menuRepo.suscribirCategorias((data) => {
-      setCategorias(data);
+      const fixedCats: Record<string, Categoria> = {};
+      for (const [cid, cat] of Object.entries(data || {})) {
+        if (cat && typeof cat === 'object') {
+          fixedCats[cid] = { ...(cat as any), id: cid };
+        }
+      }
+      if (Object.keys(fixedCats).length > 0) {
+        liveCatsRecibidas = true;
+      }
+      setCategorias(fixedCats);
       setLoading(false);
-      if (data && Object.keys(data).length > 0) {
-        void SQLiteStorageAdapter.saveCategoriasBulk(data);
+      if (Object.keys(fixedCats).length > 0) {
+        if (saveCatsTimer) clearTimeout(saveCatsTimer);
+        saveCatsTimer = setTimeout(() => {
+          void SQLiteStorageAdapter.saveCategoriasBulk(fixedCats).catch(() => {});
+        }, 600);
       }
     });
 
     return () => {
+      if (saveProdsTimer) clearTimeout(saveProdsTimer);
+      if (saveCatsTimer) clearTimeout(saveCatsTimer);
       unsubMenu();
       unsubCats();
     };
@@ -232,75 +299,88 @@ export function useMostradorPro(props?: UseMostradorProProps) {
         console.error('[MostradorPro] ⚠️ Error registrando venta en DB:', error);
       }
 
-      // Inventario
+      // Inventario (Autoridad Única Idempotente)
       if (inventoryAutoDiscount) {
         try {
-          const areas = await inventoryRepo.obtenerAreas();
-          let areaId = Object.entries(areas).find(
-            ([, a]) =>
-              (a?.hubId as string) === 'venta_crudo' ||
-              (a?.hubId as string) === 'mostrador' ||
-              (a?.hubId as string) === 'tienda'
-          )?.[0];
-          if (!areaId) {
-            const def = Object.entries(areas).find(
-              ([, a]) => (a as any)?.metadata?.isDefault === true
-            );
-            areaId = def?.[0] || Object.keys(areas)[0] || undefined;
+          const storeState = useStore.getState() as any;
+          let catalogoInventario = storeState.catalog || {};
+          if (Object.keys(catalogoInventario).length === 0) {
+            catalogoInventario = await inventoryRepo.obtenerCatalogo();
           }
-          if (!areaId) {
-            try {
-              areaId = await inventoryRepo.crearArea({
-                nombre: 'Mostrador Principal',
-                hubId: 'venta_crudo',
-                ...({ metadata: { isDefault: true } } as any),
-              });
-            } catch {
-              areaId = undefined;
-            }
-          }
-          if (areaId) {
-            const inventoryItems = safeItems.filter((i) => typeof i?.productoId === 'string');
-            if (inventoryItems.length > 0) {
-              await inventoryRepo.registrarVentaMultiple({
-                items: inventoryItems,
-                areaId,
-                total,
-                metodoPago,
-                usuario,
-                allowNegative: !!posConfig?.allowNegativeStock,
-                metadata: { origen: 'venta_crudo', tsVenta: payload?.timestamp },
-              });
-            }
+
+          const todasLineas = safeItems.flatMap((it) => {
+            const prod = it.productoId ? productos[it.productoId] : null;
+            const { lineas } = resolverLineasConsumoParaProducto({
+              producto: prod || {
+                id: it.productoId || it.id,
+                nombre: it.nombre,
+                unidad: it.unidad,
+                origenTipo: 'inventario',
+              },
+              cantidadVendida: Number(it.cantidad || 1),
+              nombreFallback: it.nombre,
+              catalogoInventario,
+            });
+            return lineas;
+          });
+
+          if (todasLineas.length > 0) {
+            await ServicioMovimientosInventario.aplicarConsumoIdempotente({
+              db,
+              rutaNegocio,
+              operacionId: `mostrador_${ventaId}`,
+              lineas: todasLineas,
+              hubPreferido: 'venta_crudo',
+              usuario,
+              allowNegative: !!posConfig?.allowNegativeStock,
+              metadata: { origen: 'venta_crudo', tsVenta: payload?.timestamp, ventaId },
+            });
           }
         } catch (error) {
           console.error('[MostradorPro] ⚠️ Error inventario V2:', error);
         }
       }
 
-      // Imprimir vía Hub
+      // Imprimir: Si la impresora Bluetooth está conectada localmente a esta terminal,
+      // imprimimos DIRECTO por hardware para cero latencia.
+      // Si la terminal no tiene impresora local pero hay conexión, encolamos al Hub de Mostrador en RTDB.
       if (isImpresionEnabled) {
-        console.log('[MostradorPro] 🖨️ ONLINE -> Hub');
-        const spooler = DespachadorCola.obtenerInstancia(
-          db,
-          rutaNegocio,
-          'pos_venta_crudo',
-          {},
-          'dispositivo'
-        );
-        await spooler.encolar({
-          proposito: 'venta_crudo',
-          idPedido: ventaId,
-          canal: 'venta_crudo',
-          payload,
-        });
+        if (servicioFierros?.estaConectado) {
+          console.log('[MostradorPro] 🖨️ Impresora Bluetooth local conectada -> Impresión directa');
+          await OfflinePrintFallback.print({
+            id: ventaId,
+            type: 'venta_crudo',
+            payload,
+            createdAt: Date.now(),
+          });
+        } else {
+          console.log('[MostradorPro] 🖨️ ONLINE -> Encolando al Hub de Mostrador');
+          const spooler = DespachadorCola.obtenerInstancia(
+            db,
+            rutaNegocio,
+            'pos_venta_crudo',
+            {},
+            'dispositivo'
+          );
+          await spooler.encolar({
+            proposito: 'mostrador',
+            idPedido: ventaId,
+            canal: 'venta_crudo',
+            payload,
+          });
+        }
       } else {
         console.log('[MostradorPro] 🖨️ ONLINE -> Impresión desactivada por Feature Flag');
       }
 
       limpiarCarrito();
       setUltimoTicket(payload);
-      return { success: true, ventaId, offline: false, method: 'hub' };
+      return {
+        success: true,
+        ventaId,
+        offline: false,
+        method: servicioFierros?.estaConectado ? 'direct_bluetooth' : 'hub',
+      };
     } else {
       // ═══════════════════════════════════════════════════════════════════
       // MODO OFFLINE: Guardar en SQLite + Imprimir vía Bluetooth/Queue
@@ -316,30 +396,44 @@ export function useMostradorPro(props?: UseMostradorProProps) {
         throw new Error(`Error local: ${error?.message || 'Desconocido'}`);
       }
 
-      // Inventario Offline
+      // Inventario Offline (Resolviendo itemId físico real)
       if (inventoryAutoDiscount) {
         try {
-          const storeState = useStore.getState();
-          const areaId = Object.entries(storeState.areas).find(
-            ([, a]) => a?.hubId === 'venta_crudo'
-          )?.[0];
+          const storeState = useStore.getState() as any;
+          const catalogoInventario = storeState.catalog || {};
+          const areaId =
+            Object.entries(storeState.areas || {}).find(
+              ([, a]: [string, any]) => a?.hubId === 'venta_crudo'
+            )?.[0] || Object.keys(storeState.areas || {})[0];
+
           if (areaId) {
-            const inventoryItems = safeItems.filter((i) => typeof i?.productoId === 'string');
-            for (const item of inventoryItems) {
-              await storeState.ajustarStockDelta({
-                db: null as any,
-                rutaNegocio,
-                containerId: areaId,
-                itemId: item.productoId,
-                delta: -item.cantidad,
-                usuario,
-                razon: `Venta Offline Mostrador #${ventaId}`,
-                allowNegative: !!posConfig?.allowNegativeStock,
+            for (const item of safeItems) {
+              const prod = item.productoId ? productos[item.productoId] : null;
+              const { lineas } = resolverLineasConsumoParaProducto({
+                producto: prod || {
+                  id: item.productoId || item.id,
+                  nombre: item.nombre,
+                  unidad: item.unidad,
+                  origenTipo: 'inventario',
+                },
+                cantidadVendida: Number(item.cantidad || 1),
+                nombreFallback: item.nombre,
+                catalogoInventario,
               });
+
+              for (const lin of lineas) {
+                await storeState.ajustarStockDelta({
+                  db: null as any,
+                  rutaNegocio,
+                  containerId: lin.areaPreferidaId || areaId,
+                  itemId: lin.itemId,
+                  delta: -lin.cantidadBase,
+                  usuario,
+                  razon: `Venta Offline Mostrador #${ventaId}`,
+                  allowNegative: !!posConfig?.allowNegativeStock,
+                });
+              }
             }
-            console.log(
-              '[MostradorPro] 📦 Movimientos de inventario offline encolados y stock local actualizado'
-            );
           }
         } catch (invError) {
           console.error('[MostradorPro] ⚠️ Error descontando inventario offline:', invError);
@@ -377,6 +471,17 @@ export function useMostradorPro(props?: UseMostradorProProps) {
   const reimprimirUltimoTicket = async () => {
     if (!ultimoTicket) return { success: false, error: 'No hay ticket previo' };
 
+    if (isImpresionEnabled && servicioFierros?.estaConectado) {
+      console.log('[MostradorPro] 🖨️ Reimpresión directa vía Bluetooth local');
+      const res = await OfflinePrintFallback.print({
+        id: `reprint_${Date.now()}`,
+        type: 'venta_crudo',
+        payload: ultimoTicket,
+        createdAt: Date.now(),
+      });
+      return { success: res.success, local: true };
+    }
+
     const jobId = `reprint_vc_${Date.now()}`;
     const spooler = DespachadorCola.obtenerInstancia(
       db,
@@ -386,18 +491,48 @@ export function useMostradorPro(props?: UseMostradorProProps) {
       'dispositivo'
     );
     await spooler.encolar({
-      proposito: 'venta_crudo',
+      proposito: 'mostrador',
       idPedido: jobId,
       canal: 'venta_crudo',
       payload: ultimoTicket,
     });
-    return { success: true, jobId };
+    return { success: true, jobId, local: false };
   };
+
+  // Elegibilidad estricta de Mostrador:
+  // Solo artículos de entrega directa (inventario o platillos con produccion_anticipada / enviarACocina === false).
+  // Los platillos preparados por pedido al momento ('por_pedido') quedan excluidos de Mostrador aunque su categoría sea mixta.
+  const productosElegiblesMostrador = useMemo(() => {
+    return Object.entries(productos)
+      .map(([id, p]) => ({ ...p, id: p.id || id }))
+      .filter((p) => {
+        if (p.activo === false) return false;
+        if (p.modoPreparacion === 'por_pedido') return false;
+        if (p.origenTipo === 'platillo' && p.modoPreparacion !== 'produccion_anticipada') {
+          return false;
+        }
+        const cat = p.categoriaId ? categorias[p.categoriaId] : undefined;
+        // Si la categoría tiene desactivado explícitamente Mostrador, excluir todos sus productos
+        if (cat?.herencia?.ventaCrudo === false) return false;
+        // Si el producto tiene desactivado ventaCrudo individualmente, excluirlo SALVO que
+        // la categoría entera haya sido habilitada explícitamente para Mostrador (`herencia.ventaCrudo === true`).
+        if (p.visible?.ventaCrudo === false && cat?.herencia?.ventaCrudo !== true) {
+          return false;
+        }
+        return true;
+      });
+  }, [productos, categorias]);
+
+  const categoriasElegiblesMostrador = useMemo(() => {
+    return Object.entries(categorias)
+      .map(([id, c]) => ({ ...c, id: c.id || id }))
+      .filter((c) => c.activa !== false && c.herencia?.ventaCrudo !== false);
+  }, [categorias]);
 
   return {
     loading: loading || configLoading,
-    productos: Object.values(productos).filter((p) => p.visible?.ventaCrudo !== false),
-    categorias: Object.values(categorias).filter((c) => c.herencia?.ventaCrudo !== false),
+    productos: productosElegiblesMostrador,
+    categorias: categoriasElegiblesMostrador,
     areas: [],
     selectedAreaId: null,
     setSelectedAreaId: () => {},

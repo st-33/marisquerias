@@ -1,15 +1,19 @@
 /**
- * 📦 CEREBRO - DESCUENTO DE INVENTARIO
- * Módulo encargado de descontar stock de los ingredientes según la receta del plato
- * SEPARACIÓN SAGRADA: Solo lógica pura de negocio
+ * 📦 CEREBRO - DESCUENTO DE INVENTARIO (MESERO / ENTREGA)
+ * Módulo encargado de descontar existencias al entregar un artículo o platillo,
+ * delegando en la Autoridad Única (`ServicioMovimientosInventario`) con `operacionId` idempotente.
  */
 
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
 import { PedidosRepository } from '../../../sistema/persistencia/pedidos.repositorio';
-import { canonicalizeString } from '../../../logica/dominio/partidaCanonica';
+import { RepositorioLibroPlatillos } from '../../../sistema/persistencia/platillos.repositorio';
+import {
+  ServicioMovimientosInventario,
+  resolverLineasConsumoParaProducto,
+} from '../../../sistema/servicios/ServicioMovimientosInventario';
 import { useStore } from '../../../sistema/store';
-import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
+import { getRtdb } from '../../../sistema/firebase';
 import { createLogger } from '../../../sistema/monitoreo';
 import {
   classifyInventoryError,
@@ -18,8 +22,6 @@ import {
 } from './erroresInventario';
 
 const log = createLogger('descontarInventario');
-
-// classifyInventoryError exported via erroresInventario.ts
 
 type DescontarInventarioProps = {
   inventarioV2Repo: InventoryV2Repository;
@@ -32,33 +34,8 @@ export function useDescontarInventario({
   pedidosRepo,
   getProductoDelStore,
 }: DescontarInventarioProps) {
-  const inventarioV2AreaRestauranteRef = useRef<string | null>(null);
-  const inventarioV2CatalogMapRef = useRef<Record<string, string> | null>(null);
   const inventoryAutoDiscount =
-    useStore((s: any) => s.negocio.features?.inventory_auto_discount?.enabled) === true;
-
-  const resolveInventoryV2ItemId = useCallback(
-    async (rawKey: string): Promise<string> => {
-      const key = String(rawKey || '').trim();
-      if (!key) return '';
-
-      if (!inventarioV2CatalogMapRef.current) {
-        const catalog = await inventarioV2Repo.obtenerCatalogo();
-        const map: Record<string, string> = {};
-        for (const [id, it] of Object.entries(catalog || {})) {
-          const byId = String(id);
-          if (byId) map[byId] = byId;
-          const byName = canonicalizeString((it as any)?.nombre);
-          if (byName && !map[byName]) map[byName] = byId;
-        }
-        inventarioV2CatalogMapRef.current = map;
-      }
-
-      const map = inventarioV2CatalogMapRef.current || {};
-      return map[key] || map[canonicalizeString(key)] || key;
-    },
-    [inventarioV2Repo]
-  );
+    useStore((s: any) => s.negocio.features?.inventory_auto_discount?.enabled) !== false;
 
   const persistInventoryError = useCallback(
     async ({
@@ -97,7 +74,7 @@ export function useDescontarInventario({
       }
 
       try {
-        log.info(`📦 Descontando inventario: ${item.nombre}`);
+        log.info(`📦 Descontando inventario por entrega: ${item.nombre}`);
 
         const productoId = item.productId ?? item.productoId;
         if (!productoId) {
@@ -111,116 +88,58 @@ export function useDescontarInventario({
           return { success: false, error, code: 'INVENTORY_DEDUCTION_FAILED', itemId };
         }
 
+        const state = useStore.getState() as any;
+        const rutaNegocio = state.sesion?.rutaNegocio || '/';
+        const db = getRtdb(state.dataSources?.operacionUrl || undefined);
         const producto = getProductoDelStore(productoId);
-        const receta = producto?.receta?.ingredientes;
-        const preferredAreaId = producto?.inventoryAreaId ?? producto?.areaId ?? null;
+        const cantidadVendida = Number(item.cantidad || 1);
 
-        // Preferir Inventario V2 si hay receta (ingredientes)
-        if (receta && Object.keys(receta).length > 0) {
-          let areaId = inventarioV2AreaRestauranteRef.current;
-          if (!areaId) {
-            const areas = await inventarioV2Repo.obtenerAreas();
-            const entries = Object.entries(areas || {}).filter(([, a]) => {
-              const hub = (a as any)?.hubId;
-              return hub === 'restaurante' || hub === undefined;
-            });
-            const def = entries.find(([, a]) => (a as any)?.metadata?.isDefault === true);
-            areaId = def?.[0] || entries?.[0]?.[0] || null;
+        let catalogoInventario = state.catalog || {};
+        if (Object.keys(catalogoInventario).length === 0) {
+          catalogoInventario = await inventarioV2Repo.obtenerCatalogo();
+        }
 
-            if (!areaId) {
-              try {
-                areaId = await inventarioV2Repo.crearArea({
-                  nombre: 'Cocina Principal',
-                  hubId: 'restaurante',
-                  ...({ metadata: { isDefault: true } } as any),
-                });
-              } catch {
-                areaId = 'area_restaurante_default';
-              }
-            }
-            inventarioV2AreaRestauranteRef.current = areaId;
-          }
+        let platillo = null;
+        if (producto?.origenTipo === 'platillo' && producto?.origenId) {
+          const libroRepo = new RepositorioLibroPlatillos(db, rutaNegocio);
+          const platillosMap = await libroRepo.obtenerPlatillos();
+          platillo = platillosMap[producto.origenId] || null;
+        }
 
-          const finalAreaId = preferredAreaId || areaId;
-          if (!preferredAreaId) {
-            await inventarioV2Repo.registrarMissingAreaAssignment({
-              hubId:
-                (useStore.getState() as any).sesion.niche === 'venta_crudo'
-                  ? 'venta_crudo'
-                  : 'restaurante',
-              productoId,
-              preferredAreaId,
-              fallbackAreaId: finalAreaId,
-              actor: 'mesero',
-              reason: 'no_area_assigned',
-              nombre: producto?.nombre || item.nombre,
-            });
-          }
+        const { lineas } = resolverLineasConsumoParaProducto({
+          producto,
+          platillo,
+          cantidadVendida,
+          nombreFallback: item.nombre,
+          catalogoInventario,
+        });
 
-          const cantidadBase = Number(item.cantidad || 1);
-          const itemsSalidaRaw = await Promise.all(
-            Object.entries(receta).map(async ([invKey, qty]) => {
-              const resolvedId = await resolveInventoryV2ItemId(invKey);
-              return {
-                itemId: resolvedId,
-                cantidad: Number(qty || 0) * cantidadBase,
-                razon: `Entrega: ${cantidadBase}x ${producto?.nombre || item.nombre}`,
-              };
-            })
-          );
-          const itemsSalida = itemsSalidaRaw.filter((x) => !!x.itemId && Number(x.cantidad) > 0);
-
-          if (itemsSalida.length === 0) {
-            throw new Error(
-              `No hay ingredientes válidos para descontar del producto ${productoId}`
-            );
-          }
-
-          await inventarioV2Repo.registrarSalidaMultiple({
-            items: itemsSalida,
-            areaId: finalAreaId,
-            usuario: 'mesero',
-            razon: 'Entrega',
+        if (lineas.length > 0) {
+          const operacionId = `pedido_${pedidoActivoId}_item_${itemId}`;
+          await ServicioMovimientosInventario.aplicarConsumoIdempotente({
+            db,
+            rutaNegocio,
+            operacionId,
+            lineas,
+            hubPreferido: state.sesion?.niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante',
+            usuario: state.sesion?.usuario?.nombre || 'mesero',
             allowNegative: false,
             metadata: {
               origen: 'mesero',
               pedidoId: pedidoActivoId,
+              itemId,
               productoId,
             },
           });
-
-          await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
-            inventoryDeducted: true,
-            inventoryError: null,
-            inventoryErrorCode: null,
-            inventoryErrorAt: null,
-          });
-          return { success: true };
         }
 
-        // Fallback Inventario V1 (legacy)
-        const resultado = await SincronizadorCocina.descontarPorReceta(
-          productoId,
-          item.cantidad || 1
-        );
-        if (resultado.success) {
-          await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
-            inventoryDeducted: true,
-            inventoryError: null,
-            inventoryErrorCode: null,
-            inventoryErrorAt: null,
-          });
-          return { success: true };
-        }
-
-        const failure = classifyInventoryError(resultado.error || 'Error al descontar inventario');
-        await persistInventoryError({
-          pedidoActivoId,
-          itemId,
-          error: failure.message,
-          code: failure.code,
+        await pedidosRepo.actualizarItem(pedidoActivoId, itemId, {
+          inventoryDeducted: true,
+          inventoryError: null,
+          inventoryErrorCode: null,
+          inventoryErrorAt: null,
         });
-        return { success: false, error: failure.message, code: failure.code, itemId };
+        return { success: true };
       } catch (inventoryError) {
         const failure = classifyInventoryError(inventoryError);
         log.error('💥 Error de inventario controlado:', inventoryError);
@@ -239,7 +158,6 @@ export function useDescontarInventario({
       inventarioV2Repo,
       pedidosRepo,
       persistInventoryError,
-      resolveInventoryV2ItemId,
     ]
   );
 
@@ -248,3 +166,7 @@ export function useDescontarInventario({
     inventoryAutoDiscount,
   };
 }
+
+export const useInventoryDeduction = useDescontarInventario;
+export { classifyInventoryError };
+export type { InventoryDeductionResult, InventoryErrorCode };

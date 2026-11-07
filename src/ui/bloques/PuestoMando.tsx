@@ -154,29 +154,22 @@ export function PuestoMando(props: PuestoMandoProps) {
   // 🎨 COLORES DINÁMICOS según tema activo
   const COLORS = useThemedColors();
   const { width, height } = useWindowDimensions();
-  const isWideLayout = width >= 900;
+  // Detección de orientación apaisada / tableta horizontal:
+  // Si el ancho supera a la altura y el ancho es >= 600, estamos en horizontal/tableta
+  const isLandscape = width > height && width >= 600;
 
-  // Columnas dinámicas según tamaño de pantalla
-  // - Móviles: 3 a 5 columnas máximo
-  // - Tabletas: hasta 8 columnas
-  const numColumns = useMemo(() => {
-    if (width < 360) return 3;
-    if (width < 480) return 4;
-    if (width < 600) return 5;
-    if (width < 768) return 6;
-    if (width < 1024) return 7;
-    return 8;
-  }, [width]);
-
+  // En horizontal, calculamos si se requiere 1 o 2 columnas para las mesas:
+  // Si hay más de 7 mesas, 2 columnas (ancho ~190), de lo contrario 1 sola columna compacta (ancho ~96)
   const totalTiles = (mesas?.length || 0) + 1; // Mesas + Para Llevar
-  const numRows = Math.ceil(totalTiles / numColumns);
+  const sidebarWidth = useMemo(() => {
+    if (!isLandscape) return undefined;
+    return totalTiles > 7 ? 190 : 96;
+  }, [isLandscape, totalTiles]);
 
-  // Proporción de altura dinámica:
-  // - 1 fila: ~18% - 20% de altura de pantalla
-  // - 2 filas: 25% - 28% de altura de pantalla
-  // - 3+ filas: capped a 28% (máx 30%) dejando 70%-80% para la comanda digital inferior
+  // Proporción de altura dinámica en modo vertical (portrait):
+  const numRows = Math.ceil(totalTiles / 5);
   const calculatedGridHeight = useMemo(() => {
-    if (isWideLayout) return undefined;
+    if (isLandscape) return undefined;
     if (numRows <= 1) {
       return Math.max(90, Math.round(height * 0.2));
     }
@@ -184,7 +177,7 @@ export function PuestoMando(props: PuestoMandoProps) {
       return Math.max(140, Math.round(height * 0.26));
     }
     return Math.max(160, Math.round(height * 0.28));
-  }, [isWideLayout, numRows, height]);
+  }, [isLandscape, numRows, height]);
 
   // Estilos que dependen del tema
   const themedStyles = useMemo(
@@ -196,12 +189,14 @@ export function PuestoMando(props: PuestoMandoProps) {
           overflow: 'hidden',
         },
         gridWrapper: {
-          ...(isWideLayout ? { flex: 3 } : { flexGrow: 0, flexShrink: 0 }),
+          ...(isLandscape
+            ? { width: sidebarWidth, flexShrink: 0 }
+            : { flexGrow: 0, flexShrink: 0 }),
           backgroundColor: 'transparent',
           overflow: 'hidden',
         },
         orderWrapper: {
-          flex: isWideLayout ? 7 : 1,
+          flex: 1,
           backgroundColor: 'transparent',
           overflow: 'hidden',
         },
@@ -217,7 +212,7 @@ export function PuestoMando(props: PuestoMandoProps) {
           textAlign: 'center',
         },
       }),
-    [COLORS, isWideLayout]
+    [COLORS, isLandscape, sidebarWidth]
   );
 
   // Total auto hide recibido por props
@@ -228,8 +223,8 @@ export function PuestoMando(props: PuestoMandoProps) {
 
   return (
     <View style={themedStyles.container}>
-      <View style={[staticStyles.layout, { flexDirection: isWideLayout ? 'row' : 'column' }]}>
-        <View style={[themedStyles.gridWrapper, !isWideLayout && { height: calculatedGridHeight }]}>
+      <View style={[staticStyles.layout, { flexDirection: isLandscape ? 'row' : 'column' }]}>
+        <View style={[themedStyles.gridWrapper, !isLandscape && { height: calculatedGridHeight }]}>
           {showGridLoading ? (
             <View style={staticStyles.emptyState}>
               <ActivityIndicator color={COLORS.primary} size="large" />

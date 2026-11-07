@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react';
 import { PedidosRepository, MesasRepository } from '../../../sistema/persistencia';
+import { useStore } from '../../../sistema/store';
 import { PendingItem } from './useLogicaMesero';
 import { createLogger } from '../../../sistema/monitoreo';
 
@@ -34,13 +35,27 @@ type ProcesarPedidoProps = {
 };
 
 const buildPedidoItemPayload = (item: PendingItem) => {
+  const storeState = useStore.getState() as any;
+  const prod = item.productId ? storeState.productos?.[item.productId] : null;
+  const cat = prod?.categoriaId ? storeState.categorias?.[prod.categoriaId] : null;
+
+  const enviarACocina = prod?.usarConfigPersonalizada
+    ? prod.enviarACocina !== false
+    : prod?.origenTipo === 'inventario' || prod?.modoPreparacion === 'produccion_anticipada'
+      ? prod?.enviarACocina === true
+      : cat?.enviarACocina !== false;
+
+  const estadoInicial = enviarACocina ? ('nuevo' as const) : ('listo' as const);
+
   const payload: any = {
     nombre: item.name,
     precio: item.price,
     cantidad: item.qty,
-    estado: 'nuevo' as const,
+    estado: estadoInicial,
     productId: item.productId || null,
-    prepMin: item.prepMin || null,
+    prepMin: item.prepMin ?? prod?.prepMin ?? null,
+    estacion_preparacion: prod?.estacion_preparacion || (item as any).estacion_preparacion || null,
+    enviarACocina,
     impreso: true,
   };
 

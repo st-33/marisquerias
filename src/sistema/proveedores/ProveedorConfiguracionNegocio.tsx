@@ -61,8 +61,11 @@ export const ProveedorConfiguracionNegocio: React.FC<ProveedorConfiguracionNegoc
     }
 
     const db = getRtdb();
-    const configRef = ref(db, `${effectivePath}/config`);
-    const flagsRef = ref(db, `${effectivePath}/flags`);
+    const baseLimpia = effectivePath.replace(/^\/+|\/+$/g, '');
+    const configPath = baseLimpia ? `${baseLimpia}/config` : 'config';
+    const flagsPath = baseLimpia ? `${baseLimpia}/flags` : 'flags';
+    const configRef = ref(db, configPath);
+    const flagsRef = ref(db, flagsPath);
 
     const unsubscribeConfig = onValue(
       configRef,

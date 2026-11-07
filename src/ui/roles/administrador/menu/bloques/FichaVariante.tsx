@@ -1,11 +1,11 @@
 /**
  * 🏷️ VARIANT CHIP COMPONENT
- * Chip visual para mostrar opciones de variantes con estilo premium
+ * Chip visual para mostrar opciones de variantes con estilo elevado
  */
 
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@/compartido/temas';
+import { theme, useAppTheme } from '@/compartido/temas';
 
 type FichaVarianteProps = {
   titulo: string;
@@ -22,13 +22,20 @@ export function FichaVariante({
   disabled = false,
   color,
 }: FichaVarianteProps) {
-  const chipColor = color || theme.colors.primary;
+  const { colors } = useAppTheme();
+  const chipColor = color || colors.primary;
 
   return (
-    <View style={[styles.chip, disabled && styles.chipDisabled, { borderColor: `${chipColor}30` }]}>
+    <View
+      style={[
+        styles.chip,
+        { backgroundColor: colors.card, borderColor: `${chipColor}45` },
+        disabled && styles.chipDisabled,
+      ]}
+    >
       <View style={styles.chipContent}>
         <View style={[styles.dot, { backgroundColor: chipColor }]} />
-        <Text style={styles.chipTitle} numberOfLines={1}>
+        <Text style={[styles.chipTitle, { color: colors.text }]} numberOfLines={1}>
           {titulo}
         </Text>
         {delta !== 0 && (
@@ -36,12 +43,12 @@ export function FichaVariante({
             style={[
               styles.deltaContainer,
               {
-                backgroundColor: delta > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                borderColor: delta > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                backgroundColor: delta > 0 ? colors.successSoft : `${colors.danger}1A`,
+                borderColor: delta > 0 ? `${colors.success}50` : `${colors.danger}50`,
               },
             ]}
           >
-            <Text style={[styles.deltaText, { color: delta > 0 ? '#10b981' : '#ef4444' }]}>
+            <Text style={[styles.deltaText, { color: delta > 0 ? colors.success : colors.danger }]}>
               {delta > 0 ? '+' : ''}${Math.abs(delta).toFixed(0)}
             </Text>
           </View>
@@ -50,10 +57,14 @@ export function FichaVariante({
       {!disabled && (
         <Pressable
           onPress={onDelete}
-          style={({ pressed }) => [styles.deleteButton, pressed && { opacity: 0.6 }]}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            { backgroundColor: `${colors.textMuted}18` },
+            pressed && { opacity: 0.6 },
+          ]}
           hitSlop={8}
         >
-          <Ionicons name="close" size={14} color={theme.colors.textMuted} />
+          <Ionicons name="close" size={15} color={colors.textSecondary} />
         </Pressable>
       )}
     </View>
@@ -65,14 +76,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    paddingVertical: 4,
-    paddingLeft: 10,
-    paddingRight: 4,
-    borderRadius: 8,
+    paddingVertical: 6,
+    paddingLeft: 12,
+    paddingRight: 6,
+    borderRadius: 10,
     borderWidth: 1,
-    gap: 6,
-    maxWidth: '100%',
+    gap: 8,
+    flex: 1,
     ...Platform.select({
       web: {
         transition: 'all 0.2s ease',
@@ -85,35 +95,33 @@ const styles = StyleSheet.create({
   chipContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     flex: 1,
     minWidth: 0,
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   chipTitle: {
-    color: theme.colors.textSecondary,
-    fontSize: 12,
-    fontWeight: theme.typography.weights.medium,
+    fontSize: 13,
+    fontWeight: theme.typography.weights.semibold,
     flexShrink: 1,
   },
   deltaContainer: {
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
     borderWidth: 1,
   },
   deltaText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: theme.typography.weights.bold,
   },
   deleteButton: {
-    padding: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 4,
+    borderRadius: 6,
     ...Platform.select({
       web: {
         cursor: 'pointer',

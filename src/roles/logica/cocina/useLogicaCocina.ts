@@ -13,6 +13,12 @@ import { ref, update } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PedidosRepository, type PedidoItem } from '../../../sistema/persistencia';
 import { InventoryV2Repository } from '../../../sistema/persistencia/inventario.repositorio';
+import { RepositorioLibroPlatillos } from '../../../sistema/persistencia/platillos.repositorio';
+import {
+  ServicioMovimientosInventario,
+  resolverLineasConsumoParaProducto,
+} from '../../../sistema/servicios/ServicioMovimientosInventario';
+import { resolver_ruta_cajon } from '../../../sistema/rtdb/rutas/ruta_negocio';
 import { useSincronizacionEstadoApp as useAppStateSync } from '../../../sistema/instalacion/hooks/useSincronizacionEstadoApp';
 import { canonicalizeString } from '../../../logica/dominio/partidaCanonica';
 import { normalizePedido } from '../../../logica/dominio/normalizadores';
@@ -20,7 +26,6 @@ import { createModuleLogger } from '../../../sistema/monitoreo';
 import { getRtdb } from '../../../sistema/firebase';
 // 🔌 DOGMA V2: Leer datos del store centralizado
 import { useCategorias, usePedidos, useProductos, useStore } from '../../../sistema/store';
-import { SincronizadorCocina } from '../../../capacidades/cocina/SincronizadorCocina';
 import { useAudioCocina } from './useAudioCocina';
 import type { LogisticaPedido } from '../../../logica/dominio/logistica';
 
@@ -69,8 +74,6 @@ function transformPedidosData(
       let itemsArray: ItemCocina[] = Object.entries(items).map(([itemId, item]) => {
         // 🔥 FIX: Estado por defecto es 'nuevo' (listo para comenzar)
         const estado = (item as any).estado || 'nuevo';
-        // 🔥 DEBUG: Ver qué estado llega cada item
-        console.log(`[COCINA] Item ${(item as any).nombre}: estado=${estado}`);
         return {
           id: itemId,
           nombre: (item as any).nombre || '',
@@ -307,16 +310,13 @@ export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
     pedidosRef.current = pedidosDelStore;
   }, [pedidosDelStore]);
 
-  // ⚡ OPTIMIZACIÓN: Debounce de transformación (300ms)
-  // Previene recálculos en cada cambio de pedido (mejora -90% re-renders)
+  const ultimaFirmaOrdenesRef = useRef<string>('');
+
+  // ⚡ OPTIMIZACIÓN: Debounce de transformación (50ms) con huella estructural anti-OOM
+  // Previene recálculos y re-renders cuando tiempoTranscurrido avanza pero los pedidos/ítems no cambiaron
   const calculateOrdenesDebounced = useMemo(
     () =>
       debounce((pedidos: Record<string, any>, now: number) => {
-        const totalPedidos = Object.keys(pedidos).length;
-        if (totalPedidos > 0) {
-          logger.debug(`Total de pedidos en store: ${totalPedidos}`);
-        }
-
         // Normalizar datos
         const pedidosNormalizados: Record<string, any> = {};
         Object.entries(pedidos).forEach(([id, pedido]) => {
@@ -332,13 +332,32 @@ export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
           now
         );
 
-        if (ordenesActivas.length > 0) {
-          logger.debug(`${ordenesActivas.length} órdenes activas`);
-        }
+        const firmaEstructural = JSON.stringify(
+          ordenesActivas.map((o) => ({
+            id: o.id,
+            estatus: o.estatus,
+            esUrgente: o.esUrgente,
+            itemsPendientes: o.itemsPendientes,
+            itemsListos: o.itemsListos,
+            items: o.items.map((it) => ({
+              id: it.id,
+              estado: it.estado,
+              cantidad: it.cantidad,
+              startedAt: it.startedAt,
+              inventoryDeducted: it.inventoryDeducted,
+            })),
+          }))
+        );
 
-        setOrdenes(ordenesActivas);
+        if (firmaEstructural !== ultimaFirmaOrdenesRef.current) {
+          ultimaFirmaOrdenesRef.current = firmaEstructural;
+          if (ordenesActivas.length > 0) {
+            logger.debug(`${ordenesActivas.length} órdenes activas`);
+          }
+          setOrdenes(ordenesActivas);
+        }
         setLoading(false);
-      }, 50), // ⚡ OPTIMIZACIÓN: Debounce reducido a 50ms (antes 300ms) para respuesta "instantánea"
+      }, 50),
     [urgentThresholdMinutes]
   );
 
@@ -459,86 +478,55 @@ export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
         (async () => {
           try {
             const producto = getProductoDelStore(productoId);
-            const receta = producto?.receta?.ingredientes;
-
-            const preferredAreaId =
-              (producto as any)?.inventoryAreaId ?? (producto as any)?.areaId ?? null;
-
-            if (receta && Object.keys(receta).length > 0) {
-              let areaId = inventarioV2AreaRestauranteRef.current;
-              if (!areaId) {
-                const areas = await inventarioV2Repo.obtenerAreas();
-                const entries = Object.entries(areas || {}).filter(([, a]) => {
-                  const hub = (a as any)?.hubId;
-                  return hub === 'restaurante' || hub === undefined;
-                });
-                const def = entries.find(([, a]) => (a as any)?.metadata?.isDefault === true);
-                areaId = def?.[0] || entries?.[0]?.[0] || null;
-                inventarioV2AreaRestauranteRef.current = areaId;
-              }
-              if (!areaId) {
-                throw new Error('No hay área de inventario V2 configurada para hubId=restaurante');
-              }
-
-              const finalAreaId = preferredAreaId || areaId;
-              if (!preferredAreaId) {
-                await inventarioV2Repo.registrarMissingAreaAssignment({
-                  hubId:
-                    useStore.getState().sesion.niche === 'venta_crudo'
-                      ? 'venta_crudo'
-                      : 'restaurante',
-                  productoId,
-                  preferredAreaId,
-                  fallbackAreaId: finalAreaId,
-                  actor: 'cocina',
-                  reason: 'no_area_assigned',
-                  nombre: producto?.nombre || item.nombre,
-                });
-              }
-
-              const itemsSalidaRaw = await Promise.all(
-                Object.entries(receta).map(async ([invKey, qty]) => {
-                  const resolvedId = await resolveInventoryV2ItemId(invKey);
-                  return {
-                    itemId: resolvedId,
-                    cantidad: Number(qty || 0) * cantidadBase,
-                    razon: `Preparación: ${cantidadBase}x ${producto?.nombre || item.nombre}`,
-                  };
-                })
-              );
-
-              const itemsSalida = itemsSalidaRaw.filter(
-                (x) => !!x.itemId && Number(x.cantidad) > 0
-              );
-
-              await inventarioV2Repo.registrarSalidaMultiple({
-                items: itemsSalida,
-                areaId: finalAreaId,
-                usuario: 'cocina',
-                razon: 'Preparación',
-                allowNegative: false,
-                metadata: { origen: 'cocina', pedidoId: ordenId, productoId },
-              });
-            } else {
-              await SincronizadorCocina.descontarPorReceta(productoId, cantidadBase);
+            const state = useStore.getState() as any;
+            let catalogoInventario = state.catalog || {};
+            if (Object.keys(catalogoInventario).length === 0) {
+              catalogoInventario = await inventarioV2Repo.obtenerCatalogo();
             }
 
+            let platillo = null;
+            if (producto?.origenTipo === 'platillo' && producto?.origenId) {
+              const libroRepo = new RepositorioLibroPlatillos(db, rutaNegocio);
+              const platillosMap = await libroRepo.obtenerPlatillos();
+              platillo = platillosMap[producto.origenId] || null;
+            }
+
+            const { lineas } = resolverLineasConsumoParaProducto({
+              producto: producto as any,
+              platillo,
+              cantidadVendida: cantidadBase,
+              nombreFallback: item.nombre,
+              catalogoInventario,
+            });
+
+            if (lineas.length > 0) {
+              const opKey = idsToStart.slice().sort().join('_');
+              const operacionId = `pedido_${ordenId}_item_${opKey}`;
+              await ServicioMovimientosInventario.aplicarConsumoIdempotente({
+                db,
+                rutaNegocio,
+                operacionId,
+                lineas,
+                hubPreferido:
+                  state.sesion?.niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante',
+                usuario: 'cocina',
+                allowNegative: true,
+                metadata: {
+                  origen: 'cocina',
+                  pedidoId: ordenId,
+                  productoId,
+                },
+              });
+            }
+
+            const basePedidos = resolver_ruta_cajon(rutaNegocio, 'pedidos');
             const updates: Record<string, any> = {};
             idsToStart.forEach((id) => {
-              updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
+              updates[`${basePedidos}/${ordenId}/items/${id}/inventoryDeducted`] = true;
             });
             await update(ref(db), updates);
           } catch (e) {
-            try {
-              await SincronizadorCocina.descontarPorReceta(productoId, cantidadBase);
-              const updates: Record<string, any> = {};
-              idsToStart.forEach((id) => {
-                updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] = true;
-              });
-              await update(ref(db), updates);
-            } catch (e2) {
-              logger.warn('Auto-descuento inventario falló (no bloqueante)', { e, e2 });
-            }
+            logger.warn('Auto-descuento inventario en startItem falló (no bloqueante)', { e });
           }
         })();
       }
@@ -607,75 +595,62 @@ export function useLogicaCocina(props: UseCocinaLogicProps = {}) {
           return ids.map((id: string) => ({ itemId: id, estado: 'listo' as const }));
         });
 
-      // ⚡ REFACTOR AYNC LOOP PARA INVENTARIO
+      // ⚡ REFACTOR AUTO-DESCUENTO UNIFICADO EN FINISH ORDER
       if (autoDescuentoInventario) {
+        const state = useStore.getState() as any;
+        let catalogoInventario = state.catalog || {};
+        if (Object.keys(catalogoInventario).length === 0) {
+          catalogoInventario = await inventarioV2Repo.obtenerCatalogo();
+        }
+        const libroRepo = new RepositorioLibroPlatillos(db, rutaNegocio);
+        const platillosMap = await libroRepo.obtenerPlatillos();
+        const basePedidos = resolver_ruta_cajon(rutaNegocio, 'pedidos');
+
         for (const item of orden.items) {
           if (item.estado !== 'listo' && !(item as any).inventoryDeducted && item.productoId) {
             try {
               const producto = getProductoDelStore(item.productoId);
-              const receta = producto?.receta?.ingredientes;
+              const platillo =
+                producto?.origenTipo === 'platillo' && producto?.origenId
+                  ? platillosMap[producto.origenId] || null
+                  : null;
+              const cantidadBase = Number(item.cantidad || 1);
 
-              if (receta && Object.keys(receta).length > 0) {
-                let areaId = inventarioV2AreaRestauranteRef.current;
-                if (!areaId) {
-                  const areas = await inventarioV2Repo.obtenerAreas();
-                  areaId =
-                    Object.entries(areas).find(([, a]) => a?.hubId === 'restaurante')?.[0] || null;
-                  inventarioV2AreaRestauranteRef.current = areaId;
-                }
+              const { lineas } = resolverLineasConsumoParaProducto({
+                producto: producto as any,
+                platillo,
+                cantidadVendida: cantidadBase,
+                nombreFallback: item.nombre,
+                catalogoInventario,
+              });
 
-                if (!areaId) {
-                  throw new Error(
-                    'No hay área de inventario V2 configurada para hubId=restaurante'
-                  );
-                }
+              const ids = (item as any).idsAgrupados || [item.id];
+              const opKey = ids.slice().sort().join('_');
+              const operacionId = `pedido_${ordenId}_item_${opKey}`;
 
-                const cantidadBase = Number(item.cantidad || 1);
-                const itemsSalida = Object.entries(receta)
-                  .map(([invItemId, qty]) => ({
-                    itemId: invItemId,
-                    cantidad: Number(qty || 0) * cantidadBase,
-                    razon: `Preparación: ${cantidadBase}x ${producto?.nombre || item.nombre}`,
-                  }))
-                  .filter((x) => !!x.itemId && Number(x.cantidad) > 0);
-
-                await inventarioV2Repo.registrarSalidaMultiple({
-                  items: itemsSalida,
-                  areaId,
+              if (lineas.length > 0) {
+                await ServicioMovimientosInventario.aplicarConsumoIdempotente({
+                  db,
+                  rutaNegocio,
+                  operacionId,
+                  lineas,
+                  hubPreferido:
+                    state.sesion?.niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante',
                   usuario: 'cocina',
-                  razon: 'Preparación',
-                  allowNegative: false,
+                  allowNegative: true,
                   metadata: {
-                    origen: 'cocina',
+                    origen: 'cocina_finish_order',
                     pedidoId: ordenId,
                     productoId: item.productoId,
                   },
                 });
-
-                if (itemsSalida.length > 0) {
-                  const ids = (item as any).idsAgrupados || [item.id];
-                  const updates: Record<string, any> = {};
-                  ids.forEach((id: string) => {
-                    updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
-                      true;
-                  });
-                  await update(ref(db), updates);
-                }
-              } else {
-                const res = await SincronizadorCocina.descontarPorReceta(
-                  item.productoId,
-                  item.cantidad || 1
-                );
-                if (res.success && res.descontados && res.descontados.length > 0) {
-                  const ids = (item as any).idsAgrupados || [item.id];
-                  const updates: Record<string, any> = {};
-                  ids.forEach((id: string) => {
-                    updates[`${rutaNegocio}/pedidos/${ordenId}/items/${id}/inventoryDeducted`] =
-                      true;
-                  });
-                  await update(ref(db), updates);
-                }
               }
+
+              const updates: Record<string, any> = {};
+              ids.forEach((id: string) => {
+                updates[`${basePedidos}/${ordenId}/items/${id}/inventoryDeducted`] = true;
+              });
+              await update(ref(db), updates);
             } catch (e) {
               logger.error('Error auto-deducting in finishOrder', e);
             }

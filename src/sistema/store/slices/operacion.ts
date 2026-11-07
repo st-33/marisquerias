@@ -297,23 +297,54 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
     });
     cleanupFunctions.push(() => off(pedidosRef, 'value', pedidosCallback as any));
 
-    // 3. MENÚ (Categorías) - Un solo listener
+    // 3. MENÚ (Categorías + Productos anidados) y 4. MENÚ (Productos planos) - Unificados
+    let flatProductosCache: Record<string, ProductoBase> = {};
+    let nestedProductosCache: Record<string, ProductoBase> = {};
+
+    const syncProductosCombinados = () => {
+      const combinados: Record<string, ProductoBase> = {
+        ...flatProductosCache,
+        ...nestedProductosCache,
+      };
+      if (!sonObjetosEquivalentes(get().productos, combinados)) {
+        const count = Object.keys(combinados).length;
+        if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
+        set({ productos: combinados, ultimaActualizacion: Date.now() });
+      }
+    };
+
     const categoriasRef = ref(db, resolverRutaCajonLocal(rutaNegocio, 'menu/categorias'));
     const categoriasCallback = onValue(categoriasRef, (snap) => {
       const data = snap.val() || {};
       const categorias: Record<string, CategoriaBase> = {};
+      const nestedProds: Record<string, ProductoBase> = {};
 
       Object.entries(data).forEach(([id, cat]) => {
         if (cat && typeof cat === 'object') {
           categorias[id] = { id, ...(cat as any) };
+          const prodsCat = (cat as any).productos;
+          if (prodsCat && typeof prodsCat === 'object') {
+            Object.entries(prodsCat).forEach(([pid, prod]) => {
+              if (prod && typeof prod === 'object') {
+                nestedProds[pid] = {
+                  id: pid,
+                  categoriaId: (prod as any).categoriaId || id,
+                  ...(prod as any),
+                };
+              }
+            });
+          }
         }
       });
+
+      nestedProductosCache = nestedProds;
 
       if (!sonObjetosEquivalentes(get().categorias, categorias)) {
         const count = Object.keys(categorias).length;
         if (count > 0) logger.debug('STORE', `📂 ${count} categorías`);
         set({ categorias, ultimaActualizacion: Date.now() });
       }
+      syncProductosCombinados();
     });
     cleanupFunctions.push(() => off(categoriasRef, 'value', categoriasCallback as any));
 
@@ -329,11 +360,8 @@ export const createOperacionSlice: StateCreator<OperacionSlice, [], [], Operacio
         }
       });
 
-      if (!sonObjetosEquivalentes(get().productos, productos)) {
-        const count = Object.keys(productos).length;
-        if (count > 0) logger.debug('STORE', `🍽️ ${count} productos`);
-        set({ productos, ultimaActualizacion: Date.now() });
-      }
+      flatProductosCache = productos;
+      syncProductosCombinados();
     });
     cleanupFunctions.push(() => off(productosRef, 'value', productosCallback as any));
 

@@ -71,6 +71,7 @@ export function useGestionDispositivos(props?: UseGestionDispositivosProps) {
 
   // Estado: Configuración de Hub Central
   const [hubConfig, setHubConfig] = useState<Partial<HubConfig> | null>(null);
+  const [hubsMap, setHubsMap] = useState<Record<string, HubConfig>>({});
 
   // Estado: Loading
   const [loading, setLoading] = useState(true);
@@ -105,8 +106,9 @@ export function useGestionDispositivos(props?: UseGestionDispositivosProps) {
       setRawTicketConfig(data);
     });
 
-    const unsubHubConfig = devicesRepo.suscribirConfiguracionHub((data) => {
+    const unsubHubConfig = devicesRepo.suscribirConfiguracionHub((data, hubs) => {
       setHubConfig(data);
+      setHubsMap(hubs || {});
     });
 
     return () => {
@@ -187,6 +189,7 @@ export function useGestionDispositivos(props?: UseGestionDispositivosProps) {
     testMessage,
     ticketConfig,
     hubConfig,
+    hubsMap,
     loading,
 
     // Acciones

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -15,7 +15,8 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Image } from 'expo-image';
+import { obtenerImagenProducto } from '../../compartido/catalogoImagenes';
 import { useFierros } from '../../sistema/impresion/fierros';
 import { useMostradorPro } from '../../capacidades/pos/useMostradorPro';
 
@@ -133,18 +134,76 @@ export function MostradorPro() {
     return () => clearInterval(timer);
   }, [selectedProduct, showKeypad, isBasculaEnabled, basculaActiva, leerPeso]);
 
-  const handleProductPress = (item: any) => {
-    if (item.unidad === 'kg') {
-      setSelectedProduct(item);
-      setWeight(0);
-      // Si la flag de báscula está apagada o no hay báscula activa, forzar keypad
-      if (!isBasculaEnabled || !basculaActiva) {
-        setShowKeypad(true);
+  const handleProductPress = useCallback(
+    (item: any) => {
+      if (item.unidad === 'kg') {
+        setSelectedProduct(item);
+        setWeight(0);
+        // Si la flag de báscula está apagada o no hay báscula activa, forzar keypad
+        if (!isBasculaEnabled || !basculaActiva) {
+          setShowKeypad(true);
+        }
+      } else {
+        actions.agregarAlCarrito(item, 1);
       }
-    } else {
-      actions.agregarAlCarrito(item, 1);
-    }
-  };
+    },
+    [isBasculaEnabled, basculaActiva, actions]
+  );
+
+  const productosFiltrados = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return productos.filter((p) => {
+      const matchesSearch = !q || (p.nombre || '').toLowerCase().includes(q);
+      const matchesCat = !selectedCatId || p.categoriaId === selectedCatId;
+      return matchesSearch && matchesCat;
+    });
+  }, [productos, search, selectedCatId]);
+
+  const renderProductoItem = useCallback(
+    ({ item }: { item: any }) => {
+      const imgAsset = obtenerImagenProducto(
+        item.imagenId || item.imagen_id,
+        item.nombre,
+        item.origenTipo === 'platillo' ? 'platillos' : 'inventario'
+      );
+      return (
+        <View style={{ flex: 1 }}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.productCard,
+              pressed && { transform: [{ scale: 0.96 }], opacity: 0.9 },
+            ]}
+            onPress={() => handleProductPress(item)}
+          >
+            <View
+              style={[
+                styles.unitBadge,
+                { backgroundColor: item.unidad === 'kg' ? '#3b82f6' : '#10b981' },
+              ]}
+            >
+              <Text style={styles.unitText}>{item.unidad === 'kg' ? 'KG' : 'PZA'}</Text>
+            </View>
+            {imgAsset ? (
+              <View style={{ alignItems: 'center', marginTop: 18, marginBottom: 4 }}>
+                <Image
+                  source={imgAsset}
+                  style={{ width: 64, height: 64 }}
+                  contentFit="contain"
+                />
+              </View>
+            ) : (
+              <View style={{ height: 20 }} />
+            )}
+            <Text style={[styles.pName, imgAsset && { marginTop: 6 }]} numberOfLines={2}>
+              {item.nombre}
+            </Text>
+            <Text style={styles.pPrice}>${item.precio}</Text>
+          </Pressable>
+        </View>
+      );
+    },
+    [handleProductPress]
+  );
 
   if (loading) {
     return (
@@ -191,77 +250,56 @@ export function MostradorPro() {
               >
                 <Text style={[styles.catText, !selectedCatId && styles.catTextActive]}>TODO</Text>
               </Pressable>
-              {categorias.map((cat) => (
-                <Pressable
-                  key={cat.id}
-                  style={[styles.catItem, selectedCatId === cat.id && styles.catItemActive]}
-                  onPress={() => setSelectedCatId(cat.id)}
-                >
-                  <Text style={[styles.catText, selectedCatId === cat.id && styles.catTextActive]}>
-                    {cat.nombre.toUpperCase()}
-                  </Text>
-                </Pressable>
-              ))}
+              {categorias.map((cat, idx) => {
+                const catKey = cat.id || `cat-${idx}`;
+                return (
+                  <Pressable
+                    key={catKey}
+                    style={[styles.catItem, selectedCatId === cat.id && styles.catItemActive]}
+                    onPress={() => setSelectedCatId(cat.id)}
+                  >
+                    <Text
+                      style={[styles.catText, selectedCatId === cat.id && styles.catTextActive]}
+                    >
+                      {(cat.nombre || '').toUpperCase()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
           </View>
 
           {/* Grid de Productos */}
           <FlatList
-            data={productos.filter((p) => {
-              const matchesSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
-              const matchesCat = !selectedCatId || p.categoriaId === selectedCatId;
-              return matchesSearch && matchesCat;
-            })}
-            keyExtractor={(item) => item.id}
-            numColumns={2} // 🔥 Siempre 2 columnas para el carnal
+            data={productosFiltrados}
+            keyExtractor={(item, index) => item.id || `prod-${index}`}
+            numColumns={2}
             contentContainerStyle={styles.gridContent}
-            renderItem={({ item, index }) => {
-              return (
-                <Animated.View
-                  entering={FadeInDown.delay(Math.min(index * 30, 300))
-                    .duration(400)
-                    .springify()}
-                  style={{ flex: 1 }}
-                >
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.productCard,
-                      pressed && { transform: [{ scale: 0.95 }], opacity: 0.9 },
-                    ]}
-                    onPress={() => handleProductPress(item)}
-                  >
-                    <View
-                      style={[
-                        styles.unitBadge,
-                        { backgroundColor: item.unidad === 'kg' ? '#3b82f6' : '#10b981' },
-                      ]}
-                    >
-                      <Text style={styles.unitText}>{item.unidad === 'kg' ? 'KG' : 'PZA'}</Text>
-                    </View>
-                    <View style={{ height: 20 }} />
-                    <Text style={styles.pName} numberOfLines={2}>
-                      {item.nombre}
-                    </Text>
-                    <Text style={styles.pPrice}>${item.precio}</Text>
-                  </Pressable>
-                </Animated.View>
-              );
-            }}
+            initialNumToRender={10}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={Platform.OS === 'android'}
+            renderItem={renderProductoItem}
           />
         </View>
 
-        {/* 💳 PANEL DERECHO: CAJA / TICKET (Responsive) */}
+        {/* 💳 PANEL DERECHO: MOSTRADOR / TICKET (Responsive) */}
         {(isLarge || showCart) && (
           <View style={[styles.rightPanel, !isLarge && StyleSheet.absoluteFill]}>
             <View style={styles.cashierHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={styles.cashierTitle}>DETALLE DE CAJA</Text>
+                <Text style={styles.cashierTitle}>DETALLE DE MOSTRADOR</Text>
                 <Pressable
                   onPress={async () => {
                     try {
                       const res = await actions.reimprimirUltimoTicket();
                       if (res.success) {
-                        Alert.alert('🖨️', 'Reimpresión enviada al Hub');
+                        Alert.alert(
+                          '🖨️',
+                          (res as any).local
+                            ? 'Ticket impreso en la impresora local'
+                            : 'Reimpresión enviada al Hub de Mostrador'
+                        );
                       } else {
                         Alert.alert('Error', res.error || 'Fallo reimpresión');
                       }

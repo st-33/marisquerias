@@ -51,6 +51,7 @@ export function esRutaPublica(rawPathname?: string | null): boolean {
 
 const ROUTE_FEATURES: Record<string, { generic?: string; admin?: string[] }> = {
   '/_role/venta-crudo': { generic: 'venta_crudo' },
+  '/_role/inventario': { generic: 'inventario' },
   '/_role/admin/venta-crudo': {
     admin: ['admin_mostrador', 'module_venta_crudo'],
   },
@@ -102,12 +103,15 @@ export default function RootLayout() {
     const rolActivo = useStore.getState().sesion.rol;
     const esAdmin = rolActivo === 'admin' || rolActivo === 'administrador';
 
-    // El Administrador tiene acceso garantizado a todas las pantallas operativas y de supervisión
-    if (esAdmin) return;
+    // Si aún no hay estadoEncendido restrictivo, el Administrador y roles de piso conservan su acceso
+    const tieneRestriccionCapacidades =
+      Boolean(estadoEncendido) && estadoEncendido?.tipo_acceso !== 'plantilla';
 
-    // Dispositivos autorizados expresamente en un rol de piso tienen acceso garantizado a su pantalla
-    if (rolActivo === 'mesero' && pathname.startsWith('/_role/mesero')) return;
-    if (rolActivo === 'cocina' && pathname.startsWith('/_role/cocina')) return;
+    if (!tieneRestriccionCapacidades) {
+      if (esAdmin) return;
+      if (rolActivo === 'mesero' && pathname.startsWith('/_role/mesero')) return;
+      if (rolActivo === 'cocina' && pathname.startsWith('/_role/cocina')) return;
+    }
 
     const matchedRoute = Object.keys(ROUTE_FEATURES).find((route) => pathname.startsWith(route));
     if (matchedRoute) {
@@ -133,6 +137,8 @@ export default function RootLayout() {
           caps.includes('mostrador_y_pos') ||
           caps.includes('mostrador' as any) ||
           caps.includes('venta_crudo' as any);
+      } else if (requirement.generic === 'inventario') {
+        isGenericEnabled = !estadoEncendido || caps.includes('inventario');
       }
 
       const isEnabled = requirement.admin
@@ -146,7 +152,7 @@ export default function RootLayout() {
           'ROUTE_GUARD',
           `[Fábrica] Acceso denegado a "${pathname}". Redirigiendo al selector de roles.`
         );
-        router.replace('/_role/roles');
+        router.replace(esAdmin ? '/_role/admin/dashboard' : '/_role/roles');
       }
     }
   }, [adminFeatures, adminFeaturesLoading, estadoEncendido, pathname, isReady, router]);

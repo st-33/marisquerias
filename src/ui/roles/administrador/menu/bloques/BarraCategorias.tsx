@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { Categoria } from '../../../../../sistema/persistencia';
 import { theme, useAppTheme } from '@/compartido/temas';
@@ -29,6 +30,11 @@ export function BarraCategorias({
   showVentaCrudo = true,
 }: BarraCategoriasProps) {
   const { colors } = useAppTheme();
+  const [expandedConfigId, setExpandedConfigId] = useState<string | null>(null);
+
+  const toggleConfig = (id: string) => {
+    setExpandedConfigId((prev) => (prev === id ? null : id));
+  };
 
   return (
     <View style={styles.container}>
@@ -42,7 +48,10 @@ export function BarraCategorias({
             onPress={onAgregar}
             style={({ pressed }) => [
               styles.addCategory,
-              { backgroundColor: `${colors.primary}18`, borderColor: `${colors.primary}55` },
+              {
+                backgroundColor: `${colors.primary}22`,
+                borderColor: `${colors.primary}66`,
+              },
               pressed && styles.addCategoryPressed,
             ]}
           >
@@ -51,173 +60,251 @@ export function BarraCategorias({
           </Pressable>
         ) : null}
       </View>
+
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {categorias.map((cat) => {
           const active = activeId === cat.id;
-          const enviarACocina = cat.enviarACocina !== false; // Default true
-          const saltarPreparando = cat.saltarPreparando === true; // Default false
+          const configOpen = expandedConfigId === cat.id;
+          const enviarACocina = cat.enviarACocina !== false;
+          const saltarPreparando = cat.saltarPreparando === true;
           const herenciaActiva = !!cat.herencia;
 
           return (
-            <View key={cat.id} style={styles.categoryCard}>
+            <View
+              key={cat.id}
+              style={[
+                styles.categoryCard,
+                {
+                  backgroundColor: active ? colors.cardElevated : colors.card,
+                  borderColor: active ? colors.primary : colors.border,
+                  shadowColor: active ? colors.primary : '#000',
+                },
+                active && styles.categoryCardActive,
+              ]}
+            >
               <View style={styles.itemWrapper}>
                 <Pressable
                   onPress={() => onSelect(cat.id)}
-                  style={[styles.item, active && styles.itemActive]}
+                  style={[
+                    styles.item,
+                    active && {
+                      backgroundColor: `${colors.primary}16`,
+                      borderLeftColor: colors.primary,
+                    },
+                  ]}
                   android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
                 >
                   <View style={styles.itemTexts}>
-                    <Text style={[styles.name, active && styles.nameActive]}>{cat.nombre}</Text>
-                    <Text style={styles.count}>{totals?.[cat.id] ?? 0} productos</Text>
-                  </View>
-                </Pressable>
-                <Pressable
-                  onPress={() => onDelete(cat.id, cat.nombre)}
-                  style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.7 }]}
-                  android_ripple={{ color: 'rgba(239,68,68,0.16)' }}
-                >
-                  {({ pressed, hovered }: any) => (
                     <Text
                       style={[
-                        styles.deleteText,
-                        (pressed || hovered) && { color: theme.colors.danger },
+                        styles.name,
+                        { color: active ? colors.primaryLight : colors.text },
+                        active && styles.nameActive,
                       ]}
+                      numberOfLines={1}
                     >
-                      ✕
+                      {cat.nombre}
                     </Text>
-                  )}
+                    <View style={styles.metaSubRow}>
+                      <Text style={[styles.count, { color: colors.textMuted }]}>
+                        {totals?.[cat.id] ?? 0} {totals?.[cat.id] === 1 ? 'opción' : 'opciones'}
+                      </Text>
+                      <View
+                        style={[
+                          styles.miniBadge,
+                          {
+                            backgroundColor: enviarACocina
+                              ? `${colors.primary}20`
+                              : `${colors.textMuted}20`,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={enviarACocina ? 'flame-outline' : 'flash-outline'}
+                          size={11}
+                          color={enviarACocina ? colors.primary : colors.textSecondary}
+                        />
+                        <Text
+                          style={[
+                            styles.miniBadgeText,
+                            { color: enviarACocina ? colors.primary : colors.textSecondary },
+                          ]}
+                        >
+                          {enviarACocina ? (saltarPreparando ? 'Rápido' : 'Cocina') : 'Directo'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
                 </Pressable>
+
+                <View style={styles.cardActionsRight}>
+                  <Pressable
+                    onPress={() => toggleConfig(cat.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ajustes de ${cat.nombre}`}
+                    style={({ pressed }) => [
+                      styles.iconActionBtn,
+                      configOpen && { backgroundColor: `${colors.primary}24` },
+                      pressed && { opacity: 0.75 },
+                    ]}
+                  >
+                    <Ionicons
+                      name={configOpen ? 'chevron-up' : 'options-outline'}
+                      size={17}
+                      color={configOpen ? colors.primary : colors.textSecondary}
+                    />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => onDelete(cat.id, cat.nombre)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Eliminar ${cat.nombre}`}
+                    style={({ pressed }) => [styles.iconActionBtn, pressed && { opacity: 0.7 }]}
+                  >
+                    <Ionicons name="trash-outline" size={16} color={colors.textMuted} />
+                  </Pressable>
+                </View>
               </View>
 
-              {/* Configuration Switches */}
-              <View style={styles.configSection}>
-                <View style={styles.switchRow}>
-                  <View style={styles.switchLabel}>
-                    <Ionicons
-                      name="restaurant"
-                      size={14}
-                      color={enviarACocina ? theme.colors.primary : theme.colors.textMuted}
-                    />
-                    <Text style={styles.switchText}>Enviar a Cocina</Text>
-                  </View>
-                  <Switch
-                    value={enviarACocina}
-                    onValueChange={(v) => onToggleEnviarACocina?.(cat.id, v)}
-                    trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                    thumbColor="#fff"
-                    style={styles.switch}
-                  />
-                </View>
-
-                {enviarACocina && (
+              {/* Ajustes desplegables de la categoría */}
+              {configOpen && (
+                <View
+                  style={[
+                    styles.configSection,
+                    {
+                      backgroundColor: colors.surfaceDark,
+                      borderTopColor: colors.border,
+                    },
+                  ]}
+                >
                   <View style={styles.switchRow}>
                     <View style={styles.switchLabel}>
                       <Ionicons
-                        name="flash"
-                        size={14}
-                        color={saltarPreparando ? theme.colors.accent : theme.colors.textMuted}
+                        name="restaurant-outline"
+                        size={15}
+                        color={enviarACocina ? colors.primary : colors.textMuted}
                       />
-                      <Text style={styles.switchText}>Fast-Track</Text>
+                      <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+                        Enviar pedidos a Cocina
+                      </Text>
                     </View>
                     <Switch
-                      value={saltarPreparando}
-                      onValueChange={(v) => onToggleSaltarPreparando?.(cat.id, v)}
-                      trackColor={{ false: theme.colors.border, true: theme.colors.accent }}
+                      value={enviarACocina}
+                      onValueChange={(v) => onToggleEnviarACocina?.(cat.id, v)}
+                      trackColor={{ false: colors.borderLight, true: colors.primary }}
                       thumbColor="#fff"
                       style={styles.switch}
                     />
                   </View>
-                )}
 
-                {/* 👪 PEGATINA: Herencia de Canales */}
-                <View
-                  style={[
-                    styles.switchRow,
-                    {
-                      marginTop: 4,
-                      paddingTop: 4,
-                      borderTopWidth: 1,
-                      borderTopColor: 'rgba(255,255,255,0.05)',
-                    },
-                  ]}
-                >
-                  <View style={styles.switchLabel}>
-                    <Ionicons
-                      name="git-network"
-                      size={14}
-                      color={herenciaActiva ? '#ec4899' : theme.colors.textMuted}
+                  {enviarACocina && (
+                    <View style={styles.switchRow}>
+                      <View style={styles.switchLabel}>
+                        <Ionicons
+                          name="flash-outline"
+                          size={15}
+                          color={saltarPreparando ? colors.accent : colors.textMuted}
+                        />
+                        <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+                          Entrega rápida (sin espera)
+                        </Text>
+                      </View>
+                      <Switch
+                        value={saltarPreparando}
+                        onValueChange={(v) => onToggleSaltarPreparando?.(cat.id, v)}
+                        trackColor={{ false: colors.borderLight, true: colors.accent }}
+                        thumbColor="#fff"
+                        style={styles.switch}
+                      />
+                    </View>
+                  )}
+
+                  <View
+                    style={[
+                      styles.switchRow,
+                      {
+                        marginTop: 4,
+                        paddingTop: 6,
+                        borderTopWidth: 1,
+                        borderTopColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <View style={styles.switchLabel}>
+                      <Ionicons
+                        name="eye-outline"
+                        size={15}
+                        color={herenciaActiva ? colors.primary : colors.textMuted}
+                      />
+                      <Text style={[styles.switchText, { color: colors.textSecondary }]}>
+                        Canales por defecto
+                      </Text>
+                    </View>
+                    <Switch
+                      value={herenciaActiva}
+                      onValueChange={(v) => {
+                        if (v) {
+                          onUpdateHerencia?.(cat.id, { mesero: true, digital: true });
+                        } else {
+                          onUpdateHerencia?.(cat.id, undefined);
+                        }
+                      }}
+                      trackColor={{ false: colors.borderLight, true: colors.primary }}
+                      thumbColor="#fff"
+                      style={styles.switch}
                     />
-                    <Text style={styles.switchText}>Heredar Visibilidad</Text>
                   </View>
-                  <Switch
-                    value={herenciaActiva}
-                    onValueChange={(v) => {
-                      if (v) {
-                        // Default inheritance
-                        onUpdateHerencia?.(cat.id, { mesero: true, digital: true });
-                      } else {
-                        // Disable inheritance (remove object)
-                        onUpdateHerencia?.(cat.id, undefined);
-                      }
-                    }}
-                    trackColor={{ false: theme.colors.border, true: '#ec4899' }}
-                    thumbColor="#fff"
-                    style={styles.switch}
-                  />
-                </View>
 
-                {herenciaActiva && cat.herencia && (
-                  <View style={{ paddingLeft: 8, gap: 4, marginTop: 4 }}>
-                    {/* Canal Mesero */}
-                    <View style={styles.switchRow}>
-                      <Text style={[styles.switchText, { fontSize: 11, color: '#94a3b8' }]}>
-                        · Visible en Mesero
-                      </Text>
-                      <Switch
-                        value={cat.herencia.mesero !== false}
-                        onValueChange={(v) =>
-                          onUpdateHerencia?.(cat.id, { ...cat.herencia, mesero: v })
-                        }
-                        trackColor={{ false: theme.colors.border, true: '#3b82f6' }}
-                        thumbColor="#fff"
-                        style={{ transform: [{ scale: 0.6 }] }}
-                      />
-                    </View>
-                    {/* Canal Digital */}
-                    <View style={styles.switchRow}>
-                      <Text style={[styles.switchText, { fontSize: 11, color: '#94a3b8' }]}>
-                        · Visible en Menú Digital
-                      </Text>
-                      <Switch
-                        value={cat.herencia.digital !== false}
-                        onValueChange={(v) =>
-                          onUpdateHerencia?.(cat.id, { ...cat.herencia, digital: v })
-                        }
-                        trackColor={{ false: theme.colors.border, true: '#10b981' }}
-                        thumbColor="#fff"
-                        style={{ transform: [{ scale: 0.6 }] }}
-                      />
-                    </View>
-                    {/* Canal Mostrador - GATED */}
-                    {showVentaCrudo && (
+                  {herenciaActiva && cat.herencia && (
+                    <View style={styles.herenciaSubBox}>
                       <View style={styles.switchRow}>
-                        <Text style={[styles.switchText, { fontSize: 11, color: '#94a3b8' }]}>
-                          · Visible en Mostrador
+                        <Text style={[styles.switchSubText, { color: colors.textMuted }]}>
+                          · Mesero (Salón)
                         </Text>
                         <Switch
-                          value={cat.herencia.ventaCrudo === true}
+                          value={cat.herencia.mesero !== false}
                           onValueChange={(v) =>
-                            onUpdateHerencia?.(cat.id, { ...cat.herencia, ventaCrudo: v })
+                            onUpdateHerencia?.(cat.id, { ...cat.herencia, mesero: v })
                           }
-                          trackColor={{ false: theme.colors.border, true: '#f59e0b' }}
+                          trackColor={{ false: colors.borderLight, true: colors.primary }}
                           thumbColor="#fff"
-                          style={{ transform: [{ scale: 0.6 }] }}
+                          style={styles.subSwitch}
                         />
                       </View>
-                    )}
-                  </View>
-                )}
-              </View>
+                      <View style={styles.switchRow}>
+                        <Text style={[styles.switchSubText, { color: colors.textMuted }]}>
+                          · Menú Digital
+                        </Text>
+                        <Switch
+                          value={cat.herencia.digital !== false}
+                          onValueChange={(v) =>
+                            onUpdateHerencia?.(cat.id, { ...cat.herencia, digital: v })
+                          }
+                          trackColor={{ false: colors.borderLight, true: colors.success }}
+                          thumbColor="#fff"
+                          style={styles.subSwitch}
+                        />
+                      </View>
+                      {showVentaCrudo && (
+                        <View style={styles.switchRow}>
+                          <Text style={[styles.switchSubText, { color: colors.textMuted }]}>
+                            · Mostrador
+                          </Text>
+                          <Switch
+                            value={cat.herencia.ventaCrudo === true}
+                            onValueChange={(v) =>
+                              onUpdateHerencia?.(cat.id, { ...cat.herencia, ventaCrudo: v })
+                            }
+                            trackColor={{ false: colors.borderLight, true: colors.accent }}
+                            thumbColor="#fff"
+                            style={styles.subSwitch}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
           );
         })}
@@ -228,98 +315,70 @@ export function BarraCategorias({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.xs,
+    width: 280,
+    minWidth: 250,
+    maxWidth: 310,
+    paddingVertical: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
   title: {
     fontSize: theme.typography.sizes.sm,
-    fontWeight: theme.typography.weights.semibold,
-    letterSpacing: 0.6,
+    fontWeight: theme.typography.weights.bold,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    paddingBottom: theme.spacing.xs,
   },
   titleRow: {
-    minHeight: 36,
+    minHeight: 38,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: theme.spacing.sm,
+    paddingHorizontal: 4,
   },
   addCategory: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
+    gap: 4,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
     borderRadius: theme.borderRadius.round,
   },
   addCategoryPressed: {
-    opacity: 0.78,
+    opacity: 0.8,
     transform: [{ scale: 0.97 }],
   },
   addCategoryText: {
     fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.semibold,
+    fontWeight: theme.typography.weights.bold,
   },
   list: {
     paddingBottom: theme.spacing.md,
-    gap: 4, // Reduced from theme.spacing.xs (8px) to 4px
+    gap: 8,
   },
   categoryCard: {
-    marginBottom: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  categoryCardActive: {
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   itemWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
-    ...(Platform.select({
-      web: {
-        transition: 'all 0.2s ease',
-      },
-    }) as any),
-  },
-  configSection: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    gap: theme.spacing.xs,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  switchLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  switchText: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.sizes.xs,
-    fontWeight: theme.typography.weights.medium,
-  },
-  switch: {
-    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   item: {
     flex: 1,
-    paddingVertical: 8, // Reduced from 12px to 8px
-    paddingHorizontal: theme.spacing.sm,
-    paddingLeft: theme.spacing.sm,
-    backgroundColor: 'transparent', // Transparent background for cleaner look
-    borderWidth: 0, // Remove border
-    borderLeftWidth: 3, // Only left border for active state
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderLeftWidth: 4,
     borderLeftColor: 'transparent',
     ...(Platform.select({
       web: {
@@ -328,51 +387,86 @@ const styles = StyleSheet.create({
       },
     }) as any),
   },
-  itemActive: {
-    backgroundColor: 'rgba(97, 130, 255, 0.12)', // Subtle primary background
-    borderLeftColor: theme.colors.primary, // Primary left border
-    ...(Platform.select({
-      web: {
-        boxShadow: 'inset 0 0 0 1px rgba(97, 130, 255, 0.2)',
-      },
-    }) as any),
-  },
   itemTexts: {
-    gap: 2, // Tighter spacing
+    gap: 4,
   },
   name: {
-    color: theme.colors.text,
     fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.medium,
+    fontWeight: theme.typography.weights.semibold,
+    fontFamily: theme.typography.fontFamily,
   },
   nameActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.weights.semibold,
+    fontWeight: theme.typography.weights.bold,
+  },
+  metaSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   count: {
-    color: theme.colors.textMuted,
     fontSize: theme.typography.sizes.xs,
+    fontWeight: theme.typography.weights.medium,
   },
-  deleteBtn: {
-    padding: 8,
-    backgroundColor: 'transparent',
+  miniBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  miniBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  cardActionsRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 6,
+    gap: 2,
+  },
+  iconActionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.select({
-      web: {
-        transition: 'all 0.15s ease',
-        cursor: 'pointer',
-      },
-    }) as any),
   },
-  deleteText: {
-    color: theme.colors.textMuted,
-    fontSize: 16,
+  configSection: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    gap: 6,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 28,
+  },
+  switchLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  switchText: {
+    fontSize: theme.typography.sizes.xs,
+    fontWeight: theme.typography.weights.medium,
+  },
+  switchSubText: {
+    fontSize: 12,
     fontWeight: '600',
-    ...(Platform.select({
-      web: {
-        transition: 'color 0.15s ease',
-      },
-    }) as any),
+  },
+  switch: {
+    transform: [{ scaleX: 0.82 }, { scaleY: 0.82 }],
+  },
+  subSwitch: {
+    transform: [{ scaleX: 0.72 }, { scaleY: 0.72 }],
+  },
+  herenciaSubBox: {
+    paddingLeft: 8,
+    gap: 2,
+    marginTop: 2,
   },
 });

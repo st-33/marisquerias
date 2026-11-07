@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -13,8 +14,14 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { theme } from '@/compartido/temas';
+import { obtenerImagenProducto } from '@/compartido/catalogoImagenes';
+import { theme as legacyTheme, useAppTheme } from '@/compartido/temas';
 import { styles } from './estilos';
+import {
+  ModalArticuloInventario,
+  formatearEtiquetaUnidadInventario,
+} from './ModalArticuloInventario';
+import { ModalPorcionadoYMerma } from './ModalPorcionadoYMerma';
 import { useInventario } from '../../../../../capacidades/inventario';
 import type {
   AreaInventario,
@@ -30,6 +37,13 @@ type PanelInventarioProps = {
 
 type ViewMode = 'areas' | 'containers' | 'items_section' | 'items_area' | 'items_container';
 
+const ETIQUETA_USO: Record<string, { texto: string; color: string }> = {
+  insumo: { texto: 'Insumo cocina', color: '#0ea5e9' },
+  venta_directa: { texto: 'Listo / Bebida', color: '#10b981' },
+  ambos: { texto: 'Cocina y Mostrador', color: '#8b5cf6' },
+  producto_terminado: { texto: 'Lote en casa', color: '#f59e0b' },
+};
+
 export function PanelInventario({
   db,
   rutaNegocio,
@@ -37,6 +51,8 @@ export function PanelInventario({
 }: PanelInventarioProps = {}) {
   const { width } = useWindowDimensions();
   const isLarge = width > 800;
+  const { theme } = useAppTheme();
+  const c = theme.colors;
 
   type InsumoConId = InsumoInventario & { id: string; sectionId?: IdSeccionInventario };
   type AreaConId = AreaInventario & {
@@ -69,17 +85,16 @@ export function PanelInventario({
 
   // Modales
   const [showItemModal, setShowItemModal] = useState(false);
+  const [articuloEditar, setArticuloEditar] = useState<InsumoConId | null>(null);
+  const [modalOperacion, setModalOperacion] = useState<{
+    visible: boolean;
+    modo: 'porcionar' | 'merma';
+    articulo: (InsumoConId & { stockActual?: number }) | null;
+  }>({ visible: false, modo: 'porcionar', articulo: null });
+
   const [showAreaModal, setShowAreaModal] = useState(false);
   const [showContainerModal, setShowContainerModal] = useState(false);
 
-  // Forms
-  const [itemForm, setItemForm] = useState({
-    nombre: '',
-    unidad: 'kg' as any,
-    minStock: '0',
-    costo: '',
-    proveedor: '',
-  });
   const [areaForm, setAreaForm] = useState({ nombre: '', icon: '📦', tipo: 'almacen' as any });
   const [containerForm, setContainerForm] = useState({
     nombre: '',
@@ -109,72 +124,6 @@ export function PanelInventario({
     return areas.find((a) => a.id === selectedContainerId) || null;
   }, [areas, selectedContainerId]);
 
-  const effectiveItemStock = useMemo(() => {
-    if (viewMode === 'items_container') {
-      return (selectedContainer?.stock || {}) as Record<string, number>;
-    }
-    if (viewMode === 'items_area') {
-      return (selectedArea?.stock || {}) as Record<string, number>;
-    }
-    if (viewMode === 'items_section') {
-      const sectionStock = (sections as any)?.[activeSectionId]?.stock || {};
-      return sectionStock as Record<string, number>;
-    }
-    return {} as Record<string, number>;
-  }, [activeSectionId, sections, selectedArea?.stock, selectedContainer?.stock, viewMode]);
-
-  const effectiveItems = useMemo(() => {
-    if (!viewMode.startsWith('items_')) return [];
-    return Object.entries(effectiveItemStock)
-      .map(([itemId, qty]) => {
-        const it = catalog.find((c) => c.id === itemId);
-        return {
-          itemId,
-          nombre: it?.nombre || 'Item',
-          unidad: it?.unidad || 'pza',
-          minStock: it?.minStock || 0,
-          qty: Number(qty || 0),
-        };
-      })
-      .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [catalog, effectiveItemStock, viewMode]);
-
-  const itemsViewMeta = useMemo(() => {
-    if (viewMode === 'items_container') {
-      return {
-        title: selectedContainer?.nombre || 'Contenedor',
-        subtitle: selectedArea?.nombre || '',
-        icon: selectedContainer?.icon || '🧊',
-        onBack: () => {
-          setSelectedContainerId(null);
-          setViewMode('containers');
-        },
-      };
-    }
-    if (viewMode === 'items_area') {
-      return {
-        title: selectedArea?.nombre || 'Área',
-        subtitle: 'Items del área',
-        icon: selectedArea?.icon || '📦',
-        onBack: () => setViewMode('containers'),
-      };
-    }
-    return {
-      title: (sections as any)?.[activeSectionId]?.nombre || 'Sección',
-      subtitle: 'Items de la sección',
-      icon: (sections as any)?.[activeSectionId]?.icon || '📦',
-      onBack: () => setViewMode('areas'),
-    };
-  }, [
-    activeSectionId,
-    sections,
-    selectedArea?.icon,
-    selectedArea?.nombre,
-    selectedContainer?.icon,
-    selectedContainer?.nombre,
-    viewMode,
-  ]);
-
   const sectionNodes = useMemo(() => {
     return areas.filter((a) => (a.sectionId || 'otros') === activeSectionId);
   }, [areas, activeSectionId]);
@@ -194,11 +143,120 @@ export function PanelInventario({
     return acc;
   }, [activeSectionId, sectionNodes, sections]);
 
+  const effectiveItemStock = useMemo(() => {
+    if (viewMode === 'items_container') {
+      return (selectedContainer?.stock || {}) as Record<string, number>;
+    }
+    if (viewMode === 'items_area') {
+      const direct = { ...(selectedArea?.stock || {}) } as Record<string, number>;
+      for (const child of containersForSelectedArea) {
+        for (const [id, q] of Object.entries(child.stock || {})) {
+          direct[id] = (direct[id] || 0) + Number(q || 0);
+        }
+      }
+      return direct;
+    }
+    if (viewMode === 'items_section') {
+      return sectionStockByItem;
+    }
+    return {} as Record<string, number>;
+  }, [
+    containersForSelectedArea,
+    sectionStockByItem,
+    selectedArea?.stock,
+    selectedContainer?.stock,
+    viewMode,
+  ]);
+
+  const effectiveItems = useMemo(() => {
+    if (!viewMode.startsWith('items_')) return [];
+    const itemsMap = new Map<string, number>();
+    for (const [itemId, qty] of Object.entries(effectiveItemStock)) {
+      itemsMap.set(itemId, Number(qty || 0));
+    }
+
+    if (viewMode === 'items_section') {
+      for (const it of catalog) {
+        if ((it.sectionId || 'alimentos') === activeSectionId && !itemsMap.has(it.id)) {
+          itemsMap.set(it.id, 0);
+        }
+      }
+    }
+
+    return Array.from(itemsMap.entries())
+      .map(([itemId, qty]) => {
+        const it = catalog.find((cat) => cat.id === itemId);
+        return {
+          itemId,
+          catalogoItem: it || null,
+          nombre: it?.nombre || 'Artículo',
+          unidad: it?.unidad || 'pza',
+          uso: it?.uso || 'ambos',
+          imagenId: it?.imagenId,
+          costo: it?.costo,
+          controlarExistencias: it?.controlarExistencias !== false,
+          equivalencias: it?.equivalencias,
+          minStock: it?.minStock || 0,
+          qty: Number(qty || 0),
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [activeSectionId, catalog, effectiveItemStock, viewMode]);
+
+  const itemsViewMeta = useMemo(() => {
+    if (viewMode === 'items_container') {
+      return {
+        title: selectedContainer?.nombre || 'Contenedor',
+        subtitle: selectedArea?.nombre || '',
+        icon: selectedContainer?.icon || '🧊',
+        onBack: () => {
+          setSelectedContainerId(null);
+          setViewMode('containers');
+        },
+      };
+    }
+    if (viewMode === 'items_area') {
+      return {
+        title: selectedArea?.nombre || 'Área',
+        subtitle: 'Artículos almacenados en esta área',
+        icon: selectedArea?.icon || '📦',
+        onBack: () => setViewMode('containers'),
+      };
+    }
+    return {
+      title: (sections as any)?.[activeSectionId]?.nombre || 'Todos los Artículos',
+      subtitle: 'Vista general de artículos e insumos de la sección',
+      icon: (sections as any)?.[activeSectionId]?.icon || '📦',
+      onBack: () => setViewMode('areas'),
+    };
+  }, [
+    activeSectionId,
+    sections,
+    selectedArea?.icon,
+    selectedArea?.nombre,
+    selectedContainer?.icon,
+    selectedContainer?.nombre,
+    viewMode,
+  ]);
+
+  const itemsEnSeccion = useMemo(
+    () => catalog.filter((i) => (i.sectionId || 'alimentos') === activeSectionId),
+    [catalog, activeSectionId]
+  );
+
   const itemsBajoStock = useMemo(() => {
-    return catalog
-      .filter((it) => (it.sectionId || 'otros') === activeSectionId)
+    return itemsEnSeccion
+      .filter((it) => it.controlarExistencias !== false)
       .filter((it) => (sectionStockByItem[it.id] || 0) <= it.minStock).length;
-  }, [activeSectionId, catalog, sectionStockByItem]);
+  }, [itemsEnSeccion, sectionStockByItem]);
+
+  const valorTotalExistencias = useMemo(() => {
+    return itemsEnSeccion.reduce((acc, it) => {
+      const cant = Number(sectionStockByItem[it.id] || 0);
+      const costoUnit = Number(it.costo || 0);
+      return acc + cant * costoUnit;
+    }, 0);
+  }, [itemsEnSeccion, sectionStockByItem]);
 
   const getContainerHealthPct = (containerId: string) => {
     const container = areas.find((a) => a.id === containerId);
@@ -215,53 +273,72 @@ export function PanelInventario({
     return Math.round((ok / entries.length) * 100);
   };
 
-  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
-
-  // --- RENDER ---
+  const targetContainerIdForOperation = useMemo(() => {
+    if (selectedContainerId) return selectedContainerId;
+    if (selectedAreaId) {
+      const defaultChild = areas.find((a) => a.parentId === selectedAreaId);
+      return defaultChild?.id || selectedAreaId;
+    }
+    const firstArea = activeAreas[0];
+    if (firstArea) {
+      const child = areas.find((a) => a.parentId === firstArea.id);
+      return child?.id || firstArea.id;
+    }
+    return null;
+  }, [selectedContainerId, selectedAreaId, areas, activeAreas]);
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={[styles.center, { backgroundColor: c.background }]}>
+        <ActivityIndicator size="large" color={c.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* HEADER TABS (SECCIÓN SELECTOR) */}
-      <View style={styles.tabHeader}>
+      <View style={[styles.tabHeader, { backgroundColor: c.surface, borderColor: c.border }]}>
         {(
           [
             {
               id: 'alimentos' as const,
-              label: 'Alimentos / Consumibles',
-              icon: 'restaurant' as const,
+              label: 'Alimentos, Mariscos y Bebidas',
+              icon: 'restaurant-outline' as const,
             },
-            { id: 'losa_cristaleria' as const, label: 'Losa y Cristal', icon: 'wine' as const },
-            { id: 'otros' as const, label: 'Otros', icon: 'cube' as const },
+            { id: 'losa_cristaleria' as const, label: 'Loza y Cristalería', icon: 'wine-outline' as const },
+            { id: 'otros' as const, label: 'Insumos Generales', icon: 'cube-outline' as const },
           ] as const
-        ).map((sec) => (
-          <Pressable
-            key={sec.id}
-            onPress={() => {
-              setActiveSectionId(sec.id);
-              setSelectedAreaId(null);
-              setSelectedContainerId(null);
-              setViewMode('areas');
-            }}
-            style={[styles.tabBtn, activeSectionId === sec.id && styles.tabBtnActive]}
-          >
-            <Ionicons
-              name={sec.icon as any}
-              size={18}
-              color={activeSectionId === sec.id ? 'white' : '#94a3b8'}
-            />
-            <Text style={[styles.tabText, activeSectionId === sec.id && styles.tabTextActive]}>
-              {sec.label}
-            </Text>
-          </Pressable>
-        ))}
+        ).map((sec) => {
+          const active = activeSectionId === sec.id;
+          return (
+            <Pressable
+              key={sec.id}
+              onPress={() => {
+                setActiveSectionId(sec.id);
+                setSelectedAreaId(null);
+                setSelectedContainerId(null);
+                setViewMode('areas');
+              }}
+              style={[
+                styles.tabBtn,
+                active && {
+                  backgroundColor: c.primary,
+                  borderColor: c.primary,
+                },
+              ]}
+            >
+              <Ionicons
+                name={sec.icon as any}
+                size={17}
+                color={active ? '#FFFFFF' : c.textSecondary}
+              />
+              <Text style={[styles.tabText, { color: active ? '#FFFFFF' : c.textSecondary }]}>
+                {sec.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <View style={[styles.contentRow, !isLarge && styles.column]}>
@@ -269,78 +346,240 @@ export function PanelInventario({
           <View style={styles.rightCol}>
             <View style={styles.header}>
               <View>
-                <Text style={styles.title}>Inventario</Text>
-                <Text style={styles.subtitle}>Selecciona una sección y luego un área</Text>
+                <Text
+                  style={[
+                    styles.title,
+                    { color: c.text, fontFamily: legacyTheme.typography.displayFamily },
+                  ]}
+                >
+                  Almacén e Inventario
+                </Text>
+                <Text style={[styles.subtitle, { color: c.textSecondary }]}>
+                  Existencias por área, costos de compra y porcionado de mariscos e insumos
+                </Text>
               </View>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Pressable style={styles.addBtn} onPress={() => setViewMode('items_section')}>
-                  <Ionicons name="list" size={18} color="white" />
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Pressable
+                  style={[
+                    styles.addBtn,
+                    {
+                      backgroundColor: c.surface,
+                      borderWidth: 1,
+                      borderColor: c.primary,
+                    },
+                  ]}
+                  onPress={() => setViewMode('items_section')}
+                >
+                  <Ionicons name="list-outline" size={17} color={c.primary} />
+                  <Text style={{ color: c.primary, fontWeight: '800', fontSize: 12 }}>
+                    Ver Artículos ({itemsEnSeccion.length})
+                  </Text>
                 </Pressable>
-                <Pressable style={styles.addBtn} onPress={() => setShowAreaModal(true)}>
-                  <Ionicons name="add" size={20} color="white" />
+
+                <Pressable
+                  style={[styles.addBtn, { backgroundColor: c.primary }]}
+                  onPress={() => {
+                    setArticuloEditar(null);
+                    setShowItemModal(true);
+                  }}
+                >
+                  <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
+                  <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
+                    Nuevo Artículo
+                  </Text>
                 </Pressable>
+
+                {activeAreas.length > 0 && (
+                  <Pressable
+                    style={[
+                      styles.addBtn,
+                      {
+                        backgroundColor: c.surface,
+                        borderWidth: 1,
+                        borderColor: c.border,
+                      },
+                    ]}
+                    onPress={() => setShowAreaModal(true)}
+                  >
+                    <Ionicons name="folder-open-outline" size={17} color={c.text} />
+                    <Text style={{ color: c.text, fontWeight: '700', fontSize: 12 }}>
+                      + Área
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.cardsScroll}
-            >
-              <View style={styles.metricCard}>
-                <Ionicons name="grid-outline" size={24} color={theme.colors.primary} />
-                <Text style={styles.metricVal}>{activeAreas.length}</Text>
-                <Text style={styles.metricLabel}>Áreas</Text>
+            {/* RESUMEN COMPACTO */}
+            <View style={styles.cardsRow}>
+              <View
+                style={[
+                  styles.metricCard,
+                  { backgroundColor: c.cardElevated || c.surface, borderColor: c.border },
+                ]}
+              >
+                <Ionicons name="grid-outline" size={22} color={c.primary} />
+                <View>
+                  <Text style={[styles.metricVal, { color: c.text }]}>{activeAreas.length}</Text>
+                  <Text style={[styles.metricLabel, { color: c.textSecondary }]}>Áreas</Text>
+                </View>
               </View>
-              <View style={[styles.metricCard, { borderColor: '#ef4444' }]}>
-                <Ionicons name="alert-circle-outline" size={24} color="#ef4444" />
-                <Text style={[styles.metricVal, { color: '#ef4444' }]}>{itemsBajoStock}</Text>
-                <Text style={styles.metricLabel}>Bajo Stock</Text>
+
+              <View
+                style={[
+                  styles.metricCard,
+                  { backgroundColor: c.cardElevated || c.surface, borderColor: c.border },
+                ]}
+              >
+                <Ionicons name="cube-outline" size={22} color={c.primary} />
+                <View>
+                  <Text style={[styles.metricVal, { color: c.text }]}>{itemsEnSeccion.length}</Text>
+                  <Text style={[styles.metricLabel, { color: c.textSecondary }]}>Artículos</Text>
+                </View>
               </View>
-            </ScrollView>
+
+              <View
+                style={[
+                  styles.metricCard,
+                  { backgroundColor: c.cardElevated || c.surface, borderColor: c.border },
+                ]}
+              >
+                <Ionicons name="wallet-outline" size={22} color={c.success} />
+                <View>
+                  <Text style={[styles.metricVal, { color: c.success }]}>
+                    ${valorTotalExistencias.toFixed(0)}
+                  </Text>
+                  <Text style={[styles.metricLabel, { color: c.textSecondary }]}>Valor en Stock</Text>
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.metricCard,
+                  {
+                    backgroundColor: c.cardElevated || c.surface,
+                    borderColor: itemsBajoStock > 0 ? c.error : c.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={22}
+                  color={itemsBajoStock > 0 ? c.error : c.textMuted}
+                />
+                <View>
+                  <Text
+                    style={[
+                      styles.metricVal,
+                      { color: itemsBajoStock > 0 ? c.error : c.text },
+                    ]}
+                  >
+                    {itemsBajoStock}
+                  </Text>
+                  <Text style={[styles.metricLabel, { color: c.textSecondary }]}>Por Agotarse</Text>
+                </View>
+              </View>
+            </View>
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>ÁREAS</Text>
-              <Pressable onPress={() => actions.seedPresets()}>
-                <Text style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
-                  Inicializar presets
-                </Text>
-              </Pressable>
+              <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
+                ÁREAS DE ALMACENAMIENTO Y ESTACIONES
+              </Text>
             </View>
 
             <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-              {activeAreas.map((area) => (
-                <Pressable
-                  key={area.id}
-                  style={styles.areaChip}
-                  onPress={() => {
-                    setSelectedAreaId(area.id);
-                    setSelectedContainerId(null);
-                    setViewMode('containers');
+              {activeAreas.map((area) => {
+                const subContainers = areas.filter((a) => a.parentId === area.id);
+                return (
+                  <Pressable
+                    key={area.id}
+                    style={[
+                      styles.areaChip,
+                      { backgroundColor: c.cardElevated || c.surface, borderColor: c.border },
+                    ]}
+                    onPress={() => {
+                      setSelectedAreaId(area.id);
+                      setSelectedContainerId(null);
+                      setViewMode('containers');
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 30 }}>{area.icon || '📦'}</Text>
+                      <View
+                        style={{
+                          backgroundColor: `${c.primary}20`,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 999,
+                        }}
+                      >
+                        <Text style={{ color: c.primary, fontSize: 10, fontWeight: '800' }}>
+                          {subContainers.length} cont.
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.areaChipName, { color: c.text }]}>{area.nombre}</Text>
+                  </Pressable>
+                );
+              })}
+
+              {activeAreas.length === 0 && (
+                <View
+                  style={{
+                    width: '100%',
+                    padding: 28,
+                    alignItems: 'center',
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: c.border,
+                    backgroundColor: c.cardElevated || c.surface,
+                    gap: 10,
                   }}
                 >
-                  <Text style={{ fontSize: 34, marginBottom: 8 }}>{area.icon || '📦'}</Text>
-                  <Text style={styles.areaChipName}>{area.nombre}</Text>
-                </Pressable>
-              ))}
-              {activeAreas.length === 0 && (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: '#64748b', fontStyle: 'italic', marginBottom: 15 }}>
-                    No hay áreas configuradas en esta sección.
+                  <Ionicons name="folder-open-outline" size={34} color={c.primary} />
+                  <Text style={{ color: c.text, fontWeight: '800', fontSize: 15 }}>
+                    Aún no hay áreas registradas en esta sección
                   </Text>
-                  <Pressable
+                  <Text
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: theme.colors.primary,
-                      padding: 12,
-                      borderRadius: 8,
+                      color: c.textSecondary,
+                      fontSize: 12,
+                      textAlign: 'center',
+                      maxWidth: 420,
                     }}
-                    onPress={() => actions.seedPresets()}
                   >
-                    <Ionicons name="sparkles" size={20} color="white" style={{ marginRight: 8 }} />
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Cargar presets</Text>
-                  </Pressable>
+                    Inicializa las áreas base del negocio (Cocina, Barra, Almacén y Mostrador) o crea una personalizada.
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                    <Pressable
+                      style={[styles.addBtn, { backgroundColor: c.primary }]}
+                      onPress={() => actions.seedPresets()}
+                    >
+                      <Ionicons name="sparkles-outline" size={16} color="white" />
+                      <Text style={{ color: 'white', fontWeight: '800', fontSize: 12 }}>
+                        Cargar Áreas Base
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[
+                        styles.addBtn,
+                        { backgroundColor: c.surface, borderWidth: 1, borderColor: c.border },
+                      ]}
+                      onPress={() => setShowAreaModal(true)}
+                    >
+                      <Ionicons name="add" size={18} color={c.text} />
+                      <Text style={{ color: c.text, fontWeight: '700', fontSize: 12 }}>
+                        Crear Área Manual
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               )}
             </ScrollView>
@@ -350,46 +589,84 @@ export function PanelInventario({
         {viewMode === 'containers' && selectedAreaId && (
           <View style={styles.rightCol}>
             <View style={styles.header}>
-              <Pressable
-                style={[styles.actionIcon, { marginLeft: 0 }]}
-                onPress={() => {
-                  setSelectedAreaId(null);
-                  setViewMode('areas');
-                }}
-              >
-                <Ionicons name="arrow-back" size={18} color={theme.colors.primary} />
-              </Pressable>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.title}>{selectedArea?.nombre || 'Área'}</Text>
-                <Text style={styles.subtitle}>Selecciona un Contenedor</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <Pressable
+                  style={[
+                    styles.actionIcon,
+                    { backgroundColor: c.surface, borderColor: c.border },
+                  ]}
+                  onPress={() => {
+                    setSelectedAreaId(null);
+                    setViewMode('areas');
+                  }}
+                >
+                  <Ionicons name="arrow-back" size={18} color={c.primary} />
+                </Pressable>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[
+                      styles.title,
+                      { color: c.text, fontFamily: legacyTheme.typography.displayFamily },
+                    ]}
+                  >
+                    {selectedArea?.nombre || 'Área'}
+                  </Text>
+                  <Text style={[styles.subtitle, { color: c.textSecondary }]}>
+                    Selecciona un contenedor físico o revisa todas las existencias del área
+                  </Text>
+                </View>
               </View>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Pressable style={styles.addBtn} onPress={() => setViewMode('items_area')}>
-                  <Ionicons name="list" size={18} color="white" />
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Pressable
+                  style={[
+                    styles.addBtn,
+                    { backgroundColor: c.surface, borderWidth: 1, borderColor: c.primary },
+                  ]}
+                  onPress={() => setViewMode('items_area')}
+                >
+                  <Ionicons name="list-outline" size={17} color={c.primary} />
+                  <Text style={{ color: c.primary, fontWeight: '800', fontSize: 12 }}>
+                    Ver Stock del Área
+                  </Text>
                 </Pressable>
-                <Pressable style={styles.addBtn} onPress={() => setShowContainerModal(true)}>
-                  <Ionicons name="add" size={20} color="white" />
-                </Pressable>
+                {containersForSelectedArea.length > 0 && (
+                  <Pressable
+                    style={[styles.addBtn, { backgroundColor: c.primary }]}
+                    onPress={() => setShowContainerModal(true)}
+                  >
+                    <Ionicons name="add" size={18} color="white" />
+                    <Text style={{ color: 'white', fontWeight: '800', fontSize: 12 }}>
+                      + Contenedor
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             </View>
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>CONTENEDORES</Text>
+              <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
+                CONTENEDORES Y REFRIGERADORES EN {selectedArea?.nombre?.toUpperCase()}
+              </Text>
             </View>
 
             <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-              {containersForSelectedArea.map((c) => {
-                const pct = getContainerHealthPct(c.id);
-                const badgeColor = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+              {containersForSelectedArea.map((cont) => {
+                const pct = getContainerHealthPct(cont.id);
+                const badgeColor = pct >= 80 ? c.success : pct >= 50 ? c.warning : c.error;
                 return (
                   <Pressable
-                    key={c.id}
+                    key={cont.id}
                     style={[
                       styles.areaChip,
-                      { width: 160, height: 120, alignItems: 'flex-start', padding: 14 },
+                      {
+                        width: 175,
+                        backgroundColor: c.cardElevated || c.surface,
+                        borderColor: c.border,
+                      },
                     ]}
                     onPress={() => {
-                      setSelectedContainerId(c.id);
+                      setSelectedContainerId(cont.id);
                       setViewMode('items_container');
                     }}
                   >
@@ -398,50 +675,54 @@ export function PanelInventario({
                         width: '100%',
                         flexDirection: 'row',
                         justifyContent: 'space-between',
+                        alignItems: 'center',
                       }}
                     >
-                      <Text style={{ fontSize: 26 }}>{c.icon || '🧊'}</Text>
+                      <Text style={{ fontSize: 28 }}>{cont.icon || '🧊'}</Text>
                       <View
                         style={{
-                          backgroundColor: badgeColor,
-                          paddingHorizontal: 10,
-                          paddingVertical: 4,
+                          backgroundColor: `${badgeColor}22`,
+                          borderColor: badgeColor,
+                          borderWidth: 1,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
                           borderRadius: 999,
                         }}
                       >
-                        <Text style={{ color: 'white', fontWeight: '900', fontSize: 12 }}>
-                          {pct}%
+                        <Text style={{ color: badgeColor, fontWeight: '900', fontSize: 11 }}>
+                          {pct}% abasto
                         </Text>
                       </View>
                     </View>
-                    <Text style={[styles.areaChipName, { textAlign: 'left', marginTop: 10 }]}>
-                      {c.nombre}
-                    </Text>
+                    <Text style={[styles.areaChipName, { color: c.text }]}>{cont.nombre}</Text>
                   </Pressable>
                 );
               })}
+
               {containersForSelectedArea.length === 0 && (
-                <View style={{ padding: 20, alignItems: 'center' }}>
-                  <Text style={{ color: '#64748b', fontStyle: 'italic', marginBottom: 15 }}>
-                    No hay contenedores en esta área.
+                <View
+                  style={{
+                    width: '100%',
+                    padding: 24,
+                    alignItems: 'center',
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: c.border,
+                    backgroundColor: c.cardElevated || c.surface,
+                    gap: 10,
+                  }}
+                >
+                  <Text style={{ color: c.textSecondary, fontSize: 13 }}>
+                    No hay contenedores registrados en esta área.
                   </Text>
                   <Pressable
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: theme.colors.primary,
-                      padding: 12,
-                      borderRadius: 8,
-                    }}
+                    style={[styles.addBtn, { backgroundColor: c.primary }]}
                     onPress={() => setShowContainerModal(true)}
                   >
-                    <Ionicons
-                      name="add-circle-outline"
-                      size={20}
-                      color="white"
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Crear contenedor</Text>
+                    <Ionicons name="add-circle-outline" size={18} color="white" />
+                    <Text style={{ color: 'white', fontWeight: '800', fontSize: 12 }}>
+                      Crear primer contenedor
+                    </Text>
                   </Pressable>
                 </View>
               )}
@@ -454,142 +735,321 @@ export function PanelInventario({
           viewMode === 'items_section') && (
           <View style={styles.rightCol}>
             <View style={styles.header}>
-              <Pressable
-                style={[styles.actionIcon, { marginLeft: 0 }]}
-                onPress={itemsViewMeta.onBack}
-              >
-                <Ionicons name="arrow-back" size={18} color={theme.colors.primary} />
-              </Pressable>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.title}>{itemsViewMeta.title}</Text>
-                <Text style={styles.subtitle}>{itemsViewMeta.subtitle}</Text>
-              </View>
-              <Pressable style={styles.addBtn} onPress={() => setShowItemModal(true)}>
-                <Ionicons name="add" size={20} color="white" />
-              </Pressable>
-            </View>
-
-            <View style={styles.detailCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{ fontSize: 52, marginRight: 16 }}>{itemsViewMeta.icon}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                <Pressable
+                  style={[
+                    styles.actionIcon,
+                    { backgroundColor: c.surface, borderColor: c.border },
+                  ]}
+                  onPress={itemsViewMeta.onBack}
+                >
+                  <Ionicons name="arrow-back" size={18} color={c.primary} />
+                </Pressable>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailTitle}>{itemsViewMeta.title}</Text>
-                  <View
-                    style={{
-                      height: 10,
-                      backgroundColor: '#0f172a',
-                      borderRadius: 999,
-                      overflow: 'hidden',
-                      marginTop: 10,
-                    }}
+                  <Text
+                    style={[
+                      styles.title,
+                      { color: c.text, fontFamily: legacyTheme.typography.displayFamily },
+                    ]}
                   >
-                    <View
-                      style={{
-                        height: 10,
-                        width: `${
-                          viewMode === 'items_container' && selectedContainerId
-                            ? getContainerHealthPct(selectedContainerId)
-                            : 100
-                        }%`,
-                        backgroundColor: theme.colors.primary,
-                      }}
-                    />
-                  </View>
+                    {itemsViewMeta.title}
+                  </Text>
+                  <Text style={[styles.subtitle, { color: c.textSecondary }]}>
+                    {itemsViewMeta.subtitle}
+                  </Text>
                 </View>
               </View>
 
+              {effectiveItems.length > 0 && (
+                <Pressable
+                  style={[styles.addBtn, { backgroundColor: c.primary }]}
+                  onPress={() => {
+                    setArticuloEditar(null);
+                    setShowItemModal(true);
+                  }}
+                >
+                  <Ionicons name="add" size={18} color="white" />
+                  <Text style={{ color: 'white', fontWeight: '800', fontSize: 12 }}>
+                    Nuevo Artículo
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.detailCard,
+                { backgroundColor: c.cardElevated || c.surface, borderColor: c.border },
+              ]}
+            >
               <FlatList
                 data={effectiveItems}
                 keyExtractor={(it) => it.itemId}
+                style={{ maxHeight: 540 }}
+                nestedScrollEnabled
                 ListEmptyComponent={
-                  <View style={{ padding: 24, alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="cube-outline" size={32} color="#64748b" />
-                    <Text style={{ color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>
-                      No hay productos registrados en este contenedor.
+                  <View style={{ padding: 28, alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="cube-outline" size={36} color={c.primary} />
+                    <Text style={{ color: c.text, fontWeight: '800', fontSize: 15 }}>
+                      No hay artículos registrados en esta ubicación
+                    </Text>
+                    <Text style={{ color: c.textSecondary, fontSize: 12, textAlign: 'center' }}>
+                      Registra tu primer insumo, marisco o bebida con su unidad y costo de compra.
                     </Text>
                     <Pressable
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: theme.colors.primary,
-                        paddingVertical: 10,
-                        paddingHorizontal: 16,
-                        borderRadius: 8,
-                        marginTop: 8,
-                        gap: 6,
+                      style={[styles.addBtn, { backgroundColor: c.primary, marginTop: 6 }]}
+                      onPress={() => {
+                        setArticuloEditar(null);
+                        setShowItemModal(true);
                       }}
-                      onPress={() => setShowItemModal(true)}
                     >
                       <Ionicons name="add-circle" size={18} color="white" />
-                      <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 13 }}>
-                        Agregar producto al contenedor
+                      <Text style={{ color: 'white', fontWeight: '800', fontSize: 13 }}>
+                        Registrar Primer Artículo
                       </Text>
                     </Pressable>
                   </View>
                 }
                 renderItem={({ item }) => {
-                  const step = item.unidad === 'kg' ? 0.5 : 1;
-                  const isLow = item.qty <= item.minStock;
+                  const step = item.unidad === 'kg' || item.unidad === 'l' ? 0.5 : 1;
+                  const isLow = item.controlarExistencias && item.qty <= item.minStock;
+                  const metaUso = ETIQUETA_USO[item.uso] || ETIQUETA_USO.ambos;
+                  const imgSource = obtenerImagenProducto(item.imagenId, item.nombre, 'inventario');
+                  const etiquetaUnidad = formatearEtiquetaUnidadInventario(item.unidad);
+
                   return (
-                    <View style={styles.distRow}>
+                    <View style={[styles.distRow, { borderColor: c.border }]}>
+                      {imgSource ? (
+                        <Image
+                          source={imgSource}
+                          style={{
+                            width: 44,
+                            height: 44,
+                            resizeMode: 'contain',
+                          }}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
+                            backgroundColor: c.surface,
+                            borderWidth: 1,
+                            borderColor: c.border,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Ionicons name="cube-outline" size={18} color={c.textSecondary} />
+                        </View>
+                      )}
+
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.distArea, { fontWeight: '800' }]}>{item.nombre}</Text>
-                        <Text style={styles.itemSub}>{item.unidad.toUpperCase()}</Text>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 8,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <Text style={[styles.distArea, { color: c.text }]}>{item.nombre}</Text>
+                          <View
+                            style={{
+                              backgroundColor: `${metaUso.color}20`,
+                              borderColor: metaUso.color,
+                              borderWidth: 1,
+                              paddingHorizontal: 7,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Text style={{ color: metaUso.color, fontSize: 10, fontWeight: '800' }}>
+                              {metaUso.texto}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            gap: 12,
+                            marginTop: 4,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <Text style={[styles.itemSub, { color: c.textSecondary }]}>
+                            Medida: {etiquetaUnidad.toUpperCase()}
+                          </Text>
+                          {typeof item.costo === 'number' && item.costo > 0 ? (
+                            <Text style={[styles.itemSub, { color: c.success, fontWeight: '800' }]}>
+                              Costo: ${item.costo.toFixed(2)} / {etiquetaUnidad}
+                            </Text>
+                          ) : (
+                            <Text style={[styles.itemSub, { color: c.warning }]}>
+                              Sin costo registrado
+                            </Text>
+                          )}
+                          {item.equivalencias?.piezasPorKg && (
+                            <Text style={[styles.itemSub, { color: c.textMuted }]}>
+                              ≈ {item.equivalencias.piezasPorKg} pza/kg
+                            </Text>
+                          )}
+                          {item.equivalencias?.pesoPromedioPiezaKg && (
+                            <Text style={[styles.itemSub, { color: c.textMuted }]}>
+                              ≈ {(item.equivalencias.pesoPromedioPiezaKg * 1000).toFixed(0)}g c/u
+                            </Text>
+                          )}
+                        </View>
                       </View>
-                      <Text style={[styles.distQty, isLow && { color: '#ef4444' }]}>
-                        {item.qty.toFixed(item.unidad === 'kg' ? 2 : 0)}
-                      </Text>
-                      <View style={{ flexDirection: 'row' }}>
-                        <Pressable
-                          style={styles.actionIcon}
-                          onPress={() => {
-                            if (viewMode === 'items_section') {
-                              actions.ajustarStockDeltaSeccion({
-                                sectionId: activeSectionId,
-                                itemId: item.itemId,
-                                delta: -step,
-                                razon: 'Ajuste manual',
-                              });
-                              return;
-                            }
-                            const targetId =
-                              viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
-                            if (!targetId) return;
-                            actions.ajustarStockDelta({
-                              containerId: targetId,
-                              itemId: item.itemId,
-                              delta: -step,
-                              razon: 'Ajuste manual',
-                            });
+
+                      {item.controlarExistencias ? (
+                        <View style={{ alignItems: 'flex-end', marginRight: 6 }}>
+                          <Text
+                            style={[
+                              styles.distQty,
+                              { color: isLow ? c.error : c.text },
+                            ]}
+                          >
+                            {item.qty.toFixed(item.unidad === 'kg' || item.unidad === 'l' ? 2 : 0)}{' '}
+                            {etiquetaUnidad}
+                          </Text>
+                          {isLow && (
+                            <Text style={{ color: c.error, fontSize: 10, fontWeight: '800' }}>
+                              Bajo stock (mín {item.minStock})
+                            </Text>
+                          )}
+                        </View>
+                      ) : (
+                        <Text
+                          style={{
+                            color: c.textMuted,
+                            fontSize: 11,
+                            fontWeight: '700',
+                            marginRight: 8,
                           }}
                         >
-                          <Ionicons name="remove" size={16} color={theme.colors.primary} />
-                        </Pressable>
-                        <Pressable
-                          style={styles.actionIcon}
-                          onPress={() => {
-                            if (viewMode === 'items_section') {
-                              actions.ajustarStockDeltaSeccion({
-                                sectionId: activeSectionId,
-                                itemId: item.itemId,
-                                delta: step,
-                                razon: 'Ajuste manual',
-                              });
-                              return;
+                          Stock libre
+                        </Text>
+                      )}
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        {item.controlarExistencias && (
+                          <>
+                            <Pressable
+                              style={[
+                                styles.actionIcon,
+                                { backgroundColor: c.surface, borderColor: c.border },
+                              ]}
+                              onPress={() => {
+                                if (viewMode === 'items_section' && !targetContainerIdForOperation) {
+                                  actions.ajustarStockDeltaSeccion({
+                                    sectionId: activeSectionId,
+                                    itemId: item.itemId,
+                                    delta: -step,
+                                    razon: 'Ajuste manual (-)',
+                                  });
+                                  return;
+                                }
+                                const targetId =
+                                  viewMode === 'items_container'
+                                    ? selectedContainerId
+                                    : targetContainerIdForOperation;
+                                if (!targetId) return;
+                                actions.ajustarStockDelta({
+                                  containerId: targetId,
+                                  itemId: item.itemId,
+                                  delta: -step,
+                                  razon: 'Ajuste manual (-)',
+                                });
+                              }}
+                            >
+                              <Ionicons name="remove" size={16} color={c.primary} />
+                            </Pressable>
+                            <Pressable
+                              style={[
+                                styles.actionIcon,
+                                { backgroundColor: c.surface, borderColor: c.border },
+                              ]}
+                              onPress={() => {
+                                if (viewMode === 'items_section' && !targetContainerIdForOperation) {
+                                  actions.ajustarStockDeltaSeccion({
+                                    sectionId: activeSectionId,
+                                    itemId: item.itemId,
+                                    delta: step,
+                                    razon: 'Entrada manual (+)',
+                                  });
+                                  return;
+                                }
+                                const targetId =
+                                  viewMode === 'items_container'
+                                    ? selectedContainerId
+                                    : targetContainerIdForOperation;
+                                if (!targetId) return;
+                                actions.ajustarStockDelta({
+                                  containerId: targetId,
+                                  itemId: item.itemId,
+                                  delta: step,
+                                  razon: 'Entrada manual (+)',
+                                });
+                              }}
+                            >
+                              <Ionicons name="add" size={16} color={c.primary} />
+                            </Pressable>
+                          </>
+                        )}
+
+                        {item.catalogoItem && (
+                          <Pressable
+                            style={[
+                              styles.actionIcon,
+                              { backgroundColor: c.surface, borderColor: c.border },
+                            ]}
+                            onPress={() =>
+                              setModalOperacion({
+                                visible: true,
+                                modo: 'porcionar',
+                                articulo: { ...item.catalogoItem!, stockActual: item.qty },
+                              })
                             }
-                            const targetId =
-                              viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
-                            if (!targetId) return;
-                            actions.ajustarStockDelta({
-                              containerId: targetId,
-                              itemId: item.itemId,
-                              delta: step,
-                              razon: 'Ajuste manual',
-                            });
-                          }}
-                        >
-                          <Ionicons name="add" size={16} color={theme.colors.primary} />
-                        </Pressable>
+                          >
+                            <Ionicons name="git-branch-outline" size={15} color={c.accent} />
+                          </Pressable>
+                        )}
+
+                        {item.catalogoItem && item.controlarExistencias && (
+                          <Pressable
+                            style={[
+                              styles.actionIcon,
+                              { backgroundColor: c.surface, borderColor: c.border },
+                            ]}
+                            onPress={() =>
+                              setModalOperacion({
+                                visible: true,
+                                modo: 'merma',
+                                articulo: { ...item.catalogoItem!, stockActual: item.qty },
+                              })
+                            }
+                          >
+                            <Ionicons name="trash-outline" size={15} color={c.error} />
+                          </Pressable>
+                        )}
+
+                        {item.catalogoItem && (
+                          <Pressable
+                            style={[
+                              styles.actionIcon,
+                              { backgroundColor: c.surface, borderColor: c.border },
+                            ]}
+                            onPress={() => {
+                              setArticuloEditar(item.catalogoItem);
+                              setShowItemModal(true);
+                            }}
+                          >
+                            <Ionicons name="create-outline" size={15} color={c.textSecondary} />
+                          </Pressable>
+                        )}
                       </View>
                     </View>
                   );
@@ -602,132 +1062,145 @@ export function PanelInventario({
 
       {/* --- MODALES --- */}
 
-      {/* Crear Item Global */}
-      <Modal visible={showItemModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nuevo Item</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre del insumo"
-              placeholderTextColor="#64748b"
-              value={itemForm.nombre}
-              onChangeText={(t) => setItemForm({ ...itemForm, nombre: t })}
-            />
-            <View style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Unidad</Text>
-                <View style={styles.unitSelector}>
-                  {(['kg', 'pza'] as const).map((u) => (
-                    <Pressable
-                      key={u}
-                      onPress={() => setItemForm((prev) => ({ ...prev, unidad: u }))}
-                      style={[styles.unitBtn, itemForm.unidad === u && styles.unitBtnActive]}
-                    >
-                      <Text style={[styles.unitText, itemForm.unidad === u && { color: 'white' }]}>
-                        {u.toUpperCase()}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Stock Mínimo</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="0"
-                  placeholderTextColor="#64748b"
-                  keyboardType="numeric"
-                  value={itemForm.minStock}
-                  onChangeText={(t) => setItemForm({ ...itemForm, minStock: t })}
-                />
-              </View>
-            </View>
+      <ModalArticuloInventario
+        visible={showItemModal}
+        articuloEditar={articuloEditar}
+        onClose={() => {
+          setShowItemModal(false);
+          setArticuloEditar(null);
+        }}
+        onGuardar={async (datos, cantidadInicial) => {
+          if (articuloEditar) {
+            await actions.actualizarItem(articuloEditar.id, {
+              ...(datos as any),
+              sectionId: articuloEditar.sectionId || activeSectionId,
+            });
+            return;
+          }
 
-            <View style={styles.modalActions}>
-              <Pressable onPress={() => setShowItemModal(false)} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancelar</Text>
-              </Pressable>
-              <Pressable
-                onPress={async () => {
-                  if (viewMode === 'items_section') {
-                    await actions.crearItemEnSeccion({
-                      sectionId: activeSectionId,
-                      item: {
-                        nombre: itemForm.nombre,
-                        unidad: itemForm.unidad,
-                        minStock: parseFloat(itemForm.minStock) || 0,
-                        sectionId: activeSectionId,
-                      } as any,
-                      initialQty: 0,
-                    });
-                  } else {
-                    const targetId =
-                      viewMode === 'items_area' ? selectedAreaId : selectedContainerId;
-                    if (!targetId) {
-                      Alert.alert('Error', 'Selecciona un área o un contenedor');
-                      return;
-                    }
-                    await actions.crearItemEnContenedor({
-                      containerId: targetId,
-                      item: {
-                        nombre: itemForm.nombre,
-                        unidad: itemForm.unidad,
-                        minStock: parseFloat(itemForm.minStock) || 0,
-                        sectionId: activeSectionId,
-                      } as any,
-                      initialQty: 0,
-                    });
-                  }
-                  setShowItemModal(false);
-                }}
-                style={styles.confirmBtn}
-              >
-                <Text style={styles.confirmText}>Crear</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+          const targetId =
+            viewMode === 'items_container' ? selectedContainerId : targetContainerIdForOperation;
+
+          if (targetId) {
+            await actions.crearItemEnContenedor({
+              containerId: targetId,
+              item: {
+                ...(datos as any),
+                sectionId: activeSectionId,
+              },
+              initialQty: cantidadInicial,
+            });
+          } else {
+            await actions.crearItemEnSeccion({
+              sectionId: activeSectionId,
+              item: {
+                ...(datos as any),
+                sectionId: activeSectionId,
+              },
+              initialQty: cantidadInicial,
+            });
+          }
+        }}
+      />
+
+      <ModalPorcionadoYMerma
+        visible={modalOperacion.visible}
+        modo={modalOperacion.modo}
+        articuloOrigen={modalOperacion.articulo}
+        catalogoCompleto={catalog}
+        onClose={() => setModalOperacion({ visible: false, modo: 'porcionar', articulo: null })}
+        onConfirmarMerma={async ({ cantidad, razon }) => {
+          const art = modalOperacion.articulo;
+          const areaId =
+            viewMode === 'items_container' ? selectedContainerId : targetContainerIdForOperation;
+          if (!art || !areaId) return;
+          await actions.registrarMerma({
+            areaId,
+            itemId: art.id,
+            cantidad,
+            razon,
+          });
+        }}
+        onConfirmarPorcionado={async ({
+          cantidadOrigen,
+          itemDestinoId,
+          nuevoItemNombre,
+          nuevoItemUnidad,
+          nuevoItemUso,
+          cantidadPorcionesObtenidas,
+          mermaCantidad,
+        }) => {
+          const art = modalOperacion.articulo;
+          const areaId =
+            viewMode === 'items_container' ? selectedContainerId : targetContainerIdForOperation;
+          if (!art || !areaId) return;
+          await actions.porcionarInsumo({
+            insumoOrigenId: art.id,
+            cantidadOrigen,
+            areaOrigenId: areaId,
+            itemDestinoId,
+            nuevoItemDestino: !itemDestinoId
+              ? {
+                  nombre: nuevoItemNombre || `${art.nombre} (Porcionado)`,
+                  unidad: nuevoItemUnidad || 'pza',
+                  uso: nuevoItemUso || 'ambos',
+                  imagenId: art.imagenId,
+                }
+              : undefined,
+            cantidadPorcionesObtenidas,
+            areaDestinoId: areaId,
+            mermaCantidad,
+          });
+        }}
+      />
 
       {/* Crear Área */}
       <Modal visible={showAreaModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nueva Área</Text>
+          <View style={[styles.modalCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Text style={[styles.modalTitle, { color: c.text }]}>Nueva Área del Negocio</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Nombre del área (ej. Refrigerador)"
-              placeholderTextColor="#64748b"
+              style={[
+                styles.input,
+                { backgroundColor: c.background, borderColor: c.border, color: c.text },
+              ]}
+              placeholder="Nombre del área (ej. Parrilla, Cocina Fría, Almacén)"
+              placeholderTextColor={c.textMuted}
               value={areaForm.nombre}
               onChangeText={(t) => setAreaForm({ ...areaForm, nombre: t })}
             />
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: c.background, borderColor: c.border, color: c.text },
+              ]}
               placeholder="Icono (Emoji)"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={c.textMuted}
               value={areaForm.icon}
               onChangeText={(t) => setAreaForm({ ...areaForm, icon: t })}
             />
 
             <View style={styles.modalActions}>
-              <Pressable onPress={() => setShowAreaModal(false)} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancelar</Text>
+              <Pressable
+                onPress={() => setShowAreaModal(false)}
+                style={[styles.cancelBtn, { borderColor: c.border, backgroundColor: c.background }]}
+              >
+                <Text style={[styles.cancelText, { color: c.textSecondary }]}>Cancelar</Text>
               </Pressable>
               <Pressable
                 onPress={async () => {
                   await actions.crearArea({
                     nombre: areaForm.nombre,
                     icon: areaForm.icon,
-                    tipo: 'almacen', // Default simple
+                    tipo: 'almacen',
                     hubId: niche === 'venta_crudo' ? 'venta_crudo' : 'restaurante',
                     sectionId: activeSectionId,
                     stock: {},
-                  } as any); // Type assertion until repo is fully strictly typed
+                  } as any);
                   setShowAreaModal(false);
                   setAreaForm({ nombre: '', icon: '📦', tipo: 'almacen' });
                 }}
-                style={styles.confirmBtn}
+                style={[styles.confirmBtn, { backgroundColor: c.primary }]}
               >
                 <Text style={styles.confirmText}>Crear Área</Text>
               </Pressable>
@@ -738,26 +1211,35 @@ export function PanelInventario({
 
       <Modal visible={showContainerModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nuevo Contenedor</Text>
+          <View style={[styles.modalCard, { backgroundColor: c.surface, borderColor: c.border }]}>
+            <Text style={[styles.modalTitle, { color: c.text }]}>Nuevo Contenedor</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Nombre del contenedor (ej. Refri Principal)"
-              placeholderTextColor="#64748b"
+              style={[
+                styles.input,
+                { backgroundColor: c.background, borderColor: c.border, color: c.text },
+              ]}
+              placeholder="Nombre del contenedor (ej. Congelador 1, Anaquel Secos)"
+              placeholderTextColor={c.textMuted}
               value={containerForm.nombre}
               onChangeText={(t) => setContainerForm({ ...containerForm, nombre: t })}
             />
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                { backgroundColor: c.background, borderColor: c.border, color: c.text },
+              ]}
               placeholder="Icono (Emoji)"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={c.textMuted}
               value={containerForm.icon}
               onChangeText={(t) => setContainerForm({ ...containerForm, icon: t })}
             />
 
             <View style={styles.modalActions}>
-              <Pressable onPress={() => setShowContainerModal(false)} style={styles.cancelBtn}>
-                <Text style={styles.cancelText}>Cancelar</Text>
+              <Pressable
+                onPress={() => setShowContainerModal(false)}
+                style={[styles.cancelBtn, { borderColor: c.border, backgroundColor: c.background }]}
+              >
+                <Text style={[styles.cancelText, { color: c.textSecondary }]}>Cancelar</Text>
               </Pressable>
               <Pressable
                 onPress={async () => {
@@ -776,7 +1258,7 @@ export function PanelInventario({
                   setShowContainerModal(false);
                   setContainerForm({ nombre: '', icon: '🧊', tipo: 'refri' });
                 }}
-                style={styles.confirmBtn}
+                style={[styles.confirmBtn, { backgroundColor: c.primary }]}
               >
                 <Text style={styles.confirmText}>Crear Contenedor</Text>
               </Pressable>

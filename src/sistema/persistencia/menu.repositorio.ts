@@ -5,7 +5,7 @@
 
 import type { Database } from 'firebase/database';
 import { assertValidRutaNegocio, sanitizeRtdbPayload } from '../rtdb/guards';
-import { assertCajonActivo } from '../rtdb/rutas/ruta_negocio';
+import { assertCajonActivo, resolver_ruta_cajon } from '../rtdb/rutas/ruta_negocio';
 import { get, off, onValue, push, ref, remove, set, update } from 'firebase/database';
 
 export type Categoria = {
@@ -38,6 +38,8 @@ export type Categoria = {
   };
 };
 
+export type OrigenOfertaMenu = 'inventario' | 'platillo';
+
 export type Producto = {
   id: string;
   nombre: string;
@@ -46,6 +48,19 @@ export type Producto = {
   slug?: string;
   descripcion?: string;
   imagen?: string;
+  imagenId?: string;
+  /**
+   * 🔗 VÍNCULO DE ORIGEN DE LA OFERTA COMERCIAL
+   * - 'inventario': Artículo físico vendible directamente de Inventario (ej. cerveza, refresco, flan terminado).
+   * - 'platillo': Platillo definido en el Libro de platillos de Cocina (`por_pedido` o `produccion_anticipada`).
+   */
+  origenTipo?: OrigenOfertaMenu;
+  origenId?: string;
+  modoPreparacion?: 'por_pedido' | 'produccion_anticipada';
+  itemTerminadoId?: string;
+  costoReferencia?: number;
+  inventoryAreaId?: string;
+  areaId?: string;
   variantes?: {
     grupos?: Record<string, VariantGroup>;
     reglas?: {
@@ -62,7 +77,7 @@ export type Producto = {
   orden?: number;
   prepMin?: number;
   receta?: {
-    ingredientes?: Record<string, number>; // itemId: quantity
+    ingredientes?: Record<string, number>; // itemId: quantity (compatibilidad / caché derivado)
   };
   /**
    * 🔥 CONFIGURACIÓN DE COCINA POR PRODUCTO (prevalece sobre categoría)
@@ -196,14 +211,14 @@ export class RepositorioMenu {
 
   private getFlatProductosPath() {
     assertCajonActivo('menu');
-    return `${this.rutaNegocio}/menu/productos`;
+    return resolver_ruta_cajon(this.rutaNegocio, 'menu', 'productos');
   }
   private getCategoriasPath() {
     assertCajonActivo('menu');
-    return `${this.rutaNegocio}/menu/categorias`;
+    return resolver_ruta_cajon(this.rutaNegocio, 'menu', 'categorias');
   }
   private async ensureUniqueCategorySlug(base: string, excludeId?: string): Promise<string> {
-    const snap = await get(ref(this.db, `${this.rutaNegocio}/menu/categorias`));
+    const snap = await get(ref(this.db, this.getCategoriasPath()));
     const cats = ((snap.val() as any) || {}) as Record<string, { slug?: string; nombre?: string }>;
     const existing = new Set(
       Object.entries(cats)
@@ -244,9 +259,16 @@ export class RepositorioMenu {
    * Suscribirse a todas las categorías
    */
   suscribirCategorias(callback: (categorias: Record<string, Categoria>) => void): () => void {
-    const r = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
+    const r = ref(this.db, this.getCategoriasPath());
     const cb = onValue(r, (snap) => {
-      callback((snap.val() as any) || {});
+      const raw = ((snap.val() as any) || {}) as Record<string, any>;
+      const fixed: Record<string, Categoria> = {};
+      for (const [cid, cat] of Object.entries(raw)) {
+        if (cat && typeof cat === 'object') {
+          fixed[cid] = { ...(cat as any), id: cid } as Categoria;
+        }
+      }
+      callback(fixed);
     });
     return () => off(r, 'value', cb as any);
   }
@@ -255,15 +277,22 @@ export class RepositorioMenu {
    * Obtener todas las categorías
    */
   async obtenerCategorias(): Promise<Record<string, Categoria>> {
-    const snap = await get(ref(this.db, `${this.rutaNegocio}/menu/categorias`));
-    return (snap.val() as any) || {};
+    const snap = await get(ref(this.db, this.getCategoriasPath()));
+    const raw = ((snap.val() as any) || {}) as Record<string, any>;
+    const fixed: Record<string, Categoria> = {};
+    for (const [cid, cat] of Object.entries(raw)) {
+      if (cat && typeof cat === 'object') {
+        fixed[cid] = { ...(cat as any), id: cid } as Categoria;
+      }
+    }
+    return fixed;
   }
 
   /**
    * Crear categoría
    */
   async crearCategoria(categoria: Omit<Categoria, 'id'>): Promise<string> {
-    const r = ref(this.db, `${this.rutaNegocio}/menu/categorias`);
+    const r = ref(this.db, this.getCategoriasPath());
     const newRef = push(r);
     const base = this.slugify(categoria.nombre);
     const slug = await this.ensureUniqueCategorySlug(base);
@@ -281,7 +310,7 @@ export class RepositorioMenu {
       patch.slug = await this.ensureUniqueCategorySlug(base, categoriaId);
     }
     await update(
-      ref(this.db, `${this.rutaNegocio}/menu/categorias/${categoriaId}`),
+      ref(this.db, `${this.getCategoriasPath()}/${categoriaId}`),
       sanitizeRtdbPayload(patch)
     );
   }
@@ -290,7 +319,7 @@ export class RepositorioMenu {
    * Eliminar categoría
    */
   async eliminarCategoria(categoriaId: string): Promise<void> {
-    await remove(ref(this.db, `${this.rutaNegocio}/menu/categorias/${categoriaId}`));
+    await remove(ref(this.db, `${this.getCategoriasPath()}/${categoriaId}`));
   }
 
   // ==================== PRODUCTOS ====================
@@ -300,9 +329,9 @@ export class RepositorioMenu {
    */
   suscribirProductos(callback: (productos: Record<string, Producto>) => void): () => void {
     const flatRef = ref(this.db, this.getFlatProductosPath());
+    const catsRef = ref(this.db, this.getCategoriasPath());
     let flatData: Record<string, Producto> = {};
     let nestedData: Record<string, Producto> = {};
-    const nestedByCat: Record<string, Record<string, Producto>> = {};
 
     const emit = () => {
       const merged = { ...(flatData || {}), ...(nestedData || {}) } as Record<string, Producto>;
@@ -313,54 +342,30 @@ export class RepositorioMenu {
       const raw = ((snap.val() as any) || {}) as Record<string, any>;
       const fixed: Record<string, Producto> = {};
       for (const [pid, p] of Object.entries(raw)) {
-        fixed[pid] = { ...(p as any), id: pid } as Producto;
+        if (p && typeof p === 'object') {
+          fixed[pid] = { ...(p as any), id: pid } as Producto;
+        }
       }
       flatData = fixed;
       emit();
     });
 
-    const catsRef = ref(this.db, this.getCategoriasPath());
-    const nestedUnsubs: Record<string, () => void> = {};
-
-    const subscribeCat = (catId: string) => {
-      const r = ref(this.db, `${this.getCategoriasPath()}/${catId}/productos`);
-      const cb = onValue(r, (snap) => {
-        const raw = ((snap.val() as any) || {}) as Record<string, any>;
-        const prods: Record<string, Producto> = {};
-        for (const [pid, p] of Object.entries(raw)) {
-          prods[pid] = { ...(p as any), id: pid } as Producto;
-        }
-        nestedByCat[catId] = prods;
-        // Rebuild nestedData from nestedByCat to avoid stale keys
-        const rebuilt: Record<string, Producto> = {};
-        for (const m of Object.values(nestedByCat)) {
-          Object.assign(rebuilt, m);
-        }
-        nestedData = rebuilt;
-        emit();
-      });
-      nestedUnsubs[catId] = () => off(r, 'value', cb as any);
-    };
-
     const catsCb = onValue(catsRef, (snap) => {
       const cats = (snap.val() as any) || {};
-      const catIds = new Set(Object.keys(cats));
-      for (const [cid, unsub] of Object.entries(nestedUnsubs)) {
-        if (!catIds.has(cid)) {
-          unsub();
-          delete nestedUnsubs[cid];
-          delete nestedByCat[cid];
-        }
-      }
-      for (const cid of catIds) {
-        if (!nestedUnsubs[cid]) {
-          subscribeCat(cid);
-        }
-      }
-      // Rebuild after possible removals
       const rebuilt: Record<string, Producto> = {};
-      for (const m of Object.values(nestedByCat)) {
-        Object.assign(rebuilt, m);
+      for (const [cid, cat] of Object.entries(cats)) {
+        const prodsCat = (cat as any)?.productos;
+        if (prodsCat && typeof prodsCat === 'object') {
+          for (const [pid, p] of Object.entries(prodsCat)) {
+            if (p && typeof p === 'object') {
+              rebuilt[pid] = {
+                ...(p as any),
+                id: pid,
+                categoriaId: (p as any).categoriaId || cid,
+              } as Producto;
+            }
+          }
+        }
       }
       nestedData = rebuilt;
       emit();
@@ -369,7 +374,6 @@ export class RepositorioMenu {
     return () => {
       off(flatRef, 'value', flatCb as any);
       off(catsRef, 'value', catsCb as any);
-      Object.values(nestedUnsubs).forEach((u) => u());
     };
   }
 

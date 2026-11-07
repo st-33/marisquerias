@@ -1,13 +1,30 @@
 /**
  * 🧠 CEREBRO - GESTIÓN DE MENÚ
- * Hook para administrar categorías y productos del menú
+ * Hook para administrar categorías y oferta comercial del menú.
+ *
+ * Responsabilidad:
+ *  - Exponer los orígenes existentes:
+ *    1) Artículos vendibles directamente de Inventario (`articulosVendiblesInventario`).
+ *    2) Platillos definidos en Cocina (`platillosDisponibles`).
+ *  - Sincronizar costos de referencia, imágenes, tiempos de preparación y
+ *    elegibilidad de canales comerciales (Restaurante, Mostrador, Menú Digital).
+ *  - Preservar borrador en memoria de sesión al saltar a Inventario o al
+ *    Libro de Platillos con retorno manual.
  */
 
 import type { Database } from 'firebase/database';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MenuRepository, type Categoria, type Producto } from '../../sistema/persistencia';
+import {
+  MenuRepository,
+  RepositorioLibroPlatillos,
+  calcularCosteoYCapacidadPlatillo,
+  esArticuloVendibleDirecto,
+  type Categoria,
+  type PlatilloCocina,
+  type Producto,
+} from '../../sistema/persistencia';
 import { RepositorioInventario } from '../../sistema/persistencia/contratos-inventario';
-import { useStore } from '../../sistema/store';
+import { useInventoryAreas, useInventoryCatalog, useStore } from '../../sistema/store';
 import { getRtdb } from '../../sistema/firebase';
 import { validarProductoParaEliminar } from '../admin/seguridadMenu';
 
@@ -15,6 +32,28 @@ type PropsGestionMenu = {
   db?: Database;
   rutaNegocio?: string;
 };
+
+let borradorMenuEnMemoria: any = null;
+const integridadReparadaPorNegocio = new Set<string>();
+
+export interface ArticuloOrigenMenu {
+  id: string;
+  nombre: string;
+  unidad: 'pza' | 'kg';
+  unidadOriginal: string;
+  costoUnitario: number;
+  stockDisponible: number;
+  uso: string;
+  imagenId?: string;
+}
+
+export interface PlatilloOrigenMenu extends PlatilloCocina {
+  costoCalculado: number;
+  costoIncompleto: boolean;
+  costoAproximado: boolean;
+  porcionesPosibles: number;
+  ingredienteLimitante?: string;
+}
 
 export function useGestionMenu(props: PropsGestionMenu = {}) {
   const rutaNegocioStore = useStore((s) => s.sesion.rutaNegocio) || '';
@@ -30,20 +69,118 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
   const listenersActivos = useStore((s) => s.listenersActivos);
   const loading = !listenersActivos;
 
-  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
+  const catalogInventario = useInventoryCatalog();
+  const areasInventario = useInventoryAreas();
 
+  const menuRepo = useMemo(() => new MenuRepository(db, rutaNegocio), [db, rutaNegocio]);
   const inventarioRepo = useMemo(
     () => new RepositorioInventario(db, rutaNegocio),
     [db, rutaNegocio]
   );
+  const platillosRepo = useMemo(
+    () => new RepositorioLibroPlatillos(db, rutaNegocio),
+    [db, rutaNegocio]
+  );
 
-  // 🔥 SELF-HEALING: Ejecutar reparación silenciosa al iniciar
+  const [platillosMap, setPlatillosMap] = useState<Record<string, PlatilloCocina>>({});
+
+  // Suscripción al Libro de Platillos + migración silenciosa de productos legacy con receta
   useEffect(() => {
     if (!rutaNegocio) return;
+    const unsub = platillosRepo.suscribirPlatillos((data) => {
+      setPlatillosMap(data || {});
+    });
+    return () => unsub();
+  }, [platillosRepo, rutaNegocio]);
+
+  // Self-healing de integridad de menú (máximo una vez por negocio en la sesión)
+  useEffect(() => {
+    if (!rutaNegocio || integridadReparadaPorNegocio.has(rutaNegocio)) return;
+    integridadReparadaPorNegocio.add(rutaNegocio);
     menuRepo
       .repararIntegridad()
-      .catch((err) => console.error('[useGestionMenu] Self-healing failed:', err));
+      .catch((err) => {
+        integridadReparadaPorNegocio.delete(rutaNegocio);
+        console.error('[useGestionMenu] Self-healing failed:', err);
+      });
   }, [menuRepo, rutaNegocio]);
+
+  // Artículos de inventario que se pueden vender directamente o provienen de producción anticipada
+  const articulosVendiblesInventario = useMemo<ArticuloOrigenMenu[]>(() => {
+    const safeCat = catalogInventario || {};
+    const safeAreas = areasInventario || {};
+    return Object.entries(safeCat)
+      .filter(([_, item]) => esArticuloVendibleDirecto(item as any))
+      .map(([id, item]: [string, any]) => {
+        let stock = 0;
+        Object.values(safeAreas).forEach((area: any) => {
+          if (area?.stock && typeof area.stock[id] === 'number') {
+            stock += area.stock[id];
+          }
+        });
+        const unidadComercial: 'pza' | 'kg' = item?.unidad === 'kg' ? 'kg' : 'pza';
+        const costoResuelto = Number(item?.costo ?? item?.costoUnitario ?? 0);
+        return {
+          id,
+          nombre: item?.nombre || id,
+          unidad: unidadComercial,
+          unidadOriginal: item?.unidad || 'pza',
+          costoUnitario: costoResuelto,
+          stockDisponible: Number(stock.toFixed(4)),
+          uso: item?.uso || 'ambos',
+          imagenId: item?.imagenId || item?.imagen_id,
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [catalogInventario, areasInventario]);
+
+  // Platillos del Libro de Platillos enriquecidos con costo en tiempo real
+  const platillosDisponibles = useMemo<PlatilloOrigenMenu[]>(() => {
+    const safeCat = catalogInventario || {};
+    const safeAreas = areasInventario || {};
+
+    const stockConsolidadoPorItem: Record<string, number> = {};
+    Object.values(safeAreas).forEach((area: any) => {
+      if (area?.stock) {
+        Object.entries(area.stock).forEach(([itemId, qty]) => {
+          if (typeof qty === 'number') {
+            stockConsolidadoPorItem[itemId] = (stockConsolidadoPorItem[itemId] || 0) + qty;
+          }
+        });
+      }
+    });
+
+    return Object.values(platillosMap || {})
+      .filter((p) => p.activo !== false)
+      .map((p) => {
+        const calc = calcularCosteoYCapacidadPlatillo({
+          platillo: p,
+          catalogoInventario: safeCat as any,
+          stockConsolidadoPorItem,
+        });
+        let costoFinal = calc.costoPorUnidadRendimiento;
+        if (
+          p.modoPreparacion === 'produccion_anticipada' &&
+          p.itemTerminadoId &&
+          safeCat[p.itemTerminadoId]
+        ) {
+          const itemTerm = safeCat[p.itemTerminadoId] as any;
+          const costoTerminado = Number(itemTerm?.costo ?? itemTerm?.costoUnitario ?? 0);
+          if (costoFinal <= 0 && costoTerminado > 0) {
+            costoFinal = costoTerminado;
+          }
+        }
+        return {
+          ...p,
+          costoCalculado: costoFinal,
+          costoIncompleto: !calc.costoCompleto && costoFinal <= 0,
+          costoAproximado: calc.contieneAproximaciones,
+          porcionesPosibles: calc.capacidadProduccionUnidades,
+          ingredienteLimitante: calc.ingredienteLimitante,
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [platillosMap, catalogInventario, areasInventario]);
 
   // Acciones de categorías
   const crearCategoria = async (categoria: Omit<Categoria, 'id'>) => {
@@ -126,7 +263,6 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       throw new Error('Ingresa un nombre');
     }
 
-    // Si recibimos un objeto con configuración adicional, incluirla
     if (typeof datos === 'object') {
       return await crearCategoria({
         nombre: nombre.trim(),
@@ -164,16 +300,15 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       let cantidadPosible = Infinity;
       let ingredienteLimitante = '';
 
-      for (const [itemId, cantidadNecesaria] of Object.entries(receta)) {
-        const cantidad = Number(cantidadNecesaria) || 0;
+      for (const [itemId, rawCant] of Object.entries(receta)) {
+        const cantidad =
+          typeof rawCant === 'number' ? rawCant : Number((rawCant as any)?.cantidad || 0);
 
-        // Validar cantidad
         if (cantidad <= 0) {
           errores.push(`La cantidad para el item "${itemId}" debe ser mayor a 0`);
           continue;
         }
 
-        // Verificar que el item exista en inventario
         const itemInventario = catalogo[itemId];
         if (!itemInventario) {
           errores.push(`El item "${itemId}" no existe en el inventario`);
@@ -181,7 +316,6 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
           continue;
         }
 
-        // Consolidar stock desde todas las áreas
         let stockConsolidado = 0;
         Object.values(areas || {}).forEach((area: any) => {
           if (area?.stock && typeof area.stock[itemId] === 'number') {
@@ -189,14 +323,12 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
           }
         });
 
-        // Advertencia si el item está bajo stock
         if (stockConsolidado <= (itemInventario.minStock || 0)) {
           advertencias.push(
             `${itemInventario.nombre}: Stock bajo (${stockConsolidado} ${itemInventario.unidad})`
           );
         }
 
-        // Calcular capacidad de producción
         if (stockConsolidado === 0) {
           cantidadPosible = 0;
           ingredienteLimitante = itemInventario.nombre;
@@ -230,7 +362,6 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
   } | null>(null);
   const [validandoActive, setValidandoActive] = useState(false);
 
-  // Sincronizar el estado durante la fase de renderizado para evitar cascading renders
   const [prevRecetaEnEdicion, setPrevRecetaEnEdicion] = useState<Record<string, any> | null>(null);
   if (recetaEnEdicion !== prevRecetaEnEdicion) {
     setPrevRecetaEnEdicion(recetaEnEdicion);
@@ -242,7 +373,6 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
     }
   }
 
-  // Debounce y validación preventiva de la receta activa
   useEffect(() => {
     if (!recetaEnEdicion || Object.keys(recetaEnEdicion).length === 0) {
       return;
@@ -258,18 +388,25 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
           setValidacionActive(null);
           setValidandoActive(false);
         });
-    }, 400); // 400ms debounce
+    }, 400);
 
     return () => {
       clearTimeout(handler);
     };
   }, [recetaEnEdicion, validarReceta]);
 
-  // 🎭 ORQUESTACIÓN: Crear producto con validación
+  // 🎭 ORQUESTACIÓN: Crear producto comercial con validación de origen y canales
   const crearProductoConValidacion = async (datos: {
     nombre: string;
     precio: string | number;
     categoriaId: string;
+    origenTipo?: 'inventario' | 'platillo';
+    origenId?: string;
+    modoPreparacion?: 'por_pedido' | 'produccion_anticipada';
+    itemTerminadoId?: string;
+    costoReferencia?: number;
+    imagenId?: string;
+    estacion_preparacion?: Producto['estacion_preparacion'];
     variantes?: Record<string, any>;
     visible?: Record<string, boolean>;
     prepMin?: number;
@@ -289,15 +426,19 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       throw new Error('El precio debe ser un número válido');
     }
 
-    // 🔍 VALIDAR RECETA si existe
+    const esPorPedido =
+      datos.origenTipo === 'platillo' && datos.modoPreparacion !== 'produccion_anticipada';
+    const visibleSeguro = {
+      digital: true,
+      mesero: true,
+      ...(datos.visible || {}),
+      ventaCrudo: esPorPedido ? false : Boolean(datos.visible?.ventaCrudo),
+    };
+
     if (datos.receta?.ingredientes && Object.keys(datos.receta.ingredientes).length > 0) {
       const validacion = await validarReceta(datos.receta.ingredientes);
       if (!validacion.valida) {
         throw new Error(`Receta inválida: ${validacion.errores.join('; ')}`);
-      }
-      // Advertencias se pueden mostrar pero no bloquean
-      if (validacion.advertencias.length > 0) {
-        console.warn('[MenuManagement] Advertencias de receta:', validacion.advertencias);
       }
     }
 
@@ -306,24 +447,38 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       precio,
       categoriaId: datos.categoriaId,
       activo: true,
+      origenTipo: datos.origenTipo || 'inventario',
+      origenId: datos.origenId,
+      modoPreparacion: datos.modoPreparacion,
+      itemTerminadoId: datos.itemTerminadoId,
+      costoReferencia: Number(datos.costoReferencia || 0),
+      imagen_id: datos.imagenId,
+      estacion_preparacion: datos.estacion_preparacion,
       variantes: datos.variantes || {},
-      visible: datos.visible || { digital: true, mesero: true },
+      visible: visibleSeguro,
       prepMin: datos.prepMin || 0,
       receta: datos.receta || {},
       usarConfigPersonalizada: datos.usarConfigPersonalizada,
-      enviarACocina: datos.enviarACocina,
-      saltarPreparando: datos.saltarPreparando,
+      enviarACocina: datos.enviarACocina ?? esPorPedido,
+      saltarPreparando: datos.saltarPreparando ?? !esPorPedido,
       unidad: datos.unidad as any,
       inventoryAreaId: datos.inventoryAreaId,
     } as any);
   };
 
-  // 🎭 ORQUESTACIÓN: Actualizar producto con validación
+  // 🎭 ORQUESTACIÓN: Actualizar producto comercial con validación
   const actualizarProductoConValidacion = async (
     id: string,
     datos: {
       nombre: string;
       precio: string | number;
+      origenTipo?: 'inventario' | 'platillo';
+      origenId?: string;
+      modoPreparacion?: 'por_pedido' | 'produccion_anticipada';
+      itemTerminadoId?: string;
+      costoReferencia?: number;
+      imagenId?: string;
+      estacion_preparacion?: Producto['estacion_preparacion'];
       variantes?: Record<string, any>;
       visible?: Record<string, boolean>;
       prepMin?: number;
@@ -344,23 +499,34 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
       throw new Error('El precio debe ser un número válido');
     }
 
-    // 🔍 VALIDAR RECETA si existe
+    const esPorPedido =
+      datos.origenTipo === 'platillo' && datos.modoPreparacion !== 'produccion_anticipada';
+    const visibleSeguro = datos.visible
+      ? {
+          ...datos.visible,
+          ventaCrudo: esPorPedido ? false : Boolean(datos.visible.ventaCrudo),
+        }
+      : undefined;
+
     if (datos.receta?.ingredientes && Object.keys(datos.receta.ingredientes).length > 0) {
       const validacion = await validarReceta(datos.receta.ingredientes);
       if (!validacion.valida) {
         throw new Error(`Receta inválida: ${validacion.errores.join('; ')}`);
-      }
-      // Advertencias se pueden mostrar pero no bloquean
-      if (validacion.advertencias.length > 0) {
-        console.warn('[MenuManagement] Advertencias de receta:', validacion.advertencias);
       }
     }
 
     await actualizarProducto(id, {
       nombre: datos.nombre.trim(),
       precio,
+      origenTipo: datos.origenTipo,
+      origenId: datos.origenId,
+      modoPreparacion: datos.modoPreparacion,
+      itemTerminadoId: datos.itemTerminadoId,
+      costoReferencia: datos.costoReferencia != null ? Number(datos.costoReferencia) : undefined,
+      imagen_id: datos.imagenId,
+      estacion_preparacion: datos.estacion_preparacion,
       variantes: datos.variantes,
-      visible: datos.visible,
+      visible: visibleSeguro,
       prepMin: datos.prepMin,
       receta: datos.receta,
       usarConfigPersonalizada: datos.usarConfigPersonalizada,
@@ -380,12 +546,46 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
     }
   };
 
-  // Helpers
-  const getProductosPorCategoria = (categoriaId: string): Producto[] => {
-    return Object.entries(storeProductos)
-      .filter(([_, prod]) => prod.categoriaId === categoriaId)
-      .map(([id, prod]) => ({ ...prod, id, categoriaId })) as Producto[];
-  };
+  const guardarBorradorMenu = useCallback((borrador: any) => {
+    borradorMenuEnMemoria = borrador;
+  }, []);
+
+  const consumirBorradorMenu = useCallback(() => {
+    const actual = borradorMenuEnMemoria;
+    borradorMenuEnMemoria = null;
+    return actual;
+  }, []);
+
+  const getProductosPorCategoria = useCallback(
+    (categoriaId: string): Producto[] => {
+      return Object.entries(storeProductos)
+        .filter(([_, prod]) => prod.categoriaId === categoriaId)
+        .map(([id, prod]) => {
+          // Enriquecer costo de referencia e imagen en caliente desde su origen real
+          let costoRef = Number(prod.costoReferencia || 0);
+          let imgId = prod.imagenId || (prod as any).imagen_id;
+          if (prod.origenTipo === 'platillo' && prod.origenId) {
+            const plat = platillosDisponibles.find((p) => p.id === prod.origenId);
+            if (plat) {
+              if (plat.costoCalculado > 0) costoRef = plat.costoCalculado;
+              if (!imgId && plat.imagenId) imgId = plat.imagenId;
+            }
+          } else if (prod.origenId && catalogInventario?.[prod.origenId]) {
+            const art = catalogInventario[prod.origenId] as any;
+            if (Number(art?.costoUnitario || 0) > 0) costoRef = Number(art.costoUnitario);
+            if (!imgId && (art?.imagenId || art?.imagen_id)) imgId = art.imagenId || art.imagen_id;
+          }
+          return {
+            ...prod,
+            id,
+            categoriaId,
+            costoReferencia: costoRef,
+            imagenId: imgId,
+          };
+        }) as Producto[];
+    },
+    [storeProductos, platillosDisponibles, catalogInventario]
+  );
 
   const categoriasArray = useMemo(
     () => Object.entries(storeCategorias).map(([id, cat]) => ({ ...cat, id })) as Categoria[],
@@ -406,6 +606,8 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
     // Estado
     categorias: categoriasArray,
     productos: productosArray,
+    articulosVendiblesInventario,
+    platillosDisponibles,
     loading,
     validacionActive,
     validandoActive,
@@ -414,22 +616,26 @@ export function useGestionMenu(props: PropsGestionMenu = {}) {
     actions: {
       // Categorías
       crearCategoria,
-      crearCategoriaConValidacion, // 🎭 Orquestación: crea con validación
+      crearCategoriaConValidacion,
       actualizarCategoria,
       eliminarCategoria,
 
       // Productos
       crearProducto,
-      crearProductoConValidacion, // 🎭 Orquestación: crea con validación
+      crearProductoConValidacion,
       actualizarProducto,
-      actualizarProductoConValidacion, // 🎭 Orquestación: actualiza con validación
+      actualizarProductoConValidacion,
       eliminarProducto,
       eliminarProductoConValidacion,
       toggleProductoActivo,
       refresh,
 
-      // 🔍 Validación
-      validarReceta, // 🔍 Valida receta contra inventario
+      // Borrador en memoria de sesión (para salto a Inventario / Libro de Platillos)
+      guardarBorradorMenu,
+      consumirBorradorMenu,
+
+      // Validación
+      validarReceta,
       setRecetaEnEdicion,
     },
 

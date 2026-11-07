@@ -1,12 +1,12 @@
 /**
  * 📦 COLLAPSIBLE SECTION COMPONENT
- * Sección colapsable reutilizable con animación suave
+ * Sección colapsable reutilizable con animación suave y soporte de tema dinámico
  */
 
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@/compartido/temas';
+import { theme, useAppTheme } from '@/compartido/temas';
 
 type SeccionDesplegableProps = {
   title: string;
@@ -25,6 +25,7 @@ export function SeccionDesplegable({
   icon,
   headerColor,
 }: SeccionDesplegableProps) {
+  const { colors } = useAppTheme();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [animation] = useState(new Animated.Value(defaultExpanded ? 1 : 0));
 
@@ -46,27 +47,37 @@ export function SeccionDesplegable({
   });
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight },
+      ]}
+    >
       <Pressable
         onPress={toggleExpanded}
         style={({ pressed }) => [
           styles.header,
-          headerColor && { backgroundColor: headerColor },
-          pressed && { opacity: 0.8 },
+          { backgroundColor: headerColor || colors.surfaceElevated },
+          pressed && { opacity: 0.85 },
         ]}
         android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
       >
         <View style={styles.headerLeft}>
           {icon && <View style={styles.iconContainer}>{icon}</View>}
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           {badge !== undefined && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{badge}</Text>
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: `${colors.primary}22`, borderColor: `${colors.primary}55` },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: colors.primaryLight }]}>{badge}</Text>
             </View>
           )}
         </View>
         <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </Animated.View>
       </Pressable>
 
@@ -77,11 +88,9 @@ export function SeccionDesplegable({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1f2937',
     borderRadius: theme.borderRadius.lg,
     marginBottom: theme.spacing.sm,
     borderWidth: 1,
-    borderColor: '#374151',
     overflow: 'hidden',
   },
   header: {
@@ -89,7 +98,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: theme.spacing.md,
-    backgroundColor: '#1f2937',
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -110,27 +118,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: theme.colors.text,
     fontSize: theme.typography.sizes.md,
-    fontWeight: theme.typography.weights.semibold,
+    fontWeight: theme.typography.weights.bold,
     flex: 1,
   },
   badge: {
-    backgroundColor: 'rgba(97, 130, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: theme.borderRadius.round,
     borderWidth: 1,
-    borderColor: 'rgba(97, 130, 255, 0.3)',
   },
   badgeText: {
-    color: theme.colors.primary,
-    fontSize: 11,
-    fontWeight: theme.typography.weights.semibold,
+    fontSize: 12,
+    fontWeight: theme.typography.weights.bold,
   },
   content: {
     padding: theme.spacing.md,
-    paddingTop: 0,
+    paddingTop: 4,
     gap: theme.spacing.sm,
   },
 });

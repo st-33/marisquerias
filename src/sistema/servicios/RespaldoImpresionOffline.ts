@@ -14,7 +14,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { logger } from '../monitoreo';
 import { SQLiteStorageAdapter } from '../sin_conexion/almacenamiento/AdaptadorAlmacenamientoSQLite';
-import { servicioFierros } from '../impresion/fierros';
+import { servicioFierros, useEstadoHub } from '../impresion/fierros';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -100,15 +100,30 @@ class RespaldoImpresionOffline {
       return { success: true, method: 'hub', message: 'Delegado a Hub' };
     }
 
-    // 2. Si hay Bluetooth, imprimir directo
+    // 2. Si hay Bluetooth y el canal es compatible con el Hub de este dispositivo, imprimir directo
     if (this.isBluetoothConnected) {
-      try {
-        const result = await this.printViaBluetooth(job);
-        if (result.success) {
-          return { success: true, method: 'bluetooth', message: 'Impreso vía Bluetooth' };
+      const estadoHub = useEstadoHub?.getState?.();
+      const incompatibleConHubLocal =
+        estadoHub?.habilitado &&
+        (((job.type === 'venta_crudo' || (job.type as any) === 'mostrador') &&
+          estadoHub?.destino === 'restaurante') ||
+          ((job.type === 'cuenta' || job.type === 'comanda') &&
+            (estadoHub?.destino === 'venta_crudo' || estadoHub?.destino === 'mostrador')));
+
+      if (!incompatibleConHubLocal) {
+        try {
+          const result = await this.printViaBluetooth(job);
+          if (result.success) {
+            return { success: true, method: 'bluetooth', message: 'Impreso vía Bluetooth' };
+          }
+        } catch (error: any) {
+          logger.warn('OFFLINE_PRINT', `Bluetooth print failed: ${error?.message}`);
         }
-      } catch (error: any) {
-        logger.warn('OFFLINE_PRINT', `Bluetooth print failed: ${error?.message}`);
+      } else {
+        logger.info(
+          'OFFLINE_PRINT',
+          `🛡️ Impresora local reservada para Hub (${estadoHub.destino}); encolando trabajo (${job.type})`
+        );
       }
     }
 

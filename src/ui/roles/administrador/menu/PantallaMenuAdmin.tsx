@@ -1,19 +1,17 @@
 /**
- * 📋 MENÚ (rol Administrador) — pantalla de gestión de catálogo.
+ * 📋 MENÚ (rol Administrador) — pantalla de configuración de la oferta comercial.
  *
- * Composición:
- *  - Datos/acciones: useGestionMenu + useAdminFeatures + store.
- *  - Piezas visuales: bloques/ (BarraCategorias), componentes/ (ListaProductos,
- *    ModalNuevaCategoria, ModalProducto), editores/ (EditorReceta, EditorVariantes).
- *  - Lógica pura: logica/ (formularioProducto, etiquetas).
- *
- * Historial: antes `AdminMenuScreen.tsx` (1063 líneas con formularios y modales
- * inline); se extrajeron ListaProductos, ModalNuevaCategoria, ModalProducto y la
- * lógica del formulario.
+ * Responsabilidad:
+ *  - Seleccionar lo existente de Inventario o del Libro de Platillos.
+ *  - Organizar categorías comerciales, consultar costos de referencia, establecer
+ *    precios de venta y habilitar canales (Restaurante, Mostrador, Menú Digital).
+ *  - Permitir saltar a Inventario o al Libro de Platillos (con retorno manual
+ *    y conservación de borrador en memoria de sesión).
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -25,9 +23,9 @@ import {
 } from 'react-native';
 import { BarraCategorias } from './bloques/BarraCategorias';
 import { useToast } from '../../../../compartido/componentes/ui/AvisoEmergente';
-import { theme } from '@/compartido/temas';
+import { theme, useAppTheme } from '@/compartido/temas';
 import type { Producto } from '../../../../sistema/persistencia';
-import { useInventoryAreas, useInventoryCatalog, useStore } from '../../../../sistema/store';
+import { useInventoryAreas, useStore } from '../../../../sistema/store';
 import { useFuncionalidadesAdmin, useGestionMenu } from '../../../../capacidades';
 import { ListaProductos } from './componentes/ListaProductos';
 import { ModalNuevaCategoria } from './componentes/ModalNuevaCategoria';
@@ -44,7 +42,6 @@ import { ETIQUETAS_MENU_POR_DEFECTO, type EtiquetasMenu } from './logica/etiquet
 export type { EtiquetasMenu };
 export { ETIQUETAS_MENU_POR_DEFECTO };
 
-// --- UTILS ---
 async function confirmAction(
   title: string,
   message: string,
@@ -67,6 +64,7 @@ export interface PropsPantallaMenuAdmin {
 }
 
 export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
+  const { colors } = useAppTheme();
   const estadoEncendido = useStore((s) => s.estadoEncendido);
   const esPlantilla = estadoEncendido?.tipo_acceso === 'plantilla';
 
@@ -88,39 +86,20 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
       showMenuDigital: tieneDigital,
     };
   }, [labels, estadoEncendido, esPlantilla]);
+
   const { width } = useWindowDimensions();
   const IS_MOBILE = width < 768;
 
   const {
     categorias,
+    articulosVendiblesInventario,
+    platillosDisponibles,
     loading,
     actions,
     getProductosPorCategoria,
-    validacionActive,
-    validandoActive,
   } = useGestionMenu();
-  const catalog = useInventoryCatalog();
+
   const areas = useInventoryAreas();
-
-  const itemsInventario = useMemo(() => {
-    const safeCatalog = catalog || {};
-    const safeAreas = areas || {};
-    return Object.entries(safeCatalog).map(([id, item]) => {
-      let stockConsolidado = 0;
-      Object.values(safeAreas).forEach((area: any) => {
-        if (area?.stock && typeof area.stock[id] === 'number') {
-          stockConsolidado += area.stock[id];
-        }
-      });
-      return {
-        id,
-        nombre: (item as any)?.nombre || id,
-        unidad: (item as any)?.unidad || 'unidades',
-        stock: stockConsolidado,
-      };
-    });
-  }, [catalog, areas]);
-
   const areasList = useMemo(() => {
     return Object.entries(areas || {}).map(([id, a]) => ({ ...(a as any), id }));
   }, [areas]);
@@ -135,14 +114,23 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const [isSaving, setIsSaving] = useState(false);
   const { isEnabled: featureEnabled } = useFuncionalidadesAdmin();
 
+  // Restaurar borrador si el administrador vuelve manualmente tras visitar Inventario o Libro de Platillos
+  useEffect(() => {
+    const borrador = actions.consumirBorradorMenu?.();
+    if (borrador && borrador.formData) {
+      setSelectedCat(borrador.selectedCat || null);
+      setFormData(borrador.formData);
+      setEditingTab(borrador.editingTab || 'basico');
+      setShowModal(borrador.showModal || 'addProd');
+    }
+  }, [actions]);
+
   const activeCat = useMemo(() => {
     if (selectedCat && categorias.some((c) => c.id === selectedCat)) {
       return selectedCat;
     }
     return categorias.length > 0 ? categorias[0].id : null;
   }, [selectedCat, categorias]);
-
-  // La navegación global del Administrador se gestiona de forma centralizada en FabNavegacionAdmin
 
   const handleAddCategory = async () => {
     if (!catNombre.trim()) {
@@ -166,10 +154,10 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
       const payload = formularioACarga(formData);
       if (showModal === 'addProd') {
         await actions.crearProductoConValidacion({ ...payload, categoriaId: formData.categoriaId });
-        showToast('Producto creado', 'success');
+        showToast('Oferta agregada al menú', 'success');
       } else {
         await actions.actualizarProductoConValidacion(formData.id, payload);
-        showToast('Producto actualizado', 'success');
+        showToast('Oferta actualizada', 'success');
       }
       setFormData(crearFormularioVacio());
       actions.setRecetaEnEdicion(null);
@@ -205,16 +193,38 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
   const handleDeleteProduct = async (id: string, nombre: string) => {
     confirmAction(
       '¿Eliminar producto?',
-      `¿Seguro que quieres eliminar el producto "${nombre}"?`,
+      `¿Seguro que quieres eliminar el producto "${nombre}" del menú?`,
       async () => {
         try {
           await actions.eliminarProductoConValidacion(id);
-          showToast('Producto eliminado', 'success');
+          showToast('Producto eliminado del menú', 'success');
         } catch (err: any) {
           showToast(err?.message || 'Error al eliminar producto', 'error');
         }
       }
     );
+  };
+
+  const handleIrAInventario = () => {
+    actions.guardarBorradorMenu?.({
+      selectedCat: activeCat,
+      formData,
+      editingTab,
+      showModal,
+    });
+    setShowModal(null);
+    router.push('/_role/admin/inventario' as any);
+  };
+
+  const handleIrALibroPlatillos = () => {
+    actions.guardarBorradorMenu?.({
+      selectedCat: activeCat,
+      formData,
+      editingTab,
+      showModal,
+    });
+    setShowModal(null);
+    router.push('/_role/cocina?vista=libro' as any);
   };
 
   const totals = useMemo(() => {
@@ -229,10 +239,12 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     () => categorias.find((c) => c.id === activeCat),
     [categorias, activeCat]
   );
+
   const abrirNuevaCategoria = () => {
     setCatNombre('');
     setShowModal('addCat');
   };
+
   const currentProducts = useMemo(
     () => (activeCat ? getProductosPorCategoria(activeCat) : []),
     [activeCat, getProductosPorCategoria]
@@ -242,16 +254,15 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     return (
       <View style={{ flex: 1 }}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando menú...</Text>
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Cargando menú...</Text>
         </View>
       </View>
     );
   }
 
-  const abrirEdicion = (prod: Producto, pestana: PestanaProducto) => {
+  const abrirEdicion = (prod: Producto, pestana: PestanaProducto = 'basico') => {
     const nextForm = productoAFormulario(prod);
     setFormData(nextForm);
-    actions.setRecetaEnEdicion(nextForm.receta?.ingredientes || null);
     setEditingTab(pestana);
     setShowModal('editProd');
   };
@@ -260,10 +271,12 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Ionicons name="cube-outline" size={28} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>{l.catalogTitle}</Text>
+          <Ionicons name="restaurant-outline" size={28} color={colors.primary} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{l.catalogTitle}</Text>
         </View>
-        <Text style={styles.headerSubtitle}>{l.catalogSubtitle}</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
+          {l.catalogSubtitle}
+        </Text>
       </View>
 
       <View style={[styles.mainGrid, IS_MOBILE && styles.mainGridMobile]}>
@@ -284,7 +297,12 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
           showVentaCrudo={l.showVentaCrudo}
         />
 
-        <View style={styles.productsSection}>
+        <View
+          style={[
+            styles.productsSection,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
           <ListaProductos
             categoriaNombre={activeCategoryObj?.nombre}
             productos={currentProducts}
@@ -294,7 +312,6 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
             onAgregarProducto={() => {
               if (!activeCat) return;
               setFormData({ ...crearFormularioVacio(), categoriaId: activeCat });
-              actions.setRecetaEnEdicion(null);
               setEditingTab('basico');
               setShowModal('addProd');
             }}
@@ -307,7 +324,16 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
                 showToast(err?.message || 'Error al actualizar', 'error');
               }
             }}
-            onReceta={(prod) => abrirEdicion(prod, 'receta')}
+            onReceta={(prod) => {
+              const esPlatillo =
+                prod.origenTipo === 'platillo' ||
+                Boolean(prod.receta?.ingredientes && Object.keys(prod.receta.ingredientes).length > 0);
+              if (esPlatillo) {
+                router.push('/_role/cocina?vista=libro' as any);
+              } else {
+                router.push('/_role/admin/inventario' as any);
+              }
+            }}
             onEliminar={(prod) => handleDeleteProduct(prod.id, prod.nombre)}
           />
         </View>
@@ -333,13 +359,13 @@ export function PantallaMenuAdmin({ labels }: PropsPantallaMenuAdmin = {}) {
               onFormDataChange={setFormData}
               pestana={editingTab}
               onPestanaChange={setEditingTab}
-              itemsInventario={itemsInventario}
+              articulosInventario={articulosVendiblesInventario}
+              platillosCocina={platillosDisponibles}
               areas={areasList}
-              validacion={validacionActive}
-              validando={validandoActive}
-              onRecetaEnEdicion={(ing) => actions.setRecetaEnEdicion(ing)}
               etiquetas={l}
               isSaving={isSaving}
+              onIrAInventario={handleIrAInventario}
+              onIrALibroPlatillos={handleIrALibroPlatillos}
               onGuardar={handleSaveProduct}
               onCancelar={() => setShowModal(null)}
             />
@@ -357,46 +383,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: '#94a3b8',
     fontSize: 16,
   },
   header: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 2,
   },
   headerTitle: {
-    color: '#64748B',
     fontSize: theme.typography.sizes.xxl,
-    fontWeight: theme.typography.weights.bold,
+    fontWeight: theme.typography.weights.heavy,
+    fontFamily: (theme.typography as any).displayFamily || theme.typography.fontFamily,
   },
   headerSubtitle: {
-    color: theme.colors.textMuted,
     fontSize: theme.typography.sizes.sm,
   },
   mainGrid: {
     flex: 1,
     flexDirection: 'row',
-    gap: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   mainGridMobile: {
     flexDirection: 'column',
   },
   productsSection: {
     flex: 1,
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   modalOverlay: {
     ...(StyleSheet.absoluteFill as any),
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
