@@ -196,7 +196,7 @@ export function resolver_nombre_negocio({
   const rutaLower = (rutaNegocio || '').toLowerCase();
   const codeUpper = (accessCode || '').toUpperCase();
 
-  // Mapeo canónico: MPL / Puerto Libres -> Marisquería Puerto Libres
+  // Resolución canónica para el slug de referencia de la categoría (mpl -> Marisquería Puerto Libres)
   if (
     idLower === 'mpl' ||
     idLower === 'marisqueria-mpl' ||
@@ -210,6 +210,7 @@ export function resolver_nombre_negocio({
   ) {
     return 'Marisquería Puerto Libres';
   }
+
 
   const esMarisqueria =
     /(?:^|\/)marisquerias?(?:\/|$)/i.test(rutaNegocio || '') ||

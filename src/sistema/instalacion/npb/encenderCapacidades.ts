@@ -240,6 +240,12 @@ export function encenderCapacidades(
       !idsCapacidadesActivas.has('inventario')
     )
       activo = false;
+    if (
+      cajon === 'pedidos' &&
+      !idsCapacidadesActivas.has('comanda_cocina') &&
+      !idsCapacidadesActivas.has('reparto_logistica')
+    )
+      activo = false;
     if (cajon === 'reparto_ajustes' && !idsCapacidadesActivas.has('reparto_logistica'))
       activo = false;
     if (cajon === 'tickets' && !idsCapacidadesActivas.has('tickets_impresion')) activo = false;

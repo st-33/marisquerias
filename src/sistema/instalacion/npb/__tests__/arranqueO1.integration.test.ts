@@ -5,7 +5,7 @@ import { encenderCapacidades } from '../encenderCapacidades';
 import { validarCompatibilidadNPB } from '../validarCompatibilidadNPB';
 import { ejecutarArranqueO1 } from '../../useArranqueSistema';
 import type { NegocioPlantillaBase } from '../tiposNPB';
-import { servicioTicketsImpresion } from '../../../../capacidades/tickets_impresion';
+import { servicioFierros } from '../../../impresion/fierros';
 import { useStore } from '../../../store';
 
 // Mock de AsyncStorage en memoria
@@ -228,12 +228,13 @@ describe('Arranque O(1) End-to-End — Integración con Unidad Secundaria y NPB 
     const estado = encenderCapacidades(npbCanonicoSellado);
     expect(estado.capacidades_activas).toContain('tickets_impresion');
 
-    // Módulo tickets_impresion responde correctamente
-    expect(typeof servicioTicketsImpresion.imprimirVenta).toBe('function');
-    expect(typeof servicioTicketsImpresion.imprimirComanda).toBe('function');
-    expect(typeof servicioTicketsImpresion.imprimirCuenta).toBe('function');
-    expect(typeof servicioTicketsImpresion.imprimirEtiquetaBascula).toBe('function');
-    expect(typeof servicioTicketsImpresion.estaListoParaImprimir()).toBe('boolean');
+    // Módulo de fierros e impresión responde correctamente
+    expect(typeof servicioFierros.imprimirTicketVenta).toBe('function');
+    expect(typeof servicioFierros.imprimirComanda).toBe('function');
+    expect(typeof servicioFierros.imprimirCuenta).toBe('function');
+    expect(typeof servicioFierros.imprimirEtiquetaBascula).toBe('function');
+    expect(typeof servicioFierros.leerPeso).toBe('function');
+    expect(typeof servicioFierros.estaConectado).toBe('boolean');
   });
 
   test('7. Tolerancia a campos extra y ejecución integrada O(1) con persistencia en store', async () => {

@@ -183,4 +183,21 @@ Un commit **no** es una instrucción. Solo un evento `INSTRUCCION_NUEVA` en
 4. Nomenclatura Canónica 'Mostrador' vs 'Venta en Crudo': Queda prohibido exponer el término 'venta en crudo' en selectores, títulos o configuraciones de Hub visibles al usuario. El término oficial y gobernado es **Mostrador** (`mostrador`), mapeándose de forma transparente y retrocompatible con la partición histórica de RTDB.
 5. Impresión Directa Local en Mostrador con Fallback a Hub: Al completar una venta o solicitar reimpresión en `MostradorPro`, si la terminal física tiene conectada directamente su impresora Bluetooth, el ticket se emite de forma inmediata por hardware local (`direct_bluetooth`) sin depender de la cola en la nube. Si la venta se realiza desde una terminal sin impresora física pero en línea, el trabajo se encola en RTDB (`spool/jobs`) para ser procesado por la terminal designada como Hub Central de Mostrador.
 
+40. Camino Único para Capacidades, Variantes y Equivalencia Arranque/Caliente (estado: objetivo con deuda reconocida; ver informe de capacidades)
+1. Toda capacidad, acción de interfaz o perfil se clasifica antes de implementarse: Capacidad (contrato), Acción en slot (composición), Perfil de interfaz (forma) o Interruptor operativo (temporal). Prohibido resolver una clase con el mecanismo de otra.
+2. El estado derivado de capacidades (roles, cajones, dependencias) se calcula con una sola función. La sincronización en caliente y el arranque en frío deben producir resultados idénticos para la misma autorización; se exige prueba de equivalencia.
+3. El catálogo de capacidades tiene una sola fuente de verdad. Las apps de giro no mantienen copias propias del motor ni del catálogo; una prueba de contrato falla ante divergencia.
+4. Prohibidos los alias de capacidades. Al renombrar, se migra en el mismo acto (Regla 32).
+5. Estado de capacidades no resuelto implica módulo oculto (falla cerrada), nunca encendido.
+6. Ninguna lista de capacidades se escribe a mano en la interfaz de Ecosistema; se deriva del catálogo, para que un botón nunca ofrezca una capacidad que el validador rechaza.
+
+41. Invariancia Matemática de Sincronización Realtime y Perfiles de Operación
+1. Idempotencia Estricta (Arranque == Caliente): Toda función o hook de sincronización en tiempo real (`useCapacidadesRealtime`, `escucharCapacidadesRealtime`) debe recibir y preservar la totalidad de los campos de gobernanza del negocio (`tipo_acceso`, `roles_permitidos`, `cajones_dormidos_forzados`, `version_npb_origen`). Queda terminantemente prohibido descartar o hardcodear estos parámetros al recomputar el `EstadoEncendido`.
+2. Prevención de Fugas y Cancelación Asíncrona: Todo oyente de RTDB (`onValue`, SSE) que dependa de lecturas asíncronas previas (`cargarNPB`) debe implementar bandera sincrónica de cancelación (`cancelado = true`) en la función de limpieza (`cleanup`) de `useEffect` para impedir oyentes huérfanos en memoria ante desmontajes rápidos.
+3. Supresión Reactiva de Timestamps en Reposo (Anti-OOM): Antes de invocar `setEstadoEncendido()` o persistir en almacenamiento local, debe evaluarse la igualdad estructural de las colecciones ordenadas (`capacidades_activas`, `roles_activos`, `cajones_activos`). Si el snapshot no muta la proyección operativa, queda prohibido despachar un nuevo objeto o inyectar `timestamp: Date.now()`.
+4. Navegación Canónica en Modo Pantalla Única (Apego a Regla 19):
+   - En giros de pantalla única (`modo_operacion === 'pantalla_unica'`), los operadores de piso navegan directamente a `/_role/mostrador` sin FAB radial.
+   - Los operadores con cargo de Administrador navegan a `/_role/admin/mostrador`, donde el FAB radial se renderiza legítimamente bajo el namespace `/_role/admin/*`, asignando el icono de Mostrador a la burbuja principal y los módulos administrativos al abanico radial.
+
+
 
